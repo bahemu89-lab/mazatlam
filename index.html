@@ -1,0 +1,545 @@
+<title>BMS · SRM Pedidos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F4F4F1; --surface:#FFFFFF; --surface-2:#ECECE7;
+    --ink:#20262B; --ink-soft:#5A646D; --line:#D8D8D1;
+    --accent:#0E6C68; --accent-ink:#FFFFFF;
+    --ok:#2E7D46; --warn:#A05A0A; --bad:#B3261E; --info:#2B5FB8;
+    --ok-bg:#E3F0E7; --warn-bg:#F6ECDD; --bad-bg:#F7E3E1; --info-bg:#E4ECF9; --neutral-bg:#E9EAE6;
+    --shadow:0 10px 30px rgba(32,38,43,.12);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#171A1D; --surface:#20252A; --surface-2:#2A3036;
+      --ink:#E8EAE6; --ink-soft:#9AA4AB; --line:#394148;
+      --accent:#3BB3AB; --accent-ink:#10201F;
+      --ok:#7FC493; --warn:#E0A45C; --bad:#E58F87; --info:#8AB0E8;
+      --ok-bg:#243528; --warn-bg:#3A2F1E; --bad-bg:#402525; --info-bg:#22303F; --neutral-bg:#2C3237;
+      --shadow:0 10px 30px rgba(0,0,0,.4);
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#171A1D; --surface:#20252A; --surface-2:#2A3036;
+    --ink:#E8EAE6; --ink-soft:#9AA4AB; --line:#394148;
+    --accent:#3BB3AB; --accent-ink:#10201F;
+    --ok:#7FC493; --warn:#E0A45C; --bad:#E58F87; --info:#8AB0E8;
+    --ok-bg:#243528; --warn-bg:#3A2F1E; --bad-bg:#402525; --info-bg:#22303F; --neutral-bg:#2C3237;
+    --shadow:0 10px 30px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 "Barlow",system-ui,sans-serif;
+    margin:0; padding-block:0 48px; padding-inline:20px;
+  }
+  header.app{
+    max-width:1080px; margin:0 auto; padding-block:20px 14px;
+    display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px}
+  .brand h1{
+    font:700 24px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;
+    letter-spacing:.02em; margin:0;
+  }
+  .brand .tag{
+    font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:3px 6px;
+  }
+  .conn{font:400 12px/1 "IBM Plex Mono",monospace; color:var(--ink-soft)}
+  .conn b{color:var(--ok); font-weight:500}
+  nav.tabs{
+    max-width:1080px; margin:0 auto 20px;
+    display:flex; gap:4px; border-bottom:2px solid var(--line);
+  }
+  nav.tabs button{
+    appearance:none; background:none; border:none; cursor:pointer;
+    font:600 14px/1 "Barlow Semi Condensed",sans-serif; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ink-soft); padding:10px 14px; margin-bottom:-2px;
+    border-bottom:2px solid transparent;
+  }
+  nav.tabs button[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent)}
+  nav.tabs button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  main{max-width:1080px; margin:0 auto}
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px}
+  .tile{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:14px 16px}
+  .tile .n{font:700 30px/1 "Barlow Semi Condensed",sans-serif; font-variant-numeric:tabular-nums}
+  .tile .l{font:500 11px/1.3 "IBM Plex Mono",monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-top:6px}
+  .tile.bad .n{color:var(--bad)} .tile.ok .n{color:var(--ok)} .tile.warn .n{color:var(--warn)}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:20px}
+  .panel h2{
+    font:600 13px/1 "Barlow Semi Condensed",sans-serif; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0; padding:12px 16px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  }
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line); align-items:center}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    font:inherit; color:var(--ink); background:var(--surface); border:1px solid var(--line);
+    border-radius:4px; padding:7px 10px; max-width:100%;
+  }
+  input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  .btn{
+    appearance:none; cursor:pointer; font:600 13px/1 "Barlow",sans-serif;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:4px; padding:8px 14px;
+  }
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .btn.danger{color:var(--bad); border-color:var(--bad)}
+  .btn:hover{filter:brightness(.97)}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse; width:100%; min-width:640px}
+  th{
+    text-align:left; font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); padding:10px 12px; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr.row{cursor:pointer}
+  tr.row:hover td{background:var(--surface-2)}
+  .code{font:500 13px/1.3 "IBM Plex Mono",monospace; white-space:nowrap}
+  .muted{color:var(--ink-soft)}
+  .num{font-variant-numeric:tabular-nums; white-space:nowrap}
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    font:600 12px/1 "Barlow",sans-serif; border-radius:99px; padding:5px 10px;
+    background:var(--neutral-bg); color:var(--ink);
+  }
+  .pill::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--ink-soft)}
+  .pill.solicitado{background:var(--info-bg); color:var(--info)} .pill.solicitado::before{background:var(--info)}
+  .pill.aprobado{background:var(--info-bg); color:var(--info)} .pill.aprobado::before{background:var(--info)}
+  .pill.en-proceso{background:var(--warn-bg); color:var(--warn)} .pill.en-proceso::before{background:var(--warn)}
+  .pill.enviado{background:var(--warn-bg); color:var(--warn)} .pill.enviado::before{background:var(--warn)}
+  .pill.recibido{background:var(--ok-bg); color:var(--ok)} .pill.recibido::before{background:var(--ok)}
+  .pill.cerrado{background:var(--ok-bg); color:var(--ok)} .pill.cerrado::before{background:var(--ok)}
+  .pill.cancelado{background:var(--bad-bg); color:var(--bad)} .pill.cancelado::before{background:var(--bad)}
+  .late{color:var(--bad); font-weight:600}
+  .empty{padding:28px 16px; text-align:center; color:var(--ink-soft)}
+  /* drawer / modal */
+  .overlay{position:fixed; inset:0; background:rgba(15,18,20,.45); z-index:10}
+  .drawer{
+    position:fixed; top:0; right:0; bottom:0; width:min(480px,100%); z-index:11;
+    background:var(--surface); border-left:1px solid var(--line); box-shadow:var(--shadow);
+    overflow-y:auto; padding:20px;
+  }
+  .drawer h3{font:700 20px/1.2 "Barlow Semi Condensed",sans-serif; margin:0 0 2px}
+  .drawer .sub{color:var(--ink-soft); margin-bottom:14px}
+  .drawer .close{position:absolute; top:14px; right:14px}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:6px 16px; margin:14px 0; font-size:14px}
+  .kv dt{font:500 11px/1.6 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin:0}
+  .kv dd{margin:0}
+  .field{display:flex; flex-direction:column; gap:4px; margin-bottom:12px}
+  .field label{font:600 12px/1 "Barlow",sans-serif; letter-spacing:.02em; color:var(--ink-soft)}
+  .field-row{display:flex; gap:10px; flex-wrap:wrap} .field-row .field{flex:1; min-width:130px}
+  .timeline{list-style:none; margin:10px 0 0; padding:0; border-left:2px solid var(--line)}
+  .timeline li{position:relative; padding:0 0 14px 16px}
+  .timeline li::before{
+    content:""; position:absolute; left:-6px; top:5px; width:10px; height:10px;
+    border-radius:50%; background:var(--accent); border:2px solid var(--surface);
+  }
+  .timeline .when{font:400 11px/1.4 "IBM Plex Mono",monospace; color:var(--ink-soft)}
+  .timeline .what{font-weight:600}
+  .timeline .note{color:var(--ink-soft); font-size:13px}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px}
+  hr.sep{border:none; border-top:1px solid var(--line); margin:18px 0}
+  @media (prefers-reduced-motion: no-preference){
+    .drawer{animation:slide .18s ease-out}
+    @keyframes slide{from{transform:translateX(24px); opacity:0}}
+  }
+</style>
+
+<header class="app">
+  <div class="brand">
+    <h1>BMS</h1>
+    <span class="tag">SRM · Pedidos</span>
+  </div>
+  <span class="conn" id="conn">almacenamiento local</span>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="tablero" id="tab-tablero">Tablero</button>
+  <button role="tab" aria-selected="false" data-tab="pedidos" id="tab-pedidos">Pedidos</button>
+  <button role="tab" aria-selected="false" data-tab="proyectos" id="tab-proyectos">Proyectos</button>
+</nav>
+
+<main>
+  <section id="view-tablero">
+    <div class="tiles" id="tiles"></div>
+    <div class="panel">
+      <h2>Pedidos con entrega vencida</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Código</th><th>Proyecto</th><th>Proveedor</th><th>Estado</th><th>Entrega</th></tr></thead>
+        <tbody id="lateBody"></tbody>
+      </table></div>
+      <div class="empty" id="lateEmpty" hidden>Sin pedidos vencidos. Todo al día.</div>
+    </div>
+    <div class="panel">
+      <h2>Última actividad</h2>
+      <ul class="timeline" id="feed" style="margin:14px 16px"></ul>
+      <div class="empty" id="feedEmpty" hidden>Aún no hay movimientos registrados.</div>
+    </div>
+  </section>
+
+  <section id="view-pedidos" hidden>
+    <div class="panel">
+      <h2>Pedidos <button class="btn primary" id="btnNuevoPedido">+ Nuevo pedido</button></h2>
+      <div class="toolbar">
+        <input type="text" id="fSearch" placeholder="Buscar código, proveedor, descripción…" style="flex:1; min-width:180px">
+        <select id="fEstado"><option value="">Todos los estados</option></select>
+        <select id="fProyecto"><option value="">Todos los proyectos</option></select>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Código</th><th>Descripción</th><th>Proyecto</th><th>Proveedor</th><th>Estado</th><th>Entrega</th><th>Monto</th></tr></thead>
+        <tbody id="pedBody"></tbody>
+      </table></div>
+      <div class="empty" id="pedEmpty" hidden>No hay pedidos que coincidan. Crea el primero con “+ Nuevo pedido”.</div>
+    </div>
+  </section>
+
+  <section id="view-proyectos" hidden>
+    <div class="panel">
+      <h2>Proyectos <button class="btn primary" id="btnNuevoProyecto">+ Nuevo proyecto</button></h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Proyecto</th><th>Cliente</th><th>Responsable</th><th>Pedidos</th><th>Abiertos</th><th></th></tr></thead>
+        <tbody id="proBody"></tbody>
+      </table></div>
+      <div class="empty" id="proEmpty" hidden>Sin proyectos todavía. Crea uno para agrupar sus pedidos.</div>
+    </div>
+  </section>
+</main>
+
+<div id="layer" hidden></div>
+
+<script>
+"use strict";
+/* ================= estado global ================= */
+const ESTADOS = ["Solicitado","Aprobado","En proceso","Enviado","Recibido","Cerrado","Cancelado"];
+const ABIERTOS = new Set(["Solicitado","Aprobado","En proceso","Enviado"]);
+const LS_KEY = "bms-srm-v1";
+
+let dbRef = null;               // claude db namespace (o null = localStorage)
+let pedidos = {};               // id -> pedido
+let proyectos = {};             // id -> proyecto
+let currentTab = "tablero";
+let openPedidoId = null;
+
+/* ================= utilidades ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const hoy = () => new Date().toISOString().slice(0,10);
+const fmtFecha = iso => {
+  if(!iso) return "—";
+  const [y,m,d] = iso.slice(0,10).split("-");
+  return `${d}/${m}/${y}`;
+};
+const fmtHora = iso => {
+  const dt = new Date(iso);
+  return isNaN(dt) ? "" : dt.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+};
+const fmtMonto = v => (v==null || v==="") ? "—" : Number(v).toLocaleString("es-MX",{style:"currency",currency:"MXN"});
+const slug = e => e.toLowerCase().replace(/\s+/g,"-").normalize("NFD").replace(/[̀-ͯ]/g,"");
+const vencido = p => p.fechaEntrega && ABIERTOS.has(p.estado) && p.fechaEntrega < hoy();
+const nombreProyecto = id => proyectos[id]?.nombre || "—";
+
+/* ================= almacenamiento ================= */
+function loadLocal(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    pedidos = raw.pedidos || {};
+    proyectos = raw.proyectos || {};
+  }catch(e){ pedidos = {}; proyectos = {}; }
+}
+function saveLocal(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({pedidos, proyectos})); }catch(e){}
+}
+async function upsert(col, id, data){
+  if(dbRef){
+    try{ await dbRef.collection(col).doc(id).set(data); }
+    catch(e){ alert("No se pudo guardar. Intenta de nuevo.\n(" + (e && e.message || e) + ")"); }
+  }else{
+    (col==="pedidos" ? pedidos : proyectos)[id] = data;
+    saveLocal(); render();
+  }
+}
+async function remove(col, id){
+  if(dbRef){
+    try{ await dbRef.collection(col).doc(id).delete(); }
+    catch(e){ alert("No se pudo eliminar. Intenta de nuevo."); }
+  }else{
+    delete (col==="pedidos" ? pedidos : proyectos)[id];
+    saveLocal(); render();
+  }
+}
+async function initStore(){
+  loadLocal(); render();          // pinta de inmediato con lo local
+  try{
+    const db = window.claude && await window.claude.use("db");
+    if(!db) return;
+    dbRef = db;
+    $("#conn").innerHTML = "<b>●</b> datos compartidos en vivo";
+    db.collection("pedidos").onSnapshot(snap => {
+      pedidos = {};
+      snap.docs.forEach(d => { if(d.exists) pedidos[d.id] = d.data(); });
+      render();
+    }, () => { $("#conn").textContent = "conexión perdida — recarga la página"; });
+    db.collection("proyectos").onSnapshot(snap => {
+      proyectos = {};
+      snap.docs.forEach(d => { if(d.exists) proyectos[d.id] = d.data(); });
+      render();
+    });
+  }catch(e){ /* sin runtime: se queda en localStorage */ }
+}
+
+/* ================= render ================= */
+function render(){
+  renderTablero(); renderPedidos(); renderProyectos();
+  if(openPedidoId && pedidos[openPedidoId] && $("#layer .drawer[data-kind=pedido]")) openPedido(openPedidoId);
+}
+
+function renderTablero(){
+  const list = Object.entries(pedidos).map(([id,p]) => ({id,...p}));
+  const abiertos = list.filter(p => ABIERTOS.has(p.estado));
+  const recibidos = list.filter(p => p.estado==="Recibido" || p.estado==="Cerrado");
+  const tarde = list.filter(vencido).sort((a,b) => (a.fechaEntrega||"").localeCompare(b.fechaEntrega||""));
+  $("#tiles").innerHTML = `
+    <div class="tile"><div class="n">${list.length}</div><div class="l">Pedidos totales</div></div>
+    <div class="tile warn"><div class="n">${abiertos.length}</div><div class="l">En curso</div></div>
+    <div class="tile bad"><div class="n">${tarde.length}</div><div class="l">Entrega vencida</div></div>
+    <div class="tile ok"><div class="n">${recibidos.length}</div><div class="l">Recibidos / cerrados</div></div>`;
+  $("#lateBody").innerHTML = tarde.map(p => `
+    <tr class="row" data-open="${p.id}">
+      <td class="code">${esc(p.codigo)}</td>
+      <td>${esc(nombreProyecto(p.proyectoId))}</td>
+      <td>${esc(p.proveedor||"—")}</td>
+      <td>${pill(p.estado)}</td>
+      <td class="num late">${fmtFecha(p.fechaEntrega)}</td>
+    </tr>`).join("");
+  $("#lateEmpty").hidden = tarde.length > 0;
+
+  const eventos = [];
+  list.forEach(p => (p.historial||[]).forEach(h => eventos.push({...h, codigo:p.codigo, id:p.id})));
+  eventos.sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
+  $("#feed").innerHTML = eventos.slice(0,8).map(h => `
+    <li>
+      <div class="when">${esc(fmtHora(h.fecha))}${h.usuario ? " · " + esc(h.usuario) : ""}</div>
+      <div class="what"><span class="code">${esc(h.codigo)}</span> → ${esc(h.estado)}</div>
+      ${h.nota ? `<div class="note">${esc(h.nota)}</div>` : ""}
+    </li>`).join("");
+  $("#feedEmpty").hidden = eventos.length > 0;
+}
+
+function pill(estado){ return `<span class="pill ${slug(estado||"")}">${esc(estado||"—")}</span>`; }
+
+function renderPedidos(){
+  const q = ($("#fSearch").value||"").toLowerCase();
+  const fe = $("#fEstado").value, fp = $("#fProyecto").value;
+  const selP = $("#fProyecto");
+  const keep = selP.value;
+  selP.innerHTML = `<option value="">Todos los proyectos</option>` +
+    Object.entries(proyectos).map(([id,p]) => `<option value="${id}">${esc(p.nombre)}</option>`).join("");
+  selP.value = keep;
+
+  const list = Object.entries(pedidos).map(([id,p]) => ({id,...p}))
+    .filter(p => !fe || p.estado===fe)
+    .filter(p => !fp || p.proyectoId===fp)
+    .filter(p => !q || [p.codigo,p.proveedor,p.descripcion].some(v => (v||"").toLowerCase().includes(q)))
+    .sort((a,b) => (b.creado||"").localeCompare(a.creado||""));
+  $("#pedBody").innerHTML = list.map(p => `
+    <tr class="row" data-open="${p.id}">
+      <td class="code">${esc(p.codigo)}</td>
+      <td>${esc(p.descripcion||"—")}</td>
+      <td>${esc(nombreProyecto(p.proyectoId))}</td>
+      <td>${esc(p.proveedor||"—")}</td>
+      <td>${pill(p.estado)}</td>
+      <td class="num ${vencido(p)?"late":""}">${fmtFecha(p.fechaEntrega)}</td>
+      <td class="num">${fmtMonto(p.monto)}</td>
+    </tr>`).join("");
+  $("#pedEmpty").hidden = list.length > 0;
+}
+
+function renderProyectos(){
+  const rows = Object.entries(proyectos).map(([id,pr]) => {
+    const ped = Object.values(pedidos).filter(p => p.proyectoId===id);
+    return {id, ...pr, total:ped.length, abiertos:ped.filter(p => ABIERTOS.has(p.estado)).length};
+  }).sort((a,b) => a.nombre.localeCompare(b.nombre));
+  $("#proBody").innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${esc(r.nombre)}</strong>${r.notas?`<div class="muted" style="font-size:13px">${esc(r.notas)}</div>`:""}</td>
+      <td>${esc(r.cliente||"—")}</td>
+      <td>${esc(r.responsable||"—")}</td>
+      <td class="num">${r.total}</td>
+      <td class="num">${r.abiertos}</td>
+      <td><button class="btn" data-editpro="${r.id}">Editar</button></td>
+    </tr>`).join("");
+  $("#proEmpty").hidden = rows.length > 0;
+}
+
+/* ================= capa (modal / drawer) ================= */
+function closeLayer(){ $("#layer").hidden = true; $("#layer").innerHTML = ""; openPedidoId = null; }
+function showLayer(html, kind){
+  $("#layer").innerHTML = `<div class="overlay" data-close></div>
+    <div class="drawer" data-kind="${kind}" role="dialog" aria-modal="true">
+      <button class="btn close" data-close aria-label="Cerrar">✕</button>${html}</div>`;
+  $("#layer").hidden = false;
+}
+
+function openPedido(id){
+  const p = pedidos[id]; if(!p) return;
+  openPedidoId = id;
+  const hist = (p.historial||[]).slice().sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
+  showLayer(`
+    <h3><span class="code">${esc(p.codigo)}</span></h3>
+    <div class="sub">${pill(p.estado)}</div>
+    <dl class="kv">
+      <dt>Descripción</dt><dd>${esc(p.descripcion||"—")}</dd>
+      <dt>Proyecto</dt><dd>${esc(nombreProyecto(p.proyectoId))}</dd>
+      <dt>Proveedor</dt><dd>${esc(p.proveedor||"—")}</dd>
+      <dt>Pedido el</dt><dd class="num">${fmtFecha(p.fechaPedido)}</dd>
+      <dt>Entrega esperada</dt><dd class="num ${vencido(p)?"late":""}">${fmtFecha(p.fechaEntrega)}${vencido(p)?" · vencida":""}</dd>
+      <dt>Monto</dt><dd class="num">${fmtMonto(p.monto)}</dd>
+    </dl>
+    <hr class="sep">
+    <div class="field"><label for="chEstado">Cambiar estado</label>
+      <select id="chEstado">${ESTADOS.map(e => `<option ${e===p.estado?"selected":""}>${e}</option>`).join("")}</select></div>
+    <div class="field"><label for="chNota">Nota del movimiento (opcional)</label>
+      <input type="text" id="chNota" placeholder="Ej. confirmado por el proveedor, guía 12345…"></div>
+    <div class="field"><label for="chUsuario">Registrado por</label>
+      <input type="text" id="chUsuario" value="${esc(localStorage.getItem("bms-srm-user")||"")}" placeholder="Tu nombre"></div>
+    <div class="actions">
+      <button class="btn primary" data-mov="${id}">Registrar movimiento</button>
+      <button class="btn" data-editped="${id}">Editar datos</button>
+      <button class="btn danger" data-delped="${id}">Eliminar</button>
+    </div>
+    <hr class="sep">
+    <h3 style="font-size:16px">Trazabilidad</h3>
+    <ul class="timeline">${hist.map(h => `
+      <li>
+        <div class="when">${esc(fmtHora(h.fecha))}${h.usuario ? " · " + esc(h.usuario) : ""}</div>
+        <div class="what">${esc(h.estado)}</div>
+        ${h.nota ? `<div class="note">${esc(h.nota)}</div>` : ""}
+      </li>`).join("") || `<li><div class="note">Sin movimientos aún.</div></li>`}
+    </ul>`, "pedido");
+}
+
+function formPedido(id){
+  const p = id ? pedidos[id] : null;
+  const n = Object.keys(pedidos).length + 1;
+  const codigo = p ? p.codigo : "PED-" + String(n).padStart(3,"0");
+  showLayer(`
+    <h3>${p ? "Editar pedido" : "Nuevo pedido"}</h3>
+    <div class="sub">Los cambios de estado se registran después, desde la ficha del pedido.</div>
+    <div class="field-row">
+      <div class="field"><label for="fpCodigo">Código</label><input type="text" id="fpCodigo" value="${esc(codigo)}"></div>
+      <div class="field"><label for="fpProyecto">Proyecto</label>
+        <select id="fpProyecto"><option value="">— sin proyecto —</option>
+          ${Object.entries(proyectos).map(([pid,pr]) => `<option value="${pid}" ${p&&p.proyectoId===pid?"selected":""}>${esc(pr.nombre)}</option>`).join("")}
+        </select></div>
+    </div>
+    <div class="field"><label for="fpDesc">Descripción</label><input type="text" id="fpDesc" value="${esc(p?.descripcion||"")}" placeholder="Qué se pidió"></div>
+    <div class="field"><label for="fpProv">Proveedor</label><input type="text" id="fpProv" value="${esc(p?.proveedor||"")}"></div>
+    <div class="field-row">
+      <div class="field"><label for="fpFP">Fecha de pedido</label><input type="date" id="fpFP" value="${esc(p?.fechaPedido||hoy())}"></div>
+      <div class="field"><label for="fpFE">Entrega esperada</label><input type="date" id="fpFE" value="${esc(p?.fechaEntrega||"")}"></div>
+    </div>
+    <div class="field"><label for="fpMonto">Monto (MXN)</label><input type="number" id="fpMonto" min="0" step="0.01" value="${esc(p?.monto??"")}"></div>
+    ${p ? "" : `<div class="field"><label for="fpUsuario">Registrado por</label>
+      <input type="text" id="fpUsuario" value="${esc(localStorage.getItem("bms-srm-user")||"")}" placeholder="Tu nombre"></div>`}
+    <div class="actions"><button class="btn primary" data-saveped="${id||""}">Guardar</button>
+      <button class="btn" data-close>Cancelar</button></div>`, "form");
+}
+
+function formProyecto(id){
+  const p = id ? proyectos[id] : null;
+  showLayer(`
+    <h3>${p ? "Editar proyecto" : "Nuevo proyecto"}</h3>
+    <div class="field"><label for="fyNombre">Nombre del proyecto</label><input type="text" id="fyNombre" value="${esc(p?.nombre||"")}"></div>
+    <div class="field"><label for="fyCliente">Cliente</label><input type="text" id="fyCliente" value="${esc(p?.cliente||"")}"></div>
+    <div class="field"><label for="fyResp">Responsable</label><input type="text" id="fyResp" value="${esc(p?.responsable||"")}" placeholder="Ej. Daniel"></div>
+    <div class="field"><label for="fyNotas">Notas</label><textarea id="fyNotas" rows="3">${esc(p?.notas||"")}</textarea></div>
+    <div class="actions"><button class="btn primary" data-savepro="${id||""}">Guardar</button>
+      ${id ? `<button class="btn danger" data-delpro="${id}">Eliminar</button>` : ""}
+      <button class="btn" data-close>Cancelar</button></div>`, "form");
+}
+
+/* ================= eventos ================= */
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  currentTab = b.dataset.tab;
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", String(x===b)));
+  ["tablero","pedidos","proyectos"].forEach(t => $("#view-"+t).hidden = t!==currentTab);
+}));
+["fSearch","fEstado","fProyecto"].forEach(id => $("#"+id).addEventListener("input", renderPedidos));
+$("#fEstado").innerHTML = `<option value="">Todos los estados</option>` + ESTADOS.map(e => `<option>${e}</option>`).join("");
+$("#btnNuevoPedido").addEventListener("click", () => formPedido(null));
+$("#btnNuevoProyecto").addEventListener("click", () => formProyecto(null));
+
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("[data-close],[data-open],[data-editpro],[data-mov],[data-editped],[data-delped],[data-saveped],[data-savepro],[data-delpro]");
+  if(!t) return;
+  if(t.hasAttribute("data-close")) return closeLayer();
+  if(t.dataset.open) return openPedido(t.dataset.open);
+  if(t.dataset.editpro) return formProyecto(t.dataset.editpro);
+  if(t.dataset.editped) return formPedido(t.dataset.editped);
+  if(t.dataset.delped){
+    if(!confirm("¿Eliminar este pedido y su historial?")) return;
+    closeLayer(); return remove("pedidos", t.dataset.delped);
+  }
+  if(t.dataset.delpro){
+    if(!confirm("¿Eliminar este proyecto? Sus pedidos se conservan sin proyecto.")) return;
+    closeLayer(); return remove("proyectos", t.dataset.delpro);
+  }
+  if(t.hasAttribute("data-mov")){
+    const id = t.getAttribute("data-mov");
+    const p = pedidos[id]; if(!p) return;
+    const estado = $("#chEstado").value, nota = $("#chNota").value.trim(), usuario = $("#chUsuario").value.trim();
+    if(usuario) try{ localStorage.setItem("bms-srm-user", usuario); }catch(e){}
+    if(estado === p.estado && !nota) return alert("Elige un estado nuevo o escribe una nota.");
+    const nuevo = {...p, estado, historial:[...(p.historial||[]), {estado, nota, usuario, fecha:new Date().toISOString()}]};
+    await upsert("pedidos", id, nuevo);
+    openPedido(id);
+    return;
+  }
+  if(t.hasAttribute("data-saveped")){
+    const id = t.getAttribute("data-saveped") || uid();
+    const prev = pedidos[t.getAttribute("data-saveped")] || null;
+    const codigo = $("#fpCodigo").value.trim();
+    if(!codigo) return alert("El código es obligatorio.");
+    const usuario = prev ? "" : ($("#fpUsuario")?.value.trim() || "");
+    if(usuario) try{ localStorage.setItem("bms-srm-user", usuario); }catch(e){}
+    const data = {
+      codigo,
+      proyectoId: $("#fpProyecto").value || "",
+      descripcion: $("#fpDesc").value.trim(),
+      proveedor: $("#fpProv").value.trim(),
+      fechaPedido: $("#fpFP").value,
+      fechaEntrega: $("#fpFE").value,
+      monto: $("#fpMonto").value === "" ? null : Number($("#fpMonto").value),
+      estado: prev ? prev.estado : "Solicitado",
+      historial: prev ? (prev.historial||[]) : [{estado:"Solicitado", nota:"Pedido creado", usuario, fecha:new Date().toISOString()}],
+      creado: prev ? (prev.creado||new Date().toISOString()) : new Date().toISOString(),
+    };
+    closeLayer();
+    return upsert("pedidos", id, data);
+  }
+  if(t.hasAttribute("data-savepro")){
+    const id = t.getAttribute("data-savepro") || uid();
+    const prev = proyectos[t.getAttribute("data-savepro")] || null;
+    const nombre = $("#fyNombre").value.trim();
+    if(!nombre) return alert("El nombre del proyecto es obligatorio.");
+    const data = {
+      nombre,
+      cliente: $("#fyCliente").value.trim(),
+      responsable: $("#fyResp").value.trim(),
+      notas: $("#fyNotas").value.trim(),
+      creado: prev ? (prev.creado||new Date().toISOString()) : new Date().toISOString(),
+    };
+    closeLayer();
+    return upsert("proyectos", id, data);
+  }
+});
+document.addEventListener("keydown", ev => { if(ev.key==="Escape" && !$("#layer").hidden) closeLayer(); });
+
+initStore();
+</script>
