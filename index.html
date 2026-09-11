@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMS — Pedidos por Establecimiento</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #dde3ea;
+    --text: #1c2733;
+    --muted: #5c6b7a;
+    --primary: #0e6ba8;
+    --primary-dark: #0a5486;
+    --danger: #c0392b;
+    --ok: #1e8e4e;
+    --warn: #b7791f;
+    --info: #4a5fc1;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding-block: 0 40px;
+    padding-inline: 16px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    margin: 0 -16px 24px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  header h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: .3px; }
+  header .sub { font-size: .85rem; opacity: .85; }
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 24px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card h2 { margin: 0 0 16px; font-size: 1.05rem; }
+
+  /* Resumen */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .stat .value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; }
+
+  /* Formulario */
+  form { display: grid; gap: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; }
+  .field { display: grid; gap: 4px; flex: 1 1 200px; }
+  label { font-size: .82rem; font-weight: 600; color: var(--muted); }
+  input, select, textarea {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text);
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* Líneas de pedido */
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th, .items-table td { padding: 6px 8px; text-align: left; }
+  .items-table th { font-size: .78rem; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .items-table td input { padding: 6px 8px; }
+  .items-table .num { width: 110px; }
+  .items-table .subtotal { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  button {
+    font: inherit;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: #e8edf2; color: var(--text); }
+  .btn-secondary:hover { background: #dbe3ea; }
+  .btn-danger-ghost { background: transparent; color: var(--danger); padding: 4px 8px; }
+  .btn-sm { padding: 5px 10px; font-size: .82rem; }
+
+  .form-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .total { font-size: 1.1rem; font-weight: 700; }
+
+  /* Filtros */
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; align-items: end; }
+  .filters .field { flex: 1 1 160px; }
+
+  /* Lista de pedidos */
+  .orders { display: grid; gap: 12px; }
+  .order {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: grid;
+    gap: 8px;
+    background: #fff;
+  }
+  .order-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .order-title { font-weight: 700; }
+  .order-meta { font-size: .82rem; color: var(--muted); }
+  .order-items { font-size: .88rem; color: var(--text); margin: 0; padding-left: 18px; }
+  .order-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .order-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-block;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .badge.pendiente   { background: #fdf3e0; color: var(--warn); }
+  .badge.en_proceso  { background: #e7eafb; color: var(--info); }
+  .badge.entregado   { background: #e2f4e9; color: var(--ok); }
+  .badge.cancelado   { background: #fbe6e3; color: var(--danger); }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px 0; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  @media (max-width: 500px) {
+    .items-table .num { width: 80px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>BMS · Pedidos por Establecimiento</h1>
+    <div class="sub">Sistema de gestión de pedidos</div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-secondary btn-sm" id="btn-export">Exportar CSV</button>
+  </div>
+</header>
+
+<main>
+  <section class="stats" id="stats"></section>
+
+  <section class="card">
+    <h2 id="form-title">Nuevo pedido</h2>
+    <form id="order-form">
+      <div class="row">
+        <div class="field">
+          <label for="establecimiento">Establecimiento *</label>
+          <input id="establecimiento" list="establecimientos-list" required
+                 placeholder="Ej. Sucursal Centro" autocomplete="off">
+          <datalist id="establecimientos-list"></datalist>
+        </div>
+        <div class="field">
+          <label for="solicitante">Solicitante</label>
+          <input id="solicitante" placeholder="Nombre de quien solicita">
+        </div>
+        <div class="field">
+          <label for="fecha-entrega">Fecha de entrega</label>
+          <input id="fecha-entrega" type="date">
+        </div>
+      </div>
+
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Producto / Artículo</th>
+            <th class="num">Cantidad</th>
+            <th class="num">Precio unit.</th>
+            <th class="subtotal">Subtotal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+      <div>
+        <button type="button" class="btn-secondary btn-sm" id="btn-add-item">+ Agregar artículo</button>
+      </div>
+
+      <div class="field">
+        <label for="notas">Notas</label>
+        <textarea id="notas" placeholder="Observaciones del pedido…"></textarea>
+      </div>
+
+      <div class="form-footer">
+        <div class="total">Total: <span id="form-total">$0.00</span></div>
+        <div class="toolbar">
+          <button type="button" class="btn-secondary" id="btn-cancel-edit" hidden>Cancelar edición</button>
+          <button type="submit" class="btn-primary" id="btn-submit">Registrar pedido</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Pedidos registrados</h2>
+    <div class="filters">
+      <div class="field">
+        <label for="filtro-establecimiento">Establecimiento</label>
+        <select id="filtro-establecimiento"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label for="filtro-estado">Estado</label>
+        <select id="filtro-estado">
+          <option value="">Todos</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="filtro-busqueda">Buscar</label>
+        <input id="filtro-busqueda" placeholder="Folio, producto, solicitante…">
+      </div>
+    </div>
+    <div class="orders" id="orders-list"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'bms_pedidos_v1';
+  const ESTADOS = {
+    pendiente:  'Pendiente',
+    en_proceso: 'En proceso',
+    entregado:  'Entregado',
+    cancelado:  'Cancelado'
+  };
+  const FLUJO = { pendiente: 'en_proceso', en_proceso: 'entregado' };
+
+  let pedidos = load();
+  let editingId = null;
+
+  const $ = (sel) => document.querySelector(sel);
+  const form = $('#order-form');
+  const itemsBody = $('#items-body');
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(pedidos)); } catch {}
+  }
+
+  const money = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (iso) => iso ? new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+  function nextFolio() {
+    const max = pedidos.reduce((m, p) => Math.max(m, p.folio || 0), 0);
+    return max + 1;
+  }
+
+  /* ---------- Líneas del formulario ---------- */
+  function addItemRow(item) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input class="it-nombre" placeholder="Nombre del artículo" value=""></td>' +
+      '<td class="num"><input class="it-cantidad" type="number" min="0" step="any" value="1"></td>' +
+      '<td class="num"><input class="it-precio" type="number" min="0" step="0.01" value="0"></td>' +
+      '<td class="subtotal it-subtotal">$0.00</td>' +
+      '<td><button type="button" class="btn-danger-ghost it-remove" title="Quitar">✕</button></td>';
+    if (item) {
+      tr.querySelector('.it-nombre').value = item.nombre;
+      tr.querySelector('.it-cantidad').value = item.cantidad;
+      tr.querySelector('.it-precio').value = item.precio;
+    }
+    tr.querySelector('.it-remove').addEventListener('click', () => {
+      tr.remove();
+      if (!itemsBody.children.length) addItemRow();
+      updateFormTotal();
+    });
+    tr.addEventListener('input', updateFormTotal);
+    itemsBody.appendChild(tr);
+    updateFormTotal();
+  }
+
+  function readItems() {
+    return Array.from(itemsBody.children).map(tr => ({
+      nombre: tr.querySelector('.it-nombre').value.trim(),
+      cantidad: parseFloat(tr.querySelector('.it-cantidad').value) || 0,
+      precio: parseFloat(tr.querySelector('.it-precio').value) || 0
+    })).filter(it => it.nombre);
+  }
+
+  const orderTotal = (p) => p.items.reduce((s, it) => s + it.cantidad * it.precio, 0);
+
+  function updateFormTotal() {
+    let total = 0;
+    Array.from(itemsBody.children).forEach(tr => {
+      const c = parseFloat(tr.querySelector('.it-cantidad').value) || 0;
+      const pr = parseFloat(tr.querySelector('.it-precio').value) || 0;
+      const sub = c * pr;
+      tr.querySelector('.it-subtotal').textContent = money(sub);
+      total += sub;
+    });
+    $('#form-total').textContent = money(total);
+  }
+
+  /* ---------- Alta / edición ---------- */
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const items = readItems();
+    if (!items.length) { alert('Agrega al menos un artículo con nombre.'); return; }
+
+    const data = {
+      establecimiento: $('#establecimiento').value.trim(),
+      solicitante: $('#solicitante').value.trim(),
+      fechaEntrega: $('#fecha-entrega').value || null,
+      notas: $('#notas').value.trim(),
+      items
+    };
+
+    if (editingId) {
+      const p = pedidos.find(x => x.id === editingId);
+      if (p) Object.assign(p, data);
+      stopEditing();
+    } else {
+      pedidos.unshift(Object.assign({
+        id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        folio: nextFolio(),
+        estado: 'pendiente',
+        creado: new Date().toISOString()
+      }, data));
+    }
+    save();
+    form.reset();
+    itemsBody.innerHTML = '';
+    addItemRow();
+    render();
+  });
+
+  function startEditing(id) {
+    const p = pedidos.find(x => x.id === id);
+    if (!p) return;
+    editingId = id;
+    $('#form-title').textContent = 'Editando pedido #' + p.folio;
+    $('#btn-submit').textContent = 'Guardar cambios';
+    $('#btn-cancel-edit').hidden = false;
+    $('#establecimiento').value = p.establecimiento;
+    $('#solicitante').value = p.solicitante || '';
+    $('#fecha-entrega').value = p.fechaEntrega || '';
+    $('#notas').value = p.notas || '';
+    itemsBody.innerHTML = '';
+    p.items.forEach(addItemRow);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function stopEditing() {
+    editingId = null;
+    $('#form-title').textContent = 'Nuevo pedido';
+    $('#btn-submit').textContent = 'Registrar pedido';
+    $('#btn-cancel-edit').hidden = true;
+  }
+
+  $('#btn-cancel-edit').addEventListener('click', () => {
+    stopEditing();
+    form.reset();
+    itemsBody.innerHTML = '';
+    addItemRow();
+  });
+
+  $('#btn-add-item').addEventListener('click', () => addItemRow());
+
+  /* ---------- Filtros ---------- */
+  ['#filtro-establecimiento', '#filtro-estado', '#filtro-busqueda'].forEach(sel =>
+    $(sel).addEventListener('input', renderOrders)
+  );
+
+  function filteredOrders() {
+    const est = $('#filtro-establecimiento').value;
+    const estado = $('#filtro-estado').value;
+    const q = $('#filtro-busqueda').value.trim().toLowerCase();
+    return pedidos.filter(p => {
+      if (est && p.establecimiento !== est) return false;
+      if (estado && p.estado !== estado) return false;
+      if (q) {
+        const hay = ['#' + p.folio, p.establecimiento, p.solicitante || '', p.notas || '',
+                     ...p.items.map(i => i.nombre)].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  /* ---------- Render ---------- */
+  function renderStats() {
+    const count = (e) => pedidos.filter(p => p.estado === e).length;
+    const activos = pedidos.filter(p => p.estado !== 'cancelado');
+    const total = activos.reduce((s, p) => s + orderTotal(p), 0);
+    $('#stats').innerHTML =
+      stat('Pedidos totales', pedidos.length) +
+      stat('Pendientes', count('pendiente')) +
+      stat('En proceso', count('en_proceso')) +
+      stat('Entregados', count('entregado')) +
+      stat('Monto activo', money(total));
+    function stat(label, value) {
+      return '<div class="stat"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
+    }
+  }
+
+  function renderEstablecimientos() {
+    const names = [...new Set(pedidos.map(p => p.establecimiento))].sort((a, b) => a.localeCompare(b, 'es'));
+    $('#establecimientos-list').innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
+    const sel = $('#filtro-establecimiento');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todos</option>' +
+      names.map(n => '<option value="' + esc(n) + '">' + esc(n) + '</option>').join('');
+    sel.value = names.includes(current) ? current : '';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderOrders() {
+    const list = filteredOrders();
+    const cont = $('#orders-list');
+    if (!list.length) {
+      cont.innerHTML = '<div class="empty">No hay pedidos que coincidan.</div>';
+      return;
+    }
+    cont.innerHTML = '';
+    list.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'order';
+      const itemsHtml = p.items.map(it =>
+        '<li>' + esc(it.nombre) + ' — ' + it.cantidad + ' × ' + money(it.precio) + '</li>').join('');
+      const next = FLUJO[p.estado];
+      div.innerHTML =
+        '<div class="order-head">' +
+          '<div><span class="order-title">#' + p.folio + ' · ' + esc(p.establecimiento) + '</span>' +
+          ' <span class="badge ' + p.estado + '">' + ESTADOS[p.estado] + '</span></div>' +
+          '<div class="order-meta">Creado: ' + fmtDate(p.creado) + ' · Entrega: ' + fmtDate(p.fechaEntrega) +
+          (p.solicitante ? ' · Solicita: ' + esc(p.solicitante) : '') + '</div>' +
+        '</div>' +
+        '<ul class="order-items">' + itemsHtml + '</ul>' +
+        (p.notas ? '<div class="order-meta">Notas: ' + esc(p.notas) + '</div>' : '') +
+        '<div class="order-foot">' +
+          '<div class="total">' + money(orderTotal(p)) + '</div>' +
+          '<div class="order-actions">' +
+            (next ? '<button class="btn-primary btn-sm" data-act="avanzar">Marcar ' + ESTADOS[next].toLowerCase() + '</button>' : '') +
+            (p.estado !== 'cancelado' && p.estado !== 'entregado'
+              ? '<button class="btn-secondary btn-sm" data-act="cancelar">Cancelar</button>' : '') +
+            '<button class="btn-secondary btn-sm" data-act="editar">Editar</button>' +
+            '<button class="btn-danger-ghost btn-sm" data-act="eliminar">Eliminar</button>' +
+          '</div>' +
+        '</div>';
+      div.addEventListener('click', (e) => {
+        const act = e.target.getAttribute && e.target.getAttribute('data-act');
+        if (!act) return;
+        if (act === 'avanzar') { p.estado = FLUJO[p.estado] || p.estado; }
+        else if (act === 'cancelar') { if (confirm('¿Cancelar el pedido #' + p.folio + '?')) p.estado = 'cancelado'; else return; }
+        else if (act === 'editar') { startEditing(p.id); return; }
+        else if (act === 'eliminar') {
+          if (!confirm('¿Eliminar definitivamente el pedido #' + p.folio + '?')) return;
+          pedidos = pedidos.filter(x => x.id !== p.id);
+          if (editingId === p.id) { stopEditing(); form.reset(); itemsBody.innerHTML = ''; addItemRow(); }
+        }
+        save();
+        render();
+      });
+      cont.appendChild(div);
+    });
+  }
+
+  function render() {
+    renderStats();
+    renderEstablecimientos();
+    renderOrders();
+  }
+
+  /* ---------- Exportar CSV ---------- */
+  $('#btn-export').addEventListener('click', () => {
+    const rows = [['Folio', 'Establecimiento', 'Estado', 'Creado', 'Entrega', 'Solicitante', 'Artículo', 'Cantidad', 'Precio unitario', 'Subtotal', 'Notas']];
+    pedidos.forEach(p => {
+      p.items.forEach(it => {
+        rows.push([p.folio, p.establecimiento, ESTADOS[p.estado], p.creado, p.fechaEntrega || '',
+                   p.solicitante || '', it.nombre, it.cantidad, it.precio,
+                   (it.cantidad * it.precio).toFixed(2), p.notas || '']);
+      });
+    });
+    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bms_pedidos_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  /* ---------- Init ---------- */
+  addItemRow();
+  render();
+})();
+</script>
+</body>
+</html>
