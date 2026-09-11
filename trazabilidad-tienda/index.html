@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMS — Trazabilidad de la Tienda</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #dde3ea;
+    --text: #1c2733;
+    --muted: #5c6b7a;
+    --primary: #8e2f2f;
+    --primary-dark: #6f2222;
+    --accent: #0e6ba8;
+    --danger: #c0392b;
+    --ok: #1e8e4e;
+    --warn: #b7791f;
+    --info: #4a5fc1;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding-block: 0 40px;
+    padding-inline: 16px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    margin: 0 -16px 0;
+    padding: 16px 24px;
+  }
+  header h1 { margin: 0; font-size: 1.3rem; }
+  header .sub { font-size: .83rem; opacity: .85; margin-top: 2px; }
+
+  nav {
+    background: var(--primary-dark);
+    margin: 0 -16px 24px;
+    padding: 0 16px;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+  nav button {
+    background: transparent;
+    border: none;
+    color: #f2d9d9;
+    padding: 12px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  nav button:hover { color: #fff; }
+  nav button.active { color: #fff; border-bottom-color: #fff; }
+  nav .pill {
+    background: #fff;
+    color: var(--primary-dark);
+    border-radius: 99px;
+    font-size: .72rem;
+    padding: 1px 7px;
+    margin-left: 6px;
+    font-weight: 700;
+  }
+
+  main { max-width: 1150px; margin: 0 auto; display: grid; gap: 20px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card h2 { margin: 0 0 6px; font-size: 1.05rem; }
+  .card .hint { margin: 0 0 16px; font-size: .85rem; color: var(--muted); }
+
+  form { display: grid; gap: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; }
+  .field { display: grid; gap: 4px; flex: 1 1 200px; }
+  label { font-size: .8rem; font-weight: 600; color: var(--muted); }
+  input, select, textarea {
+    font: inherit; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; color: var(--text); width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[readonly] { background: #eef1f5; color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 7px 8px; text-align: left; vertical-align: middle; }
+  th { font-size: .76rem; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { border-bottom: 1px solid #eef1f5; }
+  .num { width: 110px; }
+  .right { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+
+  button.btn { font: inherit; border: none; border-radius: 6px; padding: 9px 16px; cursor: pointer; font-weight: 600; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { filter: brightness(.9); }
+  .btn-secondary { background: #e8edf2; color: var(--text); }
+  .btn-secondary:hover { background: #dbe3ea; }
+  .btn-ghost-danger { background: transparent; color: var(--danger); padding: 4px 8px; border: none; cursor: pointer; font: inherit; }
+  .btn-sm { padding: 5px 10px; font-size: .82rem; }
+
+  .badge {
+    display: inline-block; font-size: .72rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: .3px;
+    white-space: nowrap;
+  }
+  .badge.por_romanear   { background: #fdf3e0; color: var(--warn); }
+  .badge.romaneado      { background: #e7eafb; color: var(--info); }
+  .badge.remitido       { background: #e0f0fa; color: var(--accent); }
+  .badge.recibido_total { background: #e2f4e9; color: var(--ok); }
+  .badge.recibido_parcial { background: #fdeee0; color: #c05621; }
+  .badge.facturado      { background: #e6e2f4; color: #5b3fa8; }
+  .badge.devolucion     { background: #fbe6e3; color: var(--danger); }
+  .badge.doc            { background: #eef1f5; color: var(--muted); }
+
+  .doc-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; display: grid; gap: 10px; background: #fff;
+  }
+  .doc-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .doc-title { font-weight: 700; }
+  .doc-meta { font-size: .82rem; color: var(--muted); }
+  .stack { display: grid; gap: 12px; }
+  .empty { text-align: center; color: var(--muted); padding: 24px 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .total-line { font-weight: 700; }
+
+  /* Trazabilidad */
+  .chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+  .chain-step {
+    flex: 1 1 150px; min-width: 140px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; background: #fafbfc;
+    position: relative;
+  }
+  .chain-step.done { border-color: var(--ok); background: #f2faf5; }
+  .chain-step.alert { border-color: var(--danger); background: #fdf4f3; }
+  .chain-step .step-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
+  .chain-step .step-doc { font-weight: 700; margin-top: 2px; font-size: .9rem; }
+  .chain-step .step-detail { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .stat .label { font-size: .74rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .stat .value { font-size: 1.35rem; font-weight: 700; margin-top: 3px; }
+
+  .flow-legend { font-size: .82rem; color: var(--muted); line-height: 1.7; }
+  .flow-legend b { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1>BMS · Trazabilidad de la Tienda</h1>
+  <div class="sub">Proveedores → SelectCarnes (CEDIS) · Pedido → Romaneo → Remisión → Recepción → Devolución → Factura</div>
+</header>
+<nav id="nav"></nav>
+
+<main id="main"></main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     Configuración del negocio
+     ========================================================= */
+  const PROVEEDORES = ['Julio', 'Julián', 'Procortes', 'Sherlyn'];
+  const CLIENTE = 'SelectCarnes (CEDIS)';
+
+  const ESTADOS_PEDIDO = {
+    por_romanear:     'Por romanear',
+    romaneado:        'Romaneado',
+    remitido:         'Remitido / En surtido',
+    recibido_total:   'Recibido completo',
+    recibido_parcial: 'Recibido parcial',
+    facturado:        'Facturado'
+  };
+
+  const STORAGE_KEY = 'bms_trazabilidad_v1';
+
+  /* =========================================================
+     Estado
+     ========================================================= */
+  let db = load();
+  function blank() {
+    return { pedidos: [], remisiones: [], devoluciones: [], facturas: [], folios: {} };
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const d = raw ? JSON.parse(raw) : blank();
+      return Object.assign(blank(), d);
+    } catch { return blank(); }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch {}
+  }
+
+  function folio(tipo) {
+    db.folios[tipo] = (db.folios[tipo] || 0) + 1;
+    return tipo + '-' + String(db.folios[tipo]).padStart(4, '0');
+  }
+  const uid = () => 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const now = () => new Date().toISOString();
+
+  /* =========================================================
+     Utilidades
+     ========================================================= */
+  const money = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const kg = (n) => (Number(n) || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 }) + ' kg';
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const sum = (arr, fn) => arr.reduce((s, x) => s + fn(x), 0);
+
+  const findPedido = (id) => db.pedidos.find(p => p.id === id);
+  const findRemision = (id) => db.remisiones.find(r => r.id === id);
+  const remisionDePedido = (p) => db.remisiones.find(r => r.pedidoId === p.id);
+  const devolucionDeRemision = (r) => db.devoluciones.find(d => d.remisionId === r.id);
+  const facturaDeRemision = (r) => db.facturas.find(f => f.remisionId === r.id);
+
+  /* =========================================================
+     Navegación
+     ========================================================= */
+  const TABS = [
+    { id: 'pedidos',     label: 'Pedidos' },
+    { id: 'romaneo',     label: 'Romaneo',     count: () => db.pedidos.filter(p => p.estado === 'por_romanear').length },
+    { id: 'remisiones',  label: 'Remisiones',  count: () => db.pedidos.filter(p => p.estado === 'romaneado').length },
+    { id: 'recepcion',   label: 'Recepción',   count: () => db.remisiones.filter(r => !r.recepcion).length },
+    { id: 'devoluciones',label: 'Devoluciones' },
+    { id: 'facturas',    label: 'Facturas',    count: () => db.remisiones.filter(r => r.recepcion && !facturaDeRemision(r)).length },
+    { id: 'trazabilidad',label: 'Trazabilidad' }
+  ];
+  let tab = 'pedidos';
+
+  function renderNav() {
+    const nav = document.getElementById('nav');
+    nav.innerHTML = '';
+    TABS.forEach(t => {
+      const b = document.createElement('button');
+      const n = t.count ? t.count() : 0;
+      b.innerHTML = esc(t.label) + (n ? ' <span class="pill">' + n + '</span>' : '');
+      if (t.id === tab) b.classList.add('active');
+      b.addEventListener('click', () => { tab = t.id; render(); });
+      nav.appendChild(b);
+    });
+  }
+
+  /* =========================================================
+     Vistas
+     ========================================================= */
+  const main = document.getElementById('main');
+
+  function render() {
+    renderNav();
+    main.innerHTML = '';
+    ({
+      pedidos: viewPedidos,
+      romaneo: viewRomaneo,
+      remisiones: viewRemisiones,
+      recepcion: viewRecepcion,
+      devoluciones: viewDevoluciones,
+      facturas: viewFacturas,
+      trazabilidad: viewTrazabilidad
+    })[tab]();
+    window.scrollTo({ top: 0 });
+  }
+
+  function section(title, hint) {
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.innerHTML = '<h2>' + esc(title) + '</h2>' + (hint ? '<p class="hint">' + esc(hint) + '</p>' : '');
+    main.appendChild(card);
+    return card;
+  }
+
+  /* ---------- 1. Pedidos ---------- */
+  function viewPedidos() {
+    const card = section('Nuevo pedido', 'El proveedor levanta un pedido para ' + CLIENTE + '. Al registrarse queda listo para romanear.');
+    const form = document.createElement('form');
+    form.innerHTML =
+      '<div class="row">' +
+        '<div class="field"><label>Proveedor (razón) *</label><select id="np-prov" required>' +
+          PROVEEDORES.map(p => '<option>' + esc(p) + '</option>').join('') +
+        '</select></div>' +
+        '<div class="field"><label>Cliente</label><input value="' + esc(CLIENTE) + '" readonly></div>' +
+        '<div class="field"><label>Notas</label><input id="np-notas" placeholder="Opcional"></div>' +
+      '</div>' +
+      '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Producto / Corte</th><th class="num">Kg solicitados</th><th class="num">Precio / kg</th><th class="right">Importe est.</th><th></th>' +
+      '</tr></thead><tbody id="np-items"></tbody></table></div>' +
+      '<div><button type="button" class="btn btn-secondary btn-sm" id="np-add">+ Agregar producto</button></div>' +
+      '<div class="actions"><span class="total-line">Total estimado: <span id="np-total">$0.00</span></span>' +
+      '<button class="btn btn-primary" type="submit">Registrar pedido</button></div>';
+    card.appendChild(form);
+
+    const body = form.querySelector('#np-items');
+    function addRow(it) {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><input class="it-n" placeholder="Ej. Arrachera, Diezmillo…"></td>' +
+        '<td class="num"><input class="it-k" type="number" min="0" step="0.01" value="0"></td>' +
+        '<td class="num"><input class="it-p" type="number" min="0" step="0.01" value="0"></td>' +
+        '<td class="right it-s">$0.00</td>' +
+        '<td><button type="button" class="btn-ghost-danger">✕</button></td>';
+      if (it) { tr.querySelector('.it-n').value = it.n; tr.querySelector('.it-k').value = it.k; tr.querySelector('.it-p').value = it.p; }
+      tr.querySelector('button').addEventListener('click', () => { tr.remove(); if (!body.children.length) addRow(); totals(); });
+      tr.addEventListener('input', totals);
+      body.appendChild(tr);
+      totals();
+    }
+    function totals() {
+      let t = 0;
+      Array.from(body.children).forEach(tr => {
+        const s = (parseFloat(tr.querySelector('.it-k').value) || 0) * (parseFloat(tr.querySelector('.it-p').value) || 0);
+        tr.querySelector('.it-s').textContent = money(s);
+        t += s;
+      });
+      form.querySelector('#np-total').textContent = money(t);
+    }
+    form.querySelector('#np-add').addEventListener('click', () => addRow());
+    addRow();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const items = Array.from(body.children).map(tr => ({
+        nombre: tr.querySelector('.it-n').value.trim(),
+        kgSolicitados: parseFloat(tr.querySelector('.it-k').value) || 0,
+        precio: parseFloat(tr.querySelector('.it-p').value) || 0
+      })).filter(it => it.nombre && it.kgSolicitados > 0);
+      if (!items.length) { alert('Agrega al menos un producto con kilos solicitados.'); return; }
+      db.pedidos.unshift({
+        id: uid(), folio: folio('PED'),
+        proveedor: form.querySelector('#np-prov').value,
+        cliente: CLIENTE,
+        notas: form.querySelector('#np-notas').value.trim(),
+        creado: now(),
+        estado: 'por_romanear',
+        items
+      });
+      save(); render();
+    });
+
+    const listCard = section('Pedidos', 'Todos los pedidos y su estado dentro del flujo.');
+    const cont = document.createElement('div');
+    cont.className = 'stack';
+    listCard.appendChild(cont);
+    if (!db.pedidos.length) { cont.innerHTML = '<div class="empty">Sin pedidos todavía. Registra el primero arriba.</div>'; return; }
+    db.pedidos.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(p.folio) + '</span> · ' + esc(p.proveedor) + ' → ' + esc(p.cliente) +
+        ' <span class="badge ' + p.estado + '">' + ESTADOS_PEDIDO[p.estado] + '</span></div>' +
+        '<div class="doc-meta">' + fmtDate(p.creado) + '</div></div>' +
+        itemsTable(p.items, [
+          ['Producto', it => esc(it.nombre)],
+          ['Kg solicitados', it => kg(it.kgSolicitados), 'right'],
+          ['Precio/kg', it => money(it.precio), 'right']
+        ]) +
+        (p.notas ? '<div class="doc-meta">Notas: ' + esc(p.notas) + '</div>' : '') +
+        (p.estado === 'por_romanear'
+          ? '<div class="actions"><button class="btn-ghost-danger btn-sm" data-del>Eliminar</button></div>' : '');
+      const del = d.querySelector('[data-del]');
+      if (del) del.addEventListener('click', () => {
+        if (!confirm('¿Eliminar el pedido ' + p.folio + '?')) return;
+        db.pedidos = db.pedidos.filter(x => x.id !== p.id);
+        save(); render();
+      });
+      cont.appendChild(d);
+    });
+  }
+
+  function itemsTable(items, cols) {
+    return '<div class="table-wrap"><table><thead><tr>' +
+      cols.map(c => '<th class="' + (c[2] || '') + '">' + c[0] + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      items.map(it => '<tr>' + cols.map(c => '<td class="' + (c[2] || '') + '">' + c[1](it) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table></div>';
+  }
+
+  /* ---------- 2. Romaneo ---------- */
+  function viewRomaneo() {
+    const card = section('Romaneo', 'Captura el peso real romaneado de cada producto. Al confirmar, el pedido pasa a "Romaneado" y podrá generarse su remisión.');
+    const pend = db.pedidos.filter(p => p.estado === 'por_romanear');
+    if (!pend.length) { card.insertAdjacentHTML('beforeend', '<div class="empty">No hay pedidos por romanear.</div>'); }
+    pend.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(p.folio) + '</span> · ' + esc(p.proveedor) +
+        ' <span class="badge por_romanear">Por romanear</span></div>' +
+        '<div class="doc-meta">' + fmtDate(p.creado) + '</div></div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Producto</th><th class="right">Kg solicitados</th><th class="num">Kg romaneados</th></tr></thead><tbody>' +
+        p.items.map((it, i) =>
+          '<tr><td>' + esc(it.nombre) + '</td><td class="right">' + kg(it.kgSolicitados) + '</td>' +
+          '<td class="num"><input type="number" min="0" step="0.01" data-i="' + i + '" value="' + it.kgSolicitados + '"></td></tr>'
+        ).join('') +
+        '</tbody></table></div>' +
+        '<div class="actions"><button class="btn btn-primary">Confirmar romaneo</button></div>';
+      d.querySelector('.btn-primary').addEventListener('click', () => {
+        const inputs = d.querySelectorAll('input[data-i]');
+        let any = false;
+        inputs.forEach(inp => {
+          const v = parseFloat(inp.value) || 0;
+          p.items[+inp.dataset.i].kgRomaneados = v;
+          if (v > 0) any = true;
+        });
+        if (!any) { alert('Captura al menos un peso romaneado mayor a cero.'); return; }
+        p.estado = 'romaneado';
+        p.romaneo = { fecha: now() };
+        save(); render();
+      });
+      card.appendChild(d);
+    });
+  }
+
+  /* ---------- 3. Remisiones ---------- */
+  function viewRemisiones() {
+    const gen = section('Generar remisión', 'De cada pedido romaneado se genera una remisión con los pesos reales. La remisión produce el surtido del pedido que viaja a recepción en ' + CLIENTE + '.');
+    const listos = db.pedidos.filter(p => p.estado === 'romaneado');
+    if (!listos.length) gen.insertAdjacentHTML('beforeend', '<div class="empty">No hay pedidos romaneados pendientes de remisión.</div>');
+    listos.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(p.folio) + '</span> · ' + esc(p.proveedor) +
+        ' <span class="badge romaneado">Romaneado</span></div>' +
+        '<div class="doc-meta">Romaneo: ' + fmtDate(p.romaneo && p.romaneo.fecha) + '</div></div>' +
+        itemsTable(p.items, [
+          ['Producto', it => esc(it.nombre)],
+          ['Kg solicitados', it => kg(it.kgSolicitados), 'right'],
+          ['Kg romaneados', it => kg(it.kgRomaneados || 0), 'right'],
+          ['Precio/kg', it => money(it.precio), 'right'],
+          ['Importe', it => money((it.kgRomaneados || 0) * it.precio), 'right']
+        ]) +
+        '<div class="actions"><span class="total-line">Total: ' + money(sum(p.items, it => (it.kgRomaneados || 0) * it.precio)) + '</span>' +
+        '<button class="btn btn-accent">Generar remisión</button></div>';
+      d.querySelector('.btn-accent').addEventListener('click', () => {
+        const rem = {
+          id: uid(), folio: folio('REM'),
+          pedidoId: p.id,
+          proveedor: p.proveedor, cliente: p.cliente,
+          fecha: now(),
+          items: p.items.filter(it => (it.kgRomaneados || 0) > 0)
+                        .map(it => ({ nombre: it.nombre, kgRemitidos: it.kgRomaneados, precio: it.precio })),
+          recepcion: null
+        };
+        db.remisiones.unshift(rem);
+        p.estado = 'remitido';
+        p.remisionId = rem.id;
+        save(); render();
+      });
+      gen.appendChild(d);
+    });
+
+    const listCard = section('Remisiones emitidas', 'Cada remisión funciona como surtido de pedido rumbo a recepción.');
+    if (!db.remisiones.length) { listCard.insertAdjacentHTML('beforeend', '<div class="empty">Sin remisiones emitidas.</div>'); return; }
+    db.remisiones.forEach(r => listCard.appendChild(remisionCard(r)));
+  }
+
+  function remisionCard(r) {
+    const p = findPedido(r.pedidoId);
+    const dev = devolucionDeRemision(r);
+    const fac = facturaDeRemision(r);
+    const estado = !r.recepcion ? '<span class="badge remitido">En surtido / tránsito</span>'
+      : (dev ? '<span class="badge recibido_parcial">Recibida parcial</span>' : '<span class="badge recibido_total">Recibida completa</span>');
+    const d = document.createElement('div');
+    d.className = 'doc-card';
+    d.style.marginBottom = '12px';
+    d.innerHTML =
+      '<div class="doc-head"><div><span class="doc-title">' + esc(r.folio) + '</span> · ' + esc(r.proveedor) + ' → ' + esc(r.cliente) + ' ' + estado +
+      (fac ? ' <span class="badge facturado">' + esc(fac.folio) + '</span>' : '') +
+      (dev ? ' <span class="badge devolucion">' + esc(dev.folio) + '</span>' : '') +
+      '</div><div class="doc-meta">Pedido ' + esc(p ? p.folio : '—') + ' · ' + fmtDate(r.fecha) + '</div></div>' +
+      itemsTable(r.items, [
+        ['Producto', it => esc(it.nombre)],
+        ['Kg remitidos', it => kg(it.kgRemitidos), 'right'],
+        ['Kg recibidos', it => r.recepcion ? kg(recibidoDe(r, it.nombre)) : '—', 'right'],
+        ['Precio/kg', it => money(it.precio), 'right']
+      ]) +
+      '<div class="doc-meta total-line">Total remitido: ' + money(sum(r.items, it => it.kgRemitidos * it.precio)) + '</div>';
+    return d;
+  }
+
+  function recibidoDe(r, nombre) {
+    if (!r.recepcion) return 0;
+    const it = r.recepcion.items.find(x => x.nombre === nombre);
+    return it ? it.kgRecibidos : 0;
+  }
+
+  /* ---------- 4. Recepción ---------- */
+  function viewRecepcion() {
+    const card = section('Recepción en ' + CLIENTE, 'Captura los kilos realmente recibidos de cada remisión. Si no se recibe en su totalidad, se genera automáticamente una devolución en SelectCarnes ligada a la remisión por la diferencia.');
+    const pend = db.remisiones.filter(r => !r.recepcion);
+    if (!pend.length) card.insertAdjacentHTML('beforeend', '<div class="empty">No hay remisiones pendientes de recepción.</div>');
+    pend.forEach(r => {
+      const p = findPedido(r.pedidoId);
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(r.folio) + '</span> · ' + esc(r.proveedor) +
+        ' <span class="badge remitido">Por recibir</span></div>' +
+        '<div class="doc-meta">Pedido ' + esc(p ? p.folio : '—') + ' · Emitida: ' + fmtDate(r.fecha) + '</div></div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Producto</th><th class="right">Kg remitidos</th><th class="num">Kg recibidos</th><th>Motivo de diferencia</th></tr></thead><tbody>' +
+        r.items.map((it, i) =>
+          '<tr><td>' + esc(it.nombre) + '</td><td class="right">' + kg(it.kgRemitidos) + '</td>' +
+          '<td class="num"><input type="number" min="0" max="' + it.kgRemitidos + '" step="0.01" data-i="' + i + '" value="' + it.kgRemitidos + '"></td>' +
+          '<td><input data-m="' + i + '" placeholder="Solo si hay diferencia (merma, mal estado…)"></td></tr>'
+        ).join('') +
+        '</tbody></table></div>' +
+        '<div class="actions"><button class="btn btn-primary">Confirmar recepción</button></div>';
+      d.querySelector('.btn-primary').addEventListener('click', () => {
+        const recItems = [];
+        const devItems = [];
+        let invalid = false;
+        r.items.forEach((it, i) => {
+          const inp = d.querySelector('input[data-i="' + i + '"]');
+          let v = parseFloat(inp.value);
+          if (isNaN(v) || v < 0) { invalid = true; return; }
+          if (v > it.kgRemitidos) v = it.kgRemitidos;
+          recItems.push({ nombre: it.nombre, kgRecibidos: v });
+          const diff = +(it.kgRemitidos - v).toFixed(2);
+          if (diff > 0) {
+            devItems.push({
+              nombre: it.nombre, kg: diff, precio: it.precio,
+              motivo: d.querySelector('input[data-m="' + i + '"]').value.trim()
+            });
+          }
+        });
+        if (invalid) { alert('Revisa los kilos recibidos: no pueden ser negativos.'); return; }
+        r.recepcion = { fecha: now(), items: recItems };
+        let devFolio = null;
+        if (devItems.length) {
+          const dev = {
+            id: uid(), folio: folio('DEV'),
+            remisionId: r.id, pedidoId: r.pedidoId,
+            proveedor: r.proveedor, cliente: r.cliente,
+            fecha: now(), items: devItems
+          };
+          db.devoluciones.unshift(dev);
+          devFolio = dev.folio;
+        }
+        if (p) p.estado = devItems.length ? 'recibido_parcial' : 'recibido_total';
+        save(); render();
+        if (devFolio) alert('Recepción parcial: se generó la devolución ' + devFolio + ' ligada a la remisión ' + r.folio + '.');
+      });
+      card.appendChild(d);
+    });
+
+    const done = db.remisiones.filter(r => r.recepcion);
+    if (done.length) {
+      const hist = section('Recepciones registradas');
+      done.forEach(r => hist.appendChild(remisionCard(r)));
+    }
+  }
+
+  /* ---------- 5. Devoluciones ---------- */
+  function viewDevoluciones() {
+    const card = section('Devoluciones', 'Devoluciones generadas en ' + CLIENTE + ' contra remisiones recibidas parcialmente.');
+    if (!db.devoluciones.length) { card.insertAdjacentHTML('beforeend', '<div class="empty">No hay devoluciones registradas.</div>'); return; }
+    db.devoluciones.forEach(dv => {
+      const r = findRemision(dv.remisionId);
+      const p = findPedido(dv.pedidoId);
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(dv.folio) + '</span> <span class="badge devolucion">Devolución</span>' +
+        ' · contra remisión <b>' + esc(r ? r.folio : '—') + '</b></div>' +
+        '<div class="doc-meta">Pedido ' + esc(p ? p.folio : '—') + ' · ' + esc(dv.proveedor) + ' · ' + fmtDate(dv.fecha) + '</div></div>' +
+        itemsTable(dv.items, [
+          ['Producto', it => esc(it.nombre)],
+          ['Kg devueltos', it => kg(it.kg), 'right'],
+          ['Precio/kg', it => money(it.precio), 'right'],
+          ['Importe', it => money(it.kg * it.precio), 'right'],
+          ['Motivo', it => esc(it.motivo || '—')]
+        ]) +
+        '<div class="doc-meta total-line">Total devuelto: ' + money(sum(dv.items, it => it.kg * it.precio)) + '</div>';
+      card.appendChild(d);
+    });
+  }
+
+  /* ---------- 6. Facturas ---------- */
+  function viewFacturas() {
+    const gen = section('Generar factura', 'La factura se emite por lo efectivamente recibido (remitido menos devolución) y queda relacionada con la recepción y la remisión del CEDIS.');
+    const pend = db.remisiones.filter(r => r.recepcion && !facturaDeRemision(r));
+    if (!pend.length) gen.insertAdjacentHTML('beforeend', '<div class="empty">No hay recepciones pendientes de facturar.</div>');
+    pend.forEach(r => {
+      const p = findPedido(r.pedidoId);
+      const dev = devolucionDeRemision(r);
+      const lineas = r.items.map(it => ({
+        nombre: it.nombre, precio: it.precio, kg: recibidoDe(r, it.nombre)
+      })).filter(l => l.kg > 0);
+      const total = sum(lineas, l => l.kg * l.precio);
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(r.folio) + '</span> · ' + esc(r.proveedor) +
+        (dev ? ' <span class="badge devolucion">' + esc(dev.folio) + '</span>' : '') +
+        '</div><div class="doc-meta">Pedido ' + esc(p ? p.folio : '—') + ' · Recibida: ' + fmtDate(r.recepcion.fecha) + '</div></div>' +
+        itemsTable(lineas, [
+          ['Producto', l => esc(l.nombre)],
+          ['Kg a facturar', l => kg(l.kg), 'right'],
+          ['Precio/kg', l => money(l.precio), 'right'],
+          ['Importe', l => money(l.kg * l.precio), 'right']
+        ]) +
+        '<div class="actions"><span class="total-line">Total factura: ' + money(total) + '</span>' +
+        '<button class="btn btn-accent">Emitir factura</button></div>';
+      d.querySelector('.btn-accent').addEventListener('click', () => {
+        if (!lineas.length) { alert('No hay kilos recibidos que facturar en esta remisión.'); return; }
+        db.facturas.unshift({
+          id: uid(), folio: folio('FAC'),
+          remisionId: r.id, pedidoId: r.pedidoId,
+          proveedor: r.proveedor, cliente: r.cliente,
+          fecha: now(), items: lineas, total,
+          recepcionFecha: r.recepcion.fecha,
+          devolucionFolio: dev ? dev.folio : null
+        });
+        if (p) p.estado = 'facturado';
+        save(); render();
+      });
+      gen.appendChild(d);
+    });
+
+    const listCard = section('Facturas emitidas', 'Relación recepción ↔ factura del CEDIS.');
+    if (!db.facturas.length) { listCard.insertAdjacentHTML('beforeend', '<div class="empty">Sin facturas emitidas.</div>'); return; }
+    db.facturas.forEach(f => {
+      const r = findRemision(f.remisionId);
+      const p = findPedido(f.pedidoId);
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(f.folio) + '</span> <span class="badge facturado">Factura</span>' +
+        ' · ' + esc(f.proveedor) + ' → ' + esc(f.cliente) + '</div>' +
+        '<div class="doc-meta">' + fmtDate(f.fecha) + '</div></div>' +
+        '<div class="doc-meta">Relación: pedido <b>' + esc(p ? p.folio : '—') + '</b> → remisión <b>' + esc(r ? r.folio : '—') + '</b> → recepción del ' + fmtDate(f.recepcionFecha) +
+        (f.devolucionFolio ? ' · devolución <b>' + esc(f.devolucionFolio) + '</b>' : '') + '</div>' +
+        itemsTable(f.items, [
+          ['Producto', l => esc(l.nombre)],
+          ['Kg facturados', l => kg(l.kg), 'right'],
+          ['Precio/kg', l => money(l.precio), 'right'],
+          ['Importe', l => money(l.kg * l.precio), 'right']
+        ]) +
+        '<div class="doc-meta total-line">Total: ' + money(f.total) + '</div>';
+      listCard.appendChild(d);
+    });
+  }
+
+  /* ---------- 7. Trazabilidad ---------- */
+  function viewTrazabilidad() {
+    const resumen = section('Resumen');
+    const activos = db.pedidos.length;
+    resumen.insertAdjacentHTML('beforeend',
+      '<div class="stats">' +
+      stat('Pedidos', activos) +
+      stat('Por romanear', db.pedidos.filter(p => p.estado === 'por_romanear').length) +
+      stat('Remisiones', db.remisiones.length) +
+      stat('Devoluciones', db.devoluciones.length) +
+      stat('Facturas', db.facturas.length) +
+      stat('Facturado', money(sum(db.facturas, f => f.total))) +
+      '</div>');
+    function stat(l, v) { return '<div class="stat"><div class="label">' + l + '</div><div class="value">' + v + '</div></div>'; }
+
+    const card = section('Cadena de trazabilidad por pedido', 'Sigue cada pedido a través de todo el flujo: romaneo, remisión, recepción, devolución y factura.');
+    if (!db.pedidos.length) { card.insertAdjacentHTML('beforeend', '<div class="empty">Sin pedidos que rastrear.</div>'); return; }
+
+    db.pedidos.forEach(p => {
+      const r = remisionDePedido(p);
+      const dev = r ? devolucionDeRemision(r) : null;
+      const fac = r ? facturaDeRemision(r) : null;
+      const kgSol = sum(p.items, it => it.kgSolicitados);
+      const kgRom = sum(p.items, it => it.kgRomaneados || 0);
+      const kgRem = r ? sum(r.items, it => it.kgRemitidos) : 0;
+      const kgRec = (r && r.recepcion) ? sum(r.recepcion.items, it => it.kgRecibidos) : 0;
+      const kgDev = dev ? sum(dev.items, it => it.kg) : 0;
+
+      const d = document.createElement('div');
+      d.className = 'doc-card';
+      d.style.marginBottom = '12px';
+      d.innerHTML =
+        '<div class="doc-head"><div><span class="doc-title">' + esc(p.folio) + '</span> · ' + esc(p.proveedor) + ' → ' + esc(p.cliente) +
+        ' <span class="badge ' + p.estado + '">' + ESTADOS_PEDIDO[p.estado] + '</span></div>' +
+        '<div class="doc-meta">' + fmtDate(p.creado) + '</div></div>' +
+        '<div class="chain">' +
+        step('1 · Pedido', p.folio, kg(kgSol) + ' solicitados', true) +
+        step('2 · Romaneo', p.romaneo ? 'Romaneado' : 'Pendiente', p.romaneo ? kg(kgRom) + ' · ' + fmtDate(p.romaneo.fecha) : '', !!p.romaneo) +
+        step('3 · Remisión', r ? r.folio : 'Pendiente', r ? kg(kgRem) + ' remitidos · surtido generado' : '', !!r) +
+        step('4 · Recepción', (r && r.recepcion) ? 'Recibido' : 'Pendiente', (r && r.recepcion) ? kg(kgRec) + ' · ' + fmtDate(r.recepcion.fecha) : '', !!(r && r.recepcion)) +
+        step('5 · Devolución', dev ? dev.folio : (r && r.recepcion ? 'Sin devolución' : '—'),
+             dev ? kg(kgDev) + ' devueltos a la remisión' : '', !!(r && r.recepcion), !!dev) +
+        step('6 · Factura', fac ? fac.folio : 'Pendiente',
+             fac ? money(fac.total) + ' · ligada a la recepción' : '', !!fac) +
+        '</div>';
+      card.appendChild(d);
+    });
+
+    function step(label, docTxt, detail, done, alert_) {
+      return '<div class="chain-step ' + (alert_ ? 'alert' : done ? 'done' : '') + '">' +
+        '<div class="step-label">' + esc(label) + '</div>' +
+        '<div class="step-doc">' + esc(docTxt) + '</div>' +
+        (detail ? '<div class="step-detail">' + esc(detail) + '</div>' : '') +
+        '</div>';
+    }
+
+    const legend = section('Flujo del proceso');
+    legend.insertAdjacentHTML('beforeend',
+      '<div class="flow-legend">' +
+      '<b>1. Pedido</b>: la razón (Julio, Julián, Procortes o Sherlyn) levanta el pedido para SelectCarnes (CEDIS).<br>' +
+      '<b>2. Romaneo</b>: el pedido aparece para romanear; se pesan los cortes y se registran los kilos reales.<br>' +
+      '<b>3. Remisión</b>: del romaneo se genera la remisión, que produce el surtido del pedido hacia recepción.<br>' +
+      '<b>4. Recepción</b>: SelectCarnes recibe el surtido y captura los kilos recibidos.<br>' +
+      '<b>5. Devolución</b>: si no se recibe en su totalidad, se genera automáticamente una devolución contra la remisión por la diferencia.<br>' +
+      '<b>6. Factura</b>: se factura lo efectivamente recibido, relacionando la recepción con la factura del CEDIS.' +
+      '</div>');
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
