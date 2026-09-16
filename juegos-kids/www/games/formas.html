@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Formas y colores</title>
+<style>
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 8px; gap: 8px; }
+  .menu { justify-content: center; gap: 22px; }
+  .menu .btn { width: min(88vw, 460px); min-height: 100px; font-size: min(7vw, 34px); gap: 16px; }
+  .menu .btn .emoji { font-size: 1.5em; }
+  .tools { position: absolute; top: 8px; right: 8px; z-index: 3; }
+  .tools .btn { font-size: 30px; }
+  /* Encuentra la forma / el color */
+  .find { justify-content: center; }
+  .target { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .tshape { width: min(34vw, 30vh, 220px); height: min(34vw, 30vh, 220px); }
+  .tshape svg { width: 100%; height: 100%; filter: drop-shadow(0 8px 0 rgba(0,0,0,.12)); }
+  .tname { font-size: min(7vw, 40px); font-weight: bold; background: #fff; border-radius: 30px; padding: 6px 22px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
+  .tname .cn { color: #fff; border-radius: 20px; padding: 0 14px; margin-left: 6px; }
+  .choices { display: flex; flex-wrap: wrap; gap: min(3vw, 22px); justify-content: center; max-width: 100%; }
+  .choice { width: min(21vw, 24vh, 170px); height: min(21vw, 24vh, 170px); padding: 10px; }
+  .choice svg { width: 100%; height: 100%; }
+  .choice .emoji { font-size: min(13vw, 15vh, 110px); }
+  /* Clasifica */
+  .sort .area { position: relative; flex: 1 1 auto; width: 100%; touch-action: none; }
+  .piece { position: absolute; cursor: grab; touch-action: none; filter: drop-shadow(0 5px 0 rgba(0,0,0,.14)); }
+  .piece svg { width: 100%; height: 100%; }
+  .piece.drag { z-index: 10; filter: drop-shadow(0 14px 10px rgba(0,0,0,.25)); }
+  .piece.gone { transition: transform .3s ease-in, opacity .3s; opacity: 0; }
+  .piece.bad { animation: shake .35s; }
+  .baskets { flex: 0 0 auto; display: flex; gap: min(3vw, 20px); width: 100%; justify-content: center; }
+  .basket {
+    flex: 1 1 0; max-width: 260px; min-height: 110px; border-radius: 22px; border: 6px dashed #ccc; background: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.1); transition: transform .12s;
+  }
+  .basket .emoji { font-size: min(11vw, 64px); }
+  .basket .bname { color: #fff; font-weight: bold; font-size: min(5vw, 24px); border-radius: 20px; padding: 2px 14px; }
+  .basket.hot { transform: scale(1.08); background: #fffbe6; }
+  .basket.got { animation: pop .35s; }
+  .hint { font-size: min(5.5vw, 26px); font-weight: bold; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Formas y colores' });
+
+  var SHAPES = [
+    { id: 'circulo',    name: 'el círculo',    svg: '<circle cx="50" cy="50" r="42"/>' },
+    { id: 'cuadrado',   name: 'el cuadrado',   svg: '<rect x="9" y="9" width="82" height="82" rx="8"/>' },
+    { id: 'triangulo',  name: 'el triángulo',  svg: '<polygon points="50,7 94,90 6,90"/>' },
+    { id: 'estrella',   name: 'la estrella',   svg: '<polygon points="50,4 62,36 96,37 69,58 79,93 50,73 21,93 31,58 4,37 38,36"/>' },
+    { id: 'corazon',    name: 'el corazón',    svg: '<path d="M50 92 L14 54 C0 38 12 12 32 12 C42 12 48 19 50 26 C52 19 58 12 68 12 C88 12 100 38 86 54 Z"/>' },
+    { id: 'rectangulo', name: 'el rectángulo', svg: '<rect x="4" y="24" width="92" height="52" rx="6"/>' },
+    { id: 'ovalo',      name: 'el óvalo',      svg: '<ellipse cx="50" cy="50" rx="46" ry="28"/>' },
+    { id: 'rombo',      name: 'el rombo',      svg: '<polygon points="50,4 94,50 50,96 6,50"/>' }
+  ];
+  var COLORS = [
+    { id: 'rojo',     name: 'rojo',     hex: '#e63946', items: ['🍎','🍓','🌹','🚒'] },
+    { id: 'azul',     name: 'azul',     hex: '#3da9fc', items: ['🐳','🫐','💙','🧢'] },
+    { id: 'verde',    name: 'verde',    hex: '#2cb67d', items: ['🐸','🍀','🥦','🐢'] },
+    { id: 'amarillo', name: 'amarillo', hex: '#ffd23f', items: ['🍌','🌻','🍋','🐥'] },
+    { id: 'morado',   name: 'morado',   hex: '#7f5af0', items: ['🍇','🔮','💜','🍆'] },
+    { id: 'naranja',  name: 'naranja',  hex: '#ff8906', items: ['🍊','🥕','🎃','🦊'] },
+    { id: 'rosa',     name: 'rosa',     hex: '#f582ae', items: ['🌸','🎀','🩷','🐷'] },
+    { id: 'cafe',     name: 'café',     hex: '#8d5524', items: ['🐻','🍫','🪵','🥔'] }
+  ];
+  var ACTS = ['shapes', 'colors', 'sort'];
+  var ROUNDS_PER_ACT = [4, 4, 2];
+
+  var act = 0, roundsInAct = 0, correctTotal = 0, nextBurst = 5, nextParty = 8, lock = false;
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
+  function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function shapeSVG(shape, color) {
+    return '<svg viewBox="0 0 100 100"><g fill="' + color + '" stroke="rgba(0,0,0,.12)" stroke-width="3" stroke-linejoin="round">' + shape.svg + '</g></svg>';
+  }
+  function blobSVG(color) {
+    return '<svg viewBox="0 0 100 100"><path d="M50 6 C72 2 94 18 95 42 C96 64 84 92 58 95 C34 98 6 84 5 58 C4 30 28 10 50 6 Z" fill="' + color + '"/>' +
+      '<circle cx="18" cy="22" r="7" fill="' + color + '"/><circle cx="86" cy="80" r="6" fill="' + color + '"/><circle cx="82" cy="14" r="4" fill="' + color + '"/>' +
+      '<ellipse cx="36" cy="30" rx="10" ry="6" fill="rgba(255,255,255,.35)"/></svg>';
+  }
+
+  /* ---------- Menú ---------- */
+  function showMenu() {
+    game.innerHTML = '';
+    var m = el('div', 'screen menu');
+    [['🔺', 'Formas', ''], ['🎨', 'Colores', 'blue'], ['🧺', 'Clasifica', 'green']].forEach(function (b, i) {
+      var btn = el('button', 'btn big ' + b[2], '<span class="emoji">' + b[0] + '</span> ' + b[1]);
+      onTap(btn, function () { KidsGame.sound.tap(); startAct(i); });
+      m.appendChild(btn);
+    });
+    game.appendChild(m);
+    KidsGame.say('Formas y colores. Elige un juego');
+  }
+
+  function startAct(i) {
+    act = i; roundsInAct = 0;
+    if (ACTS[act] === 'shapes') shapesRound(); else if (ACTS[act] === 'colors') colorsRound(); else sortRound();
+  }
+  function nextAct() { startAct((act + 1) % ACTS.length); }
+  function buildScreen(cls) {
+    game.innerHTML = '';
+    var s = el('div', 'screen ' + cls);
+    var tools = el('div', 'tools');
+    var sw = el('button', 'btn round purple', '🔁'); sw.setAttribute('aria-label', 'Otro juego');
+    onTap(sw, function () { KidsGame.sound.tap(); nextAct(); });
+    tools.appendChild(sw); s.appendChild(tools); game.appendChild(s);
+    lock = false;
+    return s;
+  }
+  function scored() {
+    correctTotal++;
+    KidsGame.addStar(); KidsGame.sound.ok(); KidsGame.vibrate(30);
+    if (correctTotal >= nextBurst) { nextBurst += 5; KidsGame.confetti(45); setTimeout(KidsGame.sound.win, 250); }
+  }
+  // Al terminar una ronda: celebrar cada 8 aciertos, rotar actividad, o seguir
+  function afterRound(again) {
+    roundsInAct++;
+    if (correctTotal >= nextParty) {
+      nextParty += 8;
+      KidsGame.celebrate({ sub: '¡' + correctTotal + ' aciertos!', onNext: nextAct, onAgain: function () { startAct(act); } });
+    } else if (roundsInAct >= ROUNDS_PER_ACT[act]) {
+      KidsGame.toast(['🎨 ¡Ahora colores!', '🧺 ¡Ahora a clasificar!', '🔺 ¡Ahora formas!'][act]);
+      setTimeout(nextAct, 700);
+    } else again();
+  }
+  function answer(c, ok, again) {
+    if (lock) return;
+    if (ok) {
+      lock = true; c.classList.add('ok'); replay(c, 'bounce'); scored();
+      setTimeout(function () { afterRound(again); }, 900);
+    } else { KidsGame.sound.wrong(); replay(c, 'bad'); }
+  }
+
+  /* ---------- (a) Encuentra la forma ---------- */
+  function shapesRound() {
+    var s = buildScreen('find shapes');
+    var target = KidsGame.pick(SHAPES);
+    var others = KidsGame.shuffle(SHAPES.filter(function (x) { return x !== target; })).slice(0, 3);
+    var cols = KidsGame.shuffle(COLORS);
+    s.dataset.target = target.id;
+    var top = el('div', 'target');
+    top.innerHTML = '<div class="tshape">' + shapeSVG(target, cols[0].hex) + '</div><div class="tname">Encuentra ' + target.name + '</div>';
+    onTap(top, function () { KidsGame.sound.tap(); KidsGame.say('Encuentra ' + target.name); });
+    var row = el('div', 'choices');
+    KidsGame.shuffle([target].concat(others)).forEach(function (sh, i) {
+      var c = el('div', 'card choice pop'); c.dataset.id = sh.id; c.style.animationDelay = (i * 80) + 'ms';
+      c.innerHTML = shapeSVG(sh, cols[i + 1].hex);
+      onTap(c, function () { answer(c, sh === target, shapesRound); });
+      row.appendChild(c);
+    });
+    s.appendChild(top); s.appendChild(row);
+    KidsGame.say('Encuentra ' + target.name);
+  }
+
+  /* ---------- (b) Encuentra el color ---------- */
+  function colorsRound() {
+    var s = buildScreen('find colors');
+    var target = KidsGame.pick(COLORS);
+    var others = KidsGame.shuffle(COLORS.filter(function (x) { return x !== target; })).slice(0, 3);
+    s.dataset.target = target.id;
+    var top = el('div', 'target');
+    top.innerHTML = '<div class="tshape">' + blobSVG(target.hex) + '</div><div class="tname">Color <span class="cn" style="background:' + target.hex + '">' + target.name + '</span></div>';
+    onTap(top, function () { KidsGame.sound.tap(); KidsGame.say('Encuentra el color ' + target.name); });
+    var row = el('div', 'choices');
+    var opts = [{ c: target, e: KidsGame.pick(target.items) }].concat(others.map(function (o) { return { c: o, e: KidsGame.pick(o.items) }; }));
+    KidsGame.shuffle(opts).forEach(function (o, i) {
+      var c = el('div', 'card choice pop'); c.dataset.id = o.c.id; c.style.animationDelay = (i * 80) + 'ms';
+      c.innerHTML = '<span class="emoji">' + o.e + '</span>';
+      onTap(c, function () { answer(c, o.c === target, colorsRound); });
+      row.appendChild(c);
+    });
+    s.appendChild(top); s.appendChild(row);
+    KidsGame.say('Encuentra el color ' + target.name);
+  }
+
+  /* ---------- (c) Clasifica por color ---------- */
+  var pieces = [], area = null, basketsEl = null, dragging = null;
+  function sortRound() {
+    var s = buildScreen('sort');
+    var nb = roundsInAct === 0 ? 2 : 3, per = 3;
+    var cols = KidsGame.shuffle(COLORS).slice(0, nb);
+    s.appendChild(el('div', 'hint', '🧺 Pon cada figura en su canasta'));
+    area = el('div', 'area'); basketsEl = el('div', 'baskets');
+    cols.forEach(function (c) {
+      var b = el('div', 'basket'); b.dataset.color = c.id; b.style.borderColor = c.hex;
+      b.innerHTML = '<span class="emoji">🧺</span><span class="bname" style="background:' + c.hex + '">' + c.name + '</span>';
+      basketsEl.appendChild(b);
+    });
+    pieces = [];
+    cols.forEach(function (c) {
+      for (var i = 0; i < per; i++) {
+        var p = el('div', 'piece pop'); p.dataset.color = c.id;
+        p.innerHTML = shapeSVG(KidsGame.pick(SHAPES), c.hex);
+        p._jx = Math.random() * 2 - 1; p._jy = Math.random() * 2 - 1;
+        p.addEventListener('pointerdown', function (e) { down(e, this); });
+        pieces.push(p);
+      }
+    });
+    pieces = KidsGame.shuffle(pieces);
+    pieces.forEach(function (p, i) { p._k = i; p.style.animationDelay = (i * 60) + 'ms'; area.appendChild(p); });
+    s.appendChild(area); s.appendChild(basketsEl);
+    layoutSort();
+    KidsGame.say('Pon cada figura en su canasta');
+  }
+  function layoutSort() {
+    if (!area || !area.isConnected) return;
+    var W = area.clientWidth, H = area.clientHeight, n = pieces.length;
+    if (!W || !H || !n) return;
+    var cols = Math.max(1, Math.round(Math.sqrt(n * W / H))); if (cols > n) cols = n;
+    var rows = Math.ceil(n / cols);
+    var cw = W / cols, ch = H / rows;
+    var size = Math.floor(Math.min(cw, ch) * 0.7); size = Math.max(64, Math.min(size, 130));
+    var jx = Math.max(0, (cw - size) / 2) * 0.6, jy = Math.max(0, (ch - size) / 2) * 0.6;
+    pieces.forEach(function (p) {
+      var c = p._k % cols, r = Math.floor(p._k / cols);
+      var x = c * cw + (cw - size) / 2 + p._jx * jx, y = r * ch + (ch - size) / 2 + p._jy * jy;
+      p.style.left = Math.max(0, Math.min(W - size, x)) + 'px'; p.style.top = Math.max(0, Math.min(H - size, y)) + 'px';
+      p.style.width = size + 'px'; p.style.height = size + 'px';
+    });
+  }
+  function basketAt(x, y) {
+    var hit = null;
+    Array.prototype.forEach.call(basketsEl.children, function (b) {
+      var r = b.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top - 24 && y <= r.bottom + 24) hit = b;
+    });
+    return hit;
+  }
+  function down(e, p) {
+    if (dragging || lock || p.classList.contains('gone')) return;
+    e.preventDefault();
+    dragging = { p: p, id: e.pointerId, sx: e.clientX, sy: e.clientY };
+    p.classList.remove('pop', 'bad'); p.classList.add('drag');
+    KidsGame.sound.tap();
+  }
+  function move(e) {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    e.preventDefault();
+    dragging.p.style.transform = 'translate(' + (e.clientX - dragging.sx) + 'px,' + (e.clientY - dragging.sy) + 'px) scale(1.15)';
+    var hit = basketAt(e.clientX, e.clientY);
+    Array.prototype.forEach.call(basketsEl.children, function (b) { b.classList.toggle('hot', b === hit); });
+  }
+  function up(e) {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    var p = dragging.p; dragging = null;
+    p.classList.remove('drag');
+    Array.prototype.forEach.call(basketsEl.children, function (b) { b.classList.remove('hot'); });
+    var r = p.getBoundingClientRect();
+    var hit = basketAt(r.left + r.width / 2, r.top + r.height / 2);
+    if (hit && hit.dataset.color === p.dataset.color) {
+      var br = hit.getBoundingClientRect();
+      p.classList.add('gone');
+      p.style.transform = 'translate(' + (br.left + br.width / 2 - (r.left + r.width / 2) + (r.left - r.left)) + 'px,' + (br.top + br.height / 2 - (r.top + r.height / 2)) + 'px) scale(0)';
+      // La traslación anterior ya incluye el desplazamiento de arrastre, así que se recalcula desde la posición original
+      var ox = parseFloat(p.style.left), oy = parseFloat(p.style.top), ar = area.getBoundingClientRect();
+      p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + r.width / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + r.height / 2)) + 'px) scale(0)';
+      KidsGame.sound.pop(); replay(hit, 'got'); scored();
+      pieces = pieces.filter(function (x) { return x !== p; });
+      setTimeout(function () { p.remove(); }, 350);
+      if (!pieces.length) { lock = true; setTimeout(function () { afterRound(sortRound); }, 700); }
+    } else {
+      p.style.transform = '';
+      if (hit) { KidsGame.sound.wrong(); replay(p, 'bad'); } else KidsGame.sound.pop();
+    }
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', up);
+
+  window.addEventListener('resize', function () { if (ACTS[act] === 'sort') layoutSort(); });
+  showMenu();
+})();
+</script>
+</body>
+</html>
