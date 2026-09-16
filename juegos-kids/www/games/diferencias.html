@@ -36,7 +36,7 @@
   @keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
 
   .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; }
-  .instr .txt { font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #b8500a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .instr .txt { font-size: 28px; font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #b8500a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
   .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
 
   .pics { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 14px; }
@@ -44,9 +44,9 @@
     position: relative; flex: 0 0 auto; padding: 9px; border-radius: 22px;
     background: linear-gradient(180deg, #ffffff, #eef2fa); border: 3px solid #fff;
     box-shadow: 0 8px 0 #c9d2e6, 0 18px 28px rgba(80,30,0,.35), inset 0 2px 0 #fff;
-    animation: pop .4s ease-out backwards;
   }
-  .frame.r { animation-delay: .12s; }
+  .frame.pop { animation: pop .4s ease-out backwards; }
+  .frame.r.pop { animation-delay: .12s; }
   .frame svg { display: block; width: 100%; height: 100%; border-radius: 14px; overflow: hidden; touch-action: none; cursor: pointer;
                box-shadow: inset 0 0 0 2px rgba(0,0,0,.08); }
   .frame .tag { position: absolute; left: 50%; top: -12px; transform: translateX(-50%); padding: 2px 14px; border-radius: 14px; font-size: 16px; font-weight: 900; color: #fff;
@@ -360,7 +360,7 @@ var game = KidsGame.init({ title: 'Diferencias' });
     pics = document.createElement('div'); pics.className = 'pics';
     frames = []; svgs = [];
     for (var i = 0; i < 2; i++) {
-      var fr = document.createElement('div'); fr.className = 'frame' + (i ? ' r' : '');
+      var fr = document.createElement('div'); fr.className = 'frame pop' + (i ? ' r' : '');
       fr.innerHTML = '<span class="tag">' + (i ? '2' : '1') + '</span><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>';
       pics.appendChild(fr); frames.push(fr); svgs.push(fr.querySelector('svg'));
       (function (side) { svgs[side].addEventListener('pointerdown', function (ev) { ev.preventDefault(); tapAt(side, ev); }); })(i);

@@ -42,6 +42,7 @@
   .sort .area { position: relative; flex: 1 1 auto; width: 100%; touch-action: none; }
   .piece { position: absolute; cursor: grab; touch-action: none; filter: drop-shadow(0 6px 4px rgba(20,40,90,.28)); animation: pop .35s ease-out backwards, float 3.6s ease-in-out infinite; }
   .piece svg { width: 100%; height: 100%; overflow: visible; }
+  .piece.moved { animation: float 3.6s ease-in-out infinite; }
   .piece.drag { z-index: 10; filter: drop-shadow(0 18px 12px rgba(0,0,0,.3)); animation: none; }
   .piece.gone { transition: transform .35s ease-in, opacity .35s; opacity: 0; animation: none; }
   .piece.bad { animation: shake .35s; }
@@ -349,7 +350,7 @@
     if (dragging || lock || p.classList.contains('gone')) return;
     e.preventDefault();
     dragging = { p: p, id: e.pointerId, sx: e.clientX, sy: e.clientY };
-    p.classList.remove('pop', 'bad'); p.classList.add('drag');
+    p.classList.remove('pop', 'bad'); p.classList.add('drag', 'moved');
     KidsGame.sound.tap();
   }
   function move(e) {
@@ -362,9 +363,10 @@
   function up(e) {
     if (!dragging || e.pointerId !== dragging.id) return;
     var p = dragging.p; dragging = null;
+    // Medir antes de quitar .drag (al quitarla vuelve la animación de reposo y cambiaría el transform)
+    var r = p.getBoundingClientRect();
     p.classList.remove('drag');
     Array.prototype.forEach.call(basketsEl.children, function (b) { b.classList.remove('hot'); });
-    var r = p.getBoundingClientRect();
     var hit = basketAt(r.left + r.width / 2, r.top + r.height / 2);
     if (hit && matches(hit, p)) {
       // Cae dentro de la boca de la canasta
