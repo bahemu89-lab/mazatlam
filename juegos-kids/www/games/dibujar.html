@@ -28,11 +28,9 @@
   .tool.rainbow { background: conic-gradient(#ff4d4d, #ffe14d, #4cd964, #3da9fc, #a06cd5, #ff7eb6, #ff4d4d); }
   .tool.action { border-radius: 22px; background: #f582ae; color: #fff; font-size: 30px; }
   .tool.action.save { background: #3da9fc; }
-  .sep { width: 100%; height: 0; }
-  .sizes { display: flex; gap: 5px; }
   /* Confirmación en la página */
   .confirm {
-    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center;
     background: rgba(23,44,102,.45); z-index: 30; border-radius: 0;
   }
   .confirm.show { display: flex; }
@@ -43,7 +41,6 @@
     .wrap { flex-direction: row; }
     .tools { width: 216px; order: 2; overflow-y: auto; touch-action: pan-y; }
     .tools::-webkit-scrollbar { display: none; }
-    .sep { display: none; }
   }
 </style>
 </head>
@@ -158,7 +155,6 @@ var rb = mk('pick rainbow', ''); rb.id = 'rainbow';
 onTap(rb, function () { mode = 'rainbow'; selectTool(rb); KidsGame.sound.pop(); });
 var er = mk('pick', '<span class="emoji">🧽</span>'); er.id = 'eraser';
 onTap(er, function () { mode = 'eraser'; selectTool(er); KidsGame.sound.tap(); });
-tools.appendChild(document.createElement('div')).className = 'sep';
 SIZES.forEach(function (s, i) {
   var el = mk('size', '<div class="dot" style="width:' + (s + 6) + 'px;height:' + (s + 6) + 'px"></div>'); if (i === 1) el.classList.add('sel');
   onTap(el, function () { size = s; if (mode === 'sticker') { mode = 'brush'; selectTool(lastColorEl); } selectSize(el); KidsGame.sound.tap(); });

@@ -9,7 +9,7 @@
   .game { background: linear-gradient(#bde9ff, #eefaff 70%, #d8f3dc); touch-action: none; }
   .hud {
     position: absolute; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
-    display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px;
   }
   .hud > * { pointer-events: auto; }
   .goal {
@@ -19,7 +19,7 @@
   .goal .dot { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 0 3px rgba(0,0,0,.15); }
   .goal .dot.any { background: conic-gradient(#e63946, #ffb703, #2cb67d, #3da9fc, #7f5af0, #e63946); }
   .goal .txt { white-space: nowrap; }
-  .prog { display: flex; gap: 5px; }
+  .prog { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 40vw; }
   .prog i { width: 14px; height: 14px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; }
   .prog i.on { background: #ffb703; box-shadow: 0 0 0 2px #fff; }
   .modebtn { font-size: 30px; }

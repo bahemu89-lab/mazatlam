@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Crea tu monstruo</title>
+<style>
+  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; }
+  .stage { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+  .stage svg { height: 100%; width: 100%; max-height: 100%; overflow: visible; }
+  .stage .mon { transform-origin: 150px 250px; transform-box: view-box; }
+  .stage .mon.dance { animation: dance .6s ease-in-out 4; }
+  .stage .mon.popin { animation: monpop .4s ease-out; }
+  @keyframes dance { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-30px) rotate(-10deg) scaleX(1.05)} 50%{transform:translateY(0) rotate(0)} 75%{transform:translateY(-30px) rotate(10deg) scaleX(.95)} }
+  @keyframes monpop { 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+  .panel { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: #fff; border-radius: 26px; padding: 10px; box-shadow: 0 6px 0 rgba(0,0,0,.1); }
+  .tabs { display: flex; justify-content: center; gap: 8px; }
+  .tabs .btn { width: 64px; height: 64px; min-width: 64px; padding: 0; font-size: 32px; background: #e6f0ff; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .tabs .btn.on { background: #3da9fc; box-shadow: 0 0 0 4px #bde0ff; transform: scale(1.08); }
+  .opts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; min-height: 90px; }
+  .opt { width: 84px; height: 84px; min-width: 84px; min-height: 84px; padding: 4px; border-radius: 20px; background: #fef6e4; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .opt svg { width: 100%; height: 100%; }
+  .opt.on { background: #d8f3dc; box-shadow: 0 0 0 5px #2cb67d; }
+  .opt.sw { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border-radius: 50%; border: 5px solid #fff; }
+  .opt.sw.on { border-color: #172c66; box-shadow: 0 0 0 4px #2cb67d; }
+  .acts { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .acts .btn { font-size: 22px; min-height: 64px; padding: 6px 16px; }
+  @media (orientation: landscape) {
+    .game { flex-direction: row; }
+    .panel { width: 380px; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Crea tu monstruo' });
+(function () {
+  var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906', '#8bd3dd', '#ef476f'];
+  var BODIES = ['round', 'tall', 'square', 'blob', 'star'];
+  var EYES = ['one', 'two', 'three', 'sleepy', 'wide', 'glasses'];
+  var MOUTHS = ['smile', 'teeth', 'tongue', 'oh', 'mustache', 'fangs'];
+  var HATS = ['none', 'party', 'crown', 'cap', 'bow', 'antenna'];
+  var LEGS = ['none', 'stubby', 'long', 'many'];
+  var TABS = [ ['color', '🎨'], ['eyes', '👀'], ['mouth', '👄'], ['hat', '🎩'], ['legs', '🦶'] ];
+  var state = { color: 0, body: 0, eyes: 1, mouth: 0, hat: 0, legs: 1 };
+  var tab = 'color', dancing = false;
+
+  try { var saved = JSON.parse(localStorage.getItem('kg-monstruo') || 'null'); if (saved && typeof saved.color === 'number') state = saved; } catch (e) {}
+  function save() { try { localStorage.setItem('kg-monstruo', JSON.stringify(state)); } catch (e) {} }
+
+  function shade(hex, k) {
+    var n = parseInt(hex.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    function f(v) { v = Math.round(v * (1 + k)); return Math.max(0, Math.min(255, v)); }
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+  }
+
+  // ---------- Partes en SVG ----------
+  function starPts(cx, cy, ro, ri) {
+    var p = [];
+    for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? ri : ro; p.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); }
+    return p.join(' ');
+  }
+  function body(kind, col) {
+    var a = 'fill="' + col + '" stroke="' + shade(col, -0.3) + '" stroke-width="6" stroke-linejoin="round"';
+    switch (kind) {
+      case 'round': return '<circle cx="150" cy="170" r="88" ' + a + '/>';
+      case 'tall': return '<rect x="90" y="60" width="120" height="215" rx="58" ' + a + '/>';
+      case 'square': return '<rect x="68" y="88" width="164" height="164" rx="34" ' + a + '/>';
+      case 'blob': return '<path d="M150,78 C205,70 245,120 235,175 C228,225 195,262 150,258 C100,262 62,225 65,170 C68,120 100,85 150,78 Z" ' + a + '/>';
+      case 'star': return '<polygon points="' + starPts(150, 172, 106, 56) + '" ' + a + '/>';
+    }
+    return '';
+  }
+  function eye(cx, cy, r, pr, dx) {
+    dx = dx || 0;
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#fff" stroke="#172c66" stroke-width="4"/>' +
+      '<circle cx="' + (cx + dx) + '" cy="' + (cy + 2) + '" r="' + pr + '" fill="#172c66"/>' +
+      '<circle cx="' + (cx + dx + pr * 0.35) + '" cy="' + (cy - pr * 0.35) + '" r="' + Math.max(2, pr * 0.3) + '" fill="#fff"/>';
+  }
+  function eyes(kind) {
+    switch (kind) {
+      case 'one': return eye(150, 148, 32, 15);
+      case 'two': return eye(120, 148, 20, 10) + eye(180, 148, 20, 10);
+      case 'three': return eye(112, 154, 16, 8) + eye(150, 136, 17, 8) + eye(188, 154, 16, 8);
+      case 'sleepy': return '<path d="M100,150 Q120,170 140,150 M160,150 Q180,170 200,150" fill="none" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
+        '<path d="M104,160 L98,170 M120,166 L120,178 M136,160 L142,170 M164,160 L158,170 M180,166 L180,178 M196,160 L202,170" stroke="#172c66" stroke-width="4" stroke-linecap="round"/>';
+      case 'wide': return eye(118, 146, 28, 8) + eye(182, 146, 28, 8);
+      case 'glasses': return eye(120, 148, 17, 9) + eye(180, 148, 17, 9) +
+        '<rect x="96" y="124" width="48" height="48" rx="14" fill="none" stroke="#7f5af0" stroke-width="6"/>' +
+        '<rect x="156" y="124" width="48" height="48" rx="14" fill="none" stroke="#7f5af0" stroke-width="6"/>' +
+        '<path d="M144,146 L156,146 M96,142 L80,136 M204,142 L220,136" stroke="#7f5af0" stroke-width="6" stroke-linecap="round"/>';
+    }
+    return '';
+  }
+  var SMILE = '<path d="M115,200 Q150,238 185,200" fill="none" stroke="#172c66" stroke-width="7" stroke-linecap="round"/>';
+  function mouth(kind) {
+    switch (kind) {
+      case 'smile': return SMILE;
+      case 'teeth': return '<path d="M110,198 Q150,254 190,198 Z" fill="#b5223a" stroke="#172c66" stroke-width="5" stroke-linejoin="round"/>' +
+        '<rect x="120" y="200" width="16" height="18" rx="4" fill="#fff"/><rect x="141" y="200" width="18" height="22" rx="4" fill="#fff"/><rect x="164" y="200" width="16" height="18" rx="4" fill="#fff"/>';
+      case 'tongue': return SMILE + '<ellipse cx="160" cy="220" rx="13" ry="17" fill="#ff6b8b" stroke="#172c66" stroke-width="4"/>';
+      case 'oh': return '<ellipse cx="150" cy="214" rx="17" ry="22" fill="#3b1a2a" stroke="#172c66" stroke-width="5"/>';
+      case 'mustache': return '<path d="M118,212 Q150,240 182,212" fill="none" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
+        '<path d="M150,200 C140,184 116,184 108,198 C122,206 140,208 150,200 C160,208 178,206 192,198 C184,184 160,184 150,200 Z" fill="#4a2b12" stroke="#2d1a0b" stroke-width="3" stroke-linejoin="round"/>';
+      case 'fangs': return '<path d="M112,200 Q150,226 188,200" fill="none" stroke="#172c66" stroke-width="7" stroke-linecap="round"/>' +
+        '<polygon points="126,202 134,230 144,206" fill="#fff" stroke="#172c66" stroke-width="3" stroke-linejoin="round"/>' +
+        '<polygon points="156,206 166,230 174,202" fill="#fff" stroke="#172c66" stroke-width="3" stroke-linejoin="round"/>';
+    }
+    return '';
+  }
+  function hat(kind) {
+    switch (kind) {
+      case 'party': return '<polygon points="150,12 116,96 184,96" fill="#ff8906" stroke="#c96a00" stroke-width="5" stroke-linejoin="round"/>' +
+        '<polygon points="137,44 129,64 171,64 163,44" fill="#ffd166"/><polygon points="124,76 120,90 180,90 176,76" fill="#ffd166"/>' +
+        '<circle cx="150" cy="14" r="11" fill="#f582ae" stroke="#c9457f" stroke-width="4"/>';
+      case 'crown': return '<polygon points="104,96 104,44 128,70 150,34 172,70 196,44 196,96" fill="#ffb703" stroke="#d98f00" stroke-width="5" stroke-linejoin="round"/>' +
+        '<circle cx="128" cy="84" r="6" fill="#ef476f"/><circle cx="150" cy="84" r="6" fill="#3da9fc"/><circle cx="172" cy="84" r="6" fill="#2cb67d"/>';
+      case 'cap': return '<path d="M102,94 A48,48 0 0 1 198,94 Z" fill="#3da9fc" stroke="#1a7ac9" stroke-width="5" stroke-linejoin="round"/>' +
+        '<rect x="140" y="86" width="80" height="16" rx="8" fill="#1a7ac9"/><circle cx="150" cy="46" r="7" fill="#ffb703"/>';
+      case 'bow': return '<polygon points="150,72 108,50 108,94" fill="#f582ae" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
+        '<polygon points="150,72 192,50 192,94" fill="#f582ae" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
+        '<circle cx="150" cy="72" r="12" fill="#ffb3d1" stroke="#c9457f" stroke-width="4"/>';
+      case 'antenna': return '<path d="M126,90 L108,38 M174,90 L192,38" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
+        '<circle cx="108" cy="36" r="12" fill="#2cb67d" stroke="#172c66" stroke-width="4"/><circle cx="192" cy="36" r="12" fill="#ffb703" stroke="#172c66" stroke-width="4"/>';
+    }
+    return '';
+  }
+  function legs(kind, col) {
+    var d = shade(col, -0.3), a = 'fill="' + d + '" stroke="' + shade(col, -0.5) + '" stroke-width="5" stroke-linejoin="round"';
+    var l = 'stroke="' + d + '" stroke-width="16" stroke-linecap="round" fill="none"';
+    switch (kind) {
+      case 'stubby': return '<rect x="112" y="236" width="30" height="54" rx="15" ' + a + '/><rect x="158" y="236" width="30" height="54" rx="15" ' + a + '/>' +
+        '<rect x="48" y="150" width="60" height="24" rx="12" transform="rotate(-25 78 162)" ' + a + '/><rect x="192" y="150" width="60" height="24" rx="12" transform="rotate(25 222 162)" ' + a + '/>';
+      case 'long': return '<path d="M128,240 L122,304 M172,240 L178,304" ' + l + '/>' +
+        '<ellipse cx="116" cy="308" rx="22" ry="11" ' + a + '/><ellipse cx="184" cy="308" rx="22" ry="11" ' + a + '/>' +
+        '<path d="M80,160 Q40,120 52,80 M220,160 Q260,120 248,80" ' + l + '/>' +
+        '<circle cx="52" cy="78" r="13" ' + a + '/><circle cx="248" cy="78" r="13" ' + a + '/>';
+      case 'many': return '<path d="M120,240 Q90,270 70,300 M150,246 L150,304 M180,240 Q210,270 230,300" ' + l + '/>' +
+        '<path d="M75,180 Q30,190 24,150 M225,180 Q270,190 276,150" ' + l + '/>' +
+        '<circle cx="24" cy="146" r="11" ' + a + '/><circle cx="276" cy="146" r="11" ' + a + '/>' +
+        '<circle cx="66" cy="304" r="11" ' + a + '/><circle cx="150" cy="306" r="11" ' + a + '/><circle cx="234" cy="304" r="11" ' + a + '/>';
+    }
+    return '';
+  }
+  function monster(s) {
+    var col = COLORS[s.color];
+    return '<g class="mon">' + legs(LEGS[s.legs], col) + body(BODIES[s.body], col) + mouth(MOUTHS[s.mouth]) + eyes(EYES[s.eyes]) + hat(HATS[s.hat]) + '</g>';
+  }
+  function svgWrap(inner) { return '<svg viewBox="0 0 300 325" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+
+  // ---------- UI ----------
+  game.innerHTML = '';
+  var stage = document.createElement('div'); stage.className = 'stage';
+  var panel = document.createElement('div'); panel.className = 'panel';
+  var tabs = document.createElement('div'); tabs.className = 'tabs';
+  var opts = document.createElement('div'); opts.className = 'opts';
+  var acts = document.createElement('div'); acts.className = 'acts';
+  acts.innerHTML = '<button class="btn purple" data-a="random">🎲 Sorpresa</button><button class="btn yellow" data-a="dance">💃 Baila</button><button class="btn green" data-a="done">⭐ Listo</button>';
+  panel.appendChild(tabs); panel.appendChild(opts); panel.appendChild(acts);
+  game.appendChild(stage); game.appendChild(panel);
+  TABS.forEach(function (t) {
+    var b = document.createElement('button'); b.className = 'btn emoji'; b.textContent = t[1]; b.dataset.tab = t[0];
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); tab = t[0]; renderTabs(); renderOpts(); });
+    tabs.appendChild(b);
+  });
+  function renderTabs() { tabs.querySelectorAll('.btn').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); }); }
+
+  function renderMonster(pop) {
+    stage.innerHTML = svgWrap(monster(state));
+    if (pop) stage.querySelector('.mon').classList.add('popin');
+  }
+  function optBtn(key, idx, inner, cls) {
+    var b = document.createElement('button'); b.className = 'opt ' + (cls || ''); b.innerHTML = inner;
+    if (state[key] === idx) b.classList.add('on');
+    b.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); state[key] = idx; KidsGame.sound.pop(); save(); renderMonster(false); renderOpts();
+    });
+    return b;
+  }
+  function renderOpts() {
+    opts.innerHTML = '';
+    var s2 = function (k, v) { var c = {}; for (var q in state) c[q] = state[q]; c[k] = v; return c; };
+    if (tab === 'color') {
+      COLORS.forEach(function (c, i) { var b = optBtn('color', i, '', 'sw'); b.style.background = c; opts.appendChild(b); });
+      BODIES.forEach(function (k, i) { opts.appendChild(optBtn('body', i, svgWrap(body(k, COLORS[state.color])))); });
+    } else if (tab === 'eyes') {
+      EYES.forEach(function (k, i) { opts.appendChild(optBtn('eyes', i, svgWrap(monster(s2('eyes', i))))); });
+    } else if (tab === 'mouth') {
+      MOUTHS.forEach(function (k, i) { opts.appendChild(optBtn('mouth', i, svgWrap(monster(s2('mouth', i))))); });
+    } else if (tab === 'hat') {
+      HATS.forEach(function (k, i) { opts.appendChild(optBtn('hat', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : svgWrap(monster(s2('hat', i))))); });
+    } else if (tab === 'legs') {
+      LEGS.forEach(function (k, i) { opts.appendChild(optBtn('legs', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : svgWrap(monster(s2('legs', i))))); });
+    }
+  }
+
+  function randomize() {
+    state = { color: KidsGame.rand(COLORS.length), body: KidsGame.rand(BODIES.length), eyes: KidsGame.rand(EYES.length),
+      mouth: KidsGame.rand(MOUTHS.length), hat: KidsGame.rand(HATS.length), legs: KidsGame.rand(LEGS.length) };
+    save(); renderMonster(true); renderOpts(); KidsGame.sound.pop();
+  }
+  function dance() {
+    if (dancing) return;
+    dancing = true;
+    var m = stage.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+    [523, 659, 784, 659, 523, 659, 784, 1047, 784, 659, 523, 392].forEach(function (f, i) { setTimeout(function () { KidsGame.sound.note(f); }, i * 200); });
+    setTimeout(function () { m.classList.remove('dance'); dancing = false; }, 2500);
+  }
+  function done() {
+    KidsGame.addStar();
+    var m = stage.querySelector('.mon'); m.classList.add('dance');
+    setTimeout(function () {
+      KidsGame.celebrate({ msg: '¡Qué monstruo!', sub: 'Tu monstruo está listo 🎉', onAgain: function () { randomize(); tab = 'color'; renderTabs(); renderOpts(); } });
+    }, 700);
+  }
+  acts.querySelectorAll('.btn').forEach(function (b) {
+    b.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); KidsGame.sound.tap();
+      var a = b.dataset.a; if (a === 'random') randomize(); else if (a === 'dance') dance(); else done();
+    });
+  });
+  stage.addEventListener('pointerdown', function () { dance(); });
+
+  renderTabs(); renderOpts(); renderMonster(true);
+  KidsGame.say('Crea tu monstruo');
+})();
+</script>
+</body>
+</html>

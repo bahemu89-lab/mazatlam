@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Piano de animales</title>
+<style>
+  .game { display: flex; flex-direction: column; }
+  .top {
+    flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
+    padding: 8px 10px; background: rgba(255,255,255,.55);
+  }
+  .inst {
+    width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 4px solid #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center;
+    font-size: 34px; cursor: pointer; transition: transform .12s;
+  }
+  .inst.sel { border-color: #172c66; transform: scale(1.12); background: #fff5c8; }
+  .inst:active { transform: scale(.9); }
+  .top .btn { font-size: 22px; min-height: 64px; padding: 6px 16px; }
+  .top .btn.sel { box-shadow: 0 0 0 5px #172c66, 0 6px 0 rgba(0,0,0,.18); }
+  .top .spacer { width: 14px; }
+  .status { flex: 0 0 auto; text-align: center; font-size: 26px; min-height: 40px; padding: 4px; }
+  .dots { display: inline-flex; gap: 5px; flex-wrap: wrap; justify-content: center; vertical-align: middle; margin-left: 10px; }
+  .dot { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid #172c66; box-sizing: border-box; }
+  .dot.on { background: #ffb703; }
+  .dot.cur { transform: scale(1.35); background: #f582ae; }
+  .bars {
+    flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; justify-content: center; gap: 8px;
+    padding: 10px 12px 16px; touch-action: none;
+  }
+  .bar {
+    flex: 1 1 0; min-width: 0; max-width: 130px; border-radius: 22px; border: 5px solid rgba(0,0,0,.15);
+    box-shadow: 0 8px 0 rgba(0,0,0,.18); display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 10px 4px; cursor: pointer; transition: transform .1s, filter .1s; position: relative; user-select: none;
+  }
+  .bar .name { font-size: 22px; font-weight: bold; color: rgba(0,0,0,.55); }
+  .bar .animal { font-size: 44px; font-size: min(56px, 9vw); line-height: 1; pointer-events: none; }
+  .bar.lit { transform: translateY(-10px) scale(1.04); filter: brightness(1.25); box-shadow: 0 0 0 6px #fff, 0 14px 0 rgba(0,0,0,.18); }
+  .bar.hint { animation: hint .7s infinite; }
+  .bar.hint::after {
+    content: '👆'; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 44px; pointer-events: none;
+    animation: bounce .7s infinite;
+  }
+  @keyframes hint { 0%,100%{ box-shadow: 0 8px 0 rgba(0,0,0,.18), 0 0 0 0 #fff; } 50%{ box-shadow: 0 8px 0 rgba(0,0,0,.18), 0 0 0 10px #fff; filter: brightness(1.2); } }
+  @media (orientation: portrait) {
+    .top .btn { font-size: 20px; padding: 6px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="top" id="top"></div>
+  <div class="status" id="status"></div>
+  <div class="bars" id="bars"></div>
+</div>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Piano de animales' });
+
+var NOTES = [
+  { f: 261.63, n: 'Do',  a: '🐭', c: '#ff6b6b' },
+  { f: 293.66, n: 'Re',  a: '🐱', c: '#ff9f43' },
+  { f: 329.63, n: 'Mi',  a: '🐶', c: '#ffe14d' },
+  { f: 349.23, n: 'Fa',  a: '🐰', c: '#4cd964' },
+  { f: 392.00, n: 'Sol', a: '🦊', c: '#2ec4b6' },
+  { f: 440.00, n: 'La',  a: '🐻', c: '#3da9fc' },
+  { f: 493.88, n: 'Si',  a: '🐼', c: '#a06cd5' },
+  { f: 523.25, n: 'Do',  a: '🐨', c: '#ff7eb6' }
+];
+// Estrellita: C C G G A A G, F F E E D D C
+var SONG = [0, 0, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0];
+var SONG_DUR = [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2];
+
+// ---------- Audio propio (instrumentos) ----------
+var AC = window.AudioContext || window.webkitAudioContext, actx = null;
+function audio() {
+  if (!AC) return null;
+  if (!actx) { try { actx = new AC(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') { try { actx.resume(); } catch (e) {} }
+  return actx;
+}
+document.addEventListener('pointerdown', function () { audio(); }, { once: true });
+var INSTR = [
+  { e: '🎹', name: 'Piano',    type: 'triangle', attack: 0.01,  decay: 0.7, vol: 0.30 },
+  { e: '🎸', name: 'Guitarra', type: 'sawtooth', attack: 0.005, decay: 0.6, vol: 0.14, filter: 1600 },
+  { e: '🎺', name: 'Trompeta', type: 'square',   attack: 0.04,  decay: 0.5, vol: 0.10, filter: 2200 },
+  { e: '🔔', name: 'Campana',  type: 'sine',     attack: 0.005, decay: 1.4, vol: 0.28, bell: true }
+];
+var instr = INSTR[0];
+function play(freq) {
+  var c = audio();
+  if (!c) { KidsGame.sound.note(freq); return; }
+  var t = c.currentTime;
+  var g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(instr.vol, t + instr.attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + instr.decay);
+  var out = g;
+  if (instr.filter) { var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = instr.filter; g.connect(f); out = f; }
+  out.connect(c.destination);
+  var o = c.createOscillator(); o.type = instr.type; o.frequency.value = freq; o.connect(g);
+  o.start(t); o.stop(t + instr.decay + 0.05);
+  if (instr.bell) {
+    var o2 = c.createOscillator(), g2 = c.createGain();
+    o2.type = 'sine'; o2.frequency.value = freq * 2.76;
+    g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.12, t + 0.005); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o2.connect(g2); g2.connect(c.destination); o2.start(t); o2.stop(t + 0.6);
+  }
+}
+
+// ---------- UI ----------
+var topEl = document.getElementById("top"), statusEl = document.getElementById("status"), barsEl = document.getElementById('bars');
+var bars = [], litTimers = {};
+NOTES.forEach(function (n, i) {
+  var b = document.createElement('div');
+  b.className = 'bar'; b.style.background = n.c; b.style.height = (100 - i * 5.5) + '%';
+  b.innerHTML = '<div class="name">' + n.n + '</div><div class="animal emoji">' + n.a + '</div>';
+  b.setAttribute('data-i', i);
+  barsEl.appendChild(b); bars.push(b);
+});
+function light(i, ms) {
+  var b = bars[i];
+  clearTimeout(litTimers[i]); b.classList.remove('lit'); void b.offsetWidth; b.classList.add('lit');
+  litTimers[i] = setTimeout(function () { b.classList.remove('lit'); }, ms || 260);
+}
+
+// Instrumentos
+INSTR.forEach(function (ins, k) {
+  var el = document.createElement('div');
+  el.className = 'inst' + (k === 0 ? ' sel' : ''); el.innerHTML = '<span class="emoji">' + ins.e + '</span>';
+  el.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); instr = ins;
+    var all = topEl.querySelectorAll('.inst'); for (var j = 0; j < all.length; j++) all[j].classList.remove('sel');
+    el.classList.add('sel'); play(392); light(4);
+  });
+  topEl.appendChild(el);
+});
+var sp = document.createElement('div'); sp.className = 'spacer'; topEl.appendChild(sp);
+var followBtn = document.createElement('button'); followBtn.className = 'btn purple'; followBtn.id = 'follow'; followBtn.textContent = '🎵 Sigue la canción';
+var listenBtn = document.createElement('button'); listenBtn.className = 'btn blue'; listenBtn.id = 'listen'; listenBtn.textContent = '🎼 Escuchar';
+topEl.appendChild(followBtn); topEl.appendChild(listenBtn);
+
+// ---------- Modos ----------
+var mode = 'free', step = 0, listenTimers = [];
+function setStatus(html) { statusEl.innerHTML = html; }
+function dotsHtml() {
+  var s = '<span class="dots">';
+  for (var i = 0; i < SONG.length; i++) s += '<span class="dot' + (i < step ? ' on' : (i === step ? ' cur' : '')) + '"></span>';
+  return s + '</span>';
+}
+function clearHints() { for (var i = 0; i < bars.length; i++) bars[i].classList.remove('hint'); }
+function stopListen() { listenTimers.forEach(clearTimeout); listenTimers = []; }
+function freeMode() {
+  stopListen(); clearHints(); mode = 'free'; step = 0;
+  followBtn.classList.remove('sel'); listenBtn.classList.remove('sel');
+  setStatus('<span class="emoji">🎹</span> ¡Toca!');
+}
+function startFollow() {
+  stopListen(); clearHints(); mode = 'follow'; step = 0;
+  followBtn.classList.add('sel'); listenBtn.classList.remove('sel');
+  showHint();
+  KidsGame.say('Toca la barra que brilla');
+}
+function showHint() {
+  clearHints();
+  if (step < SONG.length) bars[SONG[step]].classList.add('hint');
+  setStatus('<span class="emoji">👆</span> ' + dotsHtml());
+}
+function finishFollow() {
+  clearHints(); mode = 'free'; followBtn.classList.remove('sel');
+  setStatus('<span class="emoji">🌟</span> ' + dotsHtml());
+  KidsGame.addStar(2);
+  setTimeout(function () {
+    KidsGame.celebrate({ msg: '¡Estrellita!', sub: 'Tocaste la canción', onAgain: startFollow, onNext: freeMode });
+  }, 500);
+}
+function listen() {
+  stopListen(); clearHints(); mode = 'listen'; step = 0;
+  listenBtn.classList.add('sel'); followBtn.classList.remove('sel');
+  var t = 0, beat = 420;
+  SONG.forEach(function (idx, k) {
+    listenTimers.push(setTimeout(function () {
+      step = k; setStatus('<span class="emoji">🎼</span> ' + dotsHtml());
+      play(NOTES[idx].f); light(idx, beat * SONG_DUR[k] - 80);
+    }, t));
+    t += beat * SONG_DUR[k];
+  });
+  listenTimers.push(setTimeout(function () { step = SONG.length; setStatus('<span class="emoji">🎼</span> ' + dotsHtml()); }, t));
+  listenTimers.push(setTimeout(function () { KidsGame.sound.ok(); startFollow(); }, t + 600));
+}
+followBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'follow') freeMode(); else startFollow(); };
+listenBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'listen') freeMode(); else listen(); };
+
+// ---------- Toques (con deslizamiento entre barras) ----------
+var active = {};
+function hit(i) {
+  play(NOTES[i].f); light(i); KidsGame.vibrate(10);
+  if (mode === 'follow') {
+    if (i === SONG[step]) {
+      step++;
+      if (step >= SONG.length) finishFollow(); else showHint();
+    }
+  }
+}
+function barAt(e) {
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  while (el && el !== barsEl) { if (el.classList && el.classList.contains('bar')) return el; el = el.parentNode; }
+  return null;
+}
+barsEl.addEventListener('pointerdown', function (e) {
+  e.preventDefault();
+  var b = barAt(e); if (!b) return;
+  var i = +b.getAttribute('data-i');
+  active[e.pointerId] = i; hit(i);
+});
+barsEl.addEventListener('pointermove', function (e) {
+  if (!(e.pointerId in active)) return;
+  e.preventDefault();
+  var b = barAt(e); if (!b) return;
+  var i = +b.getAttribute('data-i');
+  if (i !== active[e.pointerId]) { active[e.pointerId] = i; hit(i); }
+});
+function end(e) { delete active[e.pointerId]; }
+barsEl.addEventListener('pointerup', end);
+barsEl.addEventListener('pointercancel', end);
+document.addEventListener('pointerup', end);
+
+freeMode();
+</script>
+</body>
+</html>

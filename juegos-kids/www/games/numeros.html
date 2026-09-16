@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Números</title>
+<style>
+  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px; font-size: min(5vw, 26px); font-weight: bold; }
+  .hud .q { background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
+  .hud .lvl { background: #ffb703; color: #5a3d00; border-radius: 30px; padding: 6px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
+  .counter {
+    width: 72px; height: 72px; border-radius: 50%; background: #7f5af0; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: bold;
+    box-shadow: 0 5px 0 rgba(0,0,0,.18);
+  }
+  .box { flex: 1 1 auto; position: relative; background: #fff; border-radius: 26px; box-shadow: inset 0 0 0 5px #8bd3dd; min-height: 120px; }
+  .obj { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s; }
+  .obj .emoji { filter: drop-shadow(0 4px 0 rgba(0,0,0,.12)); }
+  .obj .chk {
+    position: absolute; right: -6px; top: -6px; width: 34px; height: 34px; border-radius: 50%;
+    background: #2cb67d; color: #fff; font-size: 20px; font-weight: bold; display: none; align-items: center; justify-content: center;
+    box-shadow: 0 3px 0 rgba(0,0,0,.15);
+  }
+  .obj.marked .chk { display: flex; }
+  .obj.marked { transform: scale(1.12); }
+  .obj.jump { animation: jump .45s ease-out; }
+  @keyframes jump { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-26px) scale(1.3); } }
+  .cards { flex: 0 0 auto; display: flex; justify-content: center; gap: min(4vw, 26px); }
+  .numcard { width: min(26vw, 20vh, 150px); height: min(26vw, 20vh, 150px); font-size: min(14vw, 11vh, 84px); font-weight: bold; color: #172c66; }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Números' });
+  var EMOJIS = ['🍎','🍓','🐟','⭐','🎈','🐥','🍪','🦋','🌸','🐞','🍩','🐢','🚗','⚽','🍬','🐰','🐸','🍦'];
+  var ROUNDS = 8;
+  var level = 0, round = 0, N = 0, lock = false, marked = 0, objs = [];
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
+  function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+
+  game.innerHTML = '';
+  var hud = el('div', 'hud');
+  var q = el('span', 'q', '¿Cuántos hay?'), counter = el('div', 'counter', '?'), lvl = el('span', 'lvl', 'Nivel 1');
+  hud.appendChild(q); hud.appendChild(counter); hud.appendChild(lvl);
+  var box = el('div', 'box'), cards = el('div', 'cards');
+  game.appendChild(hud); game.appendChild(box); game.appendChild(cards);
+
+  function maxN() { return level === 0 ? 5 : 10; }
+
+  function startRound() {
+    lock = false; marked = 0; objs = [];
+    N = 1 + KidsGame.rand(maxN());
+    var em = KidsGame.pick(EMOJIS);
+    var perm = KidsGame.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i; }));
+    box.innerHTML = ''; counter.textContent = '?';
+    lvl.textContent = 'Nivel ' + (level + 1) + ' · ' + (round + 1) + '/' + ROUNDS;
+    for (var i = 0; i < N; i++) {
+      var o = el('div', 'obj pop');
+      o.innerHTML = '<span class="emoji">' + em + '</span><span class="chk"></span>';
+      o.style.animationDelay = (i * 70) + 'ms';
+      o._k = perm[i]; o._jx = Math.random() * 2 - 1; o._jy = Math.random() * 2 - 1;
+      (function (o) { onTap(o, function () { markObj(o); }); })(o);
+      box.appendChild(o); objs.push(o);
+    }
+    var lo = Math.max(1, N - 2), hi = Math.min(maxN(), N + 2), pool = [];
+    for (var k = lo; k <= hi; k++) if (k !== N) pool.push(k);
+    var opts = KidsGame.shuffle([N].concat(KidsGame.shuffle(pool).slice(0, 2)));
+    cards.innerHTML = '';
+    opts.forEach(function (n, i) {
+      var c = el('div', 'card numcard pop'); c.textContent = n; c.style.animationDelay = (i * 80) + 'ms';
+      onTap(c, function () { choose(c, n); });
+      cards.appendChild(c);
+    });
+    layout();
+    KidsGame.say('¿Cuántos hay?');
+  }
+
+  function layout() {
+    var W = box.clientWidth, H = box.clientHeight, n = objs.length;
+    if (!W || !H || !n) return;
+    var cols = Math.max(1, Math.round(Math.sqrt(n * W / H)));
+    if (cols > n) cols = n;
+    var rows = Math.ceil(n / cols);
+    var cw = W / cols, ch = H / rows;
+    var size = Math.floor(Math.min(cw, ch) * 0.72);
+    size = Math.max(60, Math.min(size, 130));
+    var jx = Math.max(0, (cw - size) / 2) * 0.7, jy = Math.max(0, (ch - size) / 2) * 0.7;
+    var cells = cols * rows;
+    objs.forEach(function (o) {
+      var cell = Math.floor(o._k * cells / n);
+      var c = cell % cols, r = Math.floor(cell / cols);
+      var x = c * cw + (cw - size) / 2 + o._jx * jx, y = r * ch + (ch - size) / 2 + o._jy * jy;
+      x = Math.max(4, Math.min(W - size - 4, x)); y = Math.max(4, Math.min(H - size - 4, y));
+      o.style.left = x + 'px'; o.style.top = y + 'px';
+      o.style.width = size + 'px'; o.style.height = size + 'px';
+      o.style.fontSize = Math.round(size * 0.78) + 'px';
+    });
+  }
+
+  // Ayuda para contar: tocar un objeto lo marca y muestra la cuenta
+  function markObj(o) {
+    if (lock || o.classList.contains('marked')) return;
+    marked++;
+    o.classList.add('marked');
+    o.querySelector('.chk').textContent = marked;
+    counter.textContent = marked; replay(counter, 'pop');
+    KidsGame.sound.tap(); KidsGame.say(String(marked));
+  }
+
+  function choose(c, n) {
+    if (lock) return;
+    if (n === N) {
+      lock = true; c.classList.add('ok');
+      countAll();
+    } else {
+      KidsGame.sound.wrong(); replay(c, 'bad');
+    }
+  }
+
+  function countAll() {
+    var i = 0;
+    counter.textContent = '';
+    function step() {
+      if (i < N) {
+        var o = objs[i]; i++;
+        o.classList.remove('marked'); replay(o, 'jump');
+        counter.textContent = i; replay(counter, 'pop');
+        KidsGame.sound.tap(); KidsGame.say(String(i));
+        setTimeout(step, 450);
+      } else {
+        setTimeout(function () {
+          KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
+          objs.forEach(function (o) { replay(o, 'bounce'); });
+          round++;
+          setTimeout(function () {
+            if (round >= ROUNDS) finish(); else startRound();
+          }, 900);
+        }, 350);
+      }
+    }
+    step();
+  }
+
+  function finish() {
+    KidsGame.celebrate({
+      sub: 'Nivel ' + (level + 1) + ' completo',
+      onNext: function () { level = Math.min(level + 1, 1); round = 0; startRound(); },
+      onAgain: function () { round = 0; startRound(); }
+    });
+  }
+
+  window.addEventListener('resize', layout);
+  startRound();
+})();
+</script>
+</body>
+</html>

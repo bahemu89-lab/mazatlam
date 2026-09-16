@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Alimenta</title>
+<style>
+  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; touch-action: none; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; }
+  .hud .lvl { background: #fff; border-radius: 30px; padding: 4px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .animals { flex: 1 1 0; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 14px; }
+  .animal {
+    position: relative; width: var(--as); height: var(--as); flex-direction: column; gap: 2px;
+    background: #fff; border-radius: 26px; box-shadow: 0 6px 0 rgba(0,0,0,.12);
+    transition: transform .18s, background .2s;
+  }
+  .animal .face { font-size: calc(var(--as) * .5); }
+  .animal .hint { font-size: calc(var(--as) * .22); }
+  .animal .want {
+    position: absolute; top: -6px; right: -6px; background: #fff3b0; border-radius: 50%;
+    width: calc(var(--as) * .32); height: calc(var(--as) * .32); display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--as) * .2); box-shadow: 0 3px 0 rgba(0,0,0,.12); border: 3px solid #ffb703;
+  }
+  .animal.over { transform: scale(1.1); background: #fff9d6; }
+  .animal.fed { background: #d8f3dc; box-shadow: 0 0 0 5px #2cb67d; }
+  .animal.fed .want { display: none; }
+  .animal.nam .face { animation: nam .7s ease-out; }
+  .animal.no { animation: nono .5s ease-in-out; }
+  @keyframes nam { 0%{transform:scale(1)} 30%{transform:scale(1.35) rotate(-8deg)} 60%{transform:scale(1.25) rotate(8deg)} 100%{transform:scale(1)} }
+  @keyframes nono { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-14deg)} 40%{transform:rotate(12deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(8deg)} }
+  .tray {
+    flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px;
+    background: #ffe3a3; border-radius: 26px; padding: 10px; min-height: calc(var(--fs) + 24px); box-shadow: inset 0 4px 0 rgba(0,0,0,.08);
+  }
+  .food {
+    width: var(--fs); height: var(--fs); font-size: calc(var(--fs) * .62); background: #fff; border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.12); display: flex; align-items: center; justify-content: center; touch-action: none;
+  }
+  .food.ghost { opacity: .25; }
+  .food.gone { display: none; }
+  .drag { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) scale(1.25); }
+  .drag.back { transition: transform .3s ease-in, opacity .3s; }
+  .heart { position: fixed; z-index: 35; pointer-events: none; font-size: 34px; animation: heart 1.1s ease-out forwards; }
+  @keyframes heart { 0%{transform:translate(-50%,0) scale(.6);opacity:1} 100%{transform:translate(-50%,-140px) scale(1.4);opacity:0} }
+  @media (orientation: landscape) {
+    .game { flex-direction: row; }
+    .hud { position: absolute; left: 0; right: 0; top: 4px; z-index: 2; pointer-events: none; }
+    .animals { padding-top: 40px; }
+    .tray { flex-direction: column; flex-wrap: nowrap; min-width: calc(var(--fs) + 24px); min-height: 0; padding: 10px; }
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Alimenta' });
+(function () {
+  var PAIRS = [
+    ['🐰', '🥕'], ['🐵', '🍌'], ['🐱', '🐟'], ['🐶', '🦴'], ['🐼', '🎋'], ['🐨', '🌿'],
+    ['🐘', '🥜'], ['🐿️', '🌰'], ['🐝', '🌸'], ['🐮', '🌾'], ['🐧', '🐟'], ['🦒', '🌳']
+  ];
+  var round = 0, animals = [], foods = [], fedCount = 0;
+  var hud, lvlEl, animalsEl, tray;
+
+  game.innerHTML = '';
+  hud = document.createElement('div'); hud.className = 'hud';
+  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="emoji">🍽️</span>';
+  lvlEl = hud.querySelector('b');
+  animalsEl = document.createElement('div'); animalsEl.className = 'animals';
+  tray = document.createElement('div'); tray.className = 'tray';
+  game.appendChild(hud); game.appendChild(animalsEl); game.appendChild(tray);
+
+  function newRound() {
+    var n = Math.min(2 + Math.floor((round + 1) / 2), 4);   // 2, 3, 3, 4, 4...
+    var pool = KidsGame.shuffle(PAIRS), chosen = [], usedFood = {};
+    for (var i = 0; i < pool.length && chosen.length < n; i++) {
+      if (usedFood[pool[i][1]]) continue;
+      usedFood[pool[i][1]] = true; chosen.push(pool[i]);
+    }
+    var distract = [], nd = round < 1 ? 1 : 2;
+    for (i = 0; i < pool.length && distract.length < nd; i++) {
+      if (usedFood[pool[i][1]]) continue;
+      usedFood[pool[i][1]] = true; distract.push(pool[i][1]);
+    }
+    animals = chosen; fedCount = 0;
+    foods = KidsGame.shuffle(chosen.map(function (p) { return p[1]; }).concat(distract));
+    lvlEl.textContent = String(round + 1);
+    animalsEl.innerHTML = ''; tray.innerHTML = '';
+    chosen.forEach(function (p, idx) {
+      var a = document.createElement('div');
+      a.className = 'animal card pop'; a.dataset.food = p[1];
+      a.style.animationDelay = (idx * 0.08) + 's';
+      a.innerHTML = '<span class="face emoji">' + p[0] + '</span><span class="hint emoji">😋</span><span class="want emoji">' + p[1] + '</span>';
+      animalsEl.appendChild(a);
+    });
+    foods.forEach(function (f, idx) {
+      var d = document.createElement('div');
+      d.className = 'food card pop'; d.dataset.food = f;
+      d.style.animationDelay = (0.3 + idx * 0.08) + 's';
+      d.innerHTML = '<span class="emoji">' + f + '</span>';
+      tray.appendChild(d);
+    });
+    layout();
+    KidsGame.say('¿Qué quiere comer cada animalito?');
+  }
+
+  function layout() {
+    var land = window.innerWidth > window.innerHeight;
+    var W = game.clientWidth - 16, H = game.clientHeight - 16;
+    var n = animals.length, nf = foods.length;
+    var fs = Math.max(72, Math.min(120, land ? Math.floor((H - 20) / nf) - 12 : Math.floor(W / nf) - 14));
+    var aw = land ? W - fs - 40 : W, ah = land ? H - 40 : H - fs - 24 - hud.offsetHeight - 16;
+    var cols = n <= 2 ? n : 2, rows = Math.ceil(n / cols);
+    if (land && n === 3) { cols = 3; rows = 1; }
+    if (land && n === 4) { cols = 4; rows = 1; var as4 = Math.min((aw - 14 * 3) / 4, ah); if (as4 < 150) { cols = 2; rows = 2; } }
+    var as = Math.floor(Math.min((aw - 14 * (cols - 1)) / cols, (ah - 14 * (rows - 1)) / rows, 260));
+    game.style.setProperty('--as', Math.max(100, as) + 'px');
+    game.style.setProperty('--fs', fs + 'px');
+  }
+
+  // --- Arrastrar comida ---
+  var drag = null;
+  function point(ev) { return { x: ev.clientX, y: ev.clientY }; }
+  function targetAt(x, y) {
+    var el = document.elementFromPoint(x, y);
+    while (el && el !== document.body) { if (el.classList && el.classList.contains('animal')) return el; el = el.parentNode; }
+    return null;
+  }
+  tray.addEventListener('pointerdown', function (ev) {
+    var f = ev.target.closest ? ev.target.closest('.food') : null;
+    if (!f || drag || f.classList.contains('gone')) return;
+    ev.preventDefault();
+    var clone = f.cloneNode(true); clone.className = 'food drag';
+    var r = f.getBoundingClientRect();
+    clone.style.width = r.width + 'px'; clone.style.height = r.height + 'px'; clone.style.fontSize = getComputedStyle(f).fontSize;
+    document.body.appendChild(clone);
+    drag = { src: f, el: clone, id: ev.pointerId, over: null, home: { x: r.left + r.width / 2, y: r.top + r.height / 2 } };
+    f.classList.add('ghost');
+    move(ev);
+    try { tray.setPointerCapture(ev.pointerId); } catch (e) {}
+    KidsGame.sound.pop();
+  });
+  function move(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    var p = point(ev);
+    drag.el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) translate(-50%,-50%) scale(1.25)';
+    var t = targetAt(p.x, p.y);
+    if (t && t.classList.contains('fed')) t = null;
+    if (t !== drag.over) { if (drag.over) drag.over.classList.remove('over'); drag.over = t; if (t) t.classList.add('over'); }
+  }
+  tray.addEventListener('pointermove', function (ev) { if (drag) { ev.preventDefault(); move(ev); } });
+  function drop(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    var d = drag; drag = null;
+    if (d.over) d.over.classList.remove('over');
+    var t = d.over;
+    if (t && t.dataset.food === d.src.dataset.food) {
+      // ¡Ñam ñam!
+      d.el.remove(); d.src.classList.remove('ghost'); d.src.classList.add('gone');
+      t.classList.add('fed', 'nam'); t.querySelector('.hint').textContent = '😊';
+      KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
+      hearts(t); fedCount++;
+      KidsGame.say('¡Ñam ñam!');
+      if (fedCount === animals.length) setTimeout(finish, 900);
+    } else {
+      if (t) { t.classList.remove('no'); void t.offsetWidth; t.classList.add('no'); KidsGame.sound.wrong(); }
+      // La comida regresa a la bandeja
+      d.el.classList.add('back');
+      d.el.style.transform = 'translate(' + d.home.x + 'px,' + d.home.y + 'px) translate(-50%,-50%) scale(1)';
+      d.el.style.opacity = '0';
+      (function (el, src) { setTimeout(function () { el.remove(); src.classList.remove('ghost'); }, 300); })(d.el, d.src);
+    }
+  }
+  tray.addEventListener('pointerup', drop); tray.addEventListener('pointercancel', drop);
+
+  function hearts(t) {
+    var r = t.getBoundingClientRect();
+    for (var i = 0; i < 5; i++) {
+      var h = document.createElement('div'); h.className = 'heart emoji'; h.textContent = KidsGame.pick(['💕', '💖', '❤️', '💗']);
+      h.style.left = (r.left + r.width * (0.2 + Math.random() * 0.6)) + 'px'; h.style.top = (r.top + r.height * 0.3) + 'px';
+      h.style.animationDelay = (i * 0.12) + 's';
+      document.body.appendChild(h);
+      (function (el) { setTimeout(function () { el.remove(); }, 1800); })(h);
+    }
+  }
+  function finish() {
+    KidsGame.celebrate({
+      sub: '¡Todos comieron! ' + animals.map(function (p) { return p[0]; }).join(' '),
+      onNext: function () { round++; newRound(); },
+      onAgain: function () { newRound(); }
+    });
+  }
+
+  window.addEventListener('resize', layout);
+  newRound();
+})();
+</script>
+</body>
+</html>

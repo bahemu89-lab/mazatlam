@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Simón dice colores</title>
+<style>
+  .game { display: flex; flex-direction: column; align-items: center; }
+  .status {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+    padding: 8px 12px; font-size: 30px; min-height: 64px; width: 100%;
+  }
+  .status .ind { background: #fff; border-radius: 30px; padding: 6px 20px; box-shadow: 0 4px 0 rgba(0,0,0,.12); transition: background .2s; }
+  .status .ind.watch { background: #ffe14d; }
+  .status .ind.you { background: #d8f3dc; }
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid #172c66; transition: transform .15s, background .15s; }
+  .dot.on { background: #ffb703; transform: scale(1.2); }
+  .dot.big { background: #2cb67d; }
+  .stage { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; padding: 8px; }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: min(3vw, 16px);
+    width: 300px; height: 300px;
+  }
+  .pad {
+    border-radius: 26px; border: 6px solid rgba(255,255,255,.55); box-shadow: 0 8px 0 rgba(0,0,0,.2);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 64px; min-height: 64px;
+    filter: brightness(.9) saturate(.95); transition: transform .1s, filter .1s, box-shadow .1s; touch-action: none;
+  }
+  .pad .emoji { font-size: 80px; font-size: min(18vw, 110px, 16vh); pointer-events: none; }
+  .pad.lit { filter: brightness(1.2) saturate(1.2); transform: scale(1.05); box-shadow: 0 0 0 8px #fff, 0 10px 0 rgba(0,0,0,.2); }
+  .pad.bad { animation: shake .35s; filter: brightness(.7); }
+  .pads-off .pad { cursor: default; }
+  .pads-off .pad:not(.lit) { opacity: .9; }
+  .r { background: #ff4d4d; } .g { background: #2cb67d; } .b { background: #3da9fc; } .y { background: #ffd23f; }
+  @keyframes wig { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-6deg)} 75%{transform:rotate(6deg)} }
+  .stage.wiggle .grid { animation: wig .35s; }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="status"><div class="ind" id="ind">👀 Mira</div><div class="dots" id="dots"></div></div>
+  <div class="stage" id="stage"><div class="grid" id="grid"></div></div>
+</div>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Simón dice colores' });
+
+var PADS = [
+  { cls: 'r', emoji: '🐞', freq: 329.63, name: 'rojo' },
+  { cls: 'g', emoji: '🐸', freq: 261.63, name: 'verde' },
+  { cls: 'b', emoji: '🐟', freq: 220.00, name: 'azul' },
+  { cls: 'y', emoji: '🐥', freq: 164.81, name: 'amarillo' }
+];
+var MAX = 8, GOAL = 5;
+var grid = document.getElementById('grid'), ind = document.getElementById('ind'), dots = document.getElementById('dots'), stage = document.getElementById('stage');
+var pads = [];
+PADS.forEach(function (p, i) {
+  var d = document.createElement('div');
+  d.className = 'pad ' + p.cls; d.innerHTML = '<span class="emoji">' + p.emoji + '</span>';
+  d.setAttribute('data-i', i);
+  d.addEventListener('pointerdown', function (e) { e.preventDefault(); onPad(i); });
+  grid.appendChild(d); pads.push(d);
+});
+
+function fit() {
+  var side = Math.max(200, Math.min(stage.clientWidth - 16, stage.clientHeight - 16, 640));
+  grid.style.width = side + 'px'; grid.style.height = side + 'px';
+}
+window.addEventListener('resize', function () { setTimeout(fit, 50); });
+fit();
+
+var seq = [], turn = 'idle', pos = 0, mistakes = 0, timers = [], litTimer = {};
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+function light(i, ms) {
+  var p = pads[i];
+  clearTimeout(litTimer[i]); p.classList.remove('lit'); void p.offsetWidth; p.classList.add('lit');
+  KidsGame.sound.note(PADS[i].freq);
+  litTimer[i] = setTimeout(function () { p.classList.remove('lit'); }, ms || 350);
+}
+function setInd(state) {
+  ind.className = 'ind ' + state;
+  ind.textContent = state === 'watch' ? '👀 Mira' : (state === 'you' ? '👆 Tu turno' : '🌟');
+}
+function drawDots() {
+  dots.innerHTML = '';
+  for (var i = 0; i < seq.length; i++) {
+    var d = document.createElement('div'); d.className = 'dot' + (i < pos ? ' on' : '');
+    dots.appendChild(d);
+  }
+}
+function speed() { return Math.max(380, 700 - seq.length * 40); }
+
+function showSequence() {
+  clearTimers();
+  turn = 'show'; pos = 0; drawDots();
+  grid.classList.add('pads-off');
+  setInd('watch'); KidsGame.say('Mira');
+  var gap = speed();
+  seq.forEach(function (idx, k) {
+    later(function () { light(idx, gap * 0.7); }, 600 + k * gap);
+  });
+  later(function () {
+    turn = 'player'; grid.classList.remove('pads-off');
+    setInd('you'); KidsGame.say('Tu turno');
+  }, 600 + seq.length * gap + 150);
+}
+function nextRound() {
+  seq.push(KidsGame.rand(4)); mistakes = 0;
+  showSequence();
+}
+function restart() { seq = []; nextRound(); }
+
+function onPad(i) {
+  if (turn !== 'player') { return; }
+  light(i, 300);
+  if (i === seq[pos]) {
+    pos++; drawDots();
+    if (pos >= seq.length) {
+      turn = 'wait'; KidsGame.addStar(); setInd('star');
+      later(function () { KidsGame.sound.ok(); }, 250);
+      if (seq.length === GOAL || seq.length >= MAX) {
+        later(function () {
+          var done = seq.length >= MAX;
+          KidsGame.celebrate({
+            msg: done ? '¡Campeona!' : '¡Muy bien!',
+            sub: done ? '¡Recordaste ' + MAX + ' colores!' : 'Recordaste ' + seq.length + ' colores',
+            stars: done ? 3 : 2,
+            onNext: done ? restart : nextRound,
+            onAgain: restart
+          });
+        }, 900);
+      } else {
+        later(nextRound, 1100);
+      }
+    }
+  } else {
+    turn = 'wait'; mistakes++;
+    KidsGame.sound.wrong(); KidsGame.vibrate(60);
+    pads[i].classList.remove('bad'); void pads[i].offsetWidth; pads[i].classList.add('bad');
+    stage.classList.remove('wiggle'); void stage.offsetWidth; stage.classList.add('wiggle');
+    ind.textContent = '🙈 Otra vez';
+    if (mistakes >= 3 && seq.length > 1) {
+      seq.pop(); mistakes = 0;
+      later(function () { KidsGame.toast('Más fácil 😊'); }, 400);
+    }
+    later(showSequence, 1200);
+  }
+}
+// estado para pruebas
+window.__simon = function () { return { seq: seq.slice(), turn: turn, pos: pos, mistakes: mistakes }; };
+
+later(restart, 500);
+</script>
+</body>
+</html>
