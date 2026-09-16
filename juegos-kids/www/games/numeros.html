@@ -156,6 +156,8 @@
   }
 
   window.addEventListener('resize', layout);
+  // Expuesto para pruebas
+  window.__num = { set: function (l) { level = l; round = 0; startRound(); }, get n() { return N; } };
   startRound();
 })();
 </script>

@@ -114,7 +114,7 @@
   boardBox.appendChild(board); wrap.appendChild(boardBox); wrap.appendChild(tray);
   game.appendChild(wrap); game.appendChild(lvlEl);
   // Expuesto para pruebas
-  window.__pz = { get cols() { return cols; }, get rows() { return rows; } };
+  window.__pz = { get cols() { return cols; }, get rows() { return rows; }, set: function (l, sc) { level = l; scene = sc; start(); } };
 
   function start() {
     var lv = LEVELS[Math.min(level, LEVELS.length - 1)]; cols = lv[0]; rows = lv[1];
