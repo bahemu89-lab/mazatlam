@@ -19,6 +19,23 @@
     box-shadow: 0 4px 0 #d9a520, 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 #fff, 0 0 0 3px #fff;
   }
   .hud .who .arr { font-size: 24px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
+  .hud .lvbtn { width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 26px; border-radius: 50%; }
+  .hud .keys { display: none; align-items: center; gap: 2px; font-size: 22px; padding: 4px 12px; border-radius: 20px; color: #7a4b00;
+    background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
+  .hud .keys.show { display: inline-flex; }
+  .hud .keys .k { opacity: .3; filter: grayscale(1); transition: transform .3s, opacity .3s, filter .3s; }
+  .hud .keys .k.got { opacity: 1; filter: none; animation: pop .4s ease-out; }
+  .piece.key::before {
+    content: ""; position: absolute; inset: 14%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.9) 0, rgba(255,214,80,.55) 45%, rgba(255,190,40,0) 72%);
+    animation: goalpulse 1.1s ease-in-out infinite;
+  }
+  .piece.key .emoji { animation: float 2s ease-in-out infinite; }
+  .piece.key.got { transition: transform .35s ease-in, opacity .35s; opacity: 0; }
+  .piece.goal.locked .emoji { filter: grayscale(.7) opacity(.55); animation: none; }
+  .piece.goal.locked::before { animation: none; opacity: .35; }
+  .piece.goal .lock { position: absolute; right: -4%; top: -8%; font-size: 45%; z-index: 2; display: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  .piece.goal.locked .lock { display: block; animation: float 2s ease-in-out infinite; }
   .area { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; min-width: 0; }
   .wrap { position: relative; touch-action: none; border-radius: 20px; box-shadow: 0 10px 0 rgba(60,30,0,.28), 0 22px 30px rgba(0,0,0,.3); }
   canvas { display: block; border-radius: 18px; touch-action: none; }
@@ -77,7 +94,9 @@
 <script>
 var game = KidsGame.init({ title: 'Laberinto' });
 (function () {
-  var LEVELS = [ [5, 5], [7, 7], [9, 9], [11, 9] ];
+  // Niveles: 1 = Fácil (5x5 → 7x7), 2 = Medio (9x9 → 11x9), 3 = Difícil (13x11 → 15x11 + 3 llaves)
+  var LEVELS = { 1: [[5, 5], [7, 7]], 2: [[9, 9], [11, 9]], 3: [[13, 11], [15, 11]] };
+  var nivel = 1, keys = [], keyEls = [], keysGot = 0, badgeEl = null;
   var CHARS = [ ['🐰', '🥕'], ['🐱', '🐟'], ['🐶', '🦴'] ];
   var WALLS = ['#f582ae', '#7f5af0', '#3da9fc', '#ff8906', '#2cb67d'];
   var TRAILS = ['#ff5fa0', '#6a4de0', '#1f8fe8', '#ff7a00', '#17a86a'];
@@ -93,13 +112,16 @@ var game = KidsGame.init({ title: 'Laberinto' });
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
-  hud.innerHTML = '<span class="lvl">Nivel <b>1</b></span><span class="who"><span class="m emoji"></span><span class="arr">➜</span><span class="m emoji"></span></span>';
+  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="who"><span class="m emoji"></span><span class="arr">➜</span><span class="m emoji"></span></span><span class="keys"></span><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
   lvlEl = hud.querySelector('b'); whoEl = hud.querySelector('.who');
+  var keysEl = hud.querySelector('.keys');
+  badgeEl = KidsGame.levelBadge(nivel); hud.insertBefore(badgeEl, hud.firstChild);
+  hud.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
   area = document.createElement('div'); area.className = 'area';
   wrap = document.createElement('div'); wrap.className = 'wrap';
   canvas = document.createElement('canvas'); ctx = canvas.getContext('2d');
   charEl = document.createElement('div'); charEl.className = 'piece char'; charEl.innerHTML = '<span class="emoji"></span>';
-  goalEl = document.createElement('div'); goalEl.className = 'piece goal'; goalEl.innerHTML = '<span class="emoji"></span>';
+  goalEl = document.createElement('div'); goalEl.className = 'piece goal'; goalEl.innerHTML = '<span class="emoji"></span><span class="lock emoji">🔒</span>';
   wrap.appendChild(canvas); wrap.appendChild(goalEl); wrap.appendChild(charEl);
   area.appendChild(wrap);
   pad = document.createElement('div'); pad.className = 'pad';
@@ -145,28 +167,58 @@ var game = KidsGame.init({ title: 'Laberinto' });
   function open(x, y, d) { return (cells[y][x] & (1 << d)) === 0; }
 
   function start(newMaze) {
-    var cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
+    var list = LEVELS[nivel], cfg = list[Math.min(level, list.length - 1)];
     var ch = CHARS[level % CHARS.length];
     if (newMaze) {
       cols = cfg[0]; rows = cfg[1];
       cells = gen(cols, rows);
-      wallColor = WALLS[level % WALLS.length]; trailColor = TRAILS[level % TRAILS.length];
+      wallColor = WALLS[(level + nivel - 1) % WALLS.length]; trailColor = TRAILS[(level + nivel - 1) % TRAILS.length];
+      placeKeys(nivel === 3 ? 3 : 0);
     }
     px = 0; py = 0; gx = cols - 1; gy = rows - 1; done = false;
     trail = [[0, 0]];
     lvlEl.textContent = String(level + 1);
+    keysGot = 0; renderKeys();
     whoEl.firstChild.textContent = ch[0]; whoEl.lastChild.textContent = ch[1];
     charEl.firstChild.textContent = ch[0];
     goalEl.firstChild.textContent = ch[1];
     charEl.classList.remove('hop');
     layout();
   }
+  // Llaves (nivel 3): repartidas lejos del inicio y de la meta; la meta se abre al juntarlas todas
+  function placeKeys(n) {
+    keyEls.forEach(function (el) { el.remove(); }); keyEls = []; keys = [];
+    var tries = 0;
+    while (keys.length < n && tries++ < 400) {
+      var kx = KidsGame.rand(cols), ky = KidsGame.rand(rows), okk = (kx + ky) > 2 && !(kx === cols - 1 && ky === rows - 1);
+      for (var i = 0; i < keys.length && okk; i++) if (Math.abs(keys[i][0] - kx) + Math.abs(keys[i][1] - ky) < Math.max(3, Math.floor(cols / 3))) okk = false;
+      if (okk) keys.push([kx, ky, false]);
+    }
+    keys.forEach(function () {
+      var el = document.createElement('div'); el.className = 'piece key'; el.innerHTML = '<span class="emoji">🔑</span>';
+      wrap.insertBefore(el, goalEl); keyEls.push(el);
+    });
+  }
+  function renderKeys() {
+    keysEl.classList.toggle('show', keys.length > 0);
+    keysEl.innerHTML = keys.map(function (k) { return '<span class="k emoji' + (k[2] ? ' got' : '') + '">🔑</span>'; }).join('');
+    goalEl.classList.toggle('locked', keys.length > 0 && keysGot < keys.length);
+  }
+  function showPicker() {
+    done = true; dragging = false;
+    KidsGame.levelPicker({ key: 'laberinto', onPick: function (n) {
+      nivel = n; level = 0;
+      var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
+      start(true);
+      KidsGame.say(nivel === 3 ? 'Junta las tres llaves y lleva al animalito hasta su comida' : 'Lleva al animalito hasta su comida');
+    } });
+  }
 
   function layout() {
     var W = area.clientWidth - 4, H = area.clientHeight - 4;
     if (W < 40 || H < 40) return;
     // Si la pantalla es vertical y el laberinto es ancho, lo giramos
-    if (W < H && cols > rows || W > H && rows > cols) { cells = transpose(cells); var t = cols; cols = rows; rows = t; t = px; px = py; py = t; t = gx; gx = gy; gy = t; trail = trail.map(function (p) { return [p[1], p[0]]; }); }
+    if (W < H && cols > rows || W > H && rows > cols) { cells = transpose(cells); var t = cols; cols = rows; rows = t; t = px; px = py; py = t; t = gx; gx = gy; gy = t; trail = trail.map(function (p) { return [p[1], p[0]]; }); keys.forEach(function (k) { var kk = k[0]; k[0] = k[1]; k[1] = kk; }); }
     cell = Math.floor(Math.min(W / cols, H / rows));
     off = Math.round(cell * 0.12);
     var cw = cell * cols + off * 2, chh = cell * rows + off * 2;
@@ -175,10 +227,11 @@ var game = KidsGame.init({ title: 'Laberinto' });
     canvas.style.width = cw + 'px'; canvas.style.height = chh + 'px';
     wrap.style.width = cw + 'px'; wrap.style.height = chh + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    [charEl, goalEl].forEach(function (el) {
+    [charEl, goalEl].concat(keyEls).forEach(function (el) {
       el.style.width = cell + 'px'; el.style.height = cell + 'px';
       el.firstChild.style.fontSize = Math.round(cell * 0.7) + 'px';
     });
+    keys.forEach(function (k, i) { place(keyEls[i], k[0], k[1]); });
     place(goalEl, gx, gy); place(charEl, px, py);
     draw();
   }
@@ -275,7 +328,18 @@ var game = KidsGame.init({ title: 'Laberinto' });
     if (trail.length > 1 && trail[trail.length - 2][0] === px && trail[trail.length - 2][1] === py) trail.pop();
     else if (!(last[0] === px && last[1] === py)) trail.push([px, py]);
     draw(); place(charEl, px, py);
-    if (px === gx && py === gy) win();
+    for (var ki = 0; ki < keys.length; ki++) {
+      if (!keys[ki][2] && keys[ki][0] === px && keys[ki][1] === py) {
+        keys[ki][2] = true; keysGot++; keyEls[ki].classList.add('got');
+        keyEls[ki].style.transform += ' scale(1.6)';
+        KidsGame.sound.ok(); KidsGame.vibrate(30); burst(8); renderKeys();
+        if (keysGot === keys.length) { KidsGame.sound.pop(); KidsGame.toast('¡Se abrió! 🔓', 1200); goalEl.classList.remove('locked'); }
+      }
+    }
+    if (px === gx && py === gy) {
+      if (keysGot < keys.length) { KidsGame.sound.wrong(); KidsGame.toast('Faltan llaves 🔑', 1200); var ge = goalEl.querySelector('.lock'); ge.classList.remove('shake'); void ge.offsetWidth; ge.classList.add('shake'); }
+      else win();
+    }
     return true;
   }
   function tryDir(d) {
@@ -334,9 +398,9 @@ var game = KidsGame.init({ title: 'Laberinto' });
     if (m != null) tryDir(m);
   });
 
-  function burst() {
+  function burst(n) {
     var r = charEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    for (var i = 0; i < 18; i++) {
+    for (var i = 0; i < (n || 18); i++) {
       var d = document.createElement('div'); d.className = 'spark emoji';
       d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
       var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
@@ -361,8 +425,10 @@ var game = KidsGame.init({ title: 'Laberinto' });
   }
 
   window.addEventListener('resize', function () { order(); layout(); });
-  start(true);
-  KidsGame.say('Lleva al animalito hasta su comida');
+  // Primero se elige el nivel; el juego arranca al escoger
+  cols = 5; rows = 5; cells = gen(cols, rows); wallColor = WALLS[0]; trailColor = TRAILS[0];
+  px = 0; py = 0; gx = 4; gy = 4; trail = [[0, 0]]; done = true; layout();
+  showPicker();
 })();
 </script>
 </body>

@@ -7,40 +7,60 @@
 <title>Formas y colores</title>
 <style>
   .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 8px; gap: 8px; }
-  .menu { justify-content: center; gap: 22px; }
-  .menu .btn { width: min(88vw, 460px); min-height: 100px; font-size: min(7vw, 34px); gap: 16px; }
-  .menu .btn .emoji { font-size: 1.5em; }
+  .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 28px; }
   .tools { position: absolute; top: 8px; right: 8px; z-index: 3; }
   .tools .btn { font-size: 30px; }
+  .menu { justify-content: center; gap: 22px; }
+  .menu .btn { width: min(88vw, 460px); min-height: 100px; font-size: min(7vw, 34px); gap: 16px; animation: float 3.4s ease-in-out infinite; }
+  .menu .btn:nth-child(3) { animation-delay: -1.2s; } .menu .btn:nth-child(4) { animation-delay: -2.3s; }
+  .menu .btn .emoji { font-size: 1.5em; }
   /* Encuentra la forma / el color */
   .find { justify-content: center; }
-  .target { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .tshape { width: min(34vw, 30vh, 220px); height: min(34vw, 30vh, 220px); }
-  .tshape svg { width: 100%; height: 100%; filter: drop-shadow(0 8px 0 rgba(0,0,0,.12)); }
-  .tname { font-size: min(7vw, 40px); font-weight: bold; background: #fff; border-radius: 30px; padding: 6px 22px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
-  .tname .cn { color: #fff; border-radius: 20px; padding: 0 14px; margin-left: 6px; }
+  .target { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  /* Medallón de cristal para la figura objetivo */
+  .tshape {
+    position: relative; width: min(34vw, 30vh, 220px); height: min(34vw, 30vh, 220px); border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #f4f9ff 40%, #cfe6ff 80%, #a9d3ff 100%);
+    box-shadow: 0 10px 0 #7fb3e6, 0 18px 28px rgba(20,60,120,.28), 0 0 0 6px #fff, 0 0 0 10px rgba(127,179,230,.5), inset 0 4px 0 #fff, inset 0 -8px 0 rgba(60,120,200,.12);
+    animation: float 3.6s ease-in-out infinite;
+  }
+  .tshape::before { content: ""; position: absolute; left: 12%; right: 12%; top: 6%; height: 32%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0)); pointer-events: none; z-index: 2; }
+  .tshape svg { width: 68%; height: 68%; overflow: visible; filter: drop-shadow(0 8px 6px rgba(20,40,90,.3)); }
+  .tname { font-size: min(7vw, 40px); font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 3px 0 #1f7fae, 0 6px 10px rgba(0,0,0,.3), -2px -2px 0 #1f7fae, 2px -2px 0 #1f7fae, -2px 2px 0 #1f7fae, 2px 2px 0 #1f7fae; }
+  .tname .cn { display: inline-block; color: #fff; border-radius: 20px; padding: 0 16px; margin-left: 6px; text-shadow: 0 2px 0 rgba(0,0,0,.35); box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 rgba(255,255,255,.5); background-image: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 50%, rgba(0,0,0,.12)); }
   .choices { display: flex; flex-wrap: wrap; gap: min(3vw, 22px); justify-content: center; max-width: 100%; }
-  .choice { width: min(21vw, 24vh, 170px); height: min(21vw, 24vh, 170px); padding: 10px; }
-  .choice svg { width: 100%; height: 100%; }
+  .choice { width: min(21vw, 24vh, 170px); height: min(21vw, 24vh, 170px); padding: 12px; animation: pop .35s ease-out backwards, float 3.4s ease-in-out infinite; }
+  .choices.six .choice { width: min(16vw, 18vh, 140px); height: min(16vw, 18vh, 140px); padding: 10px; }
+  .choice:active { animation: none; }
+  .choice svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 4px rgba(20,40,90,.25)); }
   .choice .emoji { font-size: min(13vw, 15vh, 110px); }
+  .choices.six .choice .emoji { font-size: min(10vw, 11vh, 86px); }
+  .choice.ok { animation: bounce .6s; }
   /* Clasifica */
   .sort .area { position: relative; flex: 1 1 auto; width: 100%; touch-action: none; }
-  .piece { position: absolute; cursor: grab; touch-action: none; filter: drop-shadow(0 5px 0 rgba(0,0,0,.14)); }
-  .piece svg { width: 100%; height: 100%; }
-  .piece.drag { z-index: 10; filter: drop-shadow(0 14px 10px rgba(0,0,0,.25)); }
-  .piece.gone { transition: transform .3s ease-in, opacity .3s; opacity: 0; }
+  .piece { position: absolute; cursor: grab; touch-action: none; filter: drop-shadow(0 6px 4px rgba(20,40,90,.28)); animation: pop .35s ease-out backwards, float 3.6s ease-in-out infinite; }
+  .piece svg { width: 100%; height: 100%; overflow: visible; }
+  .piece.drag { z-index: 10; filter: drop-shadow(0 18px 12px rgba(0,0,0,.3)); animation: none; }
+  .piece.gone { transition: transform .35s ease-in, opacity .35s; opacity: 0; animation: none; }
   .piece.bad { animation: shake .35s; }
-  .baskets { flex: 0 0 auto; display: flex; gap: min(3vw, 20px); width: 100%; justify-content: center; }
+  .baskets { flex: 0 0 auto; display: flex; gap: min(3vw, 20px); width: 100%; justify-content: center; align-items: flex-end; }
   .basket {
-    flex: 1 1 0; max-width: 260px; min-height: 110px; border-radius: 22px; border: 6px dashed #ccc; background: #fff;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    box-shadow: 0 5px 0 rgba(0,0,0,.1); transition: transform .12s;
+    position: relative; flex: 1 1 0; max-width: 240px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0;
+    transition: transform .12s; padding-bottom: 4px;
   }
-  .basket .emoji { font-size: min(11vw, 64px); }
-  .basket .bname { color: #fff; font-weight: bold; font-size: min(5vw, 24px); border-radius: 20px; padding: 2px 14px; }
-  .basket.hot { transform: scale(1.08); background: #fffbe6; }
+  .basket svg { width: 100%; height: min(17vh, 150px); overflow: visible; filter: drop-shadow(0 10px 8px rgba(60,30,0,.3)); }
+  .basket .bname { display: inline-flex; align-items: center; gap: 6px; color: #fff; font-weight: 900; font-size: min(4.5vw, 22px); border-radius: 20px; padding: 3px 14px; margin-top: -6px; position: relative; z-index: 2; white-space: nowrap;
+    text-shadow: 0 2px 0 rgba(0,0,0,.35); box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 rgba(255,255,255,.5); background-image: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 50%, rgba(0,0,0,.12)); }
+  .basket .bname svg { width: 26px; height: 26px; filter: none; }
+  .basket.hot { transform: scale(1.1) translateY(-6px); }
+  .basket.hot svg { filter: drop-shadow(0 14px 10px rgba(60,30,0,.35)) drop-shadow(0 0 10px rgba(255,230,120,.9)); }
   .basket.got { animation: pop .35s; }
-  .hint { font-size: min(5.5vw, 26px); font-weight: bold; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .hint { font-size: min(5.5vw, 26px); font-weight: 900; color: #1f2f6b; border-radius: 30px; padding: 6px 20px; text-shadow: 0 1px 0 #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #ffffff, #eef2fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.2), inset 0 2px 0 #fff; }
+  .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
 </style>
 </head>
 <body>
@@ -50,14 +70,14 @@
   var game = KidsGame.init({ title: 'Formas y colores' });
 
   var SHAPES = [
-    { id: 'circulo',    name: 'el círculo',    svg: '<circle cx="50" cy="50" r="42"/>' },
-    { id: 'cuadrado',   name: 'el cuadrado',   svg: '<rect x="9" y="9" width="82" height="82" rx="8"/>' },
-    { id: 'triangulo',  name: 'el triángulo',  svg: '<polygon points="50,7 94,90 6,90"/>' },
-    { id: 'estrella',   name: 'la estrella',   svg: '<polygon points="50,4 62,36 96,37 69,58 79,93 50,73 21,93 31,58 4,37 38,36"/>' },
-    { id: 'corazon',    name: 'el corazón',    svg: '<path d="M50 92 L14 54 C0 38 12 12 32 12 C42 12 48 19 50 26 C52 19 58 12 68 12 C88 12 100 38 86 54 Z"/>' },
-    { id: 'rectangulo', name: 'el rectángulo', svg: '<rect x="4" y="24" width="92" height="52" rx="6"/>' },
-    { id: 'ovalo',      name: 'el óvalo',      svg: '<ellipse cx="50" cy="50" rx="46" ry="28"/>' },
-    { id: 'rombo',      name: 'el rombo',      svg: '<polygon points="50,4 94,50 50,96 6,50"/>' }
+    { id: 'circulo',    name: 'el círculo',    short: 'círculo',    svg: '<circle cx="50" cy="50" r="42"/>' },
+    { id: 'cuadrado',   name: 'el cuadrado',   short: 'cuadrado',   svg: '<rect x="9" y="9" width="82" height="82" rx="8"/>' },
+    { id: 'triangulo',  name: 'el triángulo',  short: 'triángulo',  svg: '<polygon points="50,7 94,90 6,90"/>' },
+    { id: 'estrella',   name: 'la estrella',   short: 'estrella',   svg: '<polygon points="50,4 62,36 96,37 69,58 79,93 50,73 21,93 31,58 4,37 38,36"/>' },
+    { id: 'corazon',    name: 'el corazón',    short: 'corazón',    svg: '<path d="M50 92 L14 54 C0 38 12 12 32 12 C42 12 48 19 50 26 C52 19 58 12 68 12 C88 12 100 38 86 54 Z"/>' },
+    { id: 'rectangulo', name: 'el rectángulo', short: 'rectángulo', svg: '<rect x="4" y="24" width="92" height="52" rx="6"/>' },
+    { id: 'ovalo',      name: 'el óvalo',      short: 'óvalo',      svg: '<ellipse cx="50" cy="50" rx="46" ry="28"/>' },
+    { id: 'rombo',      name: 'el rombo',      short: 'rombo',      svg: '<polygon points="50,4 94,50 50,96 6,50"/>' }
   ];
   var COLORS = [
     { id: 'rojo',     name: 'rojo',     hex: '#e63946', items: ['🍎','🍓','🌹','🚒'] },
@@ -72,24 +92,95 @@
   var ACTS = ['shapes', 'colors', 'sort'];
   var ROUNDS_PER_ACT = [4, 4, 2];
 
-  var act = 0, roundsInAct = 0, correctTotal = 0, nextBurst = 5, nextParty = 8, lock = false;
+  var level = 1, act = 0, roundsInAct = 0, correctTotal = 0, nextBurst = 5, nextParty = 8, lock = false;
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
   function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
-  function shapeSVG(shape, color) {
-    return '<svg viewBox="0 0 100 100"><g fill="' + color + '" stroke="rgba(0,0,0,.12)" stroke-width="3" stroke-linejoin="round">' + shape.svg + '</g></svg>';
+  // Aclara (f>0) u oscurece (f<0) un color hex
+  function shade(hex, f) {
+    var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    function m(c) { return Math.max(0, Math.min(255, Math.round(f > 0 ? c + (255 - c) * f : c * (1 + f)))); }
+    return '#' + ((1 << 24) + (m(r) << 16) + (m(g) << 8) + m(b)).toString(16).slice(1);
   }
+  var uid = 0;
+  // Figura como juguete de plástico brillante: degradado con luz arriba-izquierda, grosor inferior, contorno y brillo
+  function shapeSVG(shape, color) {
+    var id = 'g' + (uid++);
+    return '<svg viewBox="0 0 100 100" overflow="visible"><defs>' +
+      '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + shade(color, .5) + '"/><stop offset=".5" stop-color="' + color + '"/><stop offset="1" stop-color="' + shade(color, -.3) + '"/></linearGradient>' +
+      '<clipPath id="' + id + 'c">' + shape.svg + '</clipPath></defs>' +
+      '<g fill="' + shade(color, -.45) + '" transform="translate(0,6)">' + shape.svg + '</g>' +
+      '<g fill="url(#' + id + ')" stroke="' + shade(color, -.35) + '" stroke-width="2.5" stroke-linejoin="round">' + shape.svg + '</g>' +
+      '<g clip-path="url(#' + id + 'c)"><ellipse cx="36" cy="26" rx="26" ry="13" fill="#fff" opacity=".5" transform="rotate(-25 36 26)"/>' +
+      '<ellipse cx="62" cy="84" rx="30" ry="9" fill="#fff" opacity=".14"/></g></svg>';
+  }
+  var BLOB = '<path d="M50 6 C72 2 94 18 95 42 C96 64 84 92 58 95 C34 98 6 84 5 58 C4 30 28 10 50 6 Z"/><circle cx="16" cy="20" r="7"/><circle cx="88" cy="82" r="6"/><circle cx="84" cy="12" r="4.5"/><circle cx="10" cy="86" r="4"/>';
+  // Mancha de pintura en 3D: degradado radial, grosor y brillo húmedo
   function blobSVG(color) {
-    return '<svg viewBox="0 0 100 100"><path d="M50 6 C72 2 94 18 95 42 C96 64 84 92 58 95 C34 98 6 84 5 58 C4 30 28 10 50 6 Z" fill="' + color + '"/>' +
-      '<circle cx="18" cy="22" r="7" fill="' + color + '"/><circle cx="86" cy="80" r="6" fill="' + color + '"/><circle cx="82" cy="14" r="4" fill="' + color + '"/>' +
-      '<ellipse cx="36" cy="30" rx="10" ry="6" fill="rgba(255,255,255,.35)"/></svg>';
+    var id = 'b' + (uid++);
+    return '<svg viewBox="0 0 100 100" overflow="visible"><defs><radialGradient id="' + id + '" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="' + shade(color, .55) + '"/><stop offset=".45" stop-color="' + color + '"/><stop offset="1" stop-color="' + shade(color, -.4) + '"/></radialGradient></defs>' +
+      '<g fill="' + shade(color, -.5) + '" transform="translate(1,6)">' + BLOB + '</g>' +
+      '<g fill="url(#' + id + ')">' + BLOB + '</g>' +
+      '<ellipse cx="34" cy="28" rx="17" ry="9" fill="#fff" opacity=".6" transform="rotate(-25 34 28)"/><circle cx="14" cy="17" r="2.5" fill="#fff" opacity=".8"/><ellipse cx="62" cy="80" rx="18" ry="6" fill="#fff" opacity=".18"/></svg>';
+  }
+  // Canasta tejida con boca abierta, asa y listón del color
+  function basketSVG(color) {
+    var id = 'k' + (uid++);
+    return '<svg viewBox="0 0 200 150" overflow="visible"><defs>' +
+      '<pattern id="' + id + 'w" patternUnits="userSpaceOnUse" width="18" height="12"><rect width="18" height="12" fill="#c98b48"/><rect width="9" height="6" fill="#e0a862"/><rect x="9" y="6" width="9" height="6" fill="#e0a862"/><rect y="5" width="18" height="2" fill="#8b5222" opacity=".6"/><rect y="11" width="18" height="1.5" fill="#8b5222" opacity=".6"/></pattern>' +
+      '<linearGradient id="' + id + 's" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#3a1c05" stop-opacity=".5"/></linearGradient>' +
+      '<linearGradient id="' + id + 'v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c05" stop-opacity="0"/><stop offset="1" stop-color="#3a1c05" stop-opacity=".45"/></linearGradient></defs>' +
+      '<path d="M52 66 C50 20 150 20 148 66" fill="none" stroke="#8b5222" stroke-width="12" stroke-linecap="round"/>' +
+      '<path d="M52 66 C50 20 150 20 148 66" fill="none" stroke="#e0a862" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 6"/>' +
+      '<ellipse class="mouth" cx="100" cy="64" rx="80" ry="17" fill="#3a1c05"/>' +
+      '<ellipse cx="100" cy="64" rx="70" ry="11" fill="#5a2e0c"/>' +
+      '<path d="M20 64 L38 142 Q100 156 162 142 L180 64 Q100 84 20 64 Z" fill="url(#' + id + 'w)"/>' +
+      '<path d="M20 64 L38 142 Q100 156 162 142 L180 64 Q100 84 20 64 Z" fill="url(#' + id + 's)"/>' +
+      '<path d="M20 64 L38 142 Q100 156 162 142 L180 64 Q100 84 20 64 Z" fill="url(#' + id + 'v)"/>' +
+      '<path d="M25 86 Q100 106 175 86 L172 100 Q100 120 28 100 Z" fill="' + color + '"/>' +
+      '<path d="M25 86 Q100 106 175 86 L174 92 Q100 112 26 92 Z" fill="#fff" opacity=".35"/>' +
+      '<path d="M20 64 Q100 84 180 64" fill="none" stroke="#e0a862" stroke-width="9" stroke-linecap="round"/>' +
+      '<path d="M20 64 Q100 84 180 64" fill="none" stroke="#fff" stroke-width="3" opacity=".45" stroke-linecap="round"/>' +
+      '<path d="M20 64 Q100 84 180 64" fill="none" stroke="#8b5222" stroke-width="9" stroke-dasharray="7 9" opacity=".55" stroke-linecap="round"/></svg>';
+  }
+  // Chispas que salen del centro de un elemento (máx. 14)
+  function sparks(node, color) {
+    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var pal = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
+    for (var i = 0; i < 14; i++) {
+      var d = document.createElement('div'); d.className = 'spark';
+      var ang = (i / 14) * Math.PI * 2, dist = 60 + Math.random() * 70;
+      d.style.left = (cx - 7) + 'px'; d.style.top = (cy - 7) + 'px';
+      d.style.setProperty('--c', color || pal[i % pal.length]);
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px'); d.style.setProperty('--dy', Math.sin(ang) * dist - 30 + 'px');
+      d.style.animationDelay = (Math.random() * 90) + 'ms';
+      document.body.appendChild(d);
+      (function (x) { setTimeout(function () { x.remove(); }, 900); })(d);
+    }
+  }
+
+  /* ---------- Niveles ---------- */
+  function shapePool() { return level === 1 ? SHAPES.slice(0, 5) : SHAPES; }
+  function colorPool() { return level === 1 ? COLORS.slice(0, 4) : COLORS; }
+  function nOptions() { return level === 1 ? 3 : level === 2 ? 4 : 6; }
+  function pickLevel() {
+    game.innerHTML = ''; lock = true; pieces = []; area = null; basketsEl = null; dragging = null;
+    KidsGame.levelPicker({ onPick: function (n) { level = n; showMenu(); } });
+  }
+  function hud() {
+    var h = el('div', 'hud');
+    var b = el('button', 'btn round yellow', '🎚️'); b.setAttribute('aria-label', 'Nivel');
+    onTap(b, function () { KidsGame.sound.tap(); pickLevel(); });
+    h.appendChild(b); h.appendChild(KidsGame.levelBadge(level));
+    return h;
   }
 
   /* ---------- Menú ---------- */
   function showMenu() {
     game.innerHTML = '';
     var m = el('div', 'screen menu');
+    m.appendChild(hud());
     [['🔺', 'Formas', ''], ['🎨', 'Colores', 'blue'], ['🧺', 'Clasifica', 'green']].forEach(function (b, i) {
       var btn = el('button', 'btn big ' + b[2], '<span class="emoji">' + b[0] + '</span> ' + b[1]);
       onTap(btn, function () { KidsGame.sound.tap(); startAct(i); });
@@ -110,7 +201,7 @@
     var tools = el('div', 'tools');
     var sw = el('button', 'btn round purple', '🔁'); sw.setAttribute('aria-label', 'Otro juego');
     onTap(sw, function () { KidsGame.sound.tap(); nextAct(); });
-    tools.appendChild(sw); s.appendChild(tools); game.appendChild(s);
+    tools.appendChild(sw); s.appendChild(hud()); s.appendChild(tools); game.appendChild(s);
     lock = false;
     return s;
   }
@@ -133,7 +224,7 @@
   function answer(c, ok, again) {
     if (lock) return;
     if (ok) {
-      lock = true; c.classList.add('ok'); replay(c, 'bounce'); scored();
+      lock = true; c.classList.add('ok'); replay(c, 'bounce'); sparks(c); scored();
       setTimeout(function () { afterRound(again); }, 900);
     } else { KidsGame.sound.wrong(); replay(c, 'bad'); }
   }
@@ -141,17 +232,18 @@
   /* ---------- (a) Encuentra la forma ---------- */
   function shapesRound() {
     var s = buildScreen('find shapes');
-    var target = KidsGame.pick(SHAPES);
-    var others = KidsGame.shuffle(SHAPES.filter(function (x) { return x !== target; })).slice(0, 3);
+    var SP = shapePool(), n = Math.min(nOptions(), SP.length);
+    var target = KidsGame.pick(SP);
+    var others = KidsGame.shuffle(SP.filter(function (x) { return x !== target; })).slice(0, n - 1);
     var cols = KidsGame.shuffle(COLORS);
     s.dataset.target = target.id;
     var top = el('div', 'target');
     top.innerHTML = '<div class="tshape">' + shapeSVG(target, cols[0].hex) + '</div><div class="tname">Encuentra ' + target.name + '</div>';
     onTap(top, function () { KidsGame.sound.tap(); KidsGame.say('Encuentra ' + target.name); });
-    var row = el('div', 'choices');
+    var row = el('div', 'choices' + (n >= 6 ? ' six' : ''));
     KidsGame.shuffle([target].concat(others)).forEach(function (sh, i) {
-      var c = el('div', 'card choice pop'); c.dataset.id = sh.id; c.style.animationDelay = (i * 80) + 'ms';
-      c.innerHTML = shapeSVG(sh, cols[i + 1].hex);
+      var c = el('div', 'card choice'); c.dataset.id = sh.id; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 0.9) + 's';
+      c.innerHTML = shapeSVG(sh, cols[(i + 1) % cols.length].hex);
       onTap(c, function () { answer(c, sh === target, shapesRound); });
       row.appendChild(c);
     });
@@ -162,16 +254,17 @@
   /* ---------- (b) Encuentra el color ---------- */
   function colorsRound() {
     var s = buildScreen('find colors');
-    var target = KidsGame.pick(COLORS);
-    var others = KidsGame.shuffle(COLORS.filter(function (x) { return x !== target; })).slice(0, 3);
+    var CP = colorPool(), n = Math.min(nOptions(), CP.length);
+    var target = KidsGame.pick(CP);
+    var others = KidsGame.shuffle(CP.filter(function (x) { return x !== target; })).slice(0, n - 1);
     s.dataset.target = target.id;
     var top = el('div', 'target');
-    top.innerHTML = '<div class="tshape">' + blobSVG(target.hex) + '</div><div class="tname">Color <span class="cn" style="background:' + target.hex + '">' + target.name + '</span></div>';
+    top.innerHTML = '<div class="tshape">' + blobSVG(target.hex) + '</div><div class="tname">Color <span class="cn" style="background-color:' + target.hex + '">' + target.name + '</span></div>';
     onTap(top, function () { KidsGame.sound.tap(); KidsGame.say('Encuentra el color ' + target.name); });
-    var row = el('div', 'choices');
+    var row = el('div', 'choices' + (n >= 6 ? ' six' : ''));
     var opts = [{ c: target, e: KidsGame.pick(target.items) }].concat(others.map(function (o) { return { c: o, e: KidsGame.pick(o.items) }; }));
     KidsGame.shuffle(opts).forEach(function (o, i) {
-      var c = el('div', 'card choice pop'); c.dataset.id = o.c.id; c.style.animationDelay = (i * 80) + 'ms';
+      var c = el('div', 'card choice'); c.dataset.id = o.c.id; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 0.9) + 's';
       c.innerHTML = '<span class="emoji">' + o.e + '</span>';
       onTap(c, function () { answer(c, o.c === target, colorsRound); });
       row.appendChild(c);
@@ -180,34 +273,45 @@
     KidsGame.say('Encuentra el color ' + target.name);
   }
 
-  /* ---------- (c) Clasifica por color ---------- */
+  /* ---------- (c) Clasifica (nivel 1-2 por color; nivel 3 por forma Y color) ---------- */
   var pieces = [], area = null, basketsEl = null, dragging = null;
   function sortRound() {
     var s = buildScreen('sort');
-    var nb = roundsInAct === 0 ? 2 : 3, per = 3;
-    var cols = KidsGame.shuffle(COLORS).slice(0, nb);
-    s.appendChild(el('div', 'hint', '🧺 Pon cada figura en su canasta'));
+    var byShape = level === 3;
+    var nb = level === 1 ? 2 : level === 2 ? (roundsInAct === 0 ? 2 : 3) : (roundsInAct === 0 ? 3 : 4);
+    var per = byShape ? 2 : 3;
+    var bins = [];
+    if (byShape) {
+      // 2 colores x 2 formas: comparten color o forma, hay que mirar las dos cosas
+      var cs = KidsGame.shuffle(colorPool()).slice(0, 2), ss = KidsGame.shuffle(shapePool()).slice(0, 2);
+      var combos = [];
+      cs.forEach(function (c) { ss.forEach(function (sh) { combos.push({ c: c, s: sh }); }); });
+      bins = KidsGame.shuffle(combos).slice(0, nb);
+    } else {
+      bins = KidsGame.shuffle(colorPool()).slice(0, nb).map(function (c) { return { c: c, s: null }; });
+    }
+    s.appendChild(el('div', 'hint', byShape ? '🧺 Forma y color en su canasta' : '🧺 Pon cada figura en su canasta'));
     area = el('div', 'area'); basketsEl = el('div', 'baskets');
-    cols.forEach(function (c) {
-      var b = el('div', 'basket'); b.dataset.color = c.id; b.style.borderColor = c.hex;
-      b.innerHTML = '<span class="emoji">🧺</span><span class="bname" style="background:' + c.hex + '">' + c.name + '</span>';
-      basketsEl.appendChild(b);
+    bins.forEach(function (b) {
+      var d = el('div', 'basket'); d.dataset.color = b.c.id; d.dataset.shape = b.s ? b.s.id : '';
+      d.innerHTML = basketSVG(b.c.hex) + '<span class="bname" style="background-color:' + b.c.hex + '">' + (b.s ? shapeSVG(b.s, b.c.hex) + b.s.short + ' ' : '') + b.c.name + '</span>';
+      basketsEl.appendChild(d);
     });
     pieces = [];
-    cols.forEach(function (c) {
+    bins.forEach(function (b) {
       for (var i = 0; i < per; i++) {
-        var p = el('div', 'piece pop'); p.dataset.color = c.id;
-        p.innerHTML = shapeSVG(KidsGame.pick(SHAPES), c.hex);
+        var p = el('div', 'piece'); p.dataset.color = b.c.id; p.dataset.shape = b.s ? b.s.id : '';
+        p.innerHTML = shapeSVG(b.s || KidsGame.pick(shapePool()), b.c.hex);
         p._jx = Math.random() * 2 - 1; p._jy = Math.random() * 2 - 1;
         p.addEventListener('pointerdown', function (e) { down(e, this); });
         pieces.push(p);
       }
     });
     pieces = KidsGame.shuffle(pieces);
-    pieces.forEach(function (p, i) { p._k = i; p.style.animationDelay = (i * 60) + 'ms'; area.appendChild(p); });
+    pieces.forEach(function (p, i) { p._k = i; p.style.animationDelay = (i * 60) + 'ms, ' + (-i * 0.7) + 's'; area.appendChild(p); });
     s.appendChild(area); s.appendChild(basketsEl);
     layoutSort();
-    KidsGame.say('Pon cada figura en su canasta');
+    KidsGame.say(byShape ? 'Pon cada figura en la canasta de su forma y su color' : 'Pon cada figura en su canasta');
   }
   function layoutSort() {
     if (!area || !area.isConnected) return;
@@ -233,6 +337,7 @@
     });
     return hit;
   }
+  function matches(b, p) { return b.dataset.color === p.dataset.color && (!b.dataset.shape || b.dataset.shape === p.dataset.shape); }
   function down(e, p) {
     if (dragging || lock || p.classList.contains('gone')) return;
     e.preventDefault();
@@ -254,13 +359,14 @@
     Array.prototype.forEach.call(basketsEl.children, function (b) { b.classList.remove('hot'); });
     var r = p.getBoundingClientRect();
     var hit = basketAt(r.left + r.width / 2, r.top + r.height / 2);
-    if (hit && hit.dataset.color === p.dataset.color) {
-      var br = hit.getBoundingClientRect();
+    if (hit && matches(hit, p)) {
+      // Cae dentro de la boca de la canasta
+      var mouth = hit.querySelector('.mouth'), br = mouth ? mouth.getBoundingClientRect() : hit.getBoundingClientRect();
       p.classList.add('gone');
-      // Se anima desde la posición original (left/top) hacia el centro de la canasta
+      // Se anima desde la posición original (left/top) hacia el centro de la boca
       var ox = parseFloat(p.style.left), oy = parseFloat(p.style.top), sz = parseFloat(p.style.width), ar = area.getBoundingClientRect();
-      p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + sz / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + sz / 2)) + 'px) scale(0)';
-      KidsGame.sound.pop(); replay(hit, 'got'); scored();
+      p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + sz / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + sz / 2)) + 'px) scale(0.1)';
+      KidsGame.sound.pop(); replay(hit, 'got'); sparks(hit, '#ffe066'); scored();
       pieces = pieces.filter(function (x) { return x !== p; });
       setTimeout(function () { p.remove(); }, 350);
       if (!pieces.length) { lock = true; setTimeout(function () { afterRound(sortRound); }, 700); }
@@ -274,7 +380,9 @@
   document.addEventListener('pointercancel', up);
 
   window.addEventListener('resize', function () { if (ACTS[act] === 'sort') layoutSort(); });
-  showMenu();
+  // Expuesto para pruebas
+  window.__formas = { setLevel: function (n) { level = n; showMenu(); }, get level() { return level; }, start: startAct };
+  pickLevel();
 })();
 </script>
 </body>

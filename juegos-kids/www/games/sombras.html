@@ -6,30 +6,128 @@
 <link rel="stylesheet" href="../common.css">
 <title>Sombras</title>
 <style>
-  .game { display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px; touch-action: none; }
-  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; }
-  .hint { flex: 0 0 auto; font-size: 22px; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); display: flex; align-items: center; gap: 8px; }
+  .game {
+    display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px; touch-action: none;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,246,190,.55), rgba(255,255,255,0) 70%);
+  }
+  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; }
+  /* Franja de suelo soleado detrás de las sombras */
+  .row.top::before {
+    content: ""; position: absolute; left: 50%; top: -16px; bottom: -16px; z-index: -1; border-radius: 34px;
+    width: calc(var(--n) * var(--sz) + (var(--n) - 1) * var(--gap) + 44px); transform: translateX(-50%);
+    background:
+      radial-gradient(ellipse 60% 55% at 30% 0%, rgba(255,255,255,.45), rgba(255,255,255,0) 70%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 14px, rgba(0,0,0,0) 14px 30px),
+      linear-gradient(180deg, #b7ee7a 0%, #7fcf52 55%, #55ad3c 100%);
+    box-shadow: 0 8px 0 #3d8a2c, 0 18px 28px rgba(0,60,0,.28), inset 0 3px 0 rgba(255,255,255,.55), inset 0 -4px 0 rgba(0,0,0,.12);
+  }
+  .row.top::after {
+    content: "🌷 🌼 🌱"; position: absolute; left: 50%; top: -34px; transform: translateX(calc((var(--n) * var(--sz) + (var(--n) - 1) * var(--gap)) / -2 - 12px));
+    font-size: 24px; z-index: 1; pointer-events: none; filter: drop-shadow(0 3px 2px rgba(0,0,0,.25));
+    font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  }
+  .hint {
+    flex: 0 0 auto; font-size: 24px; font-weight: 900; color: #fff; border-radius: 30px; padding: 8px 22px;
+    display: flex; align-items: center; gap: 10px; position: relative; z-index: 2;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8);
+    text-shadow: 0 2px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.3);
+    box-shadow: 0 6px 0 #1a63a8, 0 12px 18px rgba(0,40,80,.3), inset 0 2px 0 rgba(255,255,255,.6);
+  }
+  .hint .emoji { font-size: 28px; }
+  .hint .hand { animation: bounce .9s ease-in-out infinite; }
   .slot, .obj {
     width: var(--sz); height: var(--sz); min-width: 64px; min-height: 64px;
-    border-radius: 22px; display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: calc(var(--sz) * 0.62);
   }
-  .slot { background: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.12); border: 4px dashed #cfd8ea; position: relative; }
-  .slot .emoji { filter: brightness(0); opacity: .82; transition: filter .3s, opacity .3s, transform .3s; }
-  .slot.hover { border-color: #3da9fc; transform: scale(1.08); background: #eaf6ff; }
-  .slot.ok { border-style: solid; border-color: #2cb67d; background: #d8f3dc; }
-  .slot.ok .emoji { filter: none; opacity: 1; animation: bounce .6s 1; }
+  /* Parche de tierra iluminado por el sol, con sombra "real" del objeto */
+  .slot {
+    position: relative; border-radius: 26px;
+    background:
+      radial-gradient(ellipse 70% 60% at 30% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 110% 90% at 50% 100%, #e2b96a 0%, rgba(226,185,106,0) 60%),
+      linear-gradient(180deg, #fff1c2 0%, #f7d98d 60%, #e9bf66 100%);
+    border: 4px solid rgba(255,255,255,.85);
+    box-shadow: 0 7px 0 #b88a3c, 0 14px 20px rgba(60,30,0,.3), inset 0 2px 0 #fff, inset 0 -6px 12px rgba(150,100,20,.2);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .slot::before {
+    content: ""; position: absolute; inset: 7px; border-radius: 18px; pointer-events: none;
+    border: 3px dashed rgba(140,95,20,.35);
+  }
+  .slot::after {
+    content: ""; position: absolute; left: 14%; right: 14%; bottom: 9%; height: 16%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, rgba(60,40,20,.35), rgba(60,40,20,0) 70%);
+    transition: opacity .3s;
+  }
+  .slot .emoji {
+    filter: brightness(0) blur(.7px); opacity: .62; position: relative; z-index: 1;
+    transform: skewX(-6deg) scaleY(.96) translateY(2%);
+    transition: filter .35s, opacity .35s, transform .35s;
+  }
+  .slot.hover { transform: scale(1.1) translateY(-4px); box-shadow: 0 11px 0 #b88a3c, 0 20px 26px rgba(60,30,0,.35), 0 0 0 6px rgba(255,235,120,.9), 0 0 30px rgba(255,220,80,.9), inset 0 2px 0 #fff; }
+  .slot.hover .emoji { opacity: .8; }
+  .slot.ok {
+    background:
+      radial-gradient(ellipse 70% 60% at 30% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #ecffe9 0%, #bdf3c6 100%);
+    border-color: #fff;
+    box-shadow: 0 7px 0 #3fa864, 0 14px 20px rgba(20,120,60,.35), 0 0 0 5px rgba(120,230,150,.7), 0 0 26px rgba(120,255,160,.8), inset 0 2px 0 #fff;
+  }
+  .slot.ok::before { border-color: rgba(60,170,90,.35); border-style: solid; }
+  .slot.ok::after { opacity: .5; }
+  .slot.ok .emoji { filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); opacity: 1; transform: none; animation: bounce .6s 1; }
   .slot.bad { animation: shake .35s; }
-  .obj { background: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.14); cursor: grab; touch-action: none; transition: transform .15s, opacity .2s; }
-  .obj.dragging { opacity: .25; }
+  /* Medallones brillantes */
+  .obj {
+    position: relative; border-radius: 50%; cursor: grab; touch-action: none;
+    background:
+      radial-gradient(circle at 35% 28%, #ffffff 0%, #f5f8ff 35%, #d9e3f7 70%, #b8c8ea 100%);
+    border: 5px solid #fff;
+    box-shadow: 0 0 0 4px #ffd45c, 0 8px 0 #c48d1e, 0 8px 0 4px #c48d1e, 0 16px 22px rgba(20,40,90,.35), inset 0 3px 0 #fff, inset 0 -6px 10px rgba(80,110,170,.22);
+    transition: transform .15s, opacity .2s, box-shadow .15s;
+    animation: float 3.4s ease-in-out infinite;
+  }
+  .obj::before {
+    content: ""; position: absolute; left: 14%; right: 14%; top: 6%; height: 34%; border-radius: 50%; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0));
+  }
+  .obj::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(from 200deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,.8) 40deg, rgba(255,255,255,0) 80deg, rgba(255,255,255,0) 360deg);
+    opacity: .9;
+  }
+  .obj .emoji { position: relative; z-index: 1; filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); }
+  .obj.pop { animation: pop .35s ease-out backwards; }
+  .obj:active { transform: scale(.94); }
+  .obj.dragging { opacity: .3; animation: none; }
   .obj.gone { visibility: hidden; }
   .obj.bad { animation: shake .35s; }
   .ghost {
     position: absolute; left: 0; top: 0; pointer-events: none; z-index: 20;
     width: var(--sz); height: var(--sz); display: flex; align-items: center; justify-content: center;
-    font-size: calc(var(--sz) * 0.72); filter: drop-shadow(0 10px 8px rgba(0,0,0,.3));
+    font-size: calc(var(--sz) * 0.72);
     transform: translate(-50%, -60%) scale(1.15);
   }
+  .ghost .emoji { filter: drop-shadow(0 18px 12px rgba(0,0,0,.4)); transform: rotate(-6deg); }
+  /* Chispas doradas al acertar */
+  .spark {
+    position: absolute; width: 18px; height: 18px; z-index: 30; pointer-events: none; margin: -9px 0 0 -9px;
+    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+    background: radial-gradient(circle at 50% 50%, #fff 0, #ffe27a 40%, #ffb703 100%);
+    animation: spark .75s ease-out forwards;
+  }
+  .spark.pink { background: radial-gradient(circle at 50% 50%, #fff 0, #ffb3d1 40%, #f0569a 100%); }
+  @keyframes spark { 0%{transform:translate(0,0) scale(.3) rotate(0);opacity:1} 60%{opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(1.3) rotate(200deg);opacity:0} }
+  .ring {
+    position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; z-index: 29; pointer-events: none;
+    border: 6px solid rgba(255,255,255,.95); box-shadow: 0 0 0 4px rgba(255,220,80,.6);
+    animation: ring .55s ease-out forwards;
+  }
+  @keyframes ring { 0%{transform:scale(.4);opacity:1} 100%{transform:scale(3.2);opacity:0} }
+  .row.mid { gap: 12px; z-index: 2; }
+  .row.mid .kg-level-badge { font-size: 20px; padding: 8px 16px; }
+  .row.mid .lvbtn { font-size: 28px; }
 </style>
 </head>
 <body>
@@ -44,30 +142,78 @@ var game = KidsGame.init({ title: 'Sombras' });
     ['🧸','⚽','🪁','🎸','🎺','🧩','🪀','🎨','🚂','🪆','🎲','🏀'],
     ['🌻','🌵','🌳','🍄','🌈','☂️','🔑','⭐','🏠','🔔','🎩','👑']
   ];
+  // Nivel 3: conjuntos de siluetas parecidas (distractores difíciles)
+  var SETS_HARD = [
+    ['🐶','🐺','🦊','🐱','🐯','🦁','🐻','🐼','🐨','🐷','🐸','🐵'],
+    ['🍎','🍊','🍋','🍑','🍅','🍐','🥝','🥭','🍏','🧅','🥔','🍈'],
+    ['🚗','🚕','🚙','🚌','🚎','🚐','🚚','🚛','🏎️','🚓','🚑','🚒'],
+    ['🐔','🐓','🐦','🐧','🦆','🦢','🦉','🦜','🐤','🦩','🕊️','🦚'],
+    ['🐟','🐠','🐡','🦈','🐬','🐳','🐋','🦭','🐙','🦑','🦐','🦞']
+  ];
+  var DIFF = { 1: { base: 3, max: 4 }, 2: { base: 5, max: 6 }, 3: { base: 7, max: 8 } };
+  var nivel = 1, running = false;
   var round = 0, count = 3, items = [], slots = [], placed = 0;
   var hint = document.createElement('div'); hint.className = 'hint';
-  var top = document.createElement('div'); top.className = 'row';
+  var top = document.createElement('div'); top.className = 'row top';
   var bottom = document.createElement('div'); bottom.className = 'row';
+  var mid = document.createElement('div'); mid.className = 'row mid';
   game.innerHTML = '';
-  game.appendChild(top); game.appendChild(hint); game.appendChild(bottom);
+  mid.appendChild(hint);
+  game.appendChild(top); game.appendChild(mid); game.appendChild(bottom);
 
   function layout() {
     var n = items.length || 3;
-    var W = game.clientWidth - 16, H = game.clientHeight - hint.offsetHeight - 40;
+    var W = game.clientWidth - 16 - 44, H = game.clientHeight - mid.offsetHeight - 40;
     var gap = 14;
     var sz = Math.floor(Math.min((W - (n - 1) * gap) / n, H / 2.6, 200));
     sz = Math.max(64, sz);
     game.style.setProperty('--sz', sz + 'px');
     game.style.setProperty('--gap', gap + 'px');
+    game.style.setProperty('--n', n);
+  }
+
+  function pickLevel() {
+    running = false; drag = null;
+    top.innerHTML = ''; bottom.innerHTML = ''; mid.innerHTML = '';
+    items = []; slots = [];
+    KidsGame.levelPicker({ onPick: function (n) { nivel = n; round = 0; start(); } });
+  }
+  function buildHud() {
+    mid.innerHTML = '';
+    mid.appendChild(KidsGame.levelBadge(nivel));
+    mid.appendChild(hint);
+    var b = document.createElement('button'); b.className = 'btn round purple lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
+    mid.appendChild(b);
+  }
+
+  // Chispas y anillo de luz que salen del centro de un elemento
+  function burst(el) {
+    var r = el.getBoundingClientRect(), g = game.getBoundingClientRect();
+    var cx = r.left - g.left + r.width / 2, cy = r.top - g.top + r.height / 2;
+    var ring = document.createElement('div'); ring.className = 'ring'; ring.style.left = cx + 'px'; ring.style.top = cy + 'px';
+    game.appendChild(ring); setTimeout(function () { ring.remove(); }, 700);
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement('div'); s.className = 'spark' + (i % 3 === 0 ? ' pink' : '');
+      var a = (i / 14) * Math.PI * 2 + Math.random() * .4, d = r.width * .5 + Math.random() * r.width * .4;
+      s.style.left = cx + 'px'; s.style.top = cy + 'px';
+      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', Math.sin(a) * d + 'px');
+      s.style.animationDelay = (Math.random() * 100) + 'ms';
+      game.appendChild(s);
+      (function (e) { setTimeout(function () { e.remove(); }, 950); })(s);
+    }
   }
 
   function start() {
-    count = Math.min(3 + Math.floor(round / 2), 5);
-    var set = SETS[round % SETS.length];
+    running = true;
+    var D = DIFF[nivel];
+    count = Math.min(D.base + Math.floor(round / 2), D.max);
+    var set = (nivel === 3 ? SETS_HARD : SETS)[round % SETS.length];
     items = KidsGame.shuffle(set).slice(0, count);
     placed = 0; slots = [];
     top.innerHTML = ''; bottom.innerHTML = '';
-    hint.innerHTML = '<span class="emoji">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0)">🐶</span>';
+    hint.innerHTML = '<span class="emoji hand">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0);opacity:.7">🐶</span>';
+    buildHud();
     items.forEach(function (em, i) {
       var s = document.createElement('div');
       s.className = 'slot pop'; s.style.animationDelay = (i * 60) + 'ms';
@@ -81,6 +227,7 @@ var game = KidsGame.init({ title: 'Sombras' });
       o.dataset.v = em;
       o.innerHTML = '<span class="emoji">' + em + '</span>';
       o.addEventListener('pointerdown', function (ev) { startDrag(ev, o); });
+      o.addEventListener('animationend', function () { if (o.classList.contains('pop')) { o.classList.remove('pop'); o.style.animationDelay = (i * -0.7) + 's'; } });
       bottom.appendChild(o);
     });
     layout();
@@ -89,7 +236,7 @@ var game = KidsGame.init({ title: 'Sombras' });
 
   var drag = null;
   function startDrag(ev, o) {
-    if (drag || o.classList.contains('gone')) return;
+    if (!running || drag || o.classList.contains('gone')) return;
     ev.preventDefault();
     KidsGame.sound.tap();
     var g = document.createElement('div');
@@ -134,11 +281,13 @@ var game = KidsGame.init({ title: 'Sombras' });
     d.g.remove();
     d.o.classList.remove('dragging');
     if (d.hover) d.hover.classList.remove('hover');
+    if (!running) return;
     var target = slotAt(ev.clientX, ev.clientY);
     if (target && !target.classList.contains('ok') && target.dataset.v === d.o.dataset.v) {
       target.classList.add('ok');
       d.o.classList.add('gone');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+      burst(target);
       placed++;
       if (placed === items.length) setTimeout(finish, 600);
     } else if (target) {
@@ -157,8 +306,8 @@ var game = KidsGame.init({ title: 'Sombras' });
     });
   }
 
-  window.addEventListener('resize', layout);
-  start();
+  window.addEventListener('resize', function () { if (running) layout(); });
+  pickLevel();
 })();
 </script>
 </body>

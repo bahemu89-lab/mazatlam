@@ -31,6 +31,8 @@
     box-shadow: 0 5px 0 #b35a00, 0 10px 16px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7);
   }
   .hud .emoji { font-size: 36px; animation: float 3s ease-in-out infinite; }
+  .hud .kg-level-badge { font-size: 20px; padding: 6px 16px; }
+  .hud .lvbtn { font-size: 28px; margin-left: 4px; }
   /* Tapete de fieltro debajo del tablero */
   .board {
     position: relative; z-index: 1; flex: 0 0 auto; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh);
@@ -64,11 +66,11 @@
     backface-visibility: hidden; -webkit-backface-visibility: hidden;
   }
   .face.back {
-    color: #fff; font-size: 46px; font-weight: 900;
+    color: #fff; font-size: calc(var(--fs) * .85); font-weight: 900;
     background:
       radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), rgba(255,255,255,0) 45%),
-      repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 6px, rgba(255,255,255,0) 6px 14px),
-      repeating-linear-gradient(-45deg, rgba(255,255,255,.14) 0 6px, rgba(255,255,255,0) 6px 14px),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.1) 0 6px, rgba(255,255,255,0) 6px 14px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.1) 0 6px, rgba(255,255,255,0) 6px 14px),
       linear-gradient(160deg, var(--c1) 0%, var(--c2) 100%);
     text-shadow: 0 3px 0 rgba(0,0,0,.28), 0 6px 10px rgba(0,0,0,.3);
     box-shadow: 0 7px 0 rgba(0,0,0,.28), 0 14px 22px rgba(30,10,0,.42), inset 0 3px 0 rgba(255,255,255,.55), inset 0 -4px 0 rgba(0,0,0,.18), inset 0 0 0 4px rgba(255,255,255,.55);
@@ -82,7 +84,7 @@
     content: ""; position: absolute; left: 6%; right: 6%; top: 4%; height: 40%; border-radius: 14px 14px 40% 40%;
     background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); z-index: 1;
   }
-  .face.back .q { position: relative; z-index: 2; transform: rotate(-8deg); }
+  .face.back .q { position: relative; z-index: 2; transform: rotate(-8deg); text-shadow: 0 4px 0 rgba(0,0,0,.25), 0 8px 12px rgba(0,0,0,.3), 0 -1px 0 rgba(255,255,255,.4); }
   .face.back .shine {
     position: absolute; top: -20%; bottom: -20%; width: 35%; left: 0; z-index: 3; pointer-events: none;
     background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.45), rgba(255,255,255,0));
@@ -114,10 +116,10 @@
   .mcard.flipped:active .inner, .mcard.done:active .inner { transform: rotateY(180deg); }
   /* Chispas al acertar */
   .spark {
-    position: absolute; width: 16px; height: 16px; z-index: 30; pointer-events: none; margin: -8px 0 0 -8px;
+    position: absolute; width: 22px; height: 22px; z-index: 30; pointer-events: none; margin: -11px 0 0 -11px;
     clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
     background: radial-gradient(circle at 50% 50%, #fff 0, #ffe27a 40%, #ffb703 100%);
-    animation: spark .7s ease-out forwards;
+    animation: spark .8s ease-out forwards;
   }
   @keyframes spark { 0%{transform:translate(0,0) scale(.4) rotate(0);opacity:1} 60%{opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(180deg);opacity:0} }
 </style>
@@ -128,23 +130,37 @@
 var game = KidsGame.init({ title: 'Memoria' });
 (function () {
   var ANIMALS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦉','🐴','🦄','🐝','🐢','🐙','🦋','🐞','🐠','🐬','🦀'];
-  var BACKS = [['#ff8fb8','#e6397a'],['#5fc0ff','#5a3ee0'],['#5fe0a0','#1d8e8e'],['#ffd24d','#f0629a']];
-  var LEVELS = [
-    { pairs: 3, cols: 3, rows: 2 },
-    { pairs: 4, cols: 4, rows: 2 },
-    { pairs: 6, cols: 4, rows: 3 },
-    { pairs: 8, cols: 4, rows: 4 }
-  ];
-  var level = 0, cfg, first = null, lock = false, matched = 0, board, hud;
+  var BACKS = [['#ff7fb0','#c9186a'],['#4fb8ff','#4a2ed0'],['#4fd894','#137a7a'],['#ffc93c','#e8508a']];
+  // Dificultad: 1 = pocas parejas, 2 = medio, 3 = muchas parejas y menos tiempo para verlas
+  var DIFF = {
+    1: { rounds: [{ pairs: 3, cols: 3, rows: 2 }, { pairs: 4, cols: 4, rows: 2 }], reveal: 850 },
+    2: { rounds: [{ pairs: 6, cols: 4, rows: 3 }, { pairs: 8, cols: 4, rows: 4 }], reveal: 650 },
+    3: { rounds: [{ pairs: 10, cols: 5, rows: 4 }, { pairs: 12, cols: 6, rows: 4 }], reveal: 420 }
+  };
+  var nivel = 1, LEVELS = DIFF[1].rounds;
+  var level = 0, cfg, first = null, lock = false, matched = 0, board, hud, running = false;
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
   board = document.createElement('div'); board.className = 'board';
   game.appendChild(hud); game.appendChild(board);
 
+  function pickLevel() {
+    running = false; lock = true; first = null;
+    board.innerHTML = ''; hud.innerHTML = '';
+    KidsGame.levelPicker({ onPick: function (n) { nivel = n; LEVELS = DIFF[n].rounds; level = 0; start(); } });
+  }
+  function buildHud() {
+    hud.innerHTML = '<span class="lvl">Ronda ' + (level + 1) + '</span><span class="emoji">🧠</span>';
+    hud.appendChild(KidsGame.levelBadge(nivel));
+    var b = document.createElement('button'); b.className = 'btn round purple lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
+    hud.appendChild(b);
+  }
+
   function layout() {
     var cols = cfg.cols, rows = cfg.rows;
-    var W = game.clientWidth - 20, H = game.clientHeight - hud.offsetHeight - 28;
+    var W = game.clientWidth - 56, H = game.clientHeight - hud.offsetHeight - 64; // deja sitio al tapete (18px) y al margen
     // En vertical, más filas que columnas
     if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
     var gap = 10;
@@ -164,7 +180,7 @@ var game = KidsGame.init({ title: 'Memoria' });
     var cx = r.left - g.left + r.width / 2, cy = r.top - g.top + r.height / 2;
     for (var i = 0; i < 12; i++) {
       var s = document.createElement('div'); s.className = 'spark';
-      var a = (i / 12) * Math.PI * 2 + Math.random() * .4, d = r.width * .45 + Math.random() * r.width * .35;
+      var a = (i / 12) * Math.PI * 2 + Math.random() * .4, d = r.width * .55 + Math.random() * r.width * .45;
       s.style.left = cx + 'px'; s.style.top = cy + 'px';
       s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', Math.sin(a) * d + 'px');
       s.style.animationDelay = (Math.random() * 90) + 'ms';
@@ -175,8 +191,8 @@ var game = KidsGame.init({ title: 'Memoria' });
 
   function start() {
     cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
-    first = null; lock = false; matched = 0;
-    hud.innerHTML = '<span class="lvl">Nivel ' + (level + 1) + '</span><span class="emoji">🧠</span>';
+    first = null; lock = false; matched = 0; running = true;
+    buildHud();
     board.innerHTML = '';
     var chosen = KidsGame.shuffle(ANIMALS).slice(0, cfg.pairs);
     var deck = KidsGame.shuffle(chosen.concat(chosen));
@@ -197,7 +213,7 @@ var game = KidsGame.init({ title: 'Memoria' });
   }
 
   function tap(c) {
-    if (lock || c.classList.contains('flipped') || c.classList.contains('done')) return;
+    if (!running || lock || c.classList.contains('flipped') || c.classList.contains('done')) return;
     KidsGame.sound.tap();
     c.classList.remove('pop'); c.style.animationDelay = '';
     c.classList.add('flipped');
@@ -218,22 +234,22 @@ var game = KidsGame.init({ title: 'Memoria' });
         a.classList.add('bad'); b.classList.add('bad');
         setTimeout(function () {
           a.classList.remove('flipped', 'bad'); b.classList.remove('flipped', 'bad');
-          lock = false;
+          if (running) lock = false;
         }, 400);
-      }, 700);
+      }, DIFF[nivel].reveal);
     }
   }
 
   function finish() {
     KidsGame.celebrate({
-      sub: 'Nivel ' + (level + 1) + ' completo',
+      sub: 'Ronda ' + (level + 1) + ' completa',
       onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
       onAgain: function () { start(); }
     });
   }
 
-  window.addEventListener('resize', function () { if (cfg) layout(); });
-  start();
+  window.addEventListener('resize', function () { if (cfg && running) layout(); });
+  pickLevel();
 })();
 </script>
 </body>

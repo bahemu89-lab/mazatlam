@@ -7,29 +7,75 @@
 <title>Crea tu monstruo</title>
 <style>
   .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; }
-  .stage { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+  /* Escenario: foco de luz desde arriba y plataforma con volumen */
+  .stage { position: relative; flex: 1 1 0; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+  .stage::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.25) 60%, rgba(255,255,255,0));
+    clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+  .stage::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: -2%; height: 15%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 30%, #ffffff 0, #e4ecff 45%, #aabce6 100%);
+    box-shadow: 0 10px 0 #7d93c9, 0 20px 26px rgba(0,30,90,.35), inset 0 -8px 14px rgba(0,0,0,.08), inset 0 3px 0 #fff; }
+  .stage .mwrap { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
   .stage svg { height: 100%; width: 100%; max-height: 100%; overflow: visible; }
-  .stage .mon { transform-origin: 150px 250px; transform-box: view-box; }
+  .stage .mon { transform-origin: 150px 300px; transform-box: view-box; animation: breathe 2.8s ease-in-out infinite; }
   .stage .mon.dance { animation: dance .6s ease-in-out 4; }
-  .stage .mon.popin { animation: monpop .4s ease-out; }
-  @keyframes dance { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-30px) rotate(-10deg) scaleX(1.05)} 50%{transform:translateY(0) rotate(0)} 75%{transform:translateY(-30px) rotate(10deg) scaleX(.95)} }
+  .stage .mon.popin { animation: monpop .4s ease-out, breathe 2.8s ease-in-out .4s infinite; }
+  .stage .eyesg { animation: blink 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+  @keyframes breathe { 0%,100%{transform:scale(1,1)} 50%{transform:scale(1.02,.98)} }
+  @keyframes blink { 0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.08)} }
+  @keyframes dance { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-30px) rotate(-10deg) scale(1.05,.95)} 50%{transform:translateY(0) rotate(0) scale(.95,1.08)} 75%{transform:translateY(-30px) rotate(10deg) scale(1.05,.95)} }
   @keyframes monpop { 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
-  .panel { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; background: #fff; border-radius: 26px; padding: 10px; box-shadow: 0 6px 0 rgba(0,0,0,.1); }
+  /* HUD del escenario: nivel + botón de niveles */
+  .shud { position: absolute; right: 4px; top: 4px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+  .shud .lvbtn { width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 26px; border-radius: 50%; }
+  /* Tarjeta del monstruo a copiar (niveles 2 y 3) */
+  .target { position: absolute; left: 4px; top: 4px; z-index: 3; width: 150px; padding: 6px 6px 4px; border-radius: 22px; text-align: center;
+    background: linear-gradient(180deg, #ffffff, #f1f4fb); border: 3px solid #fff; display: none;
+    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(20,40,90,.25), inset 0 2px 0 #fff; }
+  .target.show { display: block; animation: pop .35s ease-out; }
+  .target.bad { animation: shake .4s; }
+  .target .ttl { font-size: 18px; font-weight: 900; color: #ff6f61; text-shadow: 0 1px 0 #fff; }
+  .target .tm { height: 120px; display: flex; align-items: center; justify-content: center; }
+  .target .tm svg { height: 100%; width: 100%; overflow: visible; }
+  .target .hidden { display: none; font-size: 56px; line-height: 120px; }
+  .target.hide .tm { display: none; } .target.hide .hidden { display: block; animation: float 2s ease-in-out infinite; }
+  .target .bar { height: 8px; border-radius: 6px; background: #e4e9f5; overflow: hidden; margin: 4px 6px 2px; display: none; box-shadow: inset 0 1px 2px rgba(0,0,0,.15); }
+  .target.timed .bar { display: block; }
+  .target .bar i { display: block; height: 100%; width: 100%; border-radius: 6px; background: linear-gradient(90deg, #8ef0b0, #24b36c); transform-origin: left; }
+  .target.timed:not(.hide) .bar i { animation: drain 5s linear forwards; }
+  @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  /* Panel de cristal (usa .panel de la base) */
+  .panel { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; padding: 12px 10px; }
   .tabs { display: flex; justify-content: center; gap: 8px; }
-  .tabs .btn { width: 64px; height: 64px; min-width: 64px; padding: 0; font-size: 32px; background: #e6f0ff; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
-  .tabs .btn.on { background: #3da9fc; box-shadow: 0 0 0 4px #bde0ff; transform: scale(1.08); }
-  .opts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; min-height: 90px; }
-  .opts .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
-  .opt { width: 84px; height: 84px; min-width: 84px; min-height: 84px; padding: 4px; border-radius: 20px; background: #fef6e4; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
-  .opt svg { width: 100%; height: 100%; }
-  .opt.on { background: #d8f3dc; box-shadow: 0 0 0 5px #2cb67d; }
-  .opt.sw { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border-radius: 50%; border: 5px solid #fff; }
-  .opt.sw.on { border-color: #172c66; box-shadow: 0 0 0 4px #2cb67d; }
+  .tabs .btn { --a: #ffffff; --b: #dbe6f6; --d: #9fb1cc; width: 64px; height: 64px; min-width: 64px; padding: 0; font-size: 32px; }
+  .tabs .btn.on { --a: #7dd0ff; --b: #2f95e8; --d: #1a63a8; transform: translateY(-3px) scale(1.06); box-shadow: 0 8px 0 var(--d), 0 14px 18px rgba(0,0,0,.25), 0 0 0 4px #bde0ff, inset 0 2px 0 rgba(255,255,255,.6); }
+  .tabs .btn.off { display: none; }
+  .opts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; min-height: 90px; }
+  .opts .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+  /* Fichas de opción: baldosas brillantes con grosor */
+  .opt { position: relative; width: 84px; height: 84px; min-width: 84px; min-height: 84px; padding: 5px; border-radius: 20px; border: 3px solid #fff;
+    background: linear-gradient(180deg, #fffdf5 0%, #f6ead0 100%); cursor: pointer;
+    box-shadow: 0 5px 0 #d6c39a, 0 10px 14px rgba(0,0,0,.2), inset 0 2px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.05);
+    transition: transform .1s, box-shadow .1s; }
+  .opt::before { content: ""; position: absolute; left: 8%; right: 8%; top: 4%; height: 36%; border-radius: 14px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0)); }
+  .opt:active { transform: translateY(4px) scale(.96); box-shadow: 0 1px 0 #d6c39a, 0 4px 8px rgba(0,0,0,.2), inset 0 2px 0 #fff; }
+  .opt svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
+  .opt.on { background: linear-gradient(180deg, #eaffee, #b9f0c4); transform: translateY(-2px);
+    box-shadow: 0 6px 0 #3fa864, 0 12px 16px rgba(20,120,60,.28), 0 0 0 4px rgba(111,220,140,.6), inset 0 2px 0 #fff; }
+  .opt.sw { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border-radius: 50%; padding: 0; border: 4px solid #fff;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9) 0, rgba(255,255,255,.35) 22%, rgba(255,255,255,0) 45%), var(--c);
+    box-shadow: 0 5px 0 rgba(0,0,0,.3), 0 10px 14px rgba(0,0,0,.25), inset 0 -6px 8px rgba(0,0,0,.2); }
+  .opt.sw::before { display: none; }
+  .opt.sw.on { transform: translateY(-2px) scale(1.08); box-shadow: 0 5px 0 rgba(0,0,0,.3), 0 10px 14px rgba(0,0,0,.25), inset 0 -6px 8px rgba(0,0,0,.2), 0 0 0 4px #2cb67d; }
   .acts { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .acts .btn { font-size: 22px; min-height: 64px; padding: 6px 16px; }
+  .acts .btn.off { display: none; }
+  .spark { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; font-size: 28px; animation: sparkfly 1s ease-out forwards; }
+  @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4) rotate(200deg);opacity:0} }
   @media (orientation: landscape) {
     .game { flex-direction: row; }
-    .panel { width: 380px; justify-content: center; }
+    .panel { width: 390px; justify-content: center; }
   }
 </style>
 </head>
@@ -45,8 +91,11 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   var HATS = ['none', 'party', 'crown', 'cap', 'bow', 'antenna'];
   var LEGS = ['none', 'stubby', 'long', 'many'];
   var TABS = [ ['color', '🎨'], ['eyes', '👀'], ['mouth', '👄'], ['hat', '🎩'], ['legs', '🦶'] ];
+  var TABOF = { color: '🎨', body: '🎨', eyes: '👀', mouth: '👄', hat: '🎩', legs: '🦶' };
   var state = { color: 0, body: 0, eyes: 1, mouth: 0, hat: 0, legs: 1 };
   var tab = 'color', dancing = false;
+  // Niveles: 1 = crear libremente, 2 = copiar cuerpo/ojos/boca, 3 = copiar todo con el modelo visible 5 s
+  var nivel = 1, target = null, peekTimer = null, uid = 0;
 
   try { var saved = JSON.parse(localStorage.getItem('kg-monstruo') || 'null'); if (saved && typeof saved.color === 'number') state = saved; } catch (e) {}
   function save() { try { localStorage.setItem('kg-monstruo', JSON.stringify(state)); } catch (e) {} }
@@ -56,6 +105,27 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     function f(v) { v = Math.round(v * (1 + k)); return Math.max(0, Math.min(255, v)); }
     return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
   }
+  function tint(hex, t) {
+    var n = parseInt(hex.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    function f(v) { return Math.round(v + (255 - v) * t); }
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+  }
+
+  // ---------- Definiciones de luz: degradados y sombra (un juego por SVG) ----------
+  function defs(id, col) {
+    return '<defs>' +
+      '<radialGradient id="' + id + 'b" cx="36%" cy="28%" r="80%"><stop offset="0" stop-color="' + tint(col, .55) + '"/><stop offset=".42" stop-color="' + col + '"/><stop offset="1" stop-color="' + shade(col, -.34) + '"/></radialGradient>' +
+      '<linearGradient id="' + id + 'l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + shade(col, -.1) + '"/><stop offset="1" stop-color="' + shade(col, -.45) + '"/></linearGradient>' +
+      '<radialGradient id="' + id + 'e" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".75" stop-color="#f4f7fc"/><stop offset="1" stop-color="#cfd9ea"/></radialGradient>' +
+      '<radialGradient id="' + id + 'p" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#4c5fa8"/><stop offset="1" stop-color="#121f4a"/></radialGradient>' +
+      '<radialGradient id="' + id + 'g" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(0,20,60,.32)"/><stop offset="1" stop-color="rgba(0,20,60,0)"/></radialGradient>' +
+      '<linearGradient id="' + id + 'h1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc46b"/><stop offset="1" stop-color="#e06d00"/></linearGradient>' +
+      '<linearGradient id="' + id + 'h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a6"/><stop offset="1" stop-color="#e09a00"/></linearGradient>' +
+      '<linearGradient id="' + id + 'h3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd8ff"/><stop offset="1" stop-color="#1a7ac9"/></linearGradient>' +
+      '<linearGradient id="' + id + 'h4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc1dc"/><stop offset="1" stop-color="#e0508f"/></linearGradient>' +
+      '<filter id="' + id + 's" x="-25%" y="-25%" width="150%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#0b1a40" flood-opacity=".32"/></filter>' +
+      '</defs>';
+  }
 
   // ---------- Partes en SVG ----------
   function starPts(cx, cy, ro, ri) {
@@ -63,35 +133,40 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? ri : ro; p.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); }
     return p.join(' ');
   }
-  function body(kind, col) {
-    var a = 'fill="' + col + '" stroke="' + shade(col, -0.3) + '" stroke-width="6" stroke-linejoin="round"';
+  var HL = { round: [118, 118, 30, 17], tall: [124, 96, 20, 13], square: [110, 118, 26, 14], blob: [118, 112, 28, 16], star: [138, 118, 16, 10] };
+  function body(kind, col, id) {
+    var a = 'fill="url(#' + id + 'b)" stroke="' + shade(col, -0.42) + '" stroke-width="5" stroke-linejoin="round"';
+    var h = HL[kind], gloss = '<ellipse cx="' + h[0] + '" cy="' + h[1] + '" rx="' + h[2] + '" ry="' + h[3] + '" fill="#fff" opacity=".38" transform="rotate(-35 ' + h[0] + ' ' + h[1] + ')"/>';
+    var shape = '';
     switch (kind) {
-      case 'round': return '<circle cx="150" cy="170" r="88" ' + a + '/>';
-      case 'tall': return '<rect x="90" y="60" width="120" height="215" rx="58" ' + a + '/>';
-      case 'square': return '<rect x="68" y="88" width="164" height="164" rx="34" ' + a + '/>';
-      case 'blob': return '<path d="M150,78 C205,70 245,120 235,175 C228,225 195,262 150,258 C100,262 62,225 65,170 C68,120 100,85 150,78 Z" ' + a + '/>';
-      case 'star': return '<polygon points="' + starPts(150, 172, 106, 56) + '" ' + a + '/>';
+      case 'round': shape = '<circle cx="150" cy="170" r="88" ' + a + '/>'; break;
+      case 'tall': shape = '<rect x="90" y="60" width="120" height="215" rx="58" ' + a + '/>'; break;
+      case 'square': shape = '<rect x="68" y="88" width="164" height="164" rx="34" ' + a + '/>'; break;
+      case 'blob': shape = '<path d="M150,78 C205,70 245,120 235,175 C228,225 195,262 150,258 C100,262 62,225 65,170 C68,120 100,85 150,78 Z" ' + a + '/>'; break;
+      case 'star': shape = '<polygon points="' + starPts(150, 172, 106, 56) + '" ' + a + '/>'; break;
     }
-    return '';
+    return shape + gloss;
   }
-  function eye(cx, cy, r, pr, dx) {
+  function eye(cx, cy, r, pr, id, dx) {
     dx = dx || 0;
-    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#fff" stroke="#172c66" stroke-width="4"/>' +
-      '<circle cx="' + (cx + dx) + '" cy="' + (cy + 2) + '" r="' + pr + '" fill="#172c66"/>' +
-      '<circle cx="' + (cx + dx + pr * 0.35) + '" cy="' + (cy - pr * 0.35) + '" r="' + Math.max(2, pr * 0.3) + '" fill="#fff"/>';
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + 'e)" stroke="#172c66" stroke-width="4"/>' +
+      '<circle cx="' + (cx + dx) + '" cy="' + (cy + 2) + '" r="' + pr + '" fill="url(#' + id + 'p)"/>' +
+      '<circle cx="' + (cx + dx - pr * 0.35) + '" cy="' + (cy - pr * 0.4) + '" r="' + Math.max(2.5, pr * 0.34) + '" fill="#fff"/>' +
+      '<circle cx="' + (cx + dx + pr * 0.4) + '" cy="' + (cy + pr * 0.45) + '" r="' + Math.max(1.5, pr * 0.16) + '" fill="#fff" opacity=".8"/>';
   }
-  function eyes(kind) {
+  function eyes(kind, id) {
     switch (kind) {
-      case 'one': return eye(150, 148, 32, 15);
-      case 'two': return eye(120, 148, 20, 10) + eye(180, 148, 20, 10);
-      case 'three': return eye(112, 154, 16, 8) + eye(150, 136, 17, 8) + eye(188, 154, 16, 8);
+      case 'one': return eye(150, 148, 32, 15, id);
+      case 'two': return eye(120, 148, 20, 10, id) + eye(180, 148, 20, 10, id);
+      case 'three': return eye(112, 154, 16, 8, id) + eye(150, 136, 17, 8, id) + eye(188, 154, 16, 8, id);
       case 'sleepy': return '<path d="M100,150 Q120,170 140,150 M160,150 Q180,170 200,150" fill="none" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
         '<path d="M104,160 L98,170 M120,166 L120,178 M136,160 L142,170 M164,160 L158,170 M180,166 L180,178 M196,160 L202,170" stroke="#172c66" stroke-width="4" stroke-linecap="round"/>';
-      case 'wide': return eye(118, 146, 28, 8) + eye(182, 146, 28, 8);
-      case 'glasses': return eye(120, 148, 17, 9) + eye(180, 148, 17, 9) +
-        '<rect x="96" y="124" width="48" height="48" rx="14" fill="none" stroke="#7f5af0" stroke-width="6"/>' +
-        '<rect x="156" y="124" width="48" height="48" rx="14" fill="none" stroke="#7f5af0" stroke-width="6"/>' +
-        '<path d="M144,146 L156,146 M96,142 L80,136 M204,142 L220,136" stroke="#7f5af0" stroke-width="6" stroke-linecap="round"/>';
+      case 'wide': return eye(118, 146, 28, 8, id) + eye(182, 146, 28, 8, id);
+      case 'glasses': return eye(120, 148, 17, 9, id) + eye(180, 148, 17, 9, id) +
+        '<rect x="96" y="124" width="48" height="48" rx="14" fill="rgba(255,255,255,.18)" stroke="#7f5af0" stroke-width="6"/>' +
+        '<rect x="156" y="124" width="48" height="48" rx="14" fill="rgba(255,255,255,.18)" stroke="#7f5af0" stroke-width="6"/>' +
+        '<path d="M144,146 L156,146 M96,142 L80,136 M204,142 L220,136" stroke="#7f5af0" stroke-width="6" stroke-linecap="round"/>' +
+        '<path d="M104,132 L112,128 M164,132 L172,128" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>';
     }
     return '';
   }
@@ -100,65 +175,90 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     switch (kind) {
       case 'smile': return SMILE;
       case 'teeth': return '<path d="M110,198 Q150,254 190,198 Z" fill="#b5223a" stroke="#172c66" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M120,236 Q150,252 180,236 Q150,242 120,236 Z" fill="#7a1024"/>' +
         '<rect x="120" y="200" width="16" height="18" rx="4" fill="#fff"/><rect x="141" y="200" width="18" height="22" rx="4" fill="#fff"/><rect x="164" y="200" width="16" height="18" rx="4" fill="#fff"/>';
-      case 'tongue': return SMILE + '<ellipse cx="160" cy="220" rx="13" ry="17" fill="#ff6b8b" stroke="#172c66" stroke-width="4"/>';
-      case 'oh': return '<ellipse cx="150" cy="214" rx="17" ry="22" fill="#3b1a2a" stroke="#172c66" stroke-width="5"/>';
+      case 'tongue': return SMILE + '<ellipse cx="160" cy="220" rx="13" ry="17" fill="#ff6b8b" stroke="#172c66" stroke-width="4"/><ellipse cx="156" cy="214" rx="4" ry="6" fill="#fff" opacity=".6"/>';
+      case 'oh': return '<ellipse cx="150" cy="214" rx="17" ry="22" fill="#3b1a2a" stroke="#172c66" stroke-width="5"/><ellipse cx="150" cy="226" rx="9" ry="6" fill="#ff6b8b"/>';
       case 'mustache': return '<path d="M118,212 Q150,240 182,212" fill="none" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
-        '<path d="M150,200 C140,184 116,184 108,198 C122,206 140,208 150,200 C160,208 178,206 192,198 C184,184 160,184 150,200 Z" fill="#4a2b12" stroke="#2d1a0b" stroke-width="3" stroke-linejoin="round"/>';
+        '<path d="M150,200 C140,184 116,184 108,198 C122,206 140,208 150,200 C160,208 178,206 192,198 C184,184 160,184 150,200 Z" fill="#4a2b12" stroke="#2d1a0b" stroke-width="3" stroke-linejoin="round"/>' +
+        '<path d="M120,192 Q132,188 142,194 M158,194 Q168,188 180,192" fill="none" stroke="#7a4a24" stroke-width="3" stroke-linecap="round"/>';
       case 'fangs': return '<path d="M112,200 Q150,226 188,200" fill="none" stroke="#172c66" stroke-width="7" stroke-linecap="round"/>' +
         '<polygon points="126,202 134,230 144,206" fill="#fff" stroke="#172c66" stroke-width="3" stroke-linejoin="round"/>' +
         '<polygon points="156,206 166,230 174,202" fill="#fff" stroke="#172c66" stroke-width="3" stroke-linejoin="round"/>';
     }
     return '';
   }
-  function hat(kind) {
+  function hat(kind, id) {
     switch (kind) {
-      case 'party': return '<polygon points="150,12 116,96 184,96" fill="#ff8906" stroke="#c96a00" stroke-width="5" stroke-linejoin="round"/>' +
+      case 'party': return '<polygon points="150,12 116,96 184,96" fill="url(#' + id + 'h1)" stroke="#c96a00" stroke-width="5" stroke-linejoin="round"/>' +
         '<polygon points="137,44 129,64 171,64 163,44" fill="#ffd166"/><polygon points="124,76 120,90 180,90 176,76" fill="#ffd166"/>' +
-        '<circle cx="150" cy="14" r="11" fill="#f582ae" stroke="#c9457f" stroke-width="4"/>';
-      case 'crown': return '<polygon points="104,96 104,44 128,70 150,34 172,70 196,44 196,96" fill="#ffb703" stroke="#d98f00" stroke-width="5" stroke-linejoin="round"/>' +
-        '<circle cx="128" cy="84" r="6" fill="#ef476f"/><circle cx="150" cy="84" r="6" fill="#3da9fc"/><circle cx="172" cy="84" r="6" fill="#2cb67d"/>';
-      case 'cap': return '<path d="M102,94 A48,48 0 0 1 198,94 Z" fill="#3da9fc" stroke="#1a7ac9" stroke-width="5" stroke-linejoin="round"/>' +
-        '<rect x="140" y="86" width="80" height="16" rx="8" fill="#1a7ac9"/><circle cx="150" cy="46" r="7" fill="#ffb703"/>';
-      case 'bow': return '<polygon points="150,72 108,50 108,94" fill="#f582ae" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
-        '<polygon points="150,72 192,50 192,94" fill="#f582ae" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
-        '<circle cx="150" cy="72" r="12" fill="#ffb3d1" stroke="#c9457f" stroke-width="4"/>';
+        '<path d="M143,30 L128,70" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".5"/>' +
+        '<circle cx="150" cy="14" r="11" fill="url(#' + id + 'h4)" stroke="#c9457f" stroke-width="4"/><circle cx="146" cy="10" r="3" fill="#fff" opacity=".8"/>';
+      case 'crown': return '<polygon points="104,96 104,44 128,70 150,34 172,70 196,44 196,96" fill="url(#' + id + 'h2)" stroke="#d98f00" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M110,92 L190,92" stroke="#fff" stroke-width="3" opacity=".5"/>' +
+        '<circle cx="128" cy="84" r="6" fill="#ef476f"/><circle cx="150" cy="84" r="6" fill="#3da9fc"/><circle cx="172" cy="84" r="6" fill="#2cb67d"/>' +
+        '<circle cx="126" cy="82" r="2" fill="#fff"/><circle cx="148" cy="82" r="2" fill="#fff"/><circle cx="170" cy="82" r="2" fill="#fff"/>';
+      case 'cap': return '<path d="M102,94 A48,48 0 0 1 198,94 Z" fill="url(#' + id + 'h3)" stroke="#1a7ac9" stroke-width="5" stroke-linejoin="round"/>' +
+        '<path d="M118,72 Q135,52 158,52" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".5"/>' +
+        '<rect x="140" y="86" width="80" height="16" rx="8" fill="#1a7ac9"/><rect x="144" y="88" width="72" height="5" rx="3" fill="#fff" opacity=".25"/><circle cx="150" cy="46" r="7" fill="#ffb703"/>';
+      case 'bow': return '<polygon points="150,72 108,50 108,94" fill="url(#' + id + 'h4)" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
+        '<polygon points="150,72 192,50 192,94" fill="url(#' + id + 'h4)" stroke="#c9457f" stroke-width="5" stroke-linejoin="round"/>' +
+        '<circle cx="150" cy="72" r="12" fill="#ffb3d1" stroke="#c9457f" stroke-width="4"/><circle cx="146" cy="68" r="4" fill="#fff" opacity=".8"/>';
       case 'antenna': return '<path d="M126,90 L108,38 M174,90 L192,38" stroke="#172c66" stroke-width="6" stroke-linecap="round"/>' +
-        '<circle cx="108" cy="36" r="12" fill="#2cb67d" stroke="#172c66" stroke-width="4"/><circle cx="192" cy="36" r="12" fill="#ffb703" stroke="#172c66" stroke-width="4"/>';
+        '<circle cx="108" cy="36" r="12" fill="#2cb67d" stroke="#172c66" stroke-width="4"/><circle cx="192" cy="36" r="12" fill="#ffb703" stroke="#172c66" stroke-width="4"/>' +
+        '<circle cx="104" cy="32" r="4" fill="#fff" opacity=".85"/><circle cx="188" cy="32" r="4" fill="#fff" opacity=".85"/>';
     }
     return '';
   }
-  function legs(kind, col) {
-    var d = shade(col, -0.3), a = 'fill="' + d + '" stroke="' + shade(col, -0.5) + '" stroke-width="5" stroke-linejoin="round"';
+  function legs(kind, col, id) {
+    var d = shade(col, -0.3), a = 'fill="url(#' + id + 'l)" stroke="' + shade(col, -0.55) + '" stroke-width="5" stroke-linejoin="round"';
     var l = 'stroke="' + d + '" stroke-width="16" stroke-linecap="round" fill="none"';
+    var hl = 'stroke="' + tint(col, .35) + '" stroke-width="5" stroke-linecap="round" fill="none" opacity=".55"';
     switch (kind) {
       case 'stubby': return '<rect x="112" y="236" width="30" height="54" rx="15" ' + a + '/><rect x="158" y="236" width="30" height="54" rx="15" ' + a + '/>' +
+        '<path d="M120,246 L120,270 M166,246 L166,270" ' + hl + '/>' +
         '<rect x="48" y="150" width="60" height="24" rx="12" transform="rotate(-25 78 162)" ' + a + '/><rect x="192" y="150" width="60" height="24" rx="12" transform="rotate(25 222 162)" ' + a + '/>';
-      case 'long': return '<path d="M128,240 L122,304 M172,240 L178,304" ' + l + '/>' +
+      case 'long': return '<path d="M128,240 L122,304 M172,240 L178,304" ' + l + '/><path d="M126,250 L123,290 M170,250 L173,290" ' + hl + '/>' +
         '<ellipse cx="116" cy="308" rx="22" ry="11" ' + a + '/><ellipse cx="184" cy="308" rx="22" ry="11" ' + a + '/>' +
-        '<path d="M80,160 Q40,120 52,80 M220,160 Q260,120 248,80" ' + l + '/>' +
+        '<path d="M80,160 Q40,120 52,80 M220,160 Q260,120 248,80" ' + l + '/><path d="M74,150 Q48,120 56,92 M226,150 Q252,120 244,92" ' + hl + '/>' +
         '<circle cx="52" cy="78" r="13" ' + a + '/><circle cx="248" cy="78" r="13" ' + a + '/>';
       case 'many': return '<path d="M120,240 Q90,270 70,300 M150,246 L150,304 M180,240 Q210,270 230,300" ' + l + '/>' +
+        '<path d="M116,250 Q94,272 80,292 M146,254 L146,292 M176,250 Q198,272 212,292" ' + hl + '/>' +
         '<path d="M75,180 Q30,190 24,150 M225,180 Q270,190 276,150" ' + l + '/>' +
         '<circle cx="24" cy="146" r="11" ' + a + '/><circle cx="276" cy="146" r="11" ' + a + '/>' +
         '<circle cx="66" cy="304" r="11" ' + a + '/><circle cx="150" cy="306" r="11" ' + a + '/><circle cx="234" cy="304" r="11" ' + a + '/>';
     }
     return '';
   }
-  function monster(s) {
-    var col = COLORS[s.color];
-    return '<g class="mon">' + legs(LEGS[s.legs], col) + body(BODIES[s.body], col) + mouth(MOUTHS[s.mouth]) + eyes(EYES[s.eyes]) + hat(HATS[s.hat]) + '</g>';
+  function monster(s, id) {
+    var col = COLORS[s.color], lg = LEGS[s.legs];
+    var shadowY = lg === 'none' ? 282 : 314, rx = lg === 'many' ? 130 : 104;
+    return '<g class="mon">' +
+      '<ellipse cx="150" cy="' + shadowY + '" rx="' + rx + '" ry="14" fill="url(#' + id + 'g)"/>' +
+      legs(lg, col, id) + body(BODIES[s.body], col, id) + mouth(MOUTHS[s.mouth]) +
+      '<g class="eyesg">' + eyes(EYES[s.eyes], id) + '</g>' +
+      '<g filter="url(#' + id + 's)">' + hat(HATS[s.hat], id) + '</g></g>';
   }
-  function svgWrap(inner) { return '<svg viewBox="0 0 300 325" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+  function svgOpen(id, col) { uid++; return '<svg viewBox="0 0 300 325" xmlns="http://www.w3.org/2000/svg">' + defs(id, col); }
+  function monsterSvg(s) { var id = 'm' + (uid + 1), col = COLORS[s.color]; return svgOpen(id, col) + monster(s, id) + '</svg>'; }
+  function bodySvg(kind, col) { var id = 'm' + (uid + 1); return svgOpen(id, col) + body(kind, col, id) + '</svg>'; }
 
   // ---------- UI ----------
   game.innerHTML = '';
   var stage = document.createElement('div'); stage.className = 'stage';
+  var mwrap = document.createElement('div'); mwrap.className = 'mwrap';
+  var shud = document.createElement('div'); shud.className = 'shud';
+  var badgeEl = KidsGame.levelBadge(nivel);
+  var lvbtn = document.createElement('button'); lvbtn.className = 'btn yellow lvbtn'; lvbtn.textContent = '🎚️'; lvbtn.setAttribute('aria-label', 'Nivel');
+  shud.appendChild(badgeEl); shud.appendChild(lvbtn);
+  var targetEl = document.createElement('div'); targetEl.className = 'target';
+  targetEl.innerHTML = '<div class="ttl">🎯 Copia</div><div class="tm"></div><div class="hidden emoji">👀</div><div class="bar"><i></i></div>';
+  stage.appendChild(mwrap); stage.appendChild(targetEl); stage.appendChild(shud);
   var panel = document.createElement('div'); panel.className = 'panel';
   var tabs = document.createElement('div'); tabs.className = 'tabs';
   var opts = document.createElement('div'); opts.className = 'opts';
   var acts = document.createElement('div'); acts.className = 'acts';
-  acts.innerHTML = '<button class="btn purple" data-a="random">🎲 Sorpresa</button><button class="btn yellow" data-a="dance">💃 Baila</button><button class="btn green" data-a="done">⭐ Listo</button>';
+  acts.innerHTML = '<button class="btn purple" data-a="random">🎲 Sorpresa</button><button class="btn yellow" data-a="dance">💃 Baila</button><button class="btn green" data-a="done">⭐ Listo</button><button class="btn green off" data-a="check">✅ ¿Igual?</button><button class="btn blue off" data-a="peek">👀 Ver</button>';
   panel.appendChild(tabs); panel.appendChild(opts); panel.appendChild(acts);
   game.appendChild(stage); game.appendChild(panel);
   TABS.forEach(function (t) {
@@ -166,11 +266,20 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); tab = t[0]; renderTabs(); renderOpts(); });
     tabs.appendChild(b);
   });
-  function renderTabs() { tabs.querySelectorAll('.btn').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); }); }
+  function renderTabs() {
+    tabs.querySelectorAll('.btn').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.tab === tab);
+      b.classList.toggle('off', nivel === 2 && (b.dataset.tab === 'hat' || b.dataset.tab === 'legs'));
+    });
+    acts.querySelector('[data-a="done"]').classList.toggle('off', nivel !== 1);
+    acts.querySelector('[data-a="check"]').classList.toggle('off', nivel === 1);
+    acts.querySelector('[data-a="peek"]').classList.toggle('off', nivel !== 3);
+  }
 
   function renderMonster(pop) {
-    stage.innerHTML = svgWrap(monster(state));
-    if (pop) stage.querySelector('.mon').classList.add('popin');
+    mwrap.innerHTML = monsterSvg(state);
+    if (pop) mwrap.querySelector('.mon').classList.add('popin');
+    renderTarget();
   }
   function optBtn(key, idx, inner, cls) {
     var b = document.createElement('button'); b.className = 'opt ' + (cls || ''); b.innerHTML = inner;
@@ -186,35 +295,96 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     if (tab === 'color') {
       var rowC = document.createElement('div'), rowB = document.createElement('div');
       rowC.className = 'row'; rowB.className = 'row';
-      COLORS.forEach(function (c, i) { var b = optBtn('color', i, '', 'sw'); b.style.background = c; rowC.appendChild(b); });
-      BODIES.forEach(function (k, i) { rowB.appendChild(optBtn('body', i, svgWrap(body(k, COLORS[state.color])))); });
+      COLORS.forEach(function (c, i) { var b = optBtn('color', i, '', 'sw'); b.style.setProperty('--c', c); rowC.appendChild(b); });
+      BODIES.forEach(function (k, i) { rowB.appendChild(optBtn('body', i, bodySvg(k, COLORS[state.color]))); });
       opts.appendChild(rowC); opts.appendChild(rowB);
     } else if (tab === 'eyes') {
-      EYES.forEach(function (k, i) { opts.appendChild(optBtn('eyes', i, svgWrap(monster(s2('eyes', i))))); });
+      EYES.forEach(function (k, i) { opts.appendChild(optBtn('eyes', i, monsterSvg(s2('eyes', i)))); });
     } else if (tab === 'mouth') {
-      MOUTHS.forEach(function (k, i) { opts.appendChild(optBtn('mouth', i, svgWrap(monster(s2('mouth', i))))); });
+      MOUTHS.forEach(function (k, i) { opts.appendChild(optBtn('mouth', i, monsterSvg(s2('mouth', i)))); });
     } else if (tab === 'hat') {
-      HATS.forEach(function (k, i) { opts.appendChild(optBtn('hat', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : svgWrap(monster(s2('hat', i))))); });
+      HATS.forEach(function (k, i) { opts.appendChild(optBtn('hat', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : monsterSvg(s2('hat', i)))); });
     } else if (tab === 'legs') {
-      LEGS.forEach(function (k, i) { opts.appendChild(optBtn('legs', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : svgWrap(monster(s2('legs', i))))); });
+      LEGS.forEach(function (k, i) { opts.appendChild(optBtn('legs', i, k === 'none' ? '<span class="emoji" style="font-size:40px">🚫</span>' : monsterSvg(s2('legs', i)))); });
+    }
+  }
+
+  // ---------- Reto "copia el monstruo" (niveles 2 y 3) ----------
+  var FIELDS2 = ['body', 'eyes', 'mouth'], FIELDS3 = ['color', 'body', 'eyes', 'mouth', 'hat', 'legs'];
+  function fields() { return nivel === 3 ? FIELDS3 : FIELDS2; }
+  function randomState() {
+    return { color: KidsGame.rand(COLORS.length), body: KidsGame.rand(BODIES.length), eyes: KidsGame.rand(EYES.length),
+      mouth: KidsGame.rand(MOUTHS.length), hat: KidsGame.rand(HATS.length), legs: KidsGame.rand(LEGS.length) };
+  }
+  function newTarget() {
+    if (nivel === 1) { target = null; renderTarget(); return; }
+    var tries = 0;
+    do { target = randomState(); tries++; } while (tries < 20 && fields().filter(function (f) { return target[f] !== state[f]; }).length < Math.min(2, fields().length));
+    targetEl.classList.remove('hide'); targetEl.classList.toggle('timed', nivel === 3);
+    renderTarget();
+    if (nivel === 3) peek();
+  }
+  function targetView() {
+    // Nivel 2: el modelo comparte color, sombrero y patas con el monstruo actual (solo se copian cuerpo, ojos y boca)
+    if (nivel === 3) return target;
+    return { color: state.color, body: target.body, eyes: target.eyes, mouth: target.mouth, hat: state.hat, legs: state.legs };
+  }
+  function renderTarget() {
+    if (!target) { targetEl.classList.remove('show'); return; }
+    targetEl.classList.add('show');
+    targetEl.querySelector('.tm').innerHTML = monsterSvg(targetView());
+  }
+  function peek() {
+    clearTimeout(peekTimer);
+    targetEl.classList.remove('hide');
+    // reinicia la barra de tiempo
+    var bar = targetEl.querySelector('.bar i'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    peekTimer = setTimeout(function () { targetEl.classList.add('hide'); }, 5000);
+  }
+  function check() {
+    var diff = fields().filter(function (f) { return target[f] !== state[f]; });
+    if (!diff.length) {
+      KidsGame.addStar(); KidsGame.sound.ok(); burst();
+      var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+      setTimeout(function () {
+        KidsGame.celebrate({ msg: '¡Igualito!', sub: 'Copiaste el monstruo 🎯',
+          onNext: function () { newTarget(); }, onAgain: function () { newTarget(); } });
+      }, 800);
+    } else {
+      KidsGame.sound.wrong();
+      var seen = {}, icons = diff.map(function (f) { return TABOF[f]; }).filter(function (e) { if (seen[e]) return false; seen[e] = true; return true; });
+      targetEl.classList.remove('bad'); void targetEl.offsetWidth; targetEl.classList.add('bad');
+      if (nivel === 3) peek();
+      KidsGame.toast('Casi… revisa ' + icons.join(' '), 1600); KidsGame.say('Casi, revisa otra vez');
+    }
+  }
+  function burst() {
+    var r = mwrap.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 22; i++) {
+      var d = document.createElement('div'); d.className = 'spark emoji'; d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
+      var a = Math.random() * Math.PI * 2, dist = 90 + Math.random() * 130;
+      d.style.left = cx + 'px'; d.style.top = cy + 'px';
+      d.style.setProperty('--dx', Math.cos(a) * dist + 'px'); d.style.setProperty('--dy', Math.sin(a) * dist - 40 + 'px');
+      d.style.animationDelay = (Math.random() * .25) + 's';
+      document.body.appendChild(d);
+      (function (el) { setTimeout(function () { el.remove(); }, 1400); })(d);
     }
   }
 
   function randomize() {
-    state = { color: KidsGame.rand(COLORS.length), body: KidsGame.rand(BODIES.length), eyes: KidsGame.rand(EYES.length),
-      mouth: KidsGame.rand(MOUTHS.length), hat: KidsGame.rand(HATS.length), legs: KidsGame.rand(LEGS.length) };
+    state = randomState();
     save(); renderMonster(true); renderOpts(); KidsGame.sound.pop();
   }
   function dance() {
     if (dancing) return;
     dancing = true;
-    var m = stage.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+    var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
     [523, 659, 784, 659, 523, 659, 784, 1047, 784, 659, 523, 392].forEach(function (f, i) { setTimeout(function () { KidsGame.sound.note(f); }, i * 200); });
     setTimeout(function () { m.classList.remove('dance'); dancing = false; }, 2500);
   }
   function done() {
-    KidsGame.addStar();
-    var m = stage.querySelector('.mon'); m.classList.add('dance');
+    KidsGame.addStar(); burst();
+    var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
     setTimeout(function () {
       KidsGame.celebrate({ msg: '¡Qué monstruo!', sub: 'Tu monstruo está listo 🎉', onAgain: function () { randomize(); tab = 'color'; renderTabs(); renderOpts(); } });
     }, 700);
@@ -222,13 +392,28 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   acts.querySelectorAll('.btn').forEach(function (b) {
     b.addEventListener('pointerdown', function (ev) {
       ev.preventDefault(); KidsGame.sound.tap();
-      var a = b.dataset.a; if (a === 'random') randomize(); else if (a === 'dance') dance(); else done();
+      var a = b.dataset.a;
+      if (a === 'random') randomize(); else if (a === 'dance') dance(); else if (a === 'done') done();
+      else if (a === 'check') check(); else if (a === 'peek') peek();
     });
   });
-  stage.addEventListener('pointerdown', function () { dance(); });
+  mwrap.addEventListener('pointerdown', function () { dance(); });
+  targetEl.addEventListener('pointerdown', function (ev) { ev.preventDefault(); if (nivel === 3) { KidsGame.sound.tap(); peek(); } });
 
-  renderTabs(); renderOpts(); renderMonster(true);
-  KidsGame.say('Crea tu monstruo');
+  function showPicker() {
+    clearTimeout(peekTimer);
+    KidsGame.levelPicker({ key: 'monstruo', onPick: function (n) {
+      nivel = n;
+      var nb = KidsGame.levelBadge(nivel); shud.replaceChild(nb, badgeEl); badgeEl = nb;
+      if (nivel === 2 && (tab === 'hat' || tab === 'legs')) tab = 'color';
+      renderTabs(); renderOpts(); renderMonster(true); newTarget();
+      KidsGame.say(nivel === 1 ? 'Crea tu monstruo' : nivel === 2 ? 'Haz un monstruo igual al de la tarjeta' : 'Mira bien el monstruo y hazlo igual');
+    } });
+  }
+  lvbtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+
+  renderTabs(); renderOpts(); renderMonster(false);
+  showPicker();
 })();
 </script>
 </body>

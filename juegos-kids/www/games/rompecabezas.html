@@ -6,30 +6,53 @@
 <link rel="stylesheet" href="../common.css">
 <title>Rompecabezas</title>
 <style>
-  .wrap { position: absolute; inset: 8px; display: flex; gap: 10px; }
+  .hud { position: absolute; left: 8px; right: 8px; top: 8px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 3; }
+  .hud .grp { display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 26px; }
+  .hud .btn.hint { font-size: 22px; padding: 8px 14px; letter-spacing: 1px; white-space: nowrap; }
+  .hud .btn.hint.off { opacity: .5; filter: grayscale(.6); }
+  .hud .pieces { font-size: 18px; color: #fff; font-weight: 900; text-shadow: 0 2px 0 #1f7fae, -1px -1px 0 #1f7fae, 1px -1px 0 #1f7fae, -1px 1px 0 #1f7fae, 1px 1px 0 #1f7fae; white-space: nowrap; }
+  .wrap { position: absolute; left: 8px; right: 8px; top: 74px; bottom: 8px; display: flex; gap: 10px; }
   .wrap.portrait { flex-direction: column; }
   .boardbox { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
-  .board {
-    position: relative; background: #fff; border-radius: 10px;
-    box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 0 0 5px #8bd3dd;
-  }
-  .board.done { animation: bounce .7s 2; box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 0 0 6px #ffb703; }
-  .ghost { position: absolute; inset: 0; opacity: .25; background-size: 100% 100%; background-repeat: no-repeat; border-radius: 10px; }
-  .slot { position: absolute; border: 2px dashed rgba(23,44,102,.22); }
+  /* Tablero con marco de madera (::before) y superficie interior (::after) */
+  .board { position: relative; isolation: isolate; border-radius: 4px; }
+  .board::before { content: ""; position: absolute; inset: -16px; z-index: -2; border-radius: 14px;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 5px, rgba(0,0,0,0) 5px 21px), linear-gradient(180deg, #e0a862 0%, #c2803f 40%, #a96a30 75%, #8b5222 100%);
+    box-shadow: 0 12px 0 #5c3510, 0 22px 30px rgba(60,30,0,.4), inset 0 3px 0 rgba(255,235,200,.55), inset 0 -4px 0 rgba(0,0,0,.25); }
+  .board::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 3px;
+    background: linear-gradient(135deg, #fffdf6, #efe6d2); box-shadow: inset 0 0 0 2px rgba(90,50,0,.25), inset 0 6px 14px rgba(90,50,0,.28), inset 0 -2px 0 rgba(255,255,255,.5); }
+  .board.done::before { box-shadow: 0 12px 0 #5c3510, 0 22px 30px rgba(60,30,0,.4), 0 0 0 6px #ffd166, 0 0 40px rgba(255,209,102,.9), inset 0 3px 0 rgba(255,235,200,.55); }
+  .board.done { animation: bounce .7s 2; }
+  .ghost { position: absolute; inset: 0; opacity: .3; background-size: 100% 100%; background-repeat: no-repeat; transition: opacity 1.2s; }
+  .ghost.fade { opacity: 0; }
+  .slot { position: absolute; border: 2px dashed rgba(90,50,0,.28); box-shadow: inset 0 0 12px rgba(90,50,0,.08); }
+  .peek { position: absolute; inset: 0; z-index: 6; background-size: 100% 100%; background-repeat: no-repeat; opacity: 0; transition: opacity .3s; pointer-events: none; box-shadow: 0 0 0 4px #ffd166; }
+  .peek.show { opacity: 1; }
   .board.done .slot, .board.done .ghost { display: none; }
+  /* Barrido de brillo al completar */
+  .sweep { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 7; display: none; }
+  .board.done .sweep { display: block; }
+  .sweep::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; width: 45%; transform: translateX(-140%) skewX(-20deg);
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0)); animation: shine 1.2s ease-in-out .35s 2; }
+  /* Bandeja de piezas: caja con interior acolchado */
   .tray {
-    flex: 0 0 auto; background: rgba(139,211,221,.35); border-radius: 18px;
+    flex: 0 0 auto; border-radius: 18px; border: 3px solid #fff;
+    background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(230,240,255,.85));
+    box-shadow: 0 8px 0 #c9d2e6, 0 16px 28px rgba(20,40,90,.22), inset 0 2px 0 #fff, inset 0 10px 18px rgba(20,40,90,.12);
     display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: var(--gap); padding: var(--gap);
     overflow: hidden;
   }
   .tile {
-    background-repeat: no-repeat; border-radius: 8px; outline: 3px solid #fff; outline-offset: -3px;
-    box-shadow: 0 4px 0 rgba(0,0,0,.18); cursor: grab; touch-action: none; flex: 0 0 auto;
-    animation: pop .3s ease-out;
+    position: relative; background-repeat: no-repeat; border-radius: 8px; cursor: grab; touch-action: none; flex: 0 0 auto;
+    box-shadow: 0 5px 0 rgba(60,40,20,.35), 0 9px 14px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.55), inset 2px 0 0 rgba(255,255,255,.3), inset 0 -3px 0 rgba(0,0,0,.28), inset -2px 0 0 rgba(0,0,0,.15);
+    animation: pop .3s ease-out; transform: rotate(var(--rot, 0deg));
   }
-  .tile.drag { position: fixed; z-index: 20; box-shadow: 0 14px 22px rgba(0,0,0,.35); animation: none; border-radius: 4px; }
-  .tile.placed { position: absolute; box-shadow: none; outline: none; border-radius: 0; cursor: default; animation: pop .3s ease-out; }
-  .lvl { position: absolute; left: 12px; top: 10px; z-index: 3; font-size: 20px; font-weight: bold; background: #ffb703; color: #5a3d00; border-radius: 20px; padding: 3px 12px; box-shadow: 0 3px 0 rgba(0,0,0,.12); pointer-events: none; }
+  .tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(160deg, rgba(255,255,255,.28), rgba(255,255,255,0) 45%, rgba(0,0,0,.1)); }
+  .tile.drag { position: fixed; z-index: 20; animation: none; border-radius: 6px; transform: scale(1.08) rotate(0deg);
+    box-shadow: 0 10px 0 rgba(60,40,20,.3), 0 26px 30px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 0 rgba(0,0,0,.25); }
+  .tile.placed { position: absolute; box-shadow: none; border-radius: 0; cursor: default; animation: pop .3s ease-out; transform: none; }
+  .tile.placed::after { display: none; }
 </style>
 </head>
 <body>
@@ -39,97 +62,189 @@
   var game = KidsGame.init({ title: 'Rompecabezas' });
 
   var S = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">';
+  var LG = function (id, c1, c2, vert) { return '<linearGradient id="' + id + '" x1="0" y1="0" x2="' + (vert ? 0 : 1) + '" y2="' + (vert ? 1 : 0) + '"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient>'; };
+  var RG = function (id, c1, c2, c3) { return '<radialGradient id="' + id + '" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="' + c1 + '"/><stop offset=".5" stop-color="' + c2 + '"/><stop offset="1" stop-color="' + c3 + '"/></radialGradient>'; };
+  var GLOW = function (id, c) { return '<radialGradient id="' + id + '" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="' + c + '" stop-opacity=".75"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></radialGradient>'; };
+  var SH = '<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity=".28"/></filter>';
   var SCENES = [
     // 1. Sol sonriente, colinas, árbol y casa
-    S + '<rect width="400" height="300" fill="#a8dcff"/>' +
-    '<g stroke="#ffb703" stroke-width="6" stroke-linecap="round"><line x1="320" y1="8" x2="320" y2="24"/><line x1="320" y1="116" x2="320" y2="132"/><line x1="258" y1="70" x2="274" y2="70"/><line x1="366" y1="70" x2="382" y2="70"/><line x1="276" y1="26" x2="288" y2="38"/><line x1="352" y1="102" x2="364" y2="114"/><line x1="276" y1="114" x2="288" y2="102"/><line x1="352" y1="38" x2="364" y2="26"/></g>' +
-    '<circle cx="320" cy="70" r="36" fill="#ffd166"/><circle cx="308" cy="63" r="4" fill="#5a3d00"/><circle cx="332" cy="63" r="4" fill="#5a3d00"/><path d="M305 80 Q320 95 335 80" stroke="#5a3d00" stroke-width="4" fill="none" stroke-linecap="round"/>' +
-    '<ellipse cx="70" cy="62" rx="36" ry="18" fill="#fff"/><ellipse cx="98" cy="52" rx="28" ry="17" fill="#fff"/><ellipse cx="190" cy="40" rx="30" ry="14" fill="#fff"/>' +
-    '<ellipse cx="110" cy="320" rx="240" ry="110" fill="#8ac926"/><ellipse cx="340" cy="330" rx="220" ry="100" fill="#6ab04c"/>' +
-    '<rect x="238" y="200" width="18" height="62" fill="#8d5524"/><circle cx="247" cy="180" r="42" fill="#2cb67d"/><circle cx="224" cy="196" r="28" fill="#2cb67d"/><circle cx="270" cy="196" r="28" fill="#2cb67d"/><circle cx="235" cy="170" r="5" fill="#e63946"/><circle cx="262" cy="186" r="5" fill="#e63946"/><circle cx="250" cy="205" r="5" fill="#e63946"/>' +
-    '<rect x="60" y="170" width="110" height="90" fill="#f582ae"/><polygon points="48,172 115,112 182,172" fill="#e63946"/><rect x="100" y="210" width="30" height="50" rx="4" fill="#8d5524"/><rect x="70" y="185" width="24" height="24" fill="#a8dcff" stroke="#fff" stroke-width="3"/><rect x="138" y="185" width="24" height="24" fill="#a8dcff" stroke="#fff" stroke-width="3"/>' +
-    '<circle cx="30" cy="252" r="7" fill="#ffd166"/><circle cx="330" cy="272" r="7" fill="#f582ae"/><circle cx="380" cy="256" r="7" fill="#fff"/><circle cx="200" cy="282" r="6" fill="#ffd166"/></svg>',
+    S + '<defs>' + LG('sky', '#4fb0ff', '#dff3ff', 1) + RG('sun', '#fff7c2', '#ffd43b', '#ff9f1c') + GLOW('glow', '#ffe680') + LG('cloud', '#ffffff', '#d5e9fb', 1) +
+    LG('h1', '#c4f57a', '#5aa839', 1) + LG('h2', '#a8e65f', '#3f8f2f', 1) + RG('leaf', '#8ff0a8', '#2cb67d', '#166b45') + LG('trunk', '#b8783f', '#5e3410') +
+    RG('apple', '#ff9a9a', '#e63946', '#8e1220') + LG('wall', '#ffc2da', '#e86a9a', 1) + LG('roof', '#ff7b7b', '#b71c2e', 1) + LG('door', '#b07040', '#5e3410', 1) + LG('glass', '#e8f7ff', '#8ccfff', 1) + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#sky)"/>' +
+    '<circle cx="320" cy="70" r="90" fill="url(#glow)"/>' +
+    '<g stroke="#ffcf3d" stroke-width="6" stroke-linecap="round" opacity=".95"><line x1="320" y1="8" x2="320" y2="24"/><line x1="320" y1="116" x2="320" y2="132"/><line x1="258" y1="70" x2="274" y2="70"/><line x1="366" y1="70" x2="382" y2="70"/><line x1="276" y1="26" x2="288" y2="38"/><line x1="352" y1="102" x2="364" y2="114"/><line x1="276" y1="114" x2="288" y2="102"/><line x1="352" y1="38" x2="364" y2="26"/></g>' +
+    '<circle cx="320" cy="70" r="36" fill="url(#sun)"/><ellipse cx="308" cy="54" rx="12" ry="6" fill="#fff" opacity=".55"/><circle cx="308" cy="63" r="4" fill="#5a3d00"/><circle cx="332" cy="63" r="4" fill="#5a3d00"/><path d="M305 80 Q320 95 335 80" stroke="#5a3d00" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="300" cy="76" r="5" fill="#ff8a8a" opacity=".6"/><circle cx="340" cy="76" r="5" fill="#ff8a8a" opacity=".6"/>' +
+    '<g fill="url(#cloud)" filter="url(#sh)"><ellipse cx="70" cy="62" rx="36" ry="18"/><ellipse cx="98" cy="52" rx="28" ry="17"/><ellipse cx="190" cy="40" rx="30" ry="14"/><ellipse cx="212" cy="34" rx="20" ry="11"/></g>' +
+    '<ellipse cx="110" cy="320" rx="240" ry="110" fill="url(#h1)"/><ellipse cx="340" cy="330" rx="220" ry="100" fill="url(#h2)"/>' +
+    '<ellipse cx="250" cy="262" rx="52" ry="9" fill="#000" opacity=".16"/><rect x="238" y="200" width="18" height="62" rx="3" fill="url(#trunk)"/>' +
+    '<g fill="url(#leaf)"><circle cx="247" cy="180" r="42"/><circle cx="224" cy="196" r="28"/><circle cx="270" cy="196" r="28"/></g><ellipse cx="232" cy="160" rx="16" ry="8" fill="#fff" opacity=".22" transform="rotate(-25 232 160)"/>' +
+    '<g fill="url(#apple)"><circle cx="235" cy="170" r="6"/><circle cx="262" cy="186" r="6"/><circle cx="250" cy="205" r="6"/></g>' +
+    '<ellipse cx="118" cy="262" rx="76" ry="8" fill="#000" opacity=".16"/>' +
+    '<rect x="60" y="170" width="110" height="90" fill="url(#wall)"/><rect x="150" y="170" width="20" height="90" fill="#000" opacity=".08"/>' +
+    '<polygon points="48,172 115,112 182,172" fill="url(#roof)"/><polyline points="52,168 115,116" stroke="#ffb0b0" stroke-width="3" fill="none" opacity=".6"/><rect x="44" y="168" width="142" height="8" rx="3" fill="#8e1220"/>' +
+    '<rect x="100" y="210" width="30" height="50" rx="4" fill="url(#door)"/><circle cx="124" cy="238" r="3" fill="#ffd166"/>' +
+    '<g fill="url(#glass)" stroke="#fff" stroke-width="3"><rect x="70" y="185" width="24" height="24" rx="2"/><rect x="138" y="185" width="24" height="24" rx="2"/></g><g stroke="#fff" stroke-width="2"><line x1="82" y1="185" x2="82" y2="209"/><line x1="70" y1="197" x2="94" y2="197"/><line x1="150" y1="185" x2="150" y2="209"/><line x1="138" y1="197" x2="162" y2="197"/></g>' +
+    '<g stroke="#2cb67d" stroke-width="3" stroke-linecap="round"><line x1="30" y1="270" x2="30" y2="255"/><line x1="330" y1="285" x2="330" y2="274"/><line x1="380" y1="270" x2="380" y2="258"/><line x1="200" y1="292" x2="200" y2="284"/></g>' +
+    '<circle cx="30" cy="252" r="7" fill="#ffd166"/><circle cx="28" cy="250" r="2.5" fill="#fff" opacity=".7"/><circle cx="330" cy="272" r="7" fill="#f582ae"/><circle cx="328" cy="270" r="2.5" fill="#fff" opacity=".7"/><circle cx="380" cy="256" r="7" fill="#fff"/><circle cx="380" cy="256" r="3" fill="#ffd166"/><circle cx="200" cy="282" r="6" fill="#ffd166"/><circle cx="198" cy="280" r="2" fill="#fff" opacity=".7"/></svg>',
     // 2. Bajo el mar
-    S + '<rect width="400" height="300" fill="#3da9fc"/><rect y="0" width="400" height="120" fill="#5bbcff"/>' +
-    '<ellipse cx="200" cy="305" rx="270" ry="50" fill="#f6d28c"/>' +
-    '<g stroke="#2cb67d" stroke-width="11" fill="none" stroke-linecap="round"><path d="M40 300 C60 250 20 230 45 180 C60 150 30 140 50 100"/><path d="M360 300 C340 250 380 230 355 180 C340 150 370 140 350 110"/><path d="M300 300 C310 270 290 250 305 220"/></g>' +
-    '<ellipse cx="150" cy="120" rx="46" ry="28" fill="#ff8906"/><polygon points="106,120 72,94 72,146" fill="#ff8906"/><path d="M138 96 Q146 120 138 144" stroke="#fff" stroke-width="6" fill="none"/><circle cx="170" cy="112" r="7" fill="#fff"/><circle cx="172" cy="112" r="3.5" fill="#172c66"/>' +
-    '<ellipse cx="280" cy="200" rx="40" ry="24" fill="#f582ae"/><polygon points="318,200 350,178 350,222" fill="#f582ae"/><circle cx="262" cy="194" r="6" fill="#fff"/><circle cx="260" cy="194" r="3" fill="#172c66"/>' +
-    '<ellipse cx="300" cy="66" rx="24" ry="14" fill="#ffd166"/><polygon points="322,66 340,54 340,78" fill="#ffd166"/><circle cx="290" cy="63" r="3" fill="#172c66"/>' +
-    '<ellipse cx="110" cy="220" rx="22" ry="13" fill="#7f5af0"/><polygon points="88,220 70,208 70,232" fill="#7f5af0"/><circle cx="120" cy="217" r="3" fill="#fff"/>' +
-    '<polygon points="200,240 207,260 228,260 211,273 217,294 200,282 183,294 189,273 172,260 193,260" fill="#e63946"/>' +
-    '<g fill="none" stroke="#fff" stroke-width="3" opacity=".8"><circle cx="60" cy="60" r="8"/><circle cx="80" cy="35" r="5"/><circle cx="230" cy="160" r="6"/><circle cx="245" cy="140" r="4"/><circle cx="370" cy="40" r="6"/></g></svg>',
+    S + '<defs><linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fdcff"/><stop offset=".45" stop-color="#2f97e6"/><stop offset="1" stop-color="#0b4a95"/></linearGradient>' +
+    LG('sand', '#fbe9b8', '#d3a95f', 1) + LG('weed', '#6fe8a6', '#157a4d', 1) + RG('f1', '#ffd28a', '#ff8906', '#b34d00') + RG('f2', '#ffc6de', '#f582ae', '#b8306f') + RG('f3', '#fff0b0', '#ffd166', '#d99a00') + RG('f4', '#cbbcff', '#7f5af0', '#4a2fa8') + RG('star', '#ff9a9a', '#e63946', '#8e1220') + '</defs>' +
+    '<rect width="400" height="300" fill="url(#w)"/>' +
+    '<g fill="#fff" opacity=".12"><polygon points="60,0 110,0 190,300 120,300"/><polygon points="220,0 250,0 330,300 290,300"/></g>' +
+    '<ellipse cx="200" cy="305" rx="270" ry="52" fill="url(#sand)"/><ellipse cx="200" cy="300" rx="250" ry="30" fill="#fff" opacity=".12"/>' +
+    '<g stroke="url(#weed)" stroke-width="11" fill="none" stroke-linecap="round"><path d="M40 300 C60 250 20 230 45 180 C60 150 30 140 50 100"/><path d="M360 300 C340 250 380 230 355 180 C340 150 370 140 350 110"/><path d="M300 300 C310 270 290 250 305 220"/></g>' +
+    '<g stroke="#a7ffd0" stroke-width="3" fill="none" stroke-linecap="round" opacity=".5"><path d="M42 290 C58 250 24 232 46 186"/><path d="M357 290 C342 250 376 232 354 186"/></g>' +
+    '<polygon points="106,120 72,94 72,146" fill="#d96f00"/><ellipse cx="150" cy="120" rx="46" ry="28" fill="url(#f1)"/><path d="M138 96 Q146 120 138 144" stroke="#fff" stroke-width="6" fill="none" opacity=".8"/><ellipse cx="140" cy="106" rx="18" ry="8" fill="#fff" opacity=".3" transform="rotate(-15 140 106)"/><circle cx="170" cy="112" r="7" fill="#fff"/><circle cx="172" cy="112" r="3.5" fill="#172c66"/><circle cx="173" cy="110" r="1.3" fill="#fff"/>' +
+    '<polygon points="318,200 350,178 350,222" fill="#c74d85"/><ellipse cx="280" cy="200" rx="40" ry="24" fill="url(#f2)"/><ellipse cx="272" cy="188" rx="14" ry="6" fill="#fff" opacity=".35" transform="rotate(-15 272 188)"/><circle cx="262" cy="194" r="6" fill="#fff"/><circle cx="260" cy="194" r="3" fill="#172c66"/><circle cx="259" cy="192" r="1.2" fill="#fff"/>' +
+    '<polygon points="322,66 340,54 340,78" fill="#d99a00"/><ellipse cx="300" cy="66" rx="24" ry="14" fill="url(#f3)"/><ellipse cx="294" cy="60" rx="9" ry="4" fill="#fff" opacity=".4"/><circle cx="290" cy="63" r="3" fill="#172c66"/>' +
+    '<polygon points="88,220 70,208 70,232" fill="#5232b3"/><ellipse cx="110" cy="220" rx="22" ry="13" fill="url(#f4)"/><ellipse cx="106" cy="214" rx="8" ry="3.5" fill="#fff" opacity=".4"/><circle cx="120" cy="217" r="3" fill="#fff"/><circle cx="121" cy="217" r="1.5" fill="#172c66"/>' +
+    '<ellipse cx="200" cy="290" rx="32" ry="6" fill="#000" opacity=".15"/><polygon points="200,240 207,260 228,260 211,273 217,294 200,282 183,294 189,273 172,260 193,260" fill="url(#star)"/><g fill="#ffb3b3" opacity=".8"><circle cx="200" cy="252" r="2"/><circle cx="200" cy="266" r="2.5"/><circle cx="190" cy="273" r="2"/><circle cx="210" cy="273" r="2"/></g>' +
+    '<g fill="#fff" opacity=".18"><circle cx="60" cy="60" r="8"/><circle cx="80" cy="35" r="5"/><circle cx="230" cy="160" r="6"/><circle cx="245" cy="140" r="4"/><circle cx="370" cy="40" r="6"/></g>' +
+    '<g fill="none" stroke="#fff" stroke-width="2.5" opacity=".85"><circle cx="60" cy="60" r="8"/><circle cx="80" cy="35" r="5"/><circle cx="230" cy="160" r="6"/><circle cx="245" cy="140" r="4"/><circle cx="370" cy="40" r="6"/></g>' +
+    '<g fill="#fff"><circle cx="57" cy="57" r="2"/><circle cx="78" cy="33" r="1.4"/><circle cx="228" cy="158" r="1.6"/><circle cx="368" cy="38" r="1.6"/></g></svg>',
     // 3. Cohete en el espacio
-    S + '<rect width="400" height="300" fill="#1b1f5e"/>' +
-    '<g fill="#fff"><circle cx="30" cy="30" r="3"/><circle cx="120" cy="20" r="2"/><circle cx="200" cy="15" r="3"/><circle cx="380" cy="30" r="2"/><circle cx="20" cy="150" r="2"/><circle cx="140" cy="250" r="3"/><circle cx="300" cy="270" r="2"/><circle cx="380" cy="200" r="3"/><circle cx="250" cy="110" r="2"/><circle cx="100" cy="120" r="3"/><circle cx="350" cy="140" r="2"/><circle cx="60" cy="280" r="2"/><polygon points="270,240 274,252 286,252 276,259 280,271 270,264 260,271 264,259 254,252 266,252" fill="#ffd166"/></g>' +
-    '<circle cx="320" cy="80" r="38" fill="#ff8906"/><circle cx="308" cy="70" r="8" fill="#ffb703"/><circle cx="334" cy="92" r="6" fill="#ffb703"/><ellipse cx="320" cy="84" rx="62" ry="14" fill="none" stroke="#ffd166" stroke-width="6"/>' +
-    '<circle cx="70" cy="220" r="32" fill="#2cb67d"/><circle cx="60" cy="210" r="8" fill="#1e9c66"/><circle cx="84" cy="232" r="6" fill="#1e9c66"/>' +
-    '<circle cx="60" cy="60" r="22" fill="#eee"/><circle cx="52" cy="55" r="5" fill="#ccc"/><circle cx="66" cy="68" r="3" fill="#ccc"/>' +
-    '<polygon points="180,202 200,270 220,202" fill="#ffb703"/><polygon points="190,202 200,240 210,202" fill="#ff8906"/>' +
-    '<polygon points="172,150 138,215 174,205" fill="#e63946"/><polygon points="228,150 262,215 226,205" fill="#e63946"/>' +
-    '<path d="M200 40 C232 70 236 130 230 205 L170 205 C164 130 168 70 200 40 Z" fill="#fff"/><path d="M200 40 C216 55 224 75 228 96 L172 96 C176 75 184 55 200 40 Z" fill="#e63946"/>' +
-    '<circle cx="200" cy="132" r="17" fill="#3da9fc" stroke="#e63946" stroke-width="5"/><rect x="176" y="175" width="48" height="8" fill="#3da9fc"/></svg>',
+    S + '<defs><linearGradient id="sp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f1454"/><stop offset=".6" stop-color="#28207a"/><stop offset="1" stop-color="#3d2278"/></linearGradient>' +
+    GLOW('neb', '#ff7ad9') + GLOW('neb2', '#4fd1ff') + RG('pl', '#ffd79a', '#ff8906', '#9c3d00') + RG('gp', '#a9f5c4', '#2cb67d', '#0f5e3c') + RG('moon', '#ffffff', '#d8dbe0', '#8d93a0') +
+    '<linearGradient id="body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#e8edf5"/><stop offset="1" stop-color="#a7b3c6"/></linearGradient>' +
+    '<linearGradient id="nose" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff8080"/><stop offset=".6" stop-color="#e63946"/><stop offset="1" stop-color="#a5121f"/></linearGradient>' +
+    LG('fin', '#ff6b6b', '#a5121f', 1) + RG('glass', '#c9ecff', '#3da9fc', '#14539e') + LG('flame', '#fff1a8', '#ff4d00', 1) + GLOW('fglow', '#ffb020') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#sp)"/><ellipse cx="110" cy="230" rx="130" ry="90" fill="url(#neb)" opacity=".5"/><ellipse cx="330" cy="200" rx="110" ry="80" fill="url(#neb2)" opacity=".45"/>' +
+    '<g fill="#fff"><circle cx="30" cy="30" r="3"/><circle cx="120" cy="20" r="2"/><circle cx="200" cy="15" r="3"/><circle cx="380" cy="30" r="2"/><circle cx="20" cy="150" r="2"/><circle cx="140" cy="250" r="3"/><circle cx="300" cy="270" r="2"/><circle cx="380" cy="200" r="3"/><circle cx="250" cy="110" r="2"/><circle cx="100" cy="120" r="3"/><circle cx="350" cy="140" r="2"/><circle cx="60" cy="280" r="2"/><circle cx="160" cy="90" r="1.5"/><circle cx="40" cy="200" r="1.5"/><circle cx="330" cy="240" r="1.5"/></g>' +
+    '<g fill="#fff" opacity=".9"><polygon points="90,60 93,70 103,73 93,76 90,86 87,76 77,73 87,70"/><polygon points="360,260 362,266 368,268 362,270 360,276 358,270 352,268 358,266"/></g>' +
+    '<circle cx="270" cy="255" r="22" fill="url(#fglow)" opacity=".6"/><polygon points="270,240 274,252 286,252 276,259 280,271 270,264 260,271 264,259 254,252 266,252" fill="#ffd166"/>' +
+    '<ellipse cx="320" cy="84" rx="62" ry="14" fill="none" stroke="#ffd166" stroke-width="6" opacity=".55"/>' +
+    '<circle cx="320" cy="80" r="38" fill="url(#pl)"/><ellipse cx="306" cy="66" rx="14" ry="7" fill="#fff" opacity=".35" transform="rotate(-30 306 66)"/><circle cx="308" cy="70" r="8" fill="#c65a00" opacity=".45"/><circle cx="334" cy="92" r="6" fill="#c65a00" opacity=".45"/>' +
+    '<path d="M258 84 A62 14 0 0 0 382 84" fill="none" stroke="#ffe08a" stroke-width="6"/><path d="M258 84 A62 14 0 0 0 382 84" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>' +
+    '<circle cx="70" cy="220" r="32" fill="url(#gp)"/><ellipse cx="60" cy="206" rx="12" ry="6" fill="#fff" opacity=".3" transform="rotate(-30 60 206)"/><circle cx="60" cy="214" r="8" fill="#0f5e3c" opacity=".4"/><circle cx="84" cy="232" r="6" fill="#0f5e3c" opacity=".4"/>' +
+    '<circle cx="60" cy="60" r="22" fill="url(#moon)"/><circle cx="52" cy="55" r="5" fill="#9aa0ad" opacity=".6"/><circle cx="66" cy="68" r="3" fill="#9aa0ad" opacity=".6"/><circle cx="68" cy="52" r="2" fill="#9aa0ad" opacity=".5"/>' +
+    '<ellipse cx="200" cy="245" rx="26" ry="36" fill="url(#fglow)"/><polygon points="176,202 200,278 224,202" fill="url(#flame)"/><polygon points="190,202 200,244 210,202" fill="#fff6b0"/>' +
+    '<g filter="url(#sh)"><polygon points="172,150 138,215 174,205" fill="url(#fin)"/><polygon points="228,150 262,215 226,205" fill="url(#fin)"/>' +
+    '<path d="M200 40 C232 70 236 130 230 205 L170 205 C164 130 168 70 200 40 Z" fill="url(#body)"/><path d="M200 40 C216 55 224 75 228 96 L172 96 C176 75 184 55 200 40 Z" fill="url(#nose)"/>' +
+    '<path d="M186 70 C190 58 195 50 200 44" stroke="#fff" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/>' +
+    '<circle cx="200" cy="132" r="17" fill="url(#glass)" stroke="#e63946" stroke-width="5"/><ellipse cx="194" cy="124" rx="7" ry="4" fill="#fff" opacity=".7" transform="rotate(-30 194 124)"/><rect x="176" y="175" width="48" height="8" fill="#3da9fc"/><rect x="176" y="175" width="48" height="3" fill="#fff" opacity=".5"/></g></svg>',
     // 4. Pastel de cumpleaños
-    S + '<rect width="400" height="300" fill="#fde2e4"/><rect y="232" width="400" height="68" fill="#c9a26b"/>' +
+    S + '<defs>' + LG('room', '#fff0f3', '#f9c9d6', 1) + GLOW('roomlight', '#ffffff') + LG('wood', '#dcb676', '#a5713a', 1) + LG('plate', '#ffffff', '#cfd6e2', 1) +
+    '<linearGradient id="c1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffc0dc"/><stop offset=".5" stop-color="#f582ae"/><stop offset="1" stop-color="#b8306f"/></linearGradient>' +
+    '<linearGradient id="c2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe9a3"/><stop offset=".5" stop-color="#ffb703"/><stop offset="1" stop-color="#b86f00"/></linearGradient>' +
+    '<linearGradient id="cd1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9edcff"/><stop offset="1" stop-color="#1a63a8"/></linearGradient><linearGradient id="cd2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9ff0c0"/><stop offset="1" stop-color="#14784a"/></linearGradient><linearGradient id="cd3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d6c8ff"/><stop offset="1" stop-color="#5232b3"/></linearGradient>' +
+    LG('fl', '#fff2a8', '#ff7a00', 1) + GLOW('fg', '#ffc040') + RG('b1', '#ff9a9a', '#e63946', '#8e1220') + RG('b2', '#a9dcff', '#3da9fc', '#14539e') + RG('b3', '#a9f5c4', '#2cb67d', '#0f5e3c') + RG('b4', '#ffe9a3', '#ffb703', '#b86f00') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#room)"/><ellipse cx="200" cy="60" rx="220" ry="120" fill="url(#roomlight)" opacity=".7"/>' +
+    '<rect y="232" width="400" height="68" fill="url(#wood)"/><rect y="232" width="400" height="6" fill="#f0d29a"/><g stroke="#000" stroke-width="2" opacity=".08"><line x1="0" y1="255" x2="400" y2="258"/><line x1="0" y1="278" x2="400" y2="275"/></g>' +
     '<g fill="#7f5af0"><circle cx="40" cy="30" r="5"/><circle cx="200" cy="40" r="4"/><circle cx="140" cy="60" r="4"/></g><g fill="#2cb67d"><circle cx="250" cy="25" r="4"/><circle cx="110" cy="25" r="5"/></g><g fill="#3da9fc"><circle cx="300" cy="50" r="5"/><circle cx="170" cy="20" r="4"/></g>' +
-    '<circle cx="50" cy="90" r="26" fill="#e63946"/><path d="M50 116 Q40 150 55 180" stroke="#666" stroke-width="2" fill="none"/><circle cx="85" cy="130" r="24" fill="#3da9fc"/><path d="M85 154 Q95 180 80 200" stroke="#666" stroke-width="2" fill="none"/>' +
-    '<circle cx="345" cy="95" r="26" fill="#2cb67d"/><path d="M345 121 Q355 150 340 180" stroke="#666" stroke-width="2" fill="none"/><circle cx="310" cy="140" r="22" fill="#ffb703"/><path d="M310 162 Q300 185 315 205" stroke="#666" stroke-width="2" fill="none"/>' +
-    '<ellipse cx="200" cy="236" rx="120" ry="16" fill="#fff"/>' +
-    '<rect x="110" y="176" width="180" height="60" rx="8" fill="#f582ae"/><path d="M110 182 Q125 202 140 182 Q155 202 170 182 Q185 202 200 182 Q215 202 230 182 Q245 202 260 182 Q275 202 290 182" stroke="#fff" stroke-width="8" fill="none"/>' +
-    '<rect x="130" y="126" width="140" height="54" rx="8" fill="#ffb703"/><path d="M130 132 Q145 150 160 132 Q175 150 190 132 Q205 150 220 132 Q235 150 250 132 Q262 150 270 132" stroke="#fff" stroke-width="7" fill="none"/>' +
-    '<rect x="152" y="90" width="12" height="38" rx="3" fill="#3da9fc"/><rect x="194" y="90" width="12" height="38" rx="3" fill="#2cb67d"/><rect x="236" y="90" width="12" height="38" rx="3" fill="#7f5af0"/>' +
-    '<g fill="#ffd166"><ellipse cx="158" cy="80" rx="7" ry="12"/><ellipse cx="200" cy="80" rx="7" ry="12"/><ellipse cx="242" cy="80" rx="7" ry="12"/></g><g fill="#ff8906"><ellipse cx="158" cy="84" rx="3" ry="6"/><ellipse cx="200" cy="84" rx="3" ry="6"/><ellipse cx="242" cy="84" rx="3" ry="6"/></g></svg>',
+    '<g stroke="#777" stroke-width="2" fill="none"><path d="M50 116 Q40 150 55 180"/><path d="M85 154 Q95 180 80 200"/><path d="M345 121 Q355 150 340 180"/><path d="M310 162 Q300 185 315 205"/></g>' +
+    '<g filter="url(#sh)"><circle cx="50" cy="90" r="26" fill="url(#b1)"/><circle cx="85" cy="130" r="24" fill="url(#b2)"/><circle cx="345" cy="95" r="26" fill="url(#b3)"/><circle cx="310" cy="140" r="22" fill="url(#b4)"/></g>' +
+    '<g fill="#fff" opacity=".5"><ellipse cx="41" cy="78" rx="8" ry="5" transform="rotate(-35 41 78)"/><ellipse cx="77" cy="119" rx="7" ry="4.5" transform="rotate(-35 77 119)"/><ellipse cx="336" cy="83" rx="8" ry="5" transform="rotate(-35 336 83)"/><ellipse cx="302" cy="130" rx="7" ry="4" transform="rotate(-35 302 130)"/></g>' +
+    '<ellipse cx="200" cy="244" rx="130" ry="14" fill="#000" opacity=".15"/><ellipse cx="200" cy="236" rx="120" ry="16" fill="url(#plate)"/><ellipse cx="200" cy="233" rx="104" ry="10" fill="#fff" opacity=".6"/>' +
+    '<rect x="110" y="176" width="180" height="60" rx="8" fill="url(#c1)"/><ellipse cx="200" cy="176" rx="90" ry="10" fill="#ffc9e0"/>' +
+    '<path d="M110 184 Q125 204 140 184 Q155 204 170 184 Q185 204 200 184 Q215 204 230 184 Q245 204 260 184 Q275 204 290 184" stroke="#000" stroke-width="8" fill="none" opacity=".12"/><path d="M110 182 Q125 202 140 182 Q155 202 170 182 Q185 202 200 182 Q215 202 230 182 Q245 202 260 182 Q275 202 290 182" stroke="#fff" stroke-width="8" fill="none"/>' +
+    '<rect x="130" y="126" width="140" height="54" rx="8" fill="url(#c2)"/><ellipse cx="200" cy="126" rx="70" ry="9" fill="#ffe9a3"/>' +
+    '<path d="M130 134 Q145 152 160 134 Q175 152 190 134 Q205 152 220 134 Q235 152 250 134 Q262 152 270 134" stroke="#000" stroke-width="7" fill="none" opacity=".12"/><path d="M130 132 Q145 150 160 132 Q175 150 190 132 Q205 150 220 132 Q235 150 250 132 Q262 150 270 132" stroke="#fff" stroke-width="7" fill="none"/>' +
+    '<rect x="152" y="90" width="12" height="38" rx="3" fill="url(#cd1)"/><rect x="194" y="90" width="12" height="38" rx="3" fill="url(#cd2)"/><rect x="236" y="90" width="12" height="38" rx="3" fill="url(#cd3)"/>' +
+    '<g fill="url(#fg)"><circle cx="158" cy="80" r="18"/><circle cx="200" cy="80" r="18"/><circle cx="242" cy="80" r="18"/></g>' +
+    '<g fill="url(#fl)"><ellipse cx="158" cy="80" rx="7" ry="12"/><ellipse cx="200" cy="80" rx="7" ry="12"/><ellipse cx="242" cy="80" rx="7" ry="12"/></g><g fill="#fff8c0"><ellipse cx="158" cy="85" rx="3" ry="6"/><ellipse cx="200" cy="85" rx="3" ry="6"/><ellipse cx="242" cy="85" rx="3" ry="6"/></g></svg>',
     // 5. Arcoíris con nubes y flores
-    S + '<rect width="400" height="300" fill="#cbeeff"/>' +
-    '<g fill="none" stroke-width="16"><path d="M20 262 A180 180 0 0 1 380 262" stroke="#e63946"/><path d="M36 262 A164 164 0 0 1 364 262" stroke="#ff8906"/><path d="M52 262 A148 148 0 0 1 348 262" stroke="#ffd166"/><path d="M68 262 A132 132 0 0 1 332 262" stroke="#2cb67d"/><path d="M84 262 A116 116 0 0 1 316 262" stroke="#3da9fc"/><path d="M100 262 A100 100 0 0 1 300 262" stroke="#7f5af0"/></g>' +
-    '<rect y="262" width="400" height="38" fill="#8ac926"/>' +
-    '<g fill="#fff"><ellipse cx="55" cy="250" rx="46" ry="24"/><ellipse cx="30" cy="262" rx="30" ry="18"/><ellipse cx="85" cy="264" rx="32" ry="18"/><ellipse cx="345" cy="250" rx="46" ry="24"/><ellipse cx="320" cy="264" rx="32" ry="18"/><ellipse cx="372" cy="262" rx="30" ry="18"/><ellipse cx="200" cy="50" rx="34" ry="16"/><ellipse cx="225" cy="42" rx="26" ry="14"/></g>' +
-    '<g stroke="#2cb67d" stroke-width="5" stroke-linecap="round"><line x1="140" y1="300" x2="140" y2="232"/><line x1="200" y1="300" x2="200" y2="222"/><line x1="260" y1="300" x2="260" y2="232"/></g>' +
-    '<g fill="#f582ae"><circle cx="140" cy="216" r="9"/><circle cx="140" cy="248" r="9"/><circle cx="124" cy="232" r="9"/><circle cx="156" cy="232" r="9"/></g><circle cx="140" cy="232" r="8" fill="#ffd166"/>' +
-    '<g fill="#3da9fc"><circle cx="200" cy="204" r="10"/><circle cx="200" cy="240" r="10"/><circle cx="182" cy="222" r="10"/><circle cx="218" cy="222" r="10"/></g><circle cx="200" cy="222" r="9" fill="#ffd166"/>' +
-    '<g fill="#ffd166"><circle cx="260" cy="216" r="9"/><circle cx="260" cy="248" r="9"/><circle cx="244" cy="232" r="9"/><circle cx="276" cy="232" r="9"/></g><circle cx="260" cy="232" r="8" fill="#ff8906"/>' +
-    '<circle cx="330" cy="60" r="30" fill="#ffd166"/></svg>',
+    S + '<defs>' + LG('sky5', '#63bbff', '#e2f4ff', 1) + RG('sun5', '#fff7c2', '#ffd43b', '#ff9f1c') + GLOW('glow5', '#ffe680') + LG('cloud5', '#ffffff', '#d5e9fb', 1) + LG('grass5', '#b6f06e', '#3f8f2f', 1) +
+    RG('p1', '#ffc6de', '#f582ae', '#b8306f') + RG('p2', '#a9dcff', '#3da9fc', '#14539e') + RG('p3', '#fff0b0', '#ffd166', '#d99a00') + RG('ctr', '#fff6b0', '#ffd166', '#e08a00') + RG('ctr2', '#ffd2a6', '#ff8906', '#b85a00') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#sky5)"/><circle cx="330" cy="60" r="70" fill="url(#glow5)"/><circle cx="330" cy="60" r="30" fill="url(#sun5)"/><ellipse cx="320" cy="48" rx="10" ry="5" fill="#fff" opacity=".55"/>' +
+    '<g fill="none" stroke-width="16" stroke-linecap="butt"><path d="M20 262 A180 180 0 0 1 380 262" stroke="#e63946"/><path d="M36 262 A164 164 0 0 1 364 262" stroke="#ff8906"/><path d="M52 262 A148 148 0 0 1 348 262" stroke="#ffd166"/><path d="M68 262 A132 132 0 0 1 332 262" stroke="#2cb67d"/><path d="M84 262 A116 116 0 0 1 316 262" stroke="#3da9fc"/><path d="M100 262 A100 100 0 0 1 300 262" stroke="#7f5af0"/></g>' +
+    '<path d="M14 262 A186 186 0 0 1 386 262" fill="none" stroke="#fff" stroke-width="5" opacity=".35"/><path d="M30 262 A170 170 0 0 1 370 262" fill="none" stroke="#fff" stroke-width="3" opacity=".25"/><path d="M62 262 A138 138 0 0 1 338 262" fill="none" stroke="#fff" stroke-width="3" opacity=".25"/>' +
+    '<rect y="262" width="400" height="38" fill="url(#grass5)"/><rect y="262" width="400" height="10" fill="#000" opacity=".1"/>' +
+    '<g fill="url(#cloud5)" filter="url(#sh)"><ellipse cx="55" cy="250" rx="46" ry="24"/><ellipse cx="30" cy="262" rx="30" ry="18"/><ellipse cx="85" cy="264" rx="32" ry="18"/><ellipse cx="345" cy="250" rx="46" ry="24"/><ellipse cx="320" cy="264" rx="32" ry="18"/><ellipse cx="372" cy="262" rx="30" ry="18"/><ellipse cx="200" cy="50" rx="34" ry="16"/><ellipse cx="225" cy="42" rx="26" ry="14"/></g>' +
+    '<g fill="#000" opacity=".14"><ellipse cx="140" cy="296" rx="18" ry="4"/><ellipse cx="200" cy="296" rx="20" ry="4"/><ellipse cx="260" cy="296" rx="18" ry="4"/></g>' +
+    '<g stroke="#2a9d5c" stroke-width="5" stroke-linecap="round"><line x1="140" y1="300" x2="140" y2="232"/><line x1="200" y1="300" x2="200" y2="222"/><line x1="260" y1="300" x2="260" y2="232"/></g><g stroke="#8ee8b0" stroke-width="1.5" stroke-linecap="round" opacity=".8"><line x1="138" y1="296" x2="138" y2="240"/><line x1="198" y1="296" x2="198" y2="230"/><line x1="258" y1="296" x2="258" y2="240"/></g>' +
+    '<g fill="url(#p1)"><circle cx="140" cy="216" r="9"/><circle cx="140" cy="248" r="9"/><circle cx="124" cy="232" r="9"/><circle cx="156" cy="232" r="9"/></g><circle cx="140" cy="232" r="8" fill="url(#ctr)"/>' +
+    '<g fill="url(#p2)"><circle cx="200" cy="204" r="10"/><circle cx="200" cy="240" r="10"/><circle cx="182" cy="222" r="10"/><circle cx="218" cy="222" r="10"/></g><circle cx="200" cy="222" r="9" fill="url(#ctr)"/>' +
+    '<g fill="url(#p3)"><circle cx="260" cy="216" r="9"/><circle cx="260" cy="248" r="9"/><circle cx="244" cy="232" r="9"/><circle cx="276" cy="232" r="9"/></g><circle cx="260" cy="232" r="8" fill="url(#ctr2)"/></svg>',
     // 6. Gatito
-    S + '<rect width="400" height="300" fill="#fff3b0"/><circle cx="60" cy="50" r="18" fill="#ffd166"/><circle cx="340" cy="60" r="12" fill="#f582ae"/><circle cx="370" cy="110" r="8" fill="#3da9fc"/><circle cx="40" cy="130" r="8" fill="#2cb67d"/>' +
-    '<path d="M280 235 C340 240 345 170 305 165" stroke="#f4a261" stroke-width="20" fill="none" stroke-linecap="round"/>' +
-    '<ellipse cx="200" cy="232" rx="82" ry="60" fill="#f4a261"/><ellipse cx="200" cy="245" rx="44" ry="34" fill="#fbd3b3"/>' +
-    '<ellipse cx="160" cy="286" rx="24" ry="12" fill="#f7b27a"/><ellipse cx="240" cy="286" rx="24" ry="12" fill="#f7b27a"/>' +
-    '<polygon points="138,95 150,26 192,74" fill="#f4a261"/><polygon points="262,95 250,26 208,74" fill="#f4a261"/><polygon points="150,84 156,44 182,74" fill="#f582ae"/><polygon points="250,84 244,44 218,74" fill="#f582ae"/>' +
-    '<circle cx="200" cy="130" r="70" fill="#f4a261"/>' +
-    '<g stroke="#e08a4a" stroke-width="6" stroke-linecap="round"><line x1="200" y1="66" x2="200" y2="86"/><line x1="184" y1="70" x2="188" y2="88"/><line x1="216" y1="70" x2="212" y2="88"/></g>' +
-    '<circle cx="175" cy="122" r="15" fill="#fff"/><circle cx="225" cy="122" r="15" fill="#fff"/><circle cx="177" cy="124" r="8" fill="#172c66"/><circle cx="227" cy="124" r="8" fill="#172c66"/><circle cx="180" cy="120" r="3" fill="#fff"/><circle cx="230" cy="120" r="3" fill="#fff"/>' +
-    '<polygon points="200,150 191,141 209,141" fill="#f582ae"/><path d="M200 150 Q192 162 182 155 M200 150 Q208 162 218 155" stroke="#172c66" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    S + '<defs><radialGradient id="room6" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#fffbe0"/><stop offset="1" stop-color="#ffe27a"/></radialGradient>' + LG('floor6', '#f7d78f', '#d9a94a', 1) +
+    RG('fur', '#ffcf9a', '#f4a261', '#c9702f') + RG('belly', '#fff4e6', '#fbd3b3', '#e8b48c') + RG('paw', '#ffdcb8', '#f7b27a', '#d98c4a') + RG('ear', '#ffb3d1', '#f582ae', '#c74d85') +
+    '<linearGradient id="tail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4a261"/><stop offset="1" stop-color="#c9702f"/></linearGradient>' + RG('eye', '#fff', '#fff', '#dfe6f0') + RG('pupil', '#4a52a8', '#1f2f6b', '#0d1440') +
+    RG('d1', '#fff0b0', '#ffd166', '#d99a00') + RG('d2', '#ffc6de', '#f582ae', '#b8306f') + RG('d3', '#a9dcff', '#3da9fc', '#14539e') + RG('d4', '#a9f5c4', '#2cb67d', '#0f5e3c') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#room6)"/><rect y="250" width="400" height="50" fill="url(#floor6)"/><rect y="250" width="400" height="5" fill="#fff" opacity=".5"/>' +
+    '<g filter="url(#sh)"><circle cx="60" cy="50" r="18" fill="url(#d1)"/><circle cx="340" cy="60" r="12" fill="url(#d2)"/><circle cx="370" cy="110" r="8" fill="url(#d3)"/><circle cx="40" cy="130" r="8" fill="url(#d4)"/></g><g fill="#fff" opacity=".6"><ellipse cx="53" cy="42" rx="6" ry="3.5" transform="rotate(-35 53 42)"/><ellipse cx="336" cy="55" rx="4" ry="2.5" transform="rotate(-35 336 55)"/></g>' +
+    '<ellipse cx="200" cy="288" rx="120" ry="12" fill="#000" opacity=".16"/>' +
+    '<path d="M280 235 C340 240 345 170 305 165" stroke="#000" stroke-width="20" fill="none" stroke-linecap="round" opacity=".1" transform="translate(3,5)"/><path d="M280 235 C340 240 345 170 305 165" stroke="url(#tail)" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M286 228 C336 232 338 178 306 172" stroke="#ffd0a8" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/>' +
+    '<ellipse cx="200" cy="232" rx="82" ry="60" fill="url(#fur)"/><ellipse cx="200" cy="245" rx="44" ry="34" fill="url(#belly)"/>' +
+    '<ellipse cx="160" cy="286" rx="24" ry="12" fill="url(#paw)"/><ellipse cx="240" cy="286" rx="24" ry="12" fill="url(#paw)"/><g stroke="#c9702f" stroke-width="2" opacity=".5" stroke-linecap="round"><line x1="152" y1="286" x2="152" y2="294"/><line x1="160" y1="287" x2="160" y2="296"/><line x1="168" y1="286" x2="168" y2="294"/><line x1="232" y1="286" x2="232" y2="294"/><line x1="240" y1="287" x2="240" y2="296"/><line x1="248" y1="286" x2="248" y2="294"/></g>' +
+    '<polygon points="138,95 150,26 192,74" fill="url(#fur)"/><polygon points="262,95 250,26 208,74" fill="url(#fur)"/><polygon points="150,84 156,44 182,74" fill="url(#ear)"/><polygon points="250,84 244,44 218,74" fill="url(#ear)"/>' +
+    '<ellipse cx="200" cy="196" rx="60" ry="10" fill="#000" opacity=".12"/><circle cx="200" cy="130" r="70" fill="url(#fur)"/><ellipse cx="170" cy="86" rx="26" ry="12" fill="#fff" opacity=".2" transform="rotate(-25 170 86)"/>' +
+    '<g stroke="#d9843c" stroke-width="6" stroke-linecap="round"><line x1="200" y1="66" x2="200" y2="86"/><line x1="184" y1="70" x2="188" y2="88"/><line x1="216" y1="70" x2="212" y2="88"/></g>' +
+    '<circle cx="175" cy="122" r="15" fill="url(#eye)"/><circle cx="225" cy="122" r="15" fill="url(#eye)"/><circle cx="177" cy="124" r="8" fill="url(#pupil)"/><circle cx="227" cy="124" r="8" fill="url(#pupil)"/><circle cx="180" cy="120" r="3" fill="#fff"/><circle cx="230" cy="120" r="3" fill="#fff"/><circle cx="174" cy="128" r="1.5" fill="#fff" opacity=".8"/><circle cx="224" cy="128" r="1.5" fill="#fff" opacity=".8"/>' +
+    '<polygon points="200,150 191,141 209,141" fill="#f582ae"/><ellipse cx="197" cy="143" rx="3" ry="1.5" fill="#fff" opacity=".6"/><path d="M200 150 Q192 162 182 155 M200 150 Q208 162 218 155" stroke="#172c66" stroke-width="3" fill="none" stroke-linecap="round"/>' +
     '<g stroke="#172c66" stroke-width="2.5" stroke-linecap="round"><line x1="120" y1="140" x2="165" y2="148"/><line x1="120" y1="158" x2="165" y2="156"/><line x1="280" y1="140" x2="235" y2="148"/><line x1="280" y1="158" x2="235" y2="156"/></g>' +
-    '<circle cx="160" cy="150" r="7" fill="#f582ae" opacity=".7"/><circle cx="240" cy="150" r="7" fill="#f582ae" opacity=".7"/></svg>'
+    '<circle cx="160" cy="150" r="7" fill="#f582ae" opacity=".6"/><circle cx="240" cy="150" r="7" fill="#f582ae" opacity=".6"/></svg>'
   ];
-  var LEVELS = [[2, 2], [3, 2], [3, 3], [4, 3]];
-  var level = 0, scene = 0, cols = 2, rows = 2, tiles = [], placed = 0, url = '';
-  var boardW = 0, boardH = 0, tileW = 0, tileH = 0, trayScale = 1, dragging = null;
+  // Rejillas por nivel (progresión dentro del nivel)
+  var GRIDS = { 1: [[2, 2], [3, 2]], 2: [[3, 3], [4, 3]], 3: [[4, 4], [5, 4], [6, 4]] };
+  var HINTS = 3;
+  var level = 1, step = 0, scene = 0, cols = 2, rows = 2, tiles = [], placed = 0, url = '';
+  var boardW = 0, boardH = 0, tileW = 0, tileH = 0, trayScale = 1, dragging = null, hints = HINTS, peekTimer = null, ghostTimer = null, ghost = null, peek = null;
 
   function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function lcm(a, b) { return a * b / gcd(a, b); }
 
   game.innerHTML = '';
-  var lvlEl = el('div', 'lvl');
+  var hud = el('div', 'hud');
+  var left = el('div', 'grp'), right = el('div', 'grp');
+  var lvlBtn = el('button', 'btn round yellow'); lvlBtn.textContent = '🎚️'; lvlBtn.setAttribute('aria-label', 'Nivel');
+  var badge = el('span'), piecesEl = el('span', 'pieces');
+  var hintBtn = el('button', 'btn yellow hint'); hintBtn.setAttribute('aria-label', 'Pista');
+  left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(piecesEl); right.appendChild(hintBtn);
+  hud.appendChild(left); hud.appendChild(right);
   var wrap = el('div', 'wrap'), boardBox = el('div', 'boardbox'), board = el('div', 'board'), tray = el('div', 'tray');
   boardBox.appendChild(board); wrap.appendChild(boardBox); wrap.appendChild(tray);
-  game.appendChild(wrap); game.appendChild(lvlEl);
-  // Expuesto para pruebas
-  window.__pz = { get cols() { return cols; }, get rows() { return rows; }, set: function (l, sc) { level = l; scene = sc; start(); } };
+  game.appendChild(hud); game.appendChild(wrap);
+  onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
+  onTap(hintBtn, showHint);
+  // Expuesto para pruebas (set: índice de nivel 0..2, escena, paso dentro del nivel)
+  window.__pz = { get cols() { return cols; }, get rows() { return rows; }, get level() { return level; }, get hints() { return hints; },
+    set: function (l, sc, st) { level = Math.min(3, Math.max(1, (l | 0) + 1)); scene = sc || 0; step = st || 0; start(); } };
+
+  function pickLevel() {
+    board.className = 'board'; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; dragging = null; clearTimeout(ghostTimer); clearTimeout(peekTimer);
+    KidsGame.levelPicker({ onPick: function (n) { level = n; step = 0; start(); } });
+  }
+  function setHud() {
+    badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level));
+    piecesEl.textContent = cols + '×' + rows;
+    hintBtn.textContent = (hints > 0 ? Array(hints + 1).join('💡') : '💡') + ' Pista';
+    hintBtn.classList.toggle('off', hints <= 0);
+  }
+  // Pista: muestra la imagen completa 2 segundos (máximo 3 por rompecabezas)
+  function showHint() {
+    if (hints <= 0 || !peek || peek.classList.contains('show') || board.classList.contains('done')) { if (hints <= 0) KidsGame.sound.wrong(); return; }
+    hints--; setHud(); KidsGame.sound.pop(); KidsGame.say('Mira');
+    peek.classList.add('show');
+    clearTimeout(peekTimer); peekTimer = setTimeout(function () { peek.classList.remove('show'); }, 2000);
+  }
 
   function start() {
-    var lv = LEVELS[Math.min(level, LEVELS.length - 1)]; cols = lv[0]; rows = lv[1];
+    var lv = GRIDS[level][Math.min(step, GRIDS[level].length - 1)]; cols = lv[0]; rows = lv[1];
     url = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SCENES[scene % SCENES.length]) + '")';
-    board.className = 'board'; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; placed = 0; dragging = null;
-    lvlEl.textContent = 'Nivel ' + (level + 1);
-    var ghost = el('div', 'ghost'); ghost.style.backgroundImage = url; board.appendChild(ghost);
+    board.className = 'board lvl' + level; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; placed = 0; dragging = null; hints = HINTS;
+    clearTimeout(ghostTimer); clearTimeout(peekTimer);
+    setHud();
+    // Nivel 1: la imagen guía se ve 3 segundos y se desvanece. Niveles 2 y 3: sin guía.
+    ghost = null;
+    if (level === 1) {
+      ghost = el('div', 'ghost'); ghost.style.backgroundImage = url; board.appendChild(ghost);
+      ghostTimer = setTimeout(function () { ghost.classList.add('fade'); }, 3000);
+    }
     var all = [];
     for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
       var slot = el('div', 'slot'); slot.dataset.c = c; slot.dataset.r = r; board.appendChild(slot);
       all.push({ c: c, r: r });
     }
+    peek = el('div', 'peek'); peek.style.backgroundImage = url; board.appendChild(peek);
+    board.appendChild(el('div', 'sweep'));
     KidsGame.shuffle(all).forEach(function (t, i) {
       var d = el('div', 'tile'); d.style.backgroundImage = url; d.style.animationDelay = (i * 50) + 'ms';
       d.dataset.c = t.c; d.dataset.r = t.r;
+      // Nivel 3: fichas giradas en la bandeja (se enderezan al tomarlas)
+      if (level === 3) d.style.setProperty('--rot', (Math.random() * 28 - 14).toFixed(1) + 'deg');
       t.el = d; t.state = 'tray';
       d.addEventListener('pointerdown', function (e) { down(e, t); });
       tray.appendChild(d); tiles.push(t);
@@ -139,36 +254,38 @@
   }
 
   function layout() {
-    var W = game.clientWidth - 16, H = game.clientHeight - 16, gap = 8, n = tiles.length;
+    var W = game.clientWidth - 16, H = game.clientHeight - 82, gap = 8, n = tiles.length, F = 36;
     if (!n || W < 50 || H < 50) return;
     var portrait = H > W;
     wrap.className = 'wrap' + (portrait ? ' portrait' : '');
     var bw, bh, tw, th, tcols, trows;
     if (portrait) {
       var trayH = Math.max(130, Math.floor(H * 0.3));
-      bw = W; bh = H - trayH - 10;
+      bw = W - F; bh = H - trayH - 10 - F;
       tray.style.width = '100%'; tray.style.height = trayH + 'px';
     } else {
       var trayW = Math.max(160, Math.floor(W * 0.28));
-      bw = W - trayW - 10; bh = H;
+      bw = W - trayW - 10 - F; bh = H - F;
       tray.style.width = trayW + 'px'; tray.style.height = '100%';
     }
-    // Múltiplo de 24 para que todas las fichas midan píxeles enteros (sin líneas entre fichas)
-    boardW = Math.max(24, Math.floor(Math.min(bw, bh * 4 / 3) / 24) * 24); boardH = boardW * 3 / 4;
+    // Múltiplo que hace enteras todas las fichas (sin líneas entre fichas)
+    var stepPx = lcm(4 * cols, 4 * rows);
+    boardW = Math.max(stepPx, Math.floor(Math.min(bw, bh * 4 / 3) / stepPx) * stepPx); boardH = boardW * 3 / 4;
     tileW = boardW / cols; tileH = boardH / rows;
     board.style.width = boardW + 'px'; board.style.height = boardH + 'px';
     // Tamaño de las fichas en la bandeja para que quepan todas
     if (portrait) {
-      trows = 2; tcols = Math.ceil(n / trows);
+      trows = level === 3 ? 3 : 2; tcols = Math.ceil(n / trows);
       tw = (W - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
       var availH = parseFloat(tray.style.height) - (trows + 1) * gap;
       if (trows * th > availH) { th = availH / trows; tw = th * tileW / tileH; }
     } else {
-      tcols = 2; trows = Math.ceil(n / tcols);
+      tcols = level === 3 ? 3 : 2; trows = Math.ceil(n / tcols);
       tw = (parseFloat(tray.style.width) - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
       if (trows * th > H - (trows + 1) * gap) { th = (H - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
     }
     trayScale = Math.min(1, tw / tileW);
+    if (level === 3) trayScale *= 0.82;
     tray.style.setProperty('--gap', gap + 'px');
     Array.prototype.forEach.call(board.querySelectorAll('.slot'), function (s) {
       s.style.left = (s.dataset.c * tileW) + 'px'; s.style.top = (s.dataset.r * tileH) + 'px';
@@ -224,19 +341,20 @@
   document.addEventListener('pointercancel', up);
 
   function finish() {
+    clearTimeout(peekTimer); if (peek) peek.classList.remove('show');
     board.classList.add('done');
     KidsGame.confetti(30);
     setTimeout(function () {
       KidsGame.celebrate({
-        sub: 'Nivel ' + (level + 1) + ' completo',
-        onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); scene++; start(); },
+        sub: 'Nivel ' + level + ' · ' + cols + '×' + rows + ' completo',
+        onNext: function () { scene++; step++; if (step >= GRIDS[level].length) { step = 0; level = Math.min(level + 1, 3); } start(); },
         onAgain: function () { start(); }
       });
     }, 1300);
   }
 
   window.addEventListener('resize', layout);
-  start();
+  pickLevel();
 })();
 </script>
 </body>

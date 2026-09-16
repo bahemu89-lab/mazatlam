@@ -6,42 +6,99 @@
 <link rel="stylesheet" href="../common.css">
 <title>Globos</title>
 <style>
-  .game { background: linear-gradient(#bde9ff, #eefaff 70%, #d8f3dc); touch-action: none; }
+  .game {
+    touch-action: none;
+    background:
+      radial-gradient(ellipse 90% 40% at 50% 100%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, rgba(40,140,235,.45) 0%, rgba(120,200,255,.15) 40%, rgba(255,255,255,0) 70%);
+  }
+  /* Nubes en paralaje: dos capas de tiras infinitas que se desplazan a distinta velocidad */
+  .clouds { position: absolute; left: 0; top: 0; width: 200%; height: 100%; pointer-events: none; z-index: 0; }
+  .clouds.far { animation: drift 90s linear infinite; opacity: .75; }
+  .clouds.near { animation: drift 48s linear infinite; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .cloud {
+    position: absolute; width: 180px; height: 62px; border-radius: 40px;
+    background: linear-gradient(180deg, #ffffff 0%, #f2f9ff 70%, #d7ebfa 100%);
+    box-shadow: 0 8px 14px rgba(40,100,160,.18), inset 0 -8px 0 rgba(190,220,245,.6), inset 0 3px 0 #fff;
+  }
+  .cloud::before, .cloud::after {
+    content: ""; position: absolute; bottom: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #ffffff 0%, #f4faff 60%, #dbeefb 100%);
+    box-shadow: inset 0 -5px 0 rgba(190,220,245,.5);
+  }
+  .cloud::before { left: 22px; width: 82px; height: 82px; }
+  .cloud::after { right: 24px; width: 64px; height: 64px; bottom: 22px; }
+  .clouds.far .cloud { transform: scale(.55); }
   .hud {
     position: absolute; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px;
   }
   .hud > * { pointer-events: auto; }
   .goal {
-    display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 40px;
-    padding: 6px 16px 6px 8px; box-shadow: 0 5px 0 rgba(0,0,0,.12); font-size: 22px; min-height: 64px;
+    display: flex; align-items: center; gap: 10px; border-radius: 40px; min-height: 64px;
+    padding: 6px 18px 6px 8px; font-size: 24px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8);
+    text-shadow: 0 2px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.3);
+    box-shadow: 0 6px 0 #1a63a8, 0 12px 18px rgba(0,40,80,.3), inset 0 2px 0 rgba(255,255,255,.6);
   }
-  .goal .dot { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 0 3px rgba(0,0,0,.15); }
-  .goal .dot.any { background: conic-gradient(#e63946, #ffb703, #2cb67d, #3da9fc, #7f5af0, #e63946); }
+  .dot {
+    width: 48px; height: 48px; border-radius: 50%; border: 3px solid #fff; position: relative; flex: 0 0 auto;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, var(--c, #999) 28%, var(--d, #555) 100%);
+    box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 6px 10px rgba(0,0,0,.25), inset 0 -4px 6px rgba(0,0,0,.2);
+  }
+  .dot.any { background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 40%), conic-gradient(#e63946, #ffb703, #2cb67d, #3da9fc, #7f5af0, #f582ae, #e63946); }
   .goal .txt { white-space: nowrap; }
-  .prog { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 40vw; }
-  .prog i { width: 14px; height: 14px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; }
-  .prog i.on { background: #ffb703; box-shadow: 0 0 0 2px #fff; }
-  .modebtn { font-size: 30px; }
-  .balloon {
-    position: absolute; left: 0; top: 0; width: 96px; height: 150px; cursor: pointer;
-    will-change: transform; touch-action: none;
+  .goal .plus { font-size: 26px; }
+  .prog {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 40vw; padding: 8px 12px; border-radius: 30px;
+    background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(235,244,255,.85));
+    box-shadow: 0 4px 0 #b9c8e0, 0 8px 14px rgba(20,40,90,.2), inset 0 2px 0 #fff;
   }
-  .balloon svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .prog i { width: 16px; height: 16px; border-radius: 50%; display: block; background: radial-gradient(circle at 40% 35%, #dfe7f3, #b3c0d6); box-shadow: inset 0 2px 3px rgba(0,0,0,.2); transition: transform .2s; }
+  .prog i.on { background: radial-gradient(circle at 35% 30%, #fff5b8 0%, #ffd23c 40%, #ff9a00 100%); box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0,0,0,.3), 0 0 8px rgba(255,200,40,.9); transform: scale(1.15); }
+  .btns { display: flex; gap: 8px; align-items: center; }
+  .modebtn { font-size: 30px; }
+  .lvbtn { font-size: 28px; }
+  .kg-level-badge { font-size: 18px; padding: 6px 14px; }
+  .balloon {
+    position: absolute; left: 0; top: 0; width: calc(96px * var(--bs, 1)); height: calc(150px * var(--bs, 1)); cursor: pointer;
+    will-change: transform; touch-action: none; z-index: 2;
+  }
+  .balloon svg { width: 100%; height: 100%; display: block; overflow: visible; animation: sway 2.6s ease-in-out infinite; transform-origin: 50% 78%; }
+  @keyframes sway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
   .balloon.shake { animation: bshake .35s; }
   @keyframes bshake { 0%,100%{margin-left:0} 25%{margin-left:-10px} 75%{margin-left:10px} }
-  .balloon.popped svg { animation: bpop .28s ease-out forwards; }
-  @keyframes bpop { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.35);opacity:.9} 100%{transform:scale(1.8);opacity:0} }
-  .bit { position: absolute; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; animation: bit .6s ease-out forwards; }
-  @keyframes bit { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
-  .cloud { position: absolute; font-size: 60px; opacity: .8; pointer-events: none; }
+  .balloon.popped svg { animation: bpop .22s ease-out forwards; }
+  @keyframes bpop { 0%{transform:scale(1);opacity:1} 30%{transform:scale(1.3,1.15);opacity:.8} 100%{transform:scale(1.7);opacity:0} }
+  .bit {
+    position: absolute; width: 26px; height: 32px; pointer-events: none; z-index: 3; margin: -13px 0 0 -13px;
+    background: linear-gradient(135deg, var(--l) 0%, var(--c) 45%, var(--d) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    animation: bit .65s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  .bit.s1 { clip-path: polygon(50% 0, 100% 60%, 70% 100%, 0 70%); }
+  .bit.s2 { clip-path: polygon(0 0, 100% 20%, 80% 100%, 20% 80%); border-radius: 40%; }
+  .bit.s3 { clip-path: polygon(20% 0, 100% 0, 60% 100%, 0 60%); }
+  @keyframes bit { 0%{transform:translate(0,0) rotate(0) scale(1);opacity:1} 70%{opacity:1} 100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.4);opacity:0} }
+  .flash {
+    position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; pointer-events: none; z-index: 3;
+    background: radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.4) 40%, rgba(255,255,255,0) 70%);
+    animation: flash .35s ease-out forwards;
+  }
+  @keyframes flash { 0%{transform:scale(.3);opacity:1} 100%{transform:scale(2.6);opacity:0} }
   .msg {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    background: #fff; border-radius: 30px; padding: 16px 28px; font-size: 30px;
-    box-shadow: 0 8px 20px rgba(0,0,0,.2); display: flex; align-items: center; gap: 14px;
+    border-radius: 34px; padding: 18px 32px; font-size: 32px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #ffd166 0%, #ff9f1c 100%);
+    text-shadow: 0 2px 0 #b35a00, 0 4px 8px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #b35a00, 0 20px 30px rgba(0,0,0,.35), inset 0 3px 0 rgba(255,255,255,.7);
+    display: flex; align-items: center; gap: 14px; border: 4px solid #fff;
     z-index: 15; pointer-events: none; animation: pop .4s ease-out;
   }
-  .msg .dot { width: 60px; height: 60px; border-radius: 50%; }
+  .msg .dot { width: 64px; height: 64px; }
+  .msg .emoji { font-size: 44px; }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -50,34 +107,83 @@
 var game = KidsGame.init({ title: 'Globos' });
 (function () {
   var COLORS = [
-    { n: 'ROJOS',     say: 'rojos',     c: '#e63946', d: '#b5232e' },
-    { n: 'AZULES',    say: 'azules',    c: '#3da9fc', d: '#1d7fcc' },
-    { n: 'VERDES',    say: 'verdes',    c: '#2cb67d', d: '#1e8a5e' },
-    { n: 'AMARILLOS', say: 'amarillos', c: '#ffb703', d: '#d69600' },
-    { n: 'MORADOS',   say: 'morados',   c: '#7f5af0', d: '#5a3ac4' },
-    { n: 'ROSAS',     say: 'rosas',     c: '#f582ae', d: '#d2568a' }
+    { n: 'ROJOS',     say: 'rojos',     id: 'rojo',     l: '#ff8a8f', c: '#e63946', d: '#8f1a24' },
+    { n: 'AZULES',    say: 'azules',    id: 'azul',     l: '#9fe0ff', c: '#3da9fc', d: '#155f9e' },
+    { n: 'VERDES',    say: 'verdes',    id: 'verde',    l: '#8ff0c0', c: '#2cb67d', d: '#146b48' },
+    { n: 'AMARILLOS', say: 'amarillos', id: 'amarillo', l: '#fff0a0', c: '#ffb703', d: '#b06f00' },
+    { n: 'MORADOS',   say: 'morados',   id: 'morado',   l: '#c3b0ff', c: '#7f5af0', d: '#3f2696' },
+    { n: 'ROSAS',     say: 'rosas',     id: 'rosa',     l: '#ffc2dc', c: '#f582ae', d: '#b03a6c' }
   ];
-  var mode = 'free', target = null, balloons = [], score = 0, need = 15, speedMul = 1, running = true;
+  // Dificultad: 1 = lentos y grandes, 2 = normal, 3 = rápidos, pequeños, más señuelos y dos colores objetivo
+  var DIFF = {
+    1: { speed: 0.7,  size: 1.35, freeNeed: 10, colorNeed: 8,  targetProb: 0.6,  targets: 1, max: 6, spawn: 1000 },
+    2: { speed: 1.0,  size: 1.0,  freeNeed: 15, colorNeed: 10, targetProb: 0.45, targets: 1, max: 8, spawn: 850 },
+    3: { speed: 1.45, size: 0.78, freeNeed: 15, colorNeed: 12, targetProb: 0.3,  targets: 2, max: 10, spawn: 650 }
+  };
+  var nivel = 1, D = DIFF[1];
+  var mode = 'free', targets = [], balloons = [], score = 0, need = 15, speedMul = 1, running = false;
   var lastSpawn = 0, lastT = 0, colorRounds = 0;
 
-  game.innerHTML = '<span class="cloud" style="left:8%;top:12%">☁️</span><span class="cloud" style="right:10%;top:30%;font-size:44px">☁️</span>';
+  // Degradados compartidos (un solo <defs> para todos los globos)
+  var defs = '<svg class="defs" aria-hidden="true"><defs>';
+  COLORS.forEach(function (c) {
+    defs += '<radialGradient id="g-' + c.id + '" cx="34%" cy="28%" r="78%"><stop offset="0" stop-color="' + c.l + '"/><stop offset=".45" stop-color="' + c.c + '"/><stop offset="1" stop-color="' + c.d + '"/></radialGradient>';
+  });
+  defs += '<radialGradient id="g-rim" cx="50%" cy="45%" r="60%"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>' +
+    '<linearGradient id="g-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+    '<linearGradient id="g-string" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a8a8a"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient>' +
+    '</defs></svg>';
+
+  game.innerHTML = defs;
+  function cloudLayer(cls, spec) {
+    var layer = document.createElement('div'); layer.className = 'clouds ' + cls;
+    var html = '';
+    [0, 50].forEach(function (off) {
+      spec.forEach(function (c) { html += '<div class="cloud" style="left:' + (off + c[0]) + '%;top:' + c[1] + '%"></div>'; });
+    });
+    layer.innerHTML = html; game.appendChild(layer);
+  }
+  cloudLayer('far', [[4, 14], [17, 26], [31, 9], [42, 32]]);
+  cloudLayer('near', [[8, 42], [28, 18], [38, 56]]);
+
   var hud = document.createElement('div'); hud.className = 'hud';
   var goal = document.createElement('div'); goal.className = 'goal';
   var prog = document.createElement('div'); prog.className = 'prog';
+  var btns = document.createElement('div'); btns.className = 'btns';
   var modeBtn = document.createElement('button'); modeBtn.className = 'btn round purple modebtn'; modeBtn.textContent = '🎯';
   modeBtn.setAttribute('aria-label', 'Modo color');
-  hud.appendChild(goal); hud.appendChild(prog); hud.appendChild(modeBtn);
+  var lvBtn = document.createElement('button'); lvBtn.className = 'btn round yellow lvbtn'; lvBtn.textContent = '🎚️';
+  lvBtn.setAttribute('aria-label', 'Cambiar nivel');
+  var badgeWrap = document.createElement('span');
+  btns.appendChild(badgeWrap); btns.appendChild(modeBtn); btns.appendChild(lvBtn);
+  hud.appendChild(goal); hud.appendChild(prog); hud.appendChild(btns);
   game.appendChild(hud);
   modeBtn.addEventListener('pointerdown', function (ev) {
     ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
+    if (!running) return;
     if (mode === 'free') startColorRound(); else startFree();
   });
+  lvBtn.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel();
+  });
 
+  function pickLevel() {
+    running = false; clearBalloons(); hud.style.visibility = 'hidden';
+    KidsGame.levelPicker({ onPick: function (n) {
+      nivel = n; D = DIFF[n]; speedMul = D.speed; colorRounds = 0;
+      game.style.setProperty('--bs', D.size);
+      badgeWrap.innerHTML = ''; badgeWrap.appendChild(KidsGame.levelBadge(n));
+      hud.style.visibility = ''; startFree();
+    } });
+  }
+
+  function dotHtml(c) { return '<span class="dot" style="--c:' + c.c + ';--d:' + c.d + '"></span>'; }
   function renderHud() {
     if (mode === 'free') {
       goal.innerHTML = '<span class="dot any"></span><span class="txt">¡Toca los globos!</span>';
     } else {
-      goal.innerHTML = '<span class="dot" style="background:' + target.c + '"></span><span class="txt">Toca los <b>' + target.n + '</b></span>';
+      var dots = targets.map(dotHtml).join('<span class="plus">+</span>');
+      goal.innerHTML = dots + '<span class="txt">Toca los <b>' + targets.map(function (t) { return t.n; }).join(' y ') + '</b></span>';
     }
     prog.innerHTML = '';
     for (var i = 0; i < need; i++) { var d = document.createElement('i'); if (i < score) d.className = 'on'; prog.appendChild(d); }
@@ -89,40 +195,48 @@ var game = KidsGame.init({ title: 'Globos' });
   }
 
   function clearBalloons() { balloons.forEach(function (b) { b.el.remove(); }); balloons = []; }
+  function isTarget(col) { return targets.indexOf(col) >= 0; }
 
   function startFree() {
-    mode = 'free'; target = null; score = 0; need = 15; running = true;
+    mode = 'free'; targets = []; score = 0; need = D.freeNeed; running = true;
     clearBalloons(); renderHud();
     showMsg('<span class="emoji">🎈</span> ¡Toca los globos!');
     KidsGame.say('Toca los globos');
   }
   function startColorRound(sameColor) {
-    mode = 'color'; score = 0; need = 10; running = true;
-    if (!sameColor || !target) {
-      var others = COLORS.filter(function (c) { return c !== target; });
-      target = KidsGame.pick(others);
+    mode = 'color'; score = 0; need = D.colorNeed; running = true;
+    if (!sameColor || !targets.length) {
+      var others = KidsGame.shuffle(COLORS.filter(function (c) { return !isTarget(c); }));
+      targets = others.slice(0, D.targets);
     }
     clearBalloons(); renderHud();
-    showMsg('Toca los <span class="dot" style="background:' + target.c + '"></span>');
-    KidsGame.say('Toca los globos ' + target.say);
+    showMsg('Toca los ' + targets.map(dotHtml).join('<span class="plus">+</span>'));
+    KidsGame.say('Toca los globos ' + targets.map(function (t) { return t.say; }).join(' y '));
   }
 
+  // Globo renderizado: cuerpo con radial, borde oscuro, brillo doble, nudo y cuerda ondulada
   function balloonSVG(col) {
     return '<svg viewBox="0 0 96 150">' +
-      '<path d="M48 110 Q 40 130 50 150" stroke="#555" stroke-width="2" fill="none"/>' +
-      '<polygon points="42,110 54,110 48,102" fill="' + col.d + '"/>' +
-      '<ellipse cx="48" cy="55" rx="40" ry="50" fill="' + col.c + '" stroke="' + col.d + '" stroke-width="2"/>' +
-      '<ellipse cx="32" cy="32" rx="9" ry="16" fill="rgba(255,255,255,.45)" transform="rotate(-20 32 32)"/>' +
-      '</svg>';
+      '<path d="M48 114 q -9 10 0 20 q 9 10 -2 16" stroke="url(#g-string)" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+      '<g class="body">' +
+      '<path d="M48 6 C 24 6, 6 30, 6 60 C 6 88, 30 104, 45 110 L 40 118 Q 48 122, 56 118 L 51 110 C 66 104, 90 88, 90 60 C 90 30, 72 6, 48 6 Z" fill="url(#g-' + col.id + ')"/>' +
+      '<path d="M48 6 C 24 6, 6 30, 6 60 C 6 88, 30 104, 45 110 L 40 118 Q 48 122, 56 118 L 51 110 C 66 104, 90 88, 90 60 C 90 30, 72 6, 48 6 Z" fill="url(#g-rim)"/>' +
+      '<path d="M48 6 C 24 6, 6 30, 6 60 C 6 88, 30 104, 45 110 L 40 118 Q 48 122, 56 118 L 51 110 C 66 104, 90 88, 90 60 C 90 30, 72 6, 48 6 Z" fill="none" stroke="' + col.d + '" stroke-width="1.6" stroke-opacity=".55"/>' +
+      '<ellipse cx="30" cy="34" rx="9" ry="17" fill="url(#g-gloss)" transform="rotate(-24 30 34)"/>' +
+      '<ellipse cx="24" cy="58" rx="3" ry="6" fill="#fff" fill-opacity=".55" transform="rotate(-10 24 58)"/>' +
+      '<ellipse cx="66" cy="88" rx="10" ry="5" fill="#fff" fill-opacity=".22" transform="rotate(-35 66 88)"/>' +
+      '<ellipse cx="48" cy="116" rx="7" ry="3.2" fill="' + col.d + '"/>' +
+      '</g></svg>';
   }
 
   function spawn() {
     var col;
-    if (mode === 'color' && Math.random() < 0.45) col = target;
+    if (mode === 'color' && Math.random() < D.targetProb) col = KidsGame.pick(targets);
     else col = KidsGame.pick(COLORS);
     var el = document.createElement('div');
     el.className = 'balloon';
     el.innerHTML = balloonSVG(col);
+    el.querySelector('svg').style.animationDelay = (-Math.random() * 2.6) + 's';
     var W = game.clientWidth, H = game.clientHeight;
     var b = {
       el: el, col: col,
@@ -138,25 +252,29 @@ var game = KidsGame.init({ title: 'Globos' });
     place(b, 0);
   }
   function place(b, t) {
-    var W = game.clientWidth;
-    var x = b.fx * (W - 96) + Math.sin(t / 900 + b.phase) * b.amp;
+    var W = game.clientWidth, bw = 96 * D.size;
+    var x = b.fx * (W - bw) + Math.sin(t / 900 + b.phase) * b.amp;
     b.el.style.transform = 'translate(' + x + 'px,' + b.y + 'px)';
   }
 
-  function burst(x, y, color) {
-    for (var i = 0; i < 10; i++) {
-      var d = document.createElement('div'); d.className = 'bit';
-      d.style.background = color; d.style.left = x + 'px'; d.style.top = y + 'px';
-      var a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 50;
-      d.style.setProperty('--dx', Math.cos(a) * r + 'px'); d.style.setProperty('--dy', Math.sin(a) * r + 'px');
+  function burst(x, y, col) {
+    var f = document.createElement('div'); f.className = 'flash'; f.style.left = x + 'px'; f.style.top = y + 'px';
+    game.appendChild(f); setTimeout(function () { f.remove(); }, 400);
+    for (var i = 0; i < 12; i++) {
+      var d = document.createElement('div'); d.className = 'bit s' + (1 + i % 3);
+      d.style.setProperty('--l', col.l); d.style.setProperty('--c', col.c); d.style.setProperty('--d', col.d);
+      d.style.left = x + 'px'; d.style.top = y + 'px';
+      var a = (i / 12) * Math.PI * 2 + Math.random() * .5, r = 70 + Math.random() * 80;
+      d.style.setProperty('--dx', Math.cos(a) * r + 'px'); d.style.setProperty('--dy', (Math.sin(a) * r + 30) + 'px');
+      d.style.setProperty('--rot', (Math.random() * 540 - 270) + 'deg');
       game.appendChild(d);
-      (function (el) { setTimeout(function () { el.remove(); }, 700); })(d);
+      (function (el) { setTimeout(function () { el.remove(); }, 750); })(d);
     }
   }
 
   function hit(b, ev) {
     if (b.dead || !running) return;
-    if (mode === 'color' && b.col !== target) {
+    if (mode === 'color' && !isTarget(b.col)) {
       KidsGame.sound.wrong();
       b.el.classList.remove('shake'); void b.el.offsetWidth; b.el.classList.add('shake');
       return;
@@ -165,8 +283,8 @@ var game = KidsGame.init({ title: 'Globos' });
     b.el.classList.add('popped');
     KidsGame.sound.pop(); KidsGame.addStar(); KidsGame.vibrate(20);
     var r = game.getBoundingClientRect();
-    burst(ev.clientX - r.left, ev.clientY - r.top, b.col.c);
-    (function (el) { setTimeout(function () { el.remove(); }, 300); })(b.el);
+    burst(ev.clientX - r.left, ev.clientY - r.top, b.col);
+    (function (el) { setTimeout(function () { el.remove(); }, 260); })(b.el);
     balloons = balloons.filter(function (x) { return x !== b; });
     score++; renderHud();
     if (score >= need) { running = false; setTimeout(finish, 400); }
@@ -176,15 +294,15 @@ var game = KidsGame.init({ title: 'Globos' });
     clearBalloons();
     if (mode === 'free') {
       KidsGame.celebrate({
-        sub: '¡15 globos!',
+        sub: '¡' + need + ' globos!',
         onNext: function () { startColorRound(); },
         onAgain: function () { startFree(); }
       });
     } else {
       colorRounds++;
       KidsGame.celebrate({
-        sub: 'Globos ' + target.n.toLowerCase(),
-        onNext: function () { speedMul = Math.min(speedMul + 0.15, 1.8); startColorRound(false); },
+        sub: 'Globos ' + targets.map(function (t) { return t.n.toLowerCase(); }).join(' y '),
+        onNext: function () { speedMul = Math.min(speedMul + 0.15, D.speed * 1.8); startColorRound(false); },
         onAgain: function () { startColorRound(true); }
       });
     }
@@ -194,11 +312,11 @@ var game = KidsGame.init({ title: 'Globos' });
     if (!lastT) lastT = t;
     var dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
     if (running) {
-      if (t - lastSpawn > 850 / speedMul && balloons.length < 8) { lastSpawn = t; spawn(); }
+      if (t - lastSpawn > D.spawn / speedMul && balloons.length < D.max) { lastSpawn = t; spawn(); }
       for (var i = balloons.length - 1; i >= 0; i--) {
         var b = balloons[i];
         b.y -= b.vy * dt;
-        if (b.y < -160) { b.el.remove(); balloons.splice(i, 1); continue; }
+        if (b.y < -160 * D.size) { b.el.remove(); balloons.splice(i, 1); continue; }
         place(b, t);
       }
     }
@@ -206,7 +324,7 @@ var game = KidsGame.init({ title: 'Globos' });
   }
 
   window.addEventListener('resize', function () { balloons.forEach(function (b) { place(b, lastT); }); });
-  startFree();
+  pickLevel();
   requestAnimationFrame(frame);
 })();
 </script>

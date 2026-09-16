@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Carrera</title>
+<style>
+  .game { background: linear-gradient(180deg, #6fc7ff 0%, #bfe9ff 60%, #e8f8ff 100%); touch-action: none; overflow: hidden; }
+  #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .hud {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
+    display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px;
+  }
+  .hud > * { pointer-events: auto; }
+  .hud .left { display: flex; align-items: center; gap: 8px; }
+  .prog {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 16px; min-height: 64px; min-width: 150px;
+    border-radius: 30px; justify-content: center;
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.92)); border: 3px solid #fff;
+    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(20,40,90,.22), inset 0 2px 0 #fff;
+  }
+  .prog .cnt { font-size: 24px; font-weight: 900; color: #7a4b00; text-shadow: 0 1px 0 #fff; line-height: 1; }
+  .bar { width: 150px; height: 14px; border-radius: 10px; background: linear-gradient(180deg, #cfd8e8, #e9eef8); box-shadow: inset 0 2px 3px rgba(0,0,0,.25); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 100%; border-radius: 10px; background: linear-gradient(180deg, #8ef0b0, #24b36c); box-shadow: inset 0 2px 0 rgba(255,255,255,.6); transition: width .3s linear; }
+  .bar i.low { background: linear-gradient(180deg, #ffe98a, #ffb703); }
+  .lvbtn { font-size: 30px; }
+  .picker {
+    position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.3), rgba(23,44,102,.5) 75%);
+  }
+  .picker .box { padding: 20px 26px; text-align: center; max-width: 94vw; }
+  .picker .ttl { font-size: 32px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); margin-bottom: 14px; }
+  .picker .row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+  .hero-btn {
+    width: 140px; height: 150px; border-radius: 30px; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: linear-gradient(180deg, #fff 0%, #e6ecfb 100%); font: inherit; font-weight: 900; font-size: 22px; color: #1f2f6b; position: relative;
+    box-shadow: 0 7px 0 #b9c4dc, 0 14px 22px rgba(20,40,90,.25), inset 0 2px 0 #fff; transition: transform .1s, box-shadow .1s;
+  }
+  .hero-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 #b9c4dc, 0 6px 10px rgba(20,40,90,.2); }
+  .hero-btn .med {
+    width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 35%, #ffb703 100%);
+    box-shadow: 0 0 0 4px #fff, 0 0 0 7px #ffd166, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12);
+    animation: float 3s ease-in-out infinite;
+  }
+  .hero-btn:nth-child(2) .med { animation-delay: -1s; background: radial-gradient(circle at 35% 28%, #ffffff 0%, #d8f3ff 35%, #3da9fc 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #7dd0ff, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12); }
+  .hero-btn:nth-child(3) .med { animation-delay: -2s; background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffd9f0 35%, #f582ae 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #ffb3d6, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12); }
+  .hint {
+    position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 12; pointer-events: none;
+    background: linear-gradient(180deg, #fff, #eef2ff); border-radius: 30px; padding: 12px 26px; font-size: 30px; border: 3px solid #fff;
+    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: flex; align-items: center; gap: 12px; animation: pop .4s ease-out;
+    white-space: nowrap;
+  }
+  .hint .emoji { font-size: 40px; animation: bounce .7s infinite; }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Carrera' });
+(function () {
+  var CFG = [
+    null,
+    { speed: 230, gapMin: 2.0, gapMax: 2.8, dur: 60, jumpH: 2.4, double: 0,   bird: 0 },
+    { speed: 330, gapMin: 1.4, gapMax: 2.0, dur: 75, jumpH: 2.1, double: 0.15, bird: 0 },
+    { speed: 430, gapMin: 1.0, gapMax: 1.5, dur: 90, jumpH: 2.0, double: 0.35, bird: 0.3 }
+  ];
+  var GOAL = 20;
+  var nivel = 1, cfg = CFG[1], hero = '🐰', running = false;
+  var W = 0, H = 0, S = 100, groundY = 0, dpr = 1;
+  var canvas = document.createElement('canvas'); canvas.id = 'cv';
+  var ctx = canvas.getContext('2d');
+  game.innerHTML = ''; game.appendChild(canvas);
+
+  // HUD
+  var hud = document.createElement('div'); hud.className = 'hud';
+  var left = document.createElement('div'); left.className = 'left';
+  var badgeHolder = document.createElement('span');
+  var prog = document.createElement('div'); prog.className = 'prog';
+  prog.innerHTML = '<div class="cnt">⭐ 0/' + GOAL + '</div><div class="bar"><i></i></div>';
+  var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
+  left.appendChild(badgeHolder);
+  hud.appendChild(left); hud.appendChild(prog); hud.appendChild(lvBtn);
+  game.appendChild(hud);
+  var cntEl = prog.querySelector('.cnt'), barEl = prog.querySelector('.bar i');
+  lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; pickLevel(); });
+
+  // ---------- estado del mundo ----------
+  var t = 0, elapsed = 0, stars = 0, ents = [], parts = [], texts = [], trees = [], clouds = [], hills = [], mounts = [], flowers = [];
+  var FLOW = ['🌼', '🌷', '🌸', '🍄'];
+  var scrollRoad = 0, nextSpawn = 0, lastT = 0, finished = false;
+  var P = { y: 0, vy: 0, onGround: true, sx: 1, sy: 1, wobble: 0, duck: false, jumpBuf: 0, phase: 0 };
+  var holdStart = 0, holding = false;
+
+  function resize() {
+    W = game.clientWidth; H = game.clientHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    S = Math.max(70, Math.min(130, Math.min(W, H) * 0.15));
+    groundY = H * (W > H ? 0.78 : 0.70);
+    clouds = []; for (var i = 0; i < 5; i++) clouds.push({ x: Math.random() * W, y: H * (0.12 + Math.random() * 0.22), s: 0.7 + Math.random() * 0.8 });
+    hills = []; for (var j = 0; j < 4; j++) hills.push({ x: j * W * 0.45, w: W * 0.6, h: H * (0.10 + Math.random() * 0.08) });
+    trees = []; for (var k = 0; k < 7; k++) trees.push(makeTree(k * W * 0.18 + Math.random() * 60));
+    mounts = []; for (var m = 0; m < 6; m++) mounts.push({ x: m * W * 0.3, w: W * (0.25 + Math.random() * 0.2), h: H * (0.14 + Math.random() * 0.1) });
+    flowers = []; for (var f = 0; f < 9; f++) flowers.push({ x: Math.random() * W, em: KidsGame.pick(FLOW), s: 0.22 + Math.random() * 0.12 });
+  }
+  function makeTree(x) { return { x: x, h: S * (0.9 + Math.random() * 0.8), kind: Math.random() < 0.5 ? 'pine' : 'round', tint: Math.random() }; }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------- control ----------
+  function jump() {
+    if (!running) return;
+    if (P.onGround && !P.duck) {
+      P.vy = -jumpV(); P.onGround = false; P.sx = 0.82; P.sy = 1.2;
+      KidsGame.sound.tap();
+    } else if (!P.onGround) { P.jumpBuf = 0.15; }
+  }
+  function jumpV() { var h = cfg.jumpH * S; return Math.sqrt(2 * gravity() * h); }
+  function gravity() { return 8 * cfg.jumpH * S; }
+  canvas.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault();
+    if (!running) return;
+    holding = true; holdStart = performance.now();
+    if (cfg.bird === 0) { jump(); }
+  });
+  function release(ev) {
+    if (!holding) return;
+    holding = false;
+    if (cfg.bird > 0) {
+      var held = performance.now() - holdStart;
+      if (held < 170 && !P.duck) jump();
+    }
+    P.duck = false;
+  }
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', release);
+
+  // ---------- spawns ----------
+  var OBS = ['🪨', '🌵', '🪵'];
+  function spawnWave() {
+    var x = W + S;
+    var r = Math.random();
+    if (r < 0.62) {
+      var n = (Math.random() < cfg.double) ? 2 : 1;
+      var em = KidsGame.pick(OBS);
+      for (var i = 0; i < n; i++) ents.push({ type: 'obs', em: em, x: x + i * S * 0.75, y: 0, w: S * 0.55, h: S * 0.8, hit: false });
+      // estrella alta encima del obstáculo
+      if (Math.random() < 0.6) ents.push({ type: 'star', em: '⭐', x: x + (n - 1) * S * 0.375, y: S * 1.9, w: S * 0.5, h: S * 0.5, hit: false, bob: Math.random() * 6 });
+    } else if (r < 0.62 + cfg.bird) {
+      ents.push({ type: 'bird', em: '🐦', x: x, y: S * 0.85, w: S * 0.55, h: S * 0.55, hit: false, bob: Math.random() * 6, flap: 0 });
+    } else {
+      // fila de estrellas / monedas
+      var cnt = 3 + KidsGame.rand(3), high = Math.random() < 0.4, coin = Math.random() < 0.35;
+      for (var j = 0; j < cnt; j++) {
+        var yy = high ? S * (1.2 + Math.sin(j / (cnt - 1) * Math.PI) * 0.9) : S * 0.45;
+        ents.push({ type: 'star', em: coin ? '🪙' : '⭐', x: x + j * S * 0.7, y: yy, w: S * 0.5, h: S * 0.5, hit: false, bob: j });
+      }
+    }
+    nextSpawn = cfg.gapMin + Math.random() * (cfg.gapMax - cfg.gapMin);
+  }
+
+  // ---------- partículas ----------
+  function sparkle(x, y, color, n) {
+    for (var i = 0; i < (n || 10); i++) {
+      var a = Math.random() * Math.PI * 2, v = 120 + Math.random() * 200;
+      parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, life: 0.6 + Math.random() * 0.3, max: 0.9, c: color, r: 3 + Math.random() * 4 });
+    }
+    if (parts.length > 40) parts.splice(0, parts.length - 40);
+  }
+  function floatText(txt, x, y, color) { texts.push({ t: txt, x: x, y: y, life: 1, c: color }); }
+
+  // ---------- lógica ----------
+  function update(dt) {
+    elapsed += dt; t += dt;
+    var spd = cfg.speed;
+    scrollRoad = (scrollRoad + spd * dt) % (S * 0.9);
+    // paralaje
+    clouds.forEach(function (c) { c.x -= spd * 0.12 * dt; if (c.x < -200) { c.x = W + 100; c.y = H * (0.1 + Math.random() * 0.25); } });
+    hills.forEach(function (h) { h.x -= spd * 0.25 * dt; if (h.x + h.w < 0) h.x += hills.length * W * 0.45; });
+    mounts.forEach(function (m) { m.x -= spd * 0.1 * dt; if (m.x + m.w < 0) m.x += mounts.length * W * 0.3; });
+    flowers.forEach(function (f) { f.x -= spd * 0.75 * dt; if (f.x < -S) { f.x = W + S + Math.random() * W * 0.5; f.em = KidsGame.pick(FLOW); } });
+    trees.forEach(function (tr) { tr.x -= spd * 0.5 * dt; });
+    trees = trees.filter(function (tr) { return tr.x > -S * 2; });
+    if (trees.length < 7 && (trees.length === 0 || trees[trees.length - 1].x < W - S * 1.2)) trees.push(makeTree(W + S + Math.random() * S));
+
+    // héroe
+    P.duck = (cfg.bird > 0 && holding && P.onGround && performance.now() - holdStart >= 170);
+    if (!P.onGround) {
+      P.vy += gravity() * dt; P.y += P.vy * dt;
+      if (P.y >= 0) { P.y = 0; P.vy = 0; P.onGround = true; P.sx = 1.22; P.sy = 0.78; if (P.jumpBuf > 0) { P.jumpBuf = 0; jump(); } }
+    }
+    P.jumpBuf = Math.max(0, P.jumpBuf - dt);
+    P.sx += (1 - P.sx) * Math.min(1, dt * 10); P.sy += (1 - P.sy) * Math.min(1, dt * 10);
+    P.wobble = Math.max(0, P.wobble - dt);
+    P.phase += dt * (spd / 40);
+
+    // entidades
+    nextSpawn -= dt; if (nextSpawn <= 0) spawnWave();
+    var hx = W * 0.22, hw = S * 0.42, hh = P.duck ? S * 0.55 : S * 0.95;
+    var hTop = groundY + P.y - hh, hBot = groundY + P.y - S * 0.05;
+    for (var i = ents.length - 1; i >= 0; i--) {
+      var e = ents[i];
+      e.x -= spd * dt;
+      if (e.type === 'bird') { e.x -= spd * 0.25 * dt; e.flap += dt * 12; }
+      if (e.x < -S * 2) { ents.splice(i, 1); continue; }
+      if (e.hit) continue;
+      var ex1 = e.x - e.w / 2, ex2 = e.x + e.w / 2, ey2 = groundY - e.y, ey1 = ey2 - e.h;
+      if (e.type === 'star') { ey1 -= S * 0.15; ey2 += S * 0.15; ex1 -= S * 0.1; ex2 += S * 0.1; }
+      var overlap = ex1 < hx + hw / 2 && ex2 > hx - hw / 2 && ey1 < hBot && ey2 > hTop;
+      if (!overlap) continue;
+      if (e.type === 'star') {
+        e.hit = true; e.fly = 0; stars++;
+        KidsGame.sound.pop(); KidsGame.addStar(); KidsGame.vibrate(15);
+        sparkle(e.x, ey2 - e.h / 2, e.em === '🪙' ? '#ffb703' : '#fff176', 10);
+        cntEl.textContent = '⭐ ' + stars + '/' + GOAL;
+        cntEl.classList.remove('pop'); void cntEl.offsetWidth; cntEl.classList.add('pop');
+        if (stars >= GOAL) { finish(); return; }
+      } else {
+        e.hit = true; P.wobble = 0.7; KidsGame.sound.wrong(); KidsGame.vibrate(40);
+        floatText('¡Uy!', hx, hTop - S * 0.4, '#ff6f61');
+        sparkle(hx, hTop + hh / 2, '#c9d2e6', 6);
+      }
+    }
+    for (var k = parts.length - 1; k >= 0; k--) { var p = parts[k]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt; if (p.life <= 0) parts.splice(k, 1); }
+    for (var m = texts.length - 1; m >= 0; m--) { var tx = texts[m]; tx.life -= dt * 0.9; tx.y -= 60 * dt; if (tx.life <= 0) texts.splice(m, 1); }
+
+    var frac = Math.max(0, 1 - elapsed / cfg.dur);
+    barEl.style.width = (frac * 100) + '%'; barEl.className = frac < 0.25 ? 'low' : '';
+    if (elapsed >= cfg.dur) finish();
+  }
+
+  // ---------- dibujo ----------
+  function emoji(em, x, y, size, alpha) {
+    ctx.save(); if (alpha != null) ctx.globalAlpha = alpha;
+    ctx.font = Math.round(size) + 'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(em, x, y); ctx.restore();
+  }
+  function shadowEllipse(x, y, rx, ry, alpha) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = '#1b3a1b'; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+  function drawScene() {
+    // cielo
+    var sky = ctx.createLinearGradient(0, 0, 0, groundY); sky.addColorStop(0, '#5ec0ff'); sky.addColorStop(0.6, '#bfe9ff'); sky.addColorStop(1, '#eafaff');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    // sol
+    var sun = ctx.createRadialGradient(W * 0.82, H * 0.14, 5, W * 0.82, H * 0.14, S * 1.2);
+    sun.addColorStop(0, '#fff8c4'); sun.addColorStop(0.25, '#ffd83d'); sun.addColorStop(0.5, 'rgba(255,216,61,.35)'); sun.addColorStop(1, 'rgba(255,216,61,0)');
+    ctx.fillStyle = sun; ctx.fillRect(W * 0.82 - S * 1.3, H * 0.14 - S * 1.3, S * 2.6, S * 2.6);
+    // nubes
+    clouds.forEach(function (c) {
+      ctx.save(); ctx.globalAlpha = 0.92; ctx.fillStyle = '#fff';
+      var r = 22 * c.s;
+      [[0, 0, r * 1.3], [-r * 1.3, r * 0.3, r], [r * 1.4, r * 0.3, r * 1.05], [r * 0.3, -r * 0.5, r * 0.9]].forEach(function (b) { ctx.beginPath(); ctx.arc(c.x + b[0], c.y + b[1], b[2], 0, Math.PI * 2); ctx.fill(); });
+      ctx.globalAlpha = 0.35; ctx.fillStyle = '#9ccbe8';
+      ctx.beginPath(); ctx.ellipse(c.x + r * 0.1, c.y + r * 0.8, r * 2.2, r * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    // montañas lejanas
+    var mg = ctx.createLinearGradient(0, groundY - H * 0.25, 0, groundY); mg.addColorStop(0, '#b9d8f2'); mg.addColorStop(1, '#8fb8dc');
+    ctx.fillStyle = mg;
+    mounts.forEach(function (m) { ctx.beginPath(); ctx.moveTo(m.x - m.w * 0.55, groundY); ctx.quadraticCurveTo(m.x, groundY - m.h * 2.1, m.x + m.w * 0.55, groundY); ctx.closePath(); ctx.fill(); });
+    // colinas lejanas
+    var hg = ctx.createLinearGradient(0, groundY - H * 0.2, 0, groundY); hg.addColorStop(0, '#a8e08a'); hg.addColorStop(1, '#5fbe4f');
+    ctx.fillStyle = hg;
+    hills.forEach(function (h) { ctx.beginPath(); ctx.ellipse(h.x + h.w / 2, groundY + 4, h.w / 2, h.h, 0, Math.PI, 0); ctx.fill(); });
+    // pasto
+    var gg = ctx.createLinearGradient(0, groundY - S * 0.25, 0, groundY + S * 0.1); gg.addColorStop(0, '#9be15d'); gg.addColorStop(1, '#4caf50');
+    ctx.fillStyle = gg; ctx.fillRect(0, groundY - S * 0.25, W, S * 0.35);
+    // árboles
+    trees.forEach(function (tr) {
+      var bx = tr.x, by = groundY - S * 0.1;
+      shadowEllipse(bx + 6, by + 3, tr.h * 0.35, tr.h * 0.08, 0.22);
+      ctx.fillStyle = '#8b5a2b'; ctx.fillRect(bx - tr.h * 0.06, by - tr.h * 0.35, tr.h * 0.12, tr.h * 0.36);
+      if (tr.kind === 'pine') {
+        var pg = ctx.createLinearGradient(bx - tr.h * 0.4, 0, bx + tr.h * 0.4, 0); pg.addColorStop(0, '#2e8b57'); pg.addColorStop(0.5, '#4fc16a'); pg.addColorStop(1, '#1e6b3f');
+        ctx.fillStyle = pg;
+        for (var i = 0; i < 3; i++) { var yy = by - tr.h * (0.3 + i * 0.22), ww = tr.h * (0.42 - i * 0.09); ctx.beginPath(); ctx.moveTo(bx - ww, yy); ctx.lineTo(bx + ww, yy); ctx.lineTo(bx, yy - tr.h * 0.32); ctx.closePath(); ctx.fill(); }
+      } else {
+        var rg = ctx.createRadialGradient(bx - tr.h * 0.12, by - tr.h * 0.62, 4, bx, by - tr.h * 0.5, tr.h * 0.45);
+        rg.addColorStop(0, tr.tint < 0.5 ? '#b6f07a' : '#8fe38f'); rg.addColorStop(1, '#2f7d3a');
+        ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(bx, by - tr.h * 0.5, tr.h * 0.36, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx - tr.h * 0.22, by - tr.h * 0.36, tr.h * 0.24, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bx + tr.h * 0.22, by - tr.h * 0.36, tr.h * 0.24, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    // flores
+    flowers.forEach(function (f) { emoji(f.em, f.x, groundY - S * 0.08, S * f.s); });
+    // camino
+    var rg2 = ctx.createLinearGradient(0, groundY, 0, groundY + S * 0.6); rg2.addColorStop(0, '#6d6f80'); rg2.addColorStop(0.5, '#4a4c5c'); rg2.addColorStop(1, '#33354a');
+    ctx.fillStyle = rg2; ctx.fillRect(0, groundY, W, S * 0.6);
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, groundY, W, 3);
+    ctx.fillStyle = '#ffe98a';
+    for (var x = -scrollRoad; x < W; x += S * 0.9) ctx.fillRect(x, groundY + S * 0.28, S * 0.45, 6);
+    // tierra
+    var dg = ctx.createLinearGradient(0, groundY + S * 0.6, 0, H); dg.addColorStop(0, '#9b6a3c'); dg.addColorStop(1, '#6b4423');
+    ctx.fillStyle = dg; ctx.fillRect(0, groundY + S * 0.6, W, H - groundY);
+  }
+  function drawEnts() {
+    ents.forEach(function (e) {
+      var ex = e.x, ey = groundY - e.y;
+      if (e.type === 'star') {
+        if (e.hit) {
+          e.fly = (e.fly || 0) + 0.06; if (e.fly > 1) return;
+          emoji(e.em, ex, ey - e.h / 2 - e.fly * S, e.h * (1 + e.fly * 0.8), 1 - e.fly);
+          return;
+        }
+        var bob = Math.sin(t * 5 + e.bob) * 5;
+        ctx.save(); ctx.shadowColor = 'rgba(255,200,0,.8)'; ctx.shadowBlur = 14;
+        emoji(e.em, ex, ey - e.h / 2 + bob, e.h); ctx.restore();
+      } else if (e.type === 'bird') {
+        var by = ey - e.h / 2 + Math.sin(t * 6 + e.bob) * 6;
+        shadowEllipse(ex, groundY + 6, e.w * 0.5, e.w * 0.12, 0.18);
+        ctx.save(); ctx.translate(ex, by); ctx.scale(-1, 1 + Math.sin(e.flap) * 0.08);
+        emoji(e.em, 0, 0, e.h); ctx.restore();
+      } else {
+        shadowEllipse(ex + 4, groundY + 4, e.w * 0.75, e.w * 0.22, 0.32);
+        var wob = e.hit ? Math.sin(t * 30) * 4 : 0;
+        emoji(e.em, ex + wob, ey - e.h / 2 + 4, e.h);
+      }
+    });
+  }
+  function drawHero() {
+    var hx = W * 0.22, base = groundY + P.y;
+    var airFrac = Math.min(1, -P.y / (S * 2));
+    shadowEllipse(hx, groundY + 5, S * 0.4 * (1 - airFrac * 0.4), S * 0.11 * (1 - airFrac * 0.4), 0.35 - airFrac * 0.15);
+    var bob = P.onGround && !P.duck ? Math.abs(Math.sin(P.phase)) * S * 0.06 : 0;
+    var sx = P.sx, sy = P.sy;
+    if (P.duck) { sx *= 1.25; sy *= 0.6; }
+    if (!P.onGround) { sx *= 0.95; sy *= 1.05; }
+    ctx.save(); ctx.translate(hx, base - bob);
+    var rot = P.wobble > 0 ? Math.sin(P.wobble * 30) * 0.25 * P.wobble : (P.onGround ? 0 : -0.12 * Math.sign(P.vy || 1));
+    ctx.rotate(rot); ctx.scale(sx, sy);
+    emoji(hero, 0, -S * 0.5, S);
+    ctx.restore();
+    if (P.wobble > 0) { ctx.save(); ctx.globalAlpha = P.wobble; emoji('💫', hx + S * 0.1, base - S * 1.15, S * 0.45); ctx.restore(); }
+  }
+  function drawFx() {
+    parts.forEach(function (p) {
+      ctx.save(); ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.c; ctx.shadowColor = p.c; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (p.life / p.max), 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    });
+    texts.forEach(function (tx) {
+      ctx.save(); ctx.globalAlpha = Math.max(0, tx.life); ctx.font = '900 ' + Math.round(S * 0.42) + 'px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round';
+      ctx.strokeText(tx.t, tx.x, tx.y); ctx.fillStyle = tx.c; ctx.fillText(tx.t, tx.x, tx.y); ctx.restore();
+    });
+  }
+  function frame(now) {
+    if (!lastT) lastT = now;
+    var dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
+    if (running) update(dt); else t += dt;
+    drawScene(); drawEnts(); drawHero(); drawFx();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- flujo ----------
+  function showHint(html, ms) {
+    var h = document.createElement('div'); h.className = 'hint'; h.innerHTML = html; game.appendChild(h);
+    setTimeout(function () { h.remove(); }, ms || 1800);
+  }
+  function startRound() {
+    ents = []; parts = []; texts = []; stars = 0; elapsed = 0; finished = false; nextSpawn = 1.6;
+    P.y = 0; P.vy = 0; P.onGround = true; P.duck = false; P.wobble = 0; holding = false;
+    cntEl.textContent = '⭐ 0/' + GOAL; barEl.style.width = '100%'; barEl.className = '';
+    running = true;
+    showHint('<span class="emoji">👆</span> ¡Toca para saltar!', 2000);
+    KidsGame.say(cfg.bird > 0 ? 'Toca para saltar y mantén para agacharte' : 'Toca para saltar');
+    if (cfg.bird > 0) setTimeout(function () { if (running) showHint('<span class="emoji">🐦</span> Mantén para agacharte', 2000); }, 2400);
+  }
+  function finish() {
+    if (finished) return; finished = true; running = false;
+    var n = stars >= GOAL ? 3 : stars >= 10 ? 2 : 1;
+    setTimeout(function () {
+      KidsGame.celebrate({
+        msg: stars >= GOAL ? '¡20 estrellas!' : undefined,
+        sub: '⭐ ' + stars + ' estrellas', stars: n,
+        onAgain: function () { startRound(); },
+        onNext: function () { nivel = Math.min(3, nivel + 1); cfg = CFG[nivel]; setBadge(); startRound(); }
+      });
+    }, 500);
+  }
+  function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
+  function pickHero() {
+    var pk = document.createElement('div'); pk.className = 'picker';
+    pk.innerHTML = '<div class="box panel"><div class="ttl">¿Quién corre?</div><div class="row"></div></div>';
+    var row = pk.querySelector('.row');
+    [['🐰', 'Conejo'], ['🐱', 'Gato'], ['🦄', 'Unicornio']].forEach(function (h) {
+      var b = document.createElement('button'); b.className = 'hero-btn';
+      b.innerHTML = '<span class="med"><span class="emoji">' + h[0] + '</span></span><span>' + h[1] + '</span>';
+      b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.pop(); hero = h[0]; pk.remove(); startRound(); });
+      row.appendChild(b);
+    });
+    game.appendChild(pk);
+  }
+  function pickLevel() {
+    KidsGame.levelPicker({ onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); pickHero(); } });
+  }
+  setBadge();
+  pickLevel();
+})();
+</script>
+</body>
+</html>

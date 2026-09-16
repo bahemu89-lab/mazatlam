@@ -6,29 +6,75 @@
 <link rel="stylesheet" href="../common.css">
 <title>Números</title>
 <style>
-  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; }
-  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px; font-size: min(5vw, 26px); font-weight: bold; }
-  .hud .q { background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
-  .hud .lvl { background: #ffb703; color: #5a3d00; border-radius: 30px; padding: 6px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.1); white-space: nowrap; }
+  .game { display: flex; flex-direction: column; padding: 8px 8px 8px; gap: 10px; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: min(5vw, 26px); font-weight: 900; flex-wrap: nowrap; }
+  .hud .q { display: flex; align-items: center; gap: 8px; color: #1f2f6b; border-radius: 30px; padding: 6px 18px; white-space: nowrap; text-shadow: 0 1px 0 #fff;
+    background: linear-gradient(180deg, #ffffff, #eef2fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.2), inset 0 2px 0 #fff; }
+  .hud .q .emoji { font-size: 1.35em; }
+  .hud .round { white-space: nowrap; }
+  .hud .lvl { display: flex; align-items: center; gap: 8px; }
+  .hud .lvl .btn { font-size: 26px; }
+  .hud .lvl .rnd { font-size: 18px; color: #fff; text-shadow: 0 2px 0 #1f7fae, -1px -1px 0 #1f7fae, 1px -1px 0 #1f7fae, -1px 1px 0 #1f7fae, 1px 1px 0 #1f7fae; }
+  /* Contador: insignia brillante con halo */
   .counter {
-    width: 72px; height: 72px; border-radius: 50%; background: #7f5af0; color: #fff;
-    display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: bold;
-    box-shadow: 0 5px 0 rgba(0,0,0,.18);
+    position: relative; width: 74px; height: 74px; border-radius: 50%; color: #fff; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: 900;
+    background: radial-gradient(circle at 35% 28%, #d9ccff 0%, #9b7bff 35%, #6a3fe0 75%, #4c27b0 100%);
+    box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 22px rgba(155,123,255,.9), inset 0 3px 0 rgba(255,255,255,.6);
+    text-shadow: 0 2px 0 #3c1f8f, 0 4px 6px rgba(0,0,0,.3); animation: glow 2.4s ease-in-out infinite;
   }
-  .box { flex: 1 1 auto; position: relative; background: #fff; border-radius: 26px; box-shadow: inset 0 0 0 5px #8bd3dd; min-height: 120px; }
-  .obj { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s; }
-  .obj .emoji { filter: drop-shadow(0 4px 0 rgba(0,0,0,.12)); }
+  .counter::before { content: ""; position: absolute; left: 16%; right: 16%; top: 8%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0)); pointer-events: none; }
+  @keyframes glow { 0%,100% { box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 16px rgba(155,123,255,.7), inset 0 3px 0 rgba(255,255,255,.6); }
+    50% { box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 34px rgba(155,123,255,1), inset 0 3px 0 rgba(255,255,255,.6); } }
+  /* Caja de juguetes: marco de madera, interior con profundidad y labio frontal */
+  .box {
+    flex: 1 1 auto; position: relative; min-height: 120px; border-radius: 16px;
+    background: radial-gradient(ellipse at 50% 0%, #fffdf6 0%, #fbf0d8 55%, #f0dcb4 100%);
+    border: 14px solid transparent; background-clip: padding-box;
+    box-shadow: 0 14px 0 #6b3d12, 0 24px 30px rgba(60,30,0,.35);
+  }
+  .box::before { content: ""; position: absolute; inset: -14px; z-index: -1; border-radius: 16px;
+    background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.1) 0 5px, rgba(0,0,0,0) 5px 24px), linear-gradient(180deg, #e0a862 0%, #c2803f 35%, #a96a30 70%, #8b5222 100%);
+    box-shadow: inset 0 3px 0 rgba(255,235,200,.55), inset 0 -4px 0 rgba(0,0,0,.25); }
+  .box::after { content: ""; position: absolute; inset: 0; border-radius: 4px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(120,80,20,.28), rgba(120,80,20,0) 18%), radial-gradient(ellipse at 50% 100%, rgba(120,80,20,.18), rgba(120,80,20,0) 60%);
+    box-shadow: inset 0 0 0 3px rgba(90,50,0,.2), inset 8px 8px 20px rgba(90,50,0,.22), inset -6px -6px 14px rgba(255,255,255,.5); }
+  .obj { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s; z-index: 1; }
+  .obj .emoji { filter: drop-shadow(0 6px 4px rgba(60,30,0,.35)); animation: float 3.2s ease-in-out infinite; }
+  .obj:active .emoji { transform: scale(1.12) rotate(0); animation: none; }
   .obj .chk {
-    position: absolute; right: -6px; top: -6px; width: 34px; height: 34px; border-radius: 50%;
-    background: #2cb67d; color: #fff; font-size: 20px; font-weight: bold; display: none; align-items: center; justify-content: center;
-    box-shadow: 0 3px 0 rgba(0,0,0,.15);
+    position: absolute; right: -6px; top: -6px; width: 36px; height: 36px; border-radius: 50%; color: #fff; font-size: 20px; font-weight: 900;
+    display: none; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 30%, #a6ffcb 0%, #2fd27a 45%, #148a4d 100%);
+    box-shadow: 0 3px 0 #0e6a3a, 0 6px 10px rgba(0,0,0,.25), 0 0 0 3px #fff, inset 0 2px 0 rgba(255,255,255,.6);
+    text-shadow: 0 1px 0 #0e6a3a; animation: pop .3s ease-out;
   }
   .obj.marked .chk { display: flex; }
   .obj.marked { transform: scale(1.12); }
-  .obj.jump { animation: jump .45s ease-out; }
+  .obj.marked .emoji { animation: none; }
+  .obj.jump { animation: jump .45s ease-out; z-index: 2; }
+  .obj.bad { animation: shake .35s; }
   @keyframes jump { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-26px) scale(1.3); } }
-  .cards { flex: 0 0 auto; display: flex; justify-content: center; gap: min(4vw, 26px); }
-  .numcard { width: min(26vw, 20vh, 150px); height: min(26vw, 20vh, 150px); font-size: min(14vw, 11vh, 84px); font-weight: bold; color: #172c66; }
+  .spark { position: fixed; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; z-index: 30; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .75s ease-out forwards; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  .cards { flex: 0 0 auto; display: flex; justify-content: center; gap: min(4vw, 26px); padding-top: 6px; }
+  /* Fichas de número: plástico brillante con bisel y grosor */
+  .numcard {
+    --a: #bfe6ff; --b: #3da9fc; --d: #1a63a8;
+    position: relative; width: min(26vw, 20vh, 150px); height: min(26vw, 20vh, 150px); border-radius: 24px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: min(14vw, 11vh, 84px); font-weight: 900; color: #fff; line-height: 1;
+    background: linear-gradient(135deg, var(--a) 0%, var(--b) 55%, var(--d) 130%);
+    box-shadow: 0 9px 0 var(--d), 0 16px 22px rgba(20,40,90,.28), inset 0 3px 0 rgba(255,255,255,.7), inset 3px 0 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.15);
+    text-shadow: 0 3px 0 var(--d), 0 6px 8px rgba(0,0,0,.3);
+    transition: transform .12s, box-shadow .12s; animation: pop .35s ease-out backwards, float 3.2s ease-in-out infinite;
+  }
+  .numcard::before { content: ""; position: absolute; left: 10%; right: 10%; top: 6%; height: 34%; border-radius: 16px 16px 40% 40%; background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); pointer-events: none; }
+  .numcard::after { content: ""; position: absolute; inset: 9%; border-radius: 16px; border: 3px solid rgba(255,255,255,.35); box-shadow: inset 0 2px 4px rgba(0,0,0,.12); pointer-events: none; }
+  .numcard:active { transform: scale(.94) translateY(5px); box-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(20,40,90,.25), inset 0 3px 0 rgba(255,255,255,.6); animation: none; }
+  .numcard.ok { --a: #c6ffd9; --b: #2fd27a; --d: #148a4d; animation: bounce .6s; box-shadow: 0 9px 0 var(--d), 0 16px 22px rgba(20,120,60,.3), 0 0 0 6px rgba(120,255,170,.55), 0 0 30px rgba(120,255,170,.8), inset 0 3px 0 rgba(255,255,255,.7); }
+  .numcard.bad { animation: shake .35s; }
+  @media (max-width: 600px) { .hud { gap: 8px; font-size: 20px; } .hud .q { padding: 6px 12px; } .counter { width: 64px; height: 64px; font-size: 36px; } }
 </style>
 </head>
 <body>
@@ -37,48 +83,82 @@
 (function () {
   var game = KidsGame.init({ title: 'Números' });
   var EMOJIS = ['🍎','🍓','🐟','⭐','🎈','🐥','🍪','🦋','🌸','🐞','🍩','🐢','🚗','⚽','🍬','🐰','🐸','🍦'];
+  var PAL = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
+    ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
   var ROUNDS = 8;
-  var level = 0, round = 0, N = 0, lock = false, marked = 0, objs = [];
+  var level = 1, round = 0, N = 0, lock = false, marked = 0, objs = [], targets = [], emoji = '';
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
   function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  // Estela de chispas que sube desde un elemento (máx. 8)
+  function sparks(node, n) {
+    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < (n || 8); i++) {
+      var d = document.createElement('div'); d.className = 'spark';
+      d.style.left = (cx - 6 + (Math.random() - .5) * r.width * .6) + 'px'; d.style.top = (cy - 6) + 'px';
+      d.style.setProperty('--c', PAL[i % PAL.length][1]);
+      d.style.setProperty('--dx', ((Math.random() - .5) * 90) + 'px'); d.style.setProperty('--dy', (-60 - Math.random() * 80) + 'px');
+      d.style.animationDelay = (Math.random() * 120) + 'ms';
+      document.body.appendChild(d);
+      (function (x) { setTimeout(function () { x.remove(); }, 950); })(d);
+    }
+  }
 
   game.innerHTML = '';
   var hud = el('div', 'hud');
-  var q = el('span', 'q', '¿Cuántos hay?'), counter = el('div', 'counter', '?'), lvl = el('span', 'lvl', 'Nivel 1');
+  var q = el('span', 'q', '¿Cuántos hay?'), counter = el('div', 'counter', '?'), lvl = el('span', 'lvl');
+  var lvlBtn = el('button', 'btn round yellow', '🎚️'); lvlBtn.setAttribute('aria-label', 'Nivel');
+  var badge = el('span'), rnd = el('span', 'rnd');
+  lvl.appendChild(lvlBtn); lvl.appendChild(badge); lvl.appendChild(rnd);
   hud.appendChild(q); hud.appendChild(counter); hud.appendChild(lvl);
   var box = el('div', 'box'), cards = el('div', 'cards');
   game.appendChild(hud); game.appendChild(box); game.appendChild(cards);
+  onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
 
-  function maxN() { return level === 0 ? 5 : 10; }
+  function maxN() { return level === 1 ? 5 : level === 2 ? 10 : 15; }
+  function setBadge() { badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level)); }
+
+  function pickLevel() {
+    lock = true; box.innerHTML = ''; cards.innerHTML = ''; objs = []; targets = [];
+    KidsGame.levelPicker({ onPick: function (n) { level = n; round = 0; startRound(); } });
+  }
 
   function startRound() {
-    lock = false; marked = 0; objs = [];
+    lock = false; marked = 0; objs = []; targets = [];
     N = 1 + KidsGame.rand(maxN());
-    var em = KidsGame.pick(EMOJIS);
-    var perm = KidsGame.shuffle(Array.apply(null, Array(N)).map(function (_, i) { return i; }));
+    emoji = KidsGame.pick(EMOJIS);
+    // Nivel 3: objetos distractores de otro emoji mezclados (solo se cuenta el pedido)
+    var D = level === 3 ? 2 + KidsGame.rand(4) : 0;
+    var other = D ? KidsGame.pick(EMOJIS.filter(function (e) { return e !== emoji; })) : '';
+    var total = N + D;
+    var perm = KidsGame.shuffle(Array.apply(null, Array(total)).map(function (_, i) { return i; }));
     box.innerHTML = ''; counter.textContent = '?';
-    lvl.textContent = 'Nivel ' + (level + 1) + ' · ' + (round + 1) + '/' + ROUNDS;
-    for (var i = 0; i < N; i++) {
+    q.innerHTML = '¿Cuántos <span class="emoji">' + emoji + '</span> hay?';
+    setBadge(); rnd.textContent = (round + 1) + '/' + ROUNDS;
+    for (var i = 0; i < total; i++) {
+      var isT = i < N;
       var o = el('div', 'obj pop');
-      o.innerHTML = '<span class="emoji">' + em + '</span><span class="chk"></span>';
+      o.innerHTML = '<span class="emoji">' + (isT ? emoji : other) + '</span><span class="chk"></span>';
       o.style.animationDelay = (i * 70) + 'ms';
-      o._k = perm[i]; o._jx = Math.random() * 2 - 1; o._jy = Math.random() * 2 - 1;
+      o.querySelector('.emoji').style.animationDelay = (-Math.random() * 3) + 's';
+      o._k = perm[i]; o._jx = Math.random() * 2 - 1; o._jy = Math.random() * 2 - 1; o._target = isT;
       (function (o) { onTap(o, function () { markObj(o); }); })(o);
-      box.appendChild(o); objs.push(o);
+      box.appendChild(o); objs.push(o); if (isT) targets.push(o);
     }
     var lo = Math.max(1, N - 2), hi = Math.min(maxN(), N + 2), pool = [];
     for (var k = lo; k <= hi; k++) if (k !== N) pool.push(k);
     var opts = KidsGame.shuffle([N].concat(KidsGame.shuffle(pool).slice(0, 2)));
+    var pal = KidsGame.shuffle(PAL);
     cards.innerHTML = '';
     opts.forEach(function (n, i) {
-      var c = el('div', 'card numcard pop'); c.textContent = n; c.style.animationDelay = (i * 80) + 'ms';
+      var c = el('div', 'numcard'); c.textContent = n; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
+      c.style.setProperty('--a', pal[i][0]); c.style.setProperty('--b', pal[i][1]); c.style.setProperty('--d', pal[i][2]);
       onTap(c, function () { choose(c, n); });
       cards.appendChild(c);
     });
     layout();
-    KidsGame.say('¿Cuántos hay?');
+    KidsGame.say(level === 3 ? '¿Cuántos hay de estos?' : '¿Cuántos hay?');
   }
 
   function layout() {
@@ -106,6 +186,7 @@
   // Ayuda para contar: tocar un objeto lo marca y muestra la cuenta
   function markObj(o) {
     if (lock || o.classList.contains('marked')) return;
+    if (!o._target) { KidsGame.sound.wrong(); replay(o, 'bad'); return; }
     marked++;
     o.classList.add('marked');
     o.querySelector('.chk').textContent = marked;
@@ -116,7 +197,7 @@
   function choose(c, n) {
     if (lock) return;
     if (n === N) {
-      lock = true; c.classList.add('ok');
+      lock = true; c.classList.add('ok'); sparks(c, 10);
       countAll();
     } else {
       KidsGame.sound.wrong(); replay(c, 'bad');
@@ -128,15 +209,15 @@
     counter.textContent = '';
     function step() {
       if (i < N) {
-        var o = objs[i]; i++;
-        o.classList.remove('marked'); replay(o, 'jump');
+        var o = targets[i]; i++;
+        o.classList.remove('marked'); replay(o, 'jump'); sparks(o, 6);
         counter.textContent = i; replay(counter, 'pop');
         KidsGame.sound.tap(); KidsGame.say(String(i));
         setTimeout(step, 450);
       } else {
         setTimeout(function () {
           KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
-          objs.forEach(function (o) { replay(o, 'bounce'); });
+          targets.forEach(function (o) { replay(o, 'bounce'); });
           round++;
           setTimeout(function () {
             if (round >= ROUNDS) finish(); else startRound();
@@ -149,16 +230,16 @@
 
   function finish() {
     KidsGame.celebrate({
-      sub: 'Nivel ' + (level + 1) + ' completo',
-      onNext: function () { level = Math.min(level + 1, 1); round = 0; startRound(); },
+      sub: 'Nivel ' + level + ' completo',
+      onNext: function () { level = Math.min(level + 1, 3); round = 0; startRound(); },
       onAgain: function () { round = 0; startRound(); }
     });
   }
 
   window.addEventListener('resize', layout);
-  // Expuesto para pruebas
-  window.__num = { set: function (l) { level = l; round = 0; startRound(); }, get n() { return N; } };
-  startRound();
+  // Expuesto para pruebas (set: índice 0..2 -> nivel 1..3)
+  window.__num = { set: function (l) { level = Math.min(3, Math.max(1, l + 1)); round = 0; startRound(); }, get n() { return N; }, get level() { return level; } };
+  pickLevel();
 })();
 </script>
 </body>

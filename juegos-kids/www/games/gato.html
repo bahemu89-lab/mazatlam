@@ -7,37 +7,69 @@
 <title>Tres en raya</title>
 <style>
   .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 10px; }
-  .score { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); font-size: 24px; }
+  .score { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 6px 20px; font-size: 24px; border-radius: 30px; border: 3px solid #fff;
+    background: linear-gradient(180deg, #ffffff, #eef3ff); box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
   .score .p { display: flex; align-items: center; gap: 6px; }
   .score .p .emoji { font-size: 32px; }
-  .score .vs { color: #999; }
-  .turn { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; font-size: 24px; min-height: 52px; }
+  .score .vs { color: #a9b4cc; }
+  .turn { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 24px; min-height: 56px; padding: 4px 18px; border-radius: 30px;
+    color: #fff; font-weight: 900; text-shadow: 0 2px 0 #1f7fae, 0 4px 8px rgba(0,0,0,.25); }
   .turn .emoji { font-size: 42px; display: inline-block; }
   .turn .emoji.bounce { animation: bounce .7s infinite; }
   .boardwrap { flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
-  .board { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: var(--bs); height: var(--bs); background: #7f5af0; padding: 10px; border-radius: 26px; box-shadow: 0 8px 0 rgba(0,0,0,.15); }
-  .cell { border-radius: 18px; min-width: 64px; min-height: 64px; font-size: calc(var(--bs) * .2); }
-  .cell .emoji { display: block; }
+  /* Tablero de madera gruesa con veta, borde claro y sombra */
+  .board { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: var(--bs); height: var(--bs);
+    padding: 14px; border-radius: 28px; border: 4px solid #efcf8f;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,.06) 0 6px, rgba(0,0,0,0) 6px 11px, rgba(60,30,0,.07) 11px 16px, rgba(0,0,0,0) 16px 26px),
+      linear-gradient(160deg, #e2ad68 0%, #c98a46 50%, #a7672d 100%);
+    box-shadow: 0 12px 0 #7a4418, 0 24px 34px rgba(0,0,0,.35), inset 0 3px 0 rgba(255,255,255,.35), inset 0 -4px 8px rgba(60,30,0,.25); }
+  /* Casillas hundidas (bisel interior) */
+  .cell { position: relative; border-radius: 18px; min-width: 64px; min-height: 64px; font-size: calc(var(--bs) * .2); border: 0;
+    background: linear-gradient(180deg, #f6ecd2 0%, #fff9e8 100%);
+    box-shadow: inset 0 5px 10px rgba(60,30,0,.32), inset 0 -2px 0 rgba(255,255,255,.9), inset 3px 0 6px rgba(60,30,0,.1), 0 1px 0 rgba(255,255,255,.35);
+    transition: transform .12s, box-shadow .12s, background .2s; }
+  .cell::after { display: none; }
+  .cell:active { transform: none; background: linear-gradient(180deg, #ffe9a8, #fff4cf); box-shadow: inset 0 5px 10px rgba(60,30,0,.28), inset 0 -2px 0 rgba(255,255,255,.9); }
+  .cell .emoji { display: block; position: relative; z-index: 1; }
   .cell.filled { cursor: default; }
-  .cell.filled:active { transform: none; }
-  .cell.filled .emoji { animation: pop .35s ease-out; }
-  .cell.win { background: #fff3b0; box-shadow: 0 0 0 6px #ffb703, 0 0 26px #ffd166; animation: glow .6s ease-in-out infinite alternate; }
+  .cell.filled::before { content: ""; position: absolute; left: 22%; right: 22%; bottom: 10%; height: 14%; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.3), rgba(0,0,0,0) 70%); animation: shadowin .45s ease-out; }
+  .cell.filled .emoji { animation: piecein .5s cubic-bezier(.2,1.4,.5,1); }
+  @keyframes piecein { 0%{transform:scale(.2) translateY(-60%);opacity:0} 55%{transform:scale(1.2,.85) translateY(4%);opacity:1} 75%{transform:scale(.95,1.08) translateY(-3%)} 100%{transform:scale(1) translateY(0)} }
+  @keyframes shadowin { 0%{transform:scale(.3);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .cell.win { background: linear-gradient(180deg, #fff2b8, #ffe08a); animation: glow .6s ease-in-out infinite alternate; }
   .cell.win .emoji { animation: bounce .6s infinite; }
-  @keyframes glow { from { box-shadow: 0 0 0 6px #ffb703, 0 0 10px #ffd166; } to { box-shadow: 0 0 0 8px #ff8906, 0 0 34px #ffb703; } }
+  @keyframes glow { from { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 5px #ffb703, 0 0 14px #ffd166; } to { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 7px #ff8906, 0 0 34px #ffb703; } }
   .cell.hint { background: #f3efff; }
-  .foot { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  /* Línea ganadora con brillo */
+  .winline { position: absolute; inset: 14px; width: calc(100% - 28px); height: calc(100% - 28px); pointer-events: none; z-index: 2; overflow: visible; display: none; }
+  .winline.show { display: block; }
+  .winline line { stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawline .6s ease-out forwards; }
+  .winline .glow { stroke: rgba(255,200,40,.45); stroke-width: 34; animation-delay: .05s; }
+  .winline .core { stroke: url(#wl); stroke-width: 16; }
+  .winline .hi { stroke: rgba(255,255,255,.8); stroke-width: 5; animation-delay: .12s; }
+  @keyframes drawline { to { stroke-dashoffset: 0; } }
+  .foot { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
   .foot .btn { font-size: 20px; min-height: 64px; padding: 6px 16px; }
-  .foot .btn.on { box-shadow: 0 0 0 4px #2cb67d, 0 6px 0 rgba(0,0,0,.18); }
+  .foot .btn.on { box-shadow: 0 0 0 4px #2cb67d, 0 6px 0 var(--d), 0 12px 18px rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.6); }
+  .foot .lvbtn { width: 60px; height: 60px; min-width: 60px; min-height: 60px; padding: 0; font-size: 26px; border-radius: 50%; }
+  .spark { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; font-size: 26px; animation: sparkfly 1s ease-out forwards; }
+  @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4) rotate(200deg);opacity:0} }
   /* pantalla de elección */
-  .pick { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #fef6e4; z-index: 3; }
-  .pick h2 { margin: 0; font-size: 30px; text-align: center; }
+  .pick { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 3;
+    background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%), linear-gradient(180deg, rgba(143,214,255,.6), rgba(255,250,240,.75)); }
+  .pick .box { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22px 26px; max-width: 94vw; animation: pop .4s ease-out; }
+  .pick h2 { margin: 0; font-size: 30px; text-align: center; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); }
   .pick .choices { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-  .pick .choice { width: 110px; height: 110px; font-size: 64px; border-radius: 28px; }
+  .pick .choice { width: 112px; height: 112px; font-size: 62px; border-radius: 50%; padding: 0; }
+  .pick .choice .emoji { animation: float 3s ease-in-out infinite; }
+  .pick .choice:nth-child(2) .emoji { animation-delay: -.8s; } .pick .choice:nth-child(3) .emoji { animation-delay: -1.6s; } .pick .choice:nth-child(4) .emoji { animation-delay: -2.4s; }
   .pick .choice.taken { opacity: .3; pointer-events: none; }
   .pick .mode { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   @media (orientation: landscape) {
     .game { flex-direction: row; justify-content: center; }
-    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex: 0 0 auto; width: 300px; }
+    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex: 0 0 auto; width: 320px; padding: 18px 10px; }
     .boardwrap { flex: 1 1 0; align-self: stretch; }
   }
 </style>
@@ -49,18 +81,22 @@ var game = KidsGame.init({ title: 'Tres en raya' });
 (function () {
   var PIECES = ['🐱', '🐶', '🦄', '🌟'];
   var BOTS = ['🤖', '🐭'];
+  var PALS = [ { a: '#ff9ccb', b: '#f0569a', d: '#b8306f' }, { a: '#7dd0ff', b: '#2f95e8', d: '#1a63a8' }, { a: '#8ef0b0', b: '#24b36c', d: '#14784a' }, { a: '#ffe98a', b: '#ffb703', d: '#c47f00' } ];
   var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   var twoPlayers = false, p1 = null, p2 = null, board, turn, busy = false, score = [0, 0], over = false;
-  var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [];
+  // Nivel del robot: 1 = 15% listo, 2 = 50% listo, 3 = perfecto (empatar es ganar)
+  var nivel = 1, badgeEl = null;
+  var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [], lineSvg;
 
   game.innerHTML = '';
-  var side = document.createElement('div'); side.className = 'side';
+  var side = document.createElement('div'); side.className = 'side panel';
   scoreEl = document.createElement('div'); scoreEl.className = 'score';
   turnEl = document.createElement('div'); turnEl.className = 'turn';
   wrap = document.createElement('div'); wrap.className = 'boardwrap';
   boardEl = document.createElement('div'); boardEl.className = 'board';
   foot = document.createElement('div'); foot.className = 'foot';
-  foot.innerHTML = '<button class="btn purple mode-btn">👧👦 Dos jugadores</button><button class="btn blue new-btn">🔄 Nuevo</button>';
+  foot.innerHTML = '<button class="btn purple mode-btn">👧👦 Dos jugadores</button><button class="btn blue new-btn">🔄 Nuevo</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
+  badgeEl = KidsGame.levelBadge(nivel); foot.insertBefore(badgeEl, foot.firstChild);
   wrap.appendChild(boardEl);
   side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot);
   game.appendChild(side); game.appendChild(wrap);
@@ -68,6 +104,11 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i; c.innerHTML = '<span class="emoji"></span>';
     c.addEventListener('pointerdown', onCell); boardEl.appendChild(c); cells.push(c);
   }
+  lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  lineSvg.setAttribute('class', 'winline'); lineSvg.setAttribute('viewBox', '0 0 300 300'); lineSvg.setAttribute('preserveAspectRatio', 'none');
+  lineSvg.innerHTML = '<defs><linearGradient id="wl" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="300"><stop offset="0" stop-color="#ffd166"/><stop offset=".5" stop-color="#ff8906"/><stop offset="1" stop-color="#ff5fa0"/></linearGradient></defs>' +
+    '<line class="glow" pathLength="1"/><line class="core" pathLength="1"/><line class="hi" pathLength="1"/>';
+  boardEl.appendChild(lineSvg);
   pickEl = document.createElement('div'); pickEl.className = 'pick';
   game.appendChild(pickEl);
 
@@ -87,13 +128,14 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   // --- Elegir ficha ---
   function showPick(who) {
     pickEl.innerHTML = '';
+    var box = document.createElement('div'); box.className = 'box panel';
     var h = document.createElement('h2');
     h.textContent = who === 1 ? (twoPlayers ? '👧 Jugador 1: elige tu ficha' : '¿Con cuál quieres jugar?') : '👦 Jugador 2: elige tu ficha';
     var ch = document.createElement('div'); ch.className = 'choices';
-    PIECES.forEach(function (e) {
-      var b = document.createElement('button'); b.className = 'btn choice emoji'; b.textContent = e;
+    PIECES.forEach(function (e, idx) {
+      var b = document.createElement('button'); b.className = 'btn choice'; b.innerHTML = '<span class="emoji">' + e + '</span>';
       if (who === 2 && e === p1) b.classList.add('taken');
-      b.style.background = KidsGame.pick(['#f582ae', '#3da9fc', '#2cb67d', '#ffb703']);
+      var pal = PALS[idx % PALS.length]; b.style.setProperty('--a', pal.a); b.style.setProperty('--b', pal.b); b.style.setProperty('--d', pal.d);
       b.addEventListener('pointerdown', function (ev) {
         ev.preventDefault(); KidsGame.sound.pop();
         if (who === 1) { p1 = e; if (twoPlayers) showPick(2); else { p2 = KidsGame.pick(BOTS); startGame(); } }
@@ -101,7 +143,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
       });
       ch.appendChild(b);
     });
-    pickEl.appendChild(h); pickEl.appendChild(ch);
+    box.appendChild(h); box.appendChild(ch);
     if (who === 1) {
       var m = document.createElement('div'); m.className = 'mode';
       var b1 = document.createElement('button'); b1.className = 'btn ' + (twoPlayers ? '' : 'green on'); b1.textContent = '🤖 Contra el robot';
@@ -109,8 +151,9 @@ var game = KidsGame.init({ title: 'Tres en raya' });
       b1.style.fontSize = b2.style.fontSize = '20px';
       b1.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); twoPlayers = false; showPick(1); });
       b2.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); twoPlayers = true; showPick(1); });
-      m.appendChild(b1); m.appendChild(b2); pickEl.appendChild(m);
+      m.appendChild(b1); m.appendChild(b2); box.appendChild(m);
     }
+    pickEl.appendChild(box);
     pickEl.style.display = 'flex';
     KidsGame.say(who === 1 ? 'Elige tu ficha' : 'Jugador dos, elige tu ficha');
   }
@@ -124,6 +167,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   function newRound(firstIsP1) {
     board = [0,0,0,0,0,0,0,0,0]; over = false; busy = false;
     cells.forEach(function (c) { c.className = 'cell card'; c.firstChild.textContent = ''; });
+    lineSvg.classList.remove('show');
     turn = firstIsP1 ? 1 : 2;
     renderTurn();
     if (turn === 2 && !twoPlayers) botMove();
@@ -164,7 +208,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     }
     return null;
   }
-  // Robot suave: 70% al azar, 30% inteligente (gana o bloquea)
+  // Robot: nivel 1 = 15% listo, nivel 2 = 50% listo (gana o bloquea), nivel 3 = perfecto (minimax)
   function botMove() {
     busy = true;
     setTimeout(function () {
@@ -172,7 +216,8 @@ var game = KidsGame.init({ title: 'Tres en raya' });
       var free = []; for (var i = 0; i < 9; i++) if (!board[i]) free.push(i);
       if (!free.length) return;
       var choice = null;
-      if (Math.random() < 0.3) choice = findLine(2) != null ? findLine(2) : findLine(1);
+      if (nivel === 3) choice = bestMove();
+      else if (Math.random() < (nivel === 2 ? 0.5 : 0.15)) choice = findLine(2) != null ? findLine(2) : findLine(1);
       if (choice == null) choice = KidsGame.pick(free);
       busy = false;
       play(choice, 2);
@@ -186,11 +231,69 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     }
     return null;
   }
+  function winOf(b) {
+    for (var k = 0; k < LINES.length; k++) { var l = LINES[k]; if (b[l[0]] && b[l[0]] === b[l[1]] && b[l[1]] === b[l[2]]) return b[l[0]]; }
+    return 0;
+  }
+  function minimax(b, who, depth) {
+    var w = winOf(b);
+    if (w === 2) return 10 - depth; if (w === 1) return depth - 10;
+    if (b.indexOf(0) < 0) return 0;
+    var best = who === 2 ? -99 : 99;
+    for (var i = 0; i < 9; i++) {
+      if (b[i]) continue;
+      b[i] = who; var v = minimax(b, who === 2 ? 1 : 2, depth + 1); b[i] = 0;
+      if (who === 2 ? v > best : v < best) best = v;
+    }
+    return best;
+  }
+  function bestMove() {
+    var best = -99, moves = [];
+    for (var i = 0; i < 9; i++) {
+      if (board[i]) continue;
+      board[i] = 2; var v = minimax(board, 1, 1); board[i] = 0;
+      if (v > best) { best = v; moves = [i]; } else if (v === best) moves.push(i);
+    }
+    return moves.length ? KidsGame.pick(moves) : null;
+  }
+
+  function drawLine(l) {
+    var C = [50, 150, 250], a = l[0], b = l[2];
+    var x1 = C[a % 3], y1 = C[Math.floor(a / 3)], x2 = C[b % 3], y2 = C[Math.floor(b / 3)];
+    // alarga un poco la línea hacia afuera de las casillas
+    var dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy), ex = dx / len * 22, ey = dy / len * 22;
+    lineSvg.querySelectorAll('line').forEach(function (ln) {
+      ln.setAttribute('x1', x1 - ex); ln.setAttribute('y1', y1 - ey); ln.setAttribute('x2', x2 + ex); ln.setAttribute('y2', y2 + ey);
+    });
+    lineSvg.classList.remove('show'); void lineSvg.offsetWidth; lineSvg.classList.add('show');
+  }
+  function burst(els) {
+    els.forEach(function (el) {
+      var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      for (var i = 0; i < 7; i++) {
+        var d = document.createElement('div'); d.className = 'spark emoji'; d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
+        var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
+        d.style.left = cx + 'px'; d.style.top = cy + 'px';
+        d.style.setProperty('--dx', Math.cos(a) * dist + 'px'); d.style.setProperty('--dy', Math.sin(a) * dist - 30 + 'px');
+        d.style.animationDelay = (Math.random() * .3) + 's';
+        document.body.appendChild(d);
+        (function (el2) { setTimeout(function () { el2.remove(); }, 1500); })(d);
+      }
+    });
+  }
 
   function finish(w) {
     over = true; busy = true;
     turnEl.innerHTML = '';
     if (w === 0) {
+      if (nivel === 3 && !twoPlayers) {
+        // Contra el robot perfecto, empatar es ganar
+        KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells);
+        setTimeout(function () {
+          KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: '¡Le empataste al robot perfecto! ¡Eso es ganar!', stars: 3, onAgain: function () { newRound(true); } });
+        }, 900);
+        return;
+      }
       KidsGame.toast('¡Empate! 🤝', 1500); KidsGame.addStar(1); KidsGame.sound.ok();
       setTimeout(function () {
         KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: 'Los dos jugaron muy bien', stars: 1, say: false, onAgain: function () { newRound(true); } });
@@ -198,10 +301,12 @@ var game = KidsGame.init({ title: 'Tres en raya' });
       return;
     }
     w.line.forEach(function (i) { cells[i].classList.add('win'); });
+    drawLine(w.line);
     score[w.who - 1]++; renderScore();
     var pieceWon = w.who === 1 ? p1 : p2;
     if (w.who === 1 || twoPlayers) {
       KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
+      burst(w.line.map(function (i) { return cells[i]; }));
       setTimeout(function () {
         KidsGame.celebrate({
           msg: twoPlayers ? '¡Ganó ' + pieceWon + '!' : '¡Ganaste!', sub: pieceWon + ' hizo tres en raya',
@@ -221,10 +326,19 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   foot.querySelector('.new-btn').addEventListener('pointerdown', function (ev) {
     ev.preventDefault(); KidsGame.sound.tap(); p1 = p2 = null; showPick(1);
   });
+  function showPicker() {
+    over = true; busy = true; pickEl.style.display = 'none';
+    KidsGame.levelPicker({ key: 'gato', onPick: function (n) {
+      nivel = n;
+      var nb = KidsGame.levelBadge(nivel); foot.replaceChild(nb, badgeEl); badgeEl = nb;
+      p1 = p2 = null; showPick(1);
+    } });
+  }
+  foot.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
 
   window.addEventListener('resize', order);
   order();
-  showPick(1);
+  showPicker();
 })();
 </script>
 </body>
