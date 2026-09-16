@@ -8,28 +8,61 @@
 <style>
   .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 8px; }
   .hud { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 22px; }
-  .hud .lvl { background: #fff; border-radius: 30px; padding: 4px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
-  .hud .who { font-size: 30px; }
+  .hud .lvl {
+    background: linear-gradient(180deg, #ffffff, #eef3ff); border-radius: 30px; padding: 6px 18px; border: 3px solid #fff; font-weight: 900; color: #1f2f6b;
+    box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22), inset 0 2px 0 #fff;
+  }
+  .hud .who { font-size: 30px; display: flex; align-items: center; gap: 4px; }
+  .hud .who .m {
+    display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0, #fff4c4 45%, #ffcf5a 100%);
+    box-shadow: 0 4px 0 #d9a520, 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 #fff, 0 0 0 3px #fff;
+  }
+  .hud .who .arr { font-size: 24px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
   .area { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; min-width: 0; }
-  .wrap { position: relative; touch-action: none; }
+  .wrap { position: relative; touch-action: none; border-radius: 20px; box-shadow: 0 10px 0 rgba(60,30,0,.28), 0 22px 30px rgba(0,0,0,.3); }
   canvas { display: block; border-radius: 18px; touch-action: none; }
   .piece {
     position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
     pointer-events: none; transition: transform .16s ease-out; will-change: transform;
   }
-  .piece .emoji { display: block; }
+  .piece .emoji { display: block; position: relative; z-index: 1; }
+  .piece.char::before {
+    content: ""; position: absolute; left: 22%; right: 22%; bottom: 6%; height: 18%; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.32), rgba(0,0,0,0) 70%);
+  }
+  .piece.char .emoji { animation: idle 1.6s ease-in-out infinite; }
   .piece.hop .emoji { animation: hop .5s ease-out 3; }
   .piece .emoji.shake { animation: shake .35s; }
+  .piece.goal::before {
+    content: ""; position: absolute; inset: 4%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,250,200,.95) 0, rgba(255,214,80,.6) 45%, rgba(255,190,40,0) 72%);
+    animation: goalpulse 1.4s ease-in-out infinite;
+  }
   .piece.goal .emoji { animation: wig 1.4s ease-in-out infinite; }
-  @keyframes hop { 0%,100%{transform:translateY(0) scale(1)} 40%{transform:translateY(-30%) scale(1.25)} }
+  @keyframes idle { 0%,100%{transform:translateY(0) scale(1,1)} 50%{transform:translateY(-6%) scale(.97,1.04)} }
+  @keyframes hop { 0%,100%{transform:translateY(0) scale(1)} 30%{transform:translateY(-32%) scale(1.15,1.25)} 60%{transform:translateY(0) scale(1.2,.85)} }
   @keyframes wig { 0%,100%{transform:rotate(-8deg) scale(1)} 50%{transform:rotate(8deg) scale(1.12)} }
-  .pad { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 6px; }
-  .pad .btn { width: 72px; height: 72px; min-width: 72px; min-height: 72px; padding: 0; font-size: 34px; border-radius: 22px; }
+  @keyframes goalpulse { 0%,100%{transform:scale(.85);opacity:.75} 50%{transform:scale(1.15);opacity:1} }
+  .pad { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 76px); gap: 6px; }
+  .pad .btn { width: 76px; height: 76px; min-width: 76px; min-height: 76px; padding: 0; font-size: 34px; border-radius: 24px; }
+  .pad .btn svg { width: 46px; height: 46px; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
+  .pad .btn.up svg { transform: rotate(0deg); }
+  .pad .btn.right svg { transform: rotate(90deg); }
+  .pad .btn.down svg { transform: rotate(180deg); }
+  .pad .btn.left svg { transform: rotate(-90deg); }
   .pad .up { grid-column: 2; grid-row: 1; }
   .pad .left { grid-column: 1; grid-row: 2; }
   .pad .right { grid-column: 3; grid-row: 2; }
   .pad .down { grid-column: 2; grid-row: 3; }
-  .pad .mid { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 34px; }
+  .pad .mid {
+    grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 36px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0, #fff4c4 40%, #ffcf5a 100%);
+    box-shadow: 0 5px 0 #d9a520, 0 10px 14px rgba(0,0,0,.22), inset 0 2px 0 #fff, 0 0 0 4px #fff;
+  }
+  .pad .mid .emoji { animation: float 3s ease-in-out infinite; }
+  .spark { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; font-size: 26px; animation: sparkfly .9s ease-out forwards; }
+  @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.3) rotate(180deg);opacity:0} }
   .side { display: contents; }
   @media (orientation: landscape) {
     .game { flex-direction: row; }
@@ -47,7 +80,11 @@ var game = KidsGame.init({ title: 'Laberinto' });
   var LEVELS = [ [5, 5], [7, 7], [9, 9], [11, 9] ];
   var CHARS = [ ['🐰', '🥕'], ['🐱', '🐟'], ['🐶', '🦴'] ];
   var WALLS = ['#f582ae', '#7f5af0', '#3da9fc', '#ff8906', '#2cb67d'];
-  var TRAILS = ['#ffd6e7', '#e4dcff', '#d3ecff', '#ffe5c2', '#d8f3dc'];
+  var TRAILS = ['#ff5fa0', '#6a4de0', '#1f8fe8', '#ff7a00', '#17a86a'];
+  // Paleta de cada pared: claro (luz arriba), medio, oscuro (grosor) y brillo
+  function hexRgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function mix(h, to, t) { var a = hexRgb(h), b = hexRgb(to); return 'rgb(' + a.map(function (v, i) { return Math.round(v + (b[i] - v) * t); }).join(',') + ')'; }
+  function rgba(h, al) { return 'rgba(' + hexRgb(h).join(',') + ',' + al + ')'; }
 
   var level = 0, cols, rows, cells, px, py, gx, gy, trail, done = false, wallColor, trailColor;
   var cell = 40, off = 0;
@@ -56,7 +93,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
-  hud.innerHTML = '<span class="lvl">Nivel <b>1</b></span><span class="who emoji"></span>';
+  hud.innerHTML = '<span class="lvl">Nivel <b>1</b></span><span class="who"><span class="m emoji"></span><span class="arr">➜</span><span class="m emoji"></span></span>';
   lvlEl = hud.querySelector('b'); whoEl = hud.querySelector('.who');
   area = document.createElement('div'); area.className = 'area';
   wrap = document.createElement('div'); wrap.className = 'wrap';
@@ -66,7 +103,10 @@ var game = KidsGame.init({ title: 'Laberinto' });
   wrap.appendChild(canvas); wrap.appendChild(goalEl); wrap.appendChild(charEl);
   area.appendChild(wrap);
   pad = document.createElement('div'); pad.className = 'pad';
-  pad.innerHTML = '<button class="btn blue up">⬆️</button><button class="btn blue left">⬅️</button><div class="mid emoji">🧭</div><button class="btn blue right">➡️</button><button class="btn blue down">⬇️</button>';
+  var ARROW = '<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lbA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfe2ff"/></linearGradient></defs>' +
+    '<path d="M24 5 L43 26 H32 V43 H16 V26 H5 Z" fill="url(#lbA)" stroke="#1a63a8" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M24 11 L36 24 H29 V38 H19 V24 H12 Z" fill="rgba(255,255,255,.55)"/></svg>';
+  pad.innerHTML = '<button class="btn blue up" aria-label="Arriba">' + ARROW + '</button><button class="btn blue left" aria-label="Izquierda">' + ARROW + '</button><div class="mid"><span class="emoji">🧭</span></div><button class="btn blue right" aria-label="Derecha">' + ARROW + '</button><button class="btn blue down" aria-label="Abajo">' + ARROW + '</button>';
   var side = document.createElement('div'); side.className = 'side';
   side.appendChild(hud); side.appendChild(pad);
   game.appendChild(area); game.appendChild(side);
@@ -115,7 +155,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
     px = 0; py = 0; gx = cols - 1; gy = rows - 1; done = false;
     trail = [[0, 0]];
     lvlEl.textContent = String(level + 1);
-    whoEl.textContent = ch[0] + ' ➜ ' + ch[1];
+    whoEl.firstChild.textContent = ch[0]; whoEl.lastChild.textContent = ch[1];
     charEl.firstChild.textContent = ch[0];
     goalEl.firstChild.textContent = ch[1];
     charEl.classList.remove('hop');
@@ -154,31 +194,71 @@ var game = KidsGame.init({ title: 'Laberinto' });
   function place(el, x, y) { el.style.transform = 'translate(' + (off + x * cell) + 'px,' + (off + y * cell) + 'px)'; }
 
   function draw() {
-    var w = canvas.width, h = canvas.height, x, y;
+    var w = canvas.width, h = canvas.height, x, y, i;
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.restore();
-    // fondo
-    ctx.fillStyle = '#fff';
-    rr(off, off, cell * cols, cell * rows, off * 1.2); ctx.fill();
-    // rastro
-    ctx.fillStyle = trailColor;
-    for (var i = 0; i < trail.length; i++) {
-      x = trail[i][0]; y = trail[i][1];
-      rr(off + x * cell + cell * 0.18, off + y * cell + cell * 0.18, cell * 0.64, cell * 0.64, cell * 0.2); ctx.fill();
+    var W = cell * cols + off * 2, H = cell * rows + off * 2, lw = off * 1.9;
+    // marco de madera (borde exterior)
+    var wood = ctx.createLinearGradient(0, 0, 0, H);
+    wood.addColorStop(0, '#d9a25f'); wood.addColorStop(.5, '#b8783a'); wood.addColorStop(1, '#8a4f1d');
+    ctx.fillStyle = wood; ctx.fillRect(0, 0, W, H);
+    // suelo: degradado + baldosas suaves
+    var fl = ctx.createLinearGradient(0, off, 0, H - off);
+    fl.addColorStop(0, '#fffdf2'); fl.addColorStop(1, '#f6ecc9');
+    ctx.fillStyle = fl; rr(off, off, cell * cols, cell * rows, off * 1.2); ctx.fill();
+    ctx.save(); rr(off, off, cell * cols, cell * rows, off * 1.2); ctx.clip();
+    ctx.fillStyle = 'rgba(120,90,20,.06)';
+    for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) if ((x + y) & 1) ctx.fillRect(off + x * cell, off + y * cell, cell, cell);
+    // puntitos de textura (hierba) en el centro de cada baldosa
+    ctx.fillStyle = 'rgba(120,160,40,.18)';
+    for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) {
+      var cx0 = off + x * cell + cell / 2, cy0 = off + y * cell + cell / 2, r0 = Math.max(1.2, cell * 0.035);
+      ctx.beginPath(); ctx.arc(cx0 - cell * .18, cy0 + cell * .14, r0, 0, 6.3); ctx.arc(cx0 + cell * .2, cy0 - cell * .16, r0, 0, 6.3); ctx.fill();
     }
-    // meta
-    ctx.fillStyle = '#fff3b0';
-    rr(off + gx * cell + off * 0.6, off + gy * cell + off * 0.6, cell - off * 1.2, cell - off * 1.2, cell * 0.2); ctx.fill();
-    // paredes
-    ctx.strokeStyle = wallColor; ctx.lineWidth = off * 1.7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath();
+    // viñeta interior (sombra del marco sobre el suelo)
+    var vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(90,60,0,.16)');
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    // meta: baldosa dorada con brillo
+    var gx0 = off + gx * cell, gy0 = off + gy * cell;
+    var gg = ctx.createLinearGradient(gx0, gy0, gx0, gy0 + cell);
+    gg.addColorStop(0, '#fff6c2'); gg.addColorStop(1, '#ffcf4a');
+    ctx.fillStyle = 'rgba(200,140,0,.35)'; rr(gx0 + off * .6, gy0 + off * .9, cell - off * 1.2, cell - off * 1.2, cell * .2); ctx.fill();
+    ctx.fillStyle = gg; rr(gx0 + off * .6, gy0 + off * .6, cell - off * 1.2, cell - off * 1.2, cell * .2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = Math.max(1.5, off * .35); rr(gx0 + off * 1.1, gy0 + off * 1.1, cell - off * 2.2, cell - off * 2.2, cell * .16); ctx.stroke();
+    // rastro: huellas con halo brillante
+    for (i = 0; i < trail.length; i++) {
+      x = trail[i][0]; y = trail[i][1];
+      if (x === gx && y === gy) continue;
+      var cx = off + x * cell + cell / 2, cy = off + y * cell + cell / 2, side = (i & 1) ? 1 : -1;
+      var halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, cell * .42);
+      halo.addColorStop(0, rgba(trailColor, .45)); halo.addColorStop(.6, rgba(trailColor, .18)); halo.addColorStop(1, rgba(trailColor, 0));
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, cell * .42, 0, 6.3); ctx.fill();
+      paw(cx + side * cell * .12, cy + cell * .04, cell * .13, rgba(trailColor, .8));
+    }
+    // paredes: tubos de caramelo con luz arriba, grosor abajo y sombra sobre el suelo
+    var path = new Path2D();
     for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) {
       var v = cells[y][x], x0 = off + x * cell, y0 = off + y * cell, x1 = x0 + cell, y1 = y0 + cell;
-      if (v & 1) { ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); }
-      if (v & 8) { ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); }
-      if ((v & 4) && y === rows - 1) { ctx.moveTo(x0, y1); ctx.lineTo(x1, y1); }
-      if ((v & 2) && x === cols - 1) { ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); }
+      if (v & 1) { path.moveTo(x0, y0); path.lineTo(x1, y0); }
+      if (v & 8) { path.moveTo(x0, y0); path.lineTo(x0, y1); }
+      if ((v & 4) && y === rows - 1) { path.moveTo(x0, y1); path.lineTo(x1, y1); }
+      if ((v & 2) && x === cols - 1) { path.moveTo(x1, y0); path.lineTo(x1, y1); }
     }
-    ctx.stroke();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    function pass(dx, dy, color, width) { ctx.save(); ctx.translate(dx, dy); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke(path); ctx.restore(); }
+    pass(off * .3, off * .9, 'rgba(60,30,0,.14)', lw * 1.35);
+    pass(off * .2, off * .55, 'rgba(60,30,0,.16)', lw * 1.1);
+    pass(0, off * .45, mix(wallColor, '#000000', .4), lw);
+    pass(0, off * .2, mix(wallColor, '#000000', .18), lw);
+    pass(0, 0, wallColor, lw);
+    pass(0, -off * .22, mix(wallColor, '#ffffff', .35), lw * .55);
+    pass(-off * .05, -off * .34, 'rgba(255,255,255,.7)', lw * .2);
+  }
+  function paw(cx, cy, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(cx, cy + r * .5, r, r * .8, 0, 0, 6.3); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - r * .95, cy - r * .55, r * .38, 0, 6.3); ctx.arc(cx, cy - r * .95, r * .4, 0, 6.3); ctx.arc(cx + r * .95, cy - r * .55, r * .38, 0, 6.3); ctx.fill();
   }
   function rr(x, y, w, h, r) {
     ctx.beginPath();
@@ -254,9 +334,22 @@ var game = KidsGame.init({ title: 'Laberinto' });
     if (m != null) tryDir(m);
   });
 
+  function burst() {
+    var r = charEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 18; i++) {
+      var d = document.createElement('div'); d.className = 'spark emoji';
+      d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
+      var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
+      d.style.left = cx + 'px'; d.style.top = cy + 'px';
+      d.style.setProperty('--dx', Math.cos(a) * dist + 'px'); d.style.setProperty('--dy', Math.sin(a) * dist - 30 + 'px');
+      d.style.animationDelay = (Math.random() * .25) + 's';
+      document.body.appendChild(d);
+      (function (el) { setTimeout(function () { el.remove(); }, 1300); })(d);
+    }
+  }
   function win() {
     done = true; dragging = false;
-    charEl.classList.add('hop');
+    charEl.classList.add('hop'); burst();
     KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
     setTimeout(function () {
       KidsGame.celebrate({
