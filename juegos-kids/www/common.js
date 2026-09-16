@@ -122,10 +122,47 @@
     return game;
   }
 
+
+  // levelPicker({ title, onPick }) -> pantalla "Elige tu nivel" con 3 botones; llama onPick(1|2|3).
+  // Recuerda el último nivel elegido por juego (localStorage) y lo marca con un anillo.
+  var LEVELS = [
+    { n: 1, txt: 'Fácil',   stars: '⭐',    cls: 'green'  },
+    { n: 2, txt: 'Medio',   stars: '⭐⭐',   cls: 'blue'   },
+    { n: 3, txt: 'Difícil', stars: '⭐⭐⭐',  cls: 'purple' }
+  ];
+  function levelPicker(opts) {
+    opts = opts || {};
+    var key = 'kg-level-' + (opts.key || (document.title || location.pathname).replace(/\W+/g, '-').toLowerCase());
+    var last = 0; try { last = parseInt(localStorage.getItem(key) || '0', 10) || 0; } catch (e) {}
+    var o = document.createElement('div'); o.id = 'kg-levels';
+    o.innerHTML = '<div class="box panel"><div class="ttl">' + (opts.title || '¿Qué tan difícil?') + '</div><div class="row"></div></div>';
+    var row = o.querySelector('.row');
+    LEVELS.forEach(function (L) {
+      var b = document.createElement('button');
+      b.className = 'btn big ' + L.cls + (last === L.n ? ' last' : '');
+      b.innerHTML = '<span class="lv-stars">' + L.stars + '</span><span class="lv-txt">' + L.txt + '</span>';
+      b.onclick = function () {
+        sounds.tap(); try { localStorage.setItem(key, String(L.n)); } catch (e) {}
+        o.classList.add('hide'); setTimeout(function () { o.remove(); }, 250);
+        say(L.txt); opts.onPick && opts.onPick(L.n);
+      };
+      row.appendChild(b);
+    });
+    document.body.appendChild(o);
+    return o;
+  }
+  // levelBadge(level, text?) -> etiqueta "Nivel ⭐⭐" para el HUD (devuelve el elemento)
+  function levelBadge(level, text) {
+    var el = document.createElement('div'); el.className = 'kg-level-badge';
+    el.textContent = (text || 'Nivel') + ' ' + (LEVELS[Math.min(3, Math.max(1, level)) - 1].stars);
+    return el;
+  }
+
   window.KidsGame = {
     init: init, sound: sounds, say: say, vibrate: vibrate,
     shuffle: shuffle, rand: rand, pick: pick,
     addStar: addStar, getStars: function () { return stars; },
-    celebrate: celebrate, confetti: confetti, toast: toast
+    celebrate: celebrate, confetti: confetti, toast: toast,
+    levelPicker: levelPicker, levelBadge: levelBadge
   };
 })();

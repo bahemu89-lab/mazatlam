@@ -29,3 +29,10 @@ API disponible en `KidsGame` (ver `www/common.js`):
 - `celebrate({msg, sub, stars, onAgain, onNext})`, `confetti()`, `toast(texto)`
 
 Clases CSS disponibles: `.btn` (+ `.round .blue .green .yellow .purple .big`), `.card` (+ `.ok .bad`), `.emoji`, `.pop`, `.bounce`.
+
+## Niveles de complejidad (obligatorio en todos los juegos)
+- Al iniciar, llamar `KidsGame.levelPicker({ onPick: function (nivel) { empezar(nivel); } })` (nivel 1 = Fácil,
+  2 = Medio, 3 = Difícil). Mientras se muestra el selector el juego no debe estar corriendo.
+- Cada nivel cambia de verdad la dificultad (más piezas, más rapidez, más distractores, menos ayudas).
+  Dentro de cada nivel puede haber progresión (rondas más difíciles). `KidsGame.celebrate` con `onNext` avanza.
+- Mostrar en el HUD el nivel con `KidsGame.levelBadge(nivel)` y ofrecer un botón "🎚️" para volver al selector.

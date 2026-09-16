@@ -1,9 +1,10 @@
 # 🎈 Juegos Mazatlam — app Android para niñas y niños de 4 a 6 años
 
-App **sin internet** con 16 juegos, pensada para instalarse en una tablet Android aparte.
+App **sin internet** con 24 juegos, pensada para instalarse en una tablet Android aparte.
 Los juegos están inspirados en los más populares para esta edad (memoria, colorear, rompecabezas,
 globos, letras, números, formas y colores, sombras, dibujar, piano, Simón dice, atrapa al topo,
-laberinto, alimenta a los animales, crea tu monstruo y tres en raya). Todo funciona con toques,
+laberinto, alimenta a los animales, crea tu monstruo, tres en raya, el intruso, ¿qué sigue?, diferencias,
+sumas, carrera, pesca, mi mascota y vestir). Todos tienen tres niveles: Fácil, Medio y Difícil. Todo funciona con toques,
 con sonidos, estrellas y celebraciones, sin anuncios ni compras.
 
 ## Instalar el APK en la tablet
@@ -38,6 +39,21 @@ Sugerencia: activa en la tablet **"Fijar pantalla"** (Ajustes → Seguridad) par
 | 🍌 Alimenta | asociación animal–comida (arrastrar) |
 | 👾 Crea tu monstruo | creatividad, combinar partes |
 | 🐱 Tres en raya | estrategia sencilla, jugar de a dos |
+| 🔍 El intruso | categorías, observación |
+| 🔵 ¿Qué sigue? | patrones y secuencias |
+| 👀 Diferencias | atención al detalle |
+| ➕ Sumas | sumar y restar con objetos |
+| 🏃 Carrera | reflejos (salta los obstáculos) |
+| 🎣 Pesca | tiempo de reacción, colores |
+| 🐶 Mi mascota | cuidar, responsabilidad |
+| 👗 Vestir | creatividad, clima y ocasiones |
+
+## Actualizar la app sin desinstalarla
+
+Cada versión nueva se firma con la misma llave y sube el número de versión (`android:versionCode` en
+`android/AndroidManifest.xml` y `versionCode` en `android/apktool.yml`). Basta con abrir el APK nuevo en la
+tablet y Android lo instala encima del anterior conservando las estrellas y el progreso. Si al instalar dice
+"la app no se instaló" o "paquete en conflicto", es que la versión no subió o se firmó con otra llave.
 
 ## Probar en la computadora
 
