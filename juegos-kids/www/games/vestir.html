@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Vestir</title>
+<style>
+  .game { display: flex; flex-direction: column; touch-action: none; overflow: hidden; background: linear-gradient(180deg, #fbe4ff 0%, #ffd6ea 100%); }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 4px; gap: 8px; z-index: 5; }
+  .hud .mid { flex: 1; display: flex; justify-content: center; min-width: 0; }
+  .hud .ttl { font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #b03a8a, 0 4px 8px rgba(0,0,0,.25), -1px -1px 0 #b03a8a, 1px -1px 0 #b03a8a, -1px 1px 0 #b03a8a, 1px 1px 0 #b03a8a; white-space: nowrap; }
+  .lvbtn { font-size: 30px; }
+  .mission { display: flex; align-items: center; gap: 10px; padding: 4px 16px 4px 8px; min-height: 64px; border-radius: 40px; animation: pop .4s ease-out; }
+  .mission .em { font-size: 40px; }
+  .mission .txt { font-size: 20px; font-weight: 900; color: #1f2f6b; line-height: 1.05; white-space: nowrap; }
+  .mission .txt b { color: #ff3d7f; }
+  .mission .icons { display: flex; gap: 4px; }
+  .mission .icons svg { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: inset 0 0 0 2px #dfe6f4; overflow: visible; transition: opacity .3s; }
+  .mission .icons svg.miss { opacity: .3; }
+  .mission.shake { animation: shake .4s; }
+  .target { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 26px; animation: pop .4s ease-out; }
+  .target .card { width: 80px; height: 126px; border-radius: 14px; overflow: hidden; position: relative; background: linear-gradient(180deg, #fff, #e8eefc); box-shadow: inset 0 0 0 3px #fff, 0 3px 0 #c9d2e6; }
+  .target .card svg { width: 100%; height: 100%; display: block; }
+  .target .card .cover { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 34px; background: linear-gradient(180deg, #b39cff, #7f5af0); opacity: 0; transition: opacity .4s; pointer-events: none; }
+  .target .card.hidden .cover { opacity: 1; }
+  .target .peek { font-size: 30px; }
+  .main { flex: 1 1 auto; display: flex; gap: 10px; padding: 0 10px 10px; min-height: 0; }
+  .stage { flex: 1 1 55%; position: relative; border-radius: 28px; border: 4px solid #fff; overflow: hidden; min-width: 0; display: flex; flex-direction: column; align-items: center;
+    background: radial-gradient(ellipse 80% 55% at 50% 100%, #ffd1e8 0%, rgba(255,209,232,0) 70%), repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0 30px, rgba(255,255,255,0) 30px 60px), linear-gradient(180deg, #d9b3ff 0%, #f0a3d0 100%);
+    box-shadow: 0 8px 0 #c48ac2, 0 16px 28px rgba(90,20,90,.25), inset 0 2px 0 #fff; }
+  .stage::before { content: ""; position: absolute; left: 50%; top: 0; width: 130%; height: 100%; transform: translateX(-50%); pointer-events: none;
+    background: conic-gradient(from 180deg at 50% 0%, rgba(255,255,255,0) 0deg 160deg, rgba(255,255,255,.25) 165deg 195deg, rgba(255,255,255,0) 200deg 360deg); }
+  .floor { position: absolute; left: -10%; right: -10%; bottom: -8%; height: 22%; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #fff 0%, #ffe0ee 40%, #f7b7d3 100%); box-shadow: 0 -8px 20px rgba(120,30,90,.2); }
+  .lights { position: absolute; left: 0; right: 0; top: 0; height: 14px; display: flex; justify-content: space-around; padding: 0 20px; }
+  .lights i { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #ffe066 55%, #ffb703); box-shadow: 0 0 12px 4px rgba(255,220,100,.7); animation: twinkle 1.4s ease-in-out infinite alternate; margin-top: -7px; }
+  .lights i:nth-child(odd) { animation-delay: -.7s; }
+  @keyframes twinkle { from { opacity: .5; } to { opacity: 1; } }
+  .skins { display: flex; gap: 8px; padding: 14px 6px 4px; z-index: 2; flex-wrap: wrap; justify-content: center; }
+  .skin { width: 64px; height: 64px; border-radius: 50%; border: 4px solid #fff; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,.18), 0 8px 12px rgba(0,0,0,.2), inset 0 -6px 8px rgba(0,0,0,.15), inset 0 4px 6px rgba(255,255,255,.5); transition: transform .12s; }
+  .skin.on { transform: scale(1.12); box-shadow: 0 0 0 4px #ffb703, 0 5px 0 rgba(0,0,0,.18), 0 8px 12px rgba(0,0,0,.2), inset 0 -6px 8px rgba(0,0,0,.15); }
+  .dollwrap { flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
+  .dollwrap svg { height: 100%; max-width: 100%; overflow: visible; filter: drop-shadow(0 12px 10px rgba(80,20,60,.35)); transform-origin: 50% 95%; animation: idle 3.2s ease-in-out infinite; }
+  @keyframes idle { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(1.2deg); } }
+  .dollwrap svg.dance { animation: dance .45s ease-in-out infinite; }
+  @keyframes dance { 0%,100% { transform: translateY(0) rotate(-7deg) scale(1,1); } 25% { transform: translateY(-26px) rotate(0deg) scale(.95,1.08); } 50% { transform: translateY(0) rotate(7deg) scale(1.06,.94); } 75% { transform: translateY(-26px) rotate(0) scale(.95,1.08); } }
+  .dollwrap svg.shake { animation: shake .4s; }
+  .dollwrap svg.pop { animation: pop .35s ease-out; }
+  .stagebtns { display: flex; gap: 10px; padding: 6px 6px 12px; z-index: 2; flex-wrap: wrap; justify-content: center; }
+  .stagebtns .btn { font-size: 32px; min-width: 76px; min-height: 68px; padding: 6px 16px; }
+  .stagebtns .btn.done { font-size: 26px; }
+  .wardrobe { flex: 0 0 42%; display: flex; flex-direction: column; min-height: 0; padding: 10px; gap: 8px; }
+  .tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .tab { width: 64px; height: 64px; border-radius: 18px; border: 0; cursor: pointer; font-size: 32px; font: inherit; font-size: 32px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #fff, #e6ecfb); box-shadow: 0 5px 0 #b9c4dc, 0 8px 12px rgba(20,40,90,.2), inset 0 2px 0 #fff; transition: transform .1s; position: relative; }
+  .tab.on { background: linear-gradient(180deg, #ffe98a, #ffb703); box-shadow: 0 5px 0 #c47f00, 0 8px 12px rgba(20,40,90,.2), inset 0 2px 0 rgba(255,255,255,.7); transform: translateY(2px); }
+  .opts { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; padding: 6px 4px; align-content: start; }
+  .opt { aspect-ratio: 1; min-height: 88px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; }
+  .opt svg { width: 100%; height: 100%; overflow: hidden; filter: drop-shadow(0 3px 2px rgba(0,0,0,.2)); }
+  .opt .none { font-size: 40px; }
+  .spark { position: absolute; z-index: 20; pointer-events: none; font-size: 26px; animation: sp .9s ease-out forwards; }
+  @keyframes sp { 0% { transform: translate(0,0) scale(.4); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.3); opacity: 0; } }
+  .snap { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 15; }
+  .snap.on { animation: flash .5s ease-out; }
+  @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+  @media (orientation: portrait) {
+    .main { flex-direction: column; }
+    .stage { flex: 1 1 auto; }
+    .wardrobe { flex: 0 0 auto; height: 34%; padding: 0; }
+    .opts { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Vestir' });
+(function () {
+  var SKINS = [['#ffe3cf', '#f7cdae', '#d9a382'], ['#f9d6b4', '#e9b58d', '#c48f66'], ['#ecbd94', '#d49b6e', '#a8734a'], ['#cf956a', '#b3784d', '#8a5733'], ['#a86d47', '#8b5535', '#653c22'], ['#71472f', '#583524', '#3b2214']];
+  var VB = '-40 -50 380 580';
+  // ---- degradados compartidos ----
+  var defs = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); defs.setAttribute('width', '0'); defs.setAttribute('height', '0'); defs.style.position = 'absolute';
+  function lg(id, a, b, c) { return '<linearGradient id="' + id + '" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="' + a + '"/>' + (c ? '<stop offset=".55" stop-color="' + b + '"/><stop offset="1" stop-color="' + c + '"/>' : '<stop offset="1" stop-color="' + b + '"/>') + '</linearGradient>'; }
+  var G = { red: ['#ffa8a0', '#e63946', '#a4202c'], blue: ['#9ad8ff', '#2f95e8', '#1a63a8'], yel: ['#fff6b0', '#ffc61a', '#d69300'], pink: ['#ffc6dd', '#f0569a', '#b8306f'], pur: ['#d6c2ff', '#8f6cf5', '#5232b3'], green: ['#bff5a8', '#2cb67d', '#1b7d55'], white: ['#ffffff', '#eef2fa', '#c9d2e6'], teal: ['#b2f2ea', '#1fb2a6', '#137f76'], orange: ['#ffd9a8', '#ff8906', '#c2620a'], gold: ['#fff5b0', '#f2c230', '#b8860b'], black: ['#6b6f80', '#2e3040', '#12131a'], hair: ['#8b5a2b', '#5a3416', '#33200d'], brown: ['#d9a066', '#9c5f2e', '#5a3416'], denim: ['#8fb8ff', '#3c6fd6', '#254a99'] };
+  var d = '<defs>';
+  for (var k in G) d += lg('g' + k, G[k][0], G[k][1], G[k][2]);
+  SKINS.forEach(function (s, i) { d += '<radialGradient id="sk' + i + '" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="' + s[0] + '"/><stop offset=".55" stop-color="' + s[1] + '"/><stop offset="1" stop-color="' + s[2] + '"/></radialGradient>'; });
+  d += '<radialGradient id="rballoon" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffb3a7"/><stop offset=".5" stop-color="#e63946"/><stop offset="1" stop-color="#8f1a24"/></radialGradient>';
+  d += '<radialGradient id="rbun" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#a8703a"/><stop offset="1" stop-color="#3d240f"/></radialGradient>';
+  d += '<filter id="dsh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#4a1040" flood-opacity=".3"/></filter>';
+  d += '</defs>'; defs.innerHTML = d; document.body.appendChild(defs);
+
+  // ---- cuerpo ----
+  function body(sk) {
+    var S = 'url(#sk' + sk + ')', dk = SKINS[sk][2];
+    return '<g>' +
+      '<path d="M108 190 L 72 300" stroke="' + S + '" stroke-width="30" stroke-linecap="round"/><circle cx="70" cy="304" r="17" fill="' + S + '"/>' +
+      '<path d="M192 190 L 228 300" stroke="' + S + '" stroke-width="30" stroke-linecap="round"/><circle cx="230" cy="304" r="17" fill="' + S + '"/>' +
+      '<path d="M130 310 L 128 440" stroke="' + S + '" stroke-width="34" stroke-linecap="round"/><path d="M170 310 L 172 440" stroke="' + S + '" stroke-width="34" stroke-linecap="round"/>' +
+      '<ellipse cx="126" cy="452" rx="25" ry="13" fill="' + S + '"/><ellipse cx="174" cy="452" rx="25" ry="13" fill="' + S + '"/>' +
+      '<rect x="138" y="150" width="24" height="34" rx="9" fill="' + dk + '" opacity=".9"/>' +
+      '<path d="M100 178 Q 150 168 200 178 L 204 300 Q 150 318 96 300 Z" fill="' + S + '"/>' +
+      '<path d="M104 182 Q 150 172 196 182 L 198 298 Q 150 312 102 298 Z" fill="url(#gwhite)"/>' +
+      '<path d="M102 292 L 198 292 L 196 336 Q 150 344 104 336 Z" fill="url(#gpink)" opacity=".9"/>' +
+      '<circle cx="92" cy="110" r="13" fill="' + S + '"/><circle cx="208" cy="110" r="13" fill="' + S + '"/>' +
+      '<circle cx="150" cy="105" r="62" fill="' + S + '"/>' +
+      '<ellipse cx="130" cy="82" rx="26" ry="12" fill="rgba(255,255,255,.28)"/>' +
+      '<path d="M88 104 Q 86 36 150 36 Q 214 36 212 104 Q 200 64 150 62 Q 100 64 88 104 Z" fill="url(#ghair)"/>' +
+      '<path d="M110 60 Q 130 46 150 48" stroke="rgba(255,255,255,.35)" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="128" cy="104" rx="10" ry="12" fill="#fff"/><ellipse cx="172" cy="104" rx="10" ry="12" fill="#fff"/>' +
+      '<circle cx="129" cy="106" r="6" fill="#3b2a1a"/><circle cx="173" cy="106" r="6" fill="#3b2a1a"/><circle cx="127" cy="102" r="2.2" fill="#fff"/><circle cx="171" cy="102" r="2.2" fill="#fff"/>' +
+      '<path d="M116 88 Q 128 82 140 88 M160 88 Q 172 82 184 88" stroke="' + dk + '" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="M147 118 Q 150 124 154 118" stroke="' + dk + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M132 130 Q 150 148 168 130" stroke="#b83b5e" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="114" cy="124" r="9" fill="#ff8fb1" opacity=".55"/><circle cx="186" cy="124" r="9" fill="#ff8fb1" opacity=".55"/>' +
+      '</g>';
+  }
+  function sleeveShort(g) { return '<path d="M100 178 L 68 214 L 84 236 L 108 214 Z" fill="' + g + '"/><path d="M200 178 L 232 214 L 216 236 L 192 214 Z" fill="' + g + '"/>'; }
+  function sleeveLong(g, dk) { return '<path d="M106 188 L 74 292" stroke="' + g + '" stroke-width="38" stroke-linecap="round"/><path d="M194 188 L 226 292" stroke="' + g + '" stroke-width="38" stroke-linecap="round"/><path d="M84 280 L 66 292 M216 280 L 234 292" stroke="' + dk + '" stroke-width="10" stroke-linecap="round" opacity=".6"/>'; }
+  function torso(g, bottom) { return '<path d="M100 178 Q 150 168 200 178 L 204 ' + (bottom || 300) + ' Q 150 ' + ((bottom || 300) + 14) + ' 96 ' + (bottom || 300) + ' Z" fill="' + g + '"/><path d="M110 186 Q 150 178 190 186 L 190 202 Q 150 194 110 202 Z" fill="rgba(255,255,255,.28)"/>'; }
+  var ITEMS = {
+    top: [
+      { id: 'camiseta', n: 'Camiseta', vb: '50 160 200 160', svg: sleeveShort('url(#gblue)') + torso('url(#gblue)') + '<path d="M150 214 l7 14 15 2 -11 10 3 15 -14 -8 -14 8 3 -15 -11 -10 15 -2 Z" fill="#fff6b0"/>' },
+      { id: 'vestido', n: 'Vestido', vb: '40 160 220 260', dress: true, svg: sleeveShort('url(#gred)') + '<path d="M100 178 Q 150 168 200 178 L 206 270 L 236 404 Q 150 424 64 404 L 94 270 Z" fill="url(#gred)"/><path d="M110 186 Q 150 178 190 186 L 190 202 Q 150 194 110 202 Z" fill="rgba(255,255,255,.28)"/><g fill="#fff" opacity=".85"><circle cx="120" cy="320" r="6"/><circle cx="160" cy="340" r="6"/><circle cx="200" cy="330" r="6"/><circle cx="140" cy="380" r="6"/><circle cx="185" cy="385" r="6"/><circle cx="100" cy="370" r="6"/></g><path d="M96 268 L 204 268" stroke="#fff" stroke-width="10" stroke-linecap="round"/>' },
+      { id: 'sueter', n: 'Suéter', vb: '40 160 220 160', svg: sleeveLong('url(#ggreen)', '#1b7d55') + torso('url(#ggreen)', 310) + '<path d="M104 232 Q 150 244 196 232 M104 256 Q 150 268 196 256 M104 280 Q 150 292 196 280" stroke="rgba(0,0,0,.14)" stroke-width="6" fill="none"/><path d="M128 178 Q 150 196 172 178" stroke="#1b7d55" stroke-width="8" fill="none" stroke-linecap="round"/>' },
+      { id: 'princesa', n: 'Princesa', vb: '20 160 260 300', dress: true, svg: '<path d="M100 178 Q 150 168 200 178 L 210 266 L 262 452 Q 150 476 38 452 L 90 266 Z" fill="url(#gpink)"/><path d="M92 300 Q 150 320 208 300 M74 370 Q 150 396 226 370 M56 430 Q 150 458 244 430" stroke="rgba(255,255,255,.55)" stroke-width="7" fill="none"/><path d="M110 186 Q 150 178 190 186 L 190 210 Q 150 202 110 210 Z" fill="rgba(255,255,255,.35)"/><path d="M96 266 L 204 266" stroke="url(#ggold)" stroke-width="10" stroke-linecap="round"/><path d="M100 178 L 78 206 L 96 220 Z M200 178 L 222 206 L 204 220 Z" fill="url(#gpink)"/><g fill="#fff"><path d="M130 330 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/><path d="M190 390 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/><path d="M110 420 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/></g>' },
+      { id: 'heroe', n: 'Súper', vb: '30 160 240 200', back: '<path d="M104 184 L 40 400 Q 150 380 260 400 L 196 184 Z" fill="url(#gred)"/>', svg: sleeveLong('url(#gblue)', '#1a63a8') + torso('url(#gblue)', 304) + '<circle cx="150" cy="240" r="24" fill="url(#gred)"/><path d="M150 222 l6 12 13 2 -9 9 2 13 -12 -6 -12 6 2 -13 -9 -9 13 -2 Z" fill="#fff6b0"/><path d="M96 296 L 204 296" stroke="url(#gyel)" stroke-width="12" stroke-linecap="round"/>' },
+      { id: 'impermeable', n: 'Impermeable', vb: '40 150 220 240', back: '<path d="M96 100 Q 150 20 204 100 L 208 200 L 92 200 Z" fill="url(#gyel)"/>', svg: sleeveLong('url(#gyel)', '#d69300') + '<path d="M100 178 Q 150 168 200 178 L 212 366 Q 150 380 88 366 Z" fill="url(#gyel)"/><path d="M110 186 Q 150 178 190 186 L 190 206 Q 150 198 110 206 Z" fill="rgba(255,255,255,.35)"/><path d="M150 190 L 150 366" stroke="#d69300" stroke-width="3"/><g fill="#1f2f6b"><circle cx="150" cy="230" r="6"/><circle cx="150" cy="270" r="6"/><circle cx="150" cy="310" r="6"/></g>' }
+    ],
+    bottom: [
+      { id: 'pantalon', n: 'Pantalón', vb: '70 280 160 170', svg: '<path d="M102 292 L 198 292 L 202 432 L 156 432 L 150 340 L 144 432 L 98 432 Z" fill="url(#gdenim)"/><path d="M104 300 L 196 300" stroke="#254a99" stroke-width="5"/><path d="M112 320 L 118 420 M188 320 L 182 420" stroke="rgba(255,255,255,.3)" stroke-width="4" fill="none"/>' },
+      { id: 'falda', n: 'Falda', vb: '60 280 180 120', svg: '<path d="M100 292 L 200 292 L 224 372 Q 150 390 76 372 Z" fill="url(#gpur)"/><path d="M120 296 L 112 376 M150 296 L 150 384 M180 296 L 188 376" stroke="rgba(0,0,0,.15)" stroke-width="5"/><path d="M102 300 L 198 300" stroke="#fff" stroke-width="6" opacity=".6"/>' },
+      { id: 'short', n: 'Short', vb: '70 280 160 100', svg: '<path d="M102 292 L 198 292 L 200 356 L 156 356 L 150 330 L 144 356 L 100 356 Z" fill="url(#gteal)"/><path d="M104 300 L 196 300" stroke="#137f76" stroke-width="5"/><circle cx="150" cy="306" r="4" fill="#fff"/>' },
+      { id: 'tutu', n: 'Tutú', vb: '40 280 220 120', svg: '<ellipse cx="150" cy="352" rx="94" ry="26" fill="#ff8fb1" opacity=".55"/><ellipse cx="150" cy="340" rx="86" ry="24" fill="#ffb3d1" opacity=".7"/><path d="M100 292 L 200 292 L 214 330 Q 150 348 86 330 Z" fill="url(#gpink)"/><ellipse cx="150" cy="328" rx="72" ry="16" fill="#fff" opacity=".45"/>' },
+      { id: 'nada', n: 'Nada', vb: '', none: true, svg: '' }
+    ],
+    shoes: [
+      { id: 'tenis', n: 'Tenis', vb: '80 420 140 60', svg: '<ellipse cx="124" cy="454" rx="28" ry="15" fill="url(#gwhite)"/><ellipse cx="176" cy="454" rx="28" ry="15" fill="url(#gwhite)"/><path d="M100 452 Q 118 436 136 452 M152 452 Q 170 436 188 452" stroke="url(#gblue)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M98 460 L 150 460 M150 460 L 202 460" stroke="#c9d2e6" stroke-width="5"/>' },
+      { id: 'botas', n: 'Botas', vb: '80 360 140 120', svg: '<path d="M108 376 L 150 376 L 150 452 Q 152 468 130 466 L 104 466 Q 98 460 104 452 Z" fill="url(#gyel)"/><path d="M152 376 L 194 376 L 196 452 Q 202 460 196 466 L 170 466 Q 150 468 152 452 Z" fill="url(#gyel)"/><path d="M110 380 L 148 380 M154 380 L 192 380" stroke="#fff" stroke-width="6" opacity=".6"/><path d="M104 460 L 148 460 M154 460 L 198 460" stroke="#d69300" stroke-width="5"/>' },
+      { id: 'ballet', n: 'Ballet', vb: '80 360 140 120', svg: '<path d="M126 436 L 112 400 M126 436 L 140 400 M174 436 L 160 400 M174 436 L 188 400" stroke="#f0569a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="124" cy="454" rx="27" ry="13" fill="url(#gpink)"/><ellipse cx="176" cy="454" rx="27" ry="13" fill="url(#gpink)"/><circle cx="118" cy="446" r="5" fill="#fff"/><circle cx="170" cy="446" r="5" fill="#fff"/>' },
+      { id: 'sandalias', n: 'Sandalias', vb: '80 420 140 60', svg: '<ellipse cx="124" cy="458" rx="27" ry="10" fill="url(#gbrown)"/><ellipse cx="176" cy="458" rx="27" ry="10" fill="url(#gbrown)"/><path d="M104 452 L 144 448 M108 446 L 140 456 M156 452 L 196 448 M160 446 L 192 456" stroke="#9c5f2e" stroke-width="4" stroke-linecap="round"/>' },
+      { id: 'rojos', n: 'Zapatos', vb: '80 420 140 60', svg: '<ellipse cx="124" cy="455" rx="28" ry="14" fill="url(#gred)"/><ellipse cx="176" cy="455" rx="28" ry="14" fill="url(#gred)"/><path d="M104 446 L 144 446 M156 446 L 196 446" stroke="#a4202c" stroke-width="5" stroke-linecap="round"/><circle cx="106" cy="444" r="4" fill="#fff6b0"/><circle cx="194" cy="444" r="4" fill="#fff6b0"/><ellipse cx="112" cy="452" rx="8" ry="3" fill="rgba(255,255,255,.4)"/><ellipse cx="164" cy="452" rx="8" ry="3" fill="rgba(255,255,255,.4)"/>' }
+    ],
+    hair: [
+      { id: 'corto', n: 'Corto', vb: '60 20 180 140', svg: '<path d="M88 104 Q 80 130 96 150 Q 90 120 100 100 Z M212 104 Q 220 130 204 150 Q 210 120 200 100 Z" fill="url(#ghair)"/>' },
+      { id: 'coletas', n: 'Coletas', vb: '30 20 240 180', back: '<circle cx="78" cy="150" r="30" fill="url(#ghair)"/><circle cx="222" cy="150" r="30" fill="url(#ghair)"/>', svg: '<path d="M92 112 Q 80 122 84 140 M208 112 Q 220 122 216 140" stroke="#5a3416" stroke-width="14" stroke-linecap="round"/><circle cx="86" cy="126" r="9" fill="url(#gred)"/><circle cx="214" cy="126" r="9" fill="url(#gred)"/>' },
+      { id: 'largo', n: 'Largo', vb: '50 20 200 260', back: '<path d="M90 90 Q 66 180 92 270 L 208 270 Q 234 180 210 90 Z" fill="url(#ghair)"/><path d="M104 130 Q 96 200 104 250" stroke="rgba(255,255,255,.2)" stroke-width="6" fill="none"/>', svg: '' },
+      { id: 'chongo', n: 'Chongo', vb: '80 -10 140 120', svg: '<circle cx="150" cy="40" r="24" fill="url(#rbun)"/><ellipse cx="142" cy="30" rx="9" ry="5" fill="rgba(255,255,255,.3)"/><ellipse cx="128" cy="56" rx="12" ry="7" fill="url(#gpink)" transform="rotate(-20 128 56)"/><ellipse cx="172" cy="56" rx="12" ry="7" fill="url(#gpink)" transform="rotate(20 172 56)"/><circle cx="150" cy="58" r="6" fill="#fff"/>' },
+      { id: 'corona', n: 'Corona', vb: '80 0 140 100', svg: '<path d="M104 72 L 112 26 L 134 54 L 150 18 L 166 54 L 188 26 L 196 72 Z" fill="url(#ggold)" stroke="#b8860b" stroke-width="2" stroke-linejoin="round"/><rect x="104" y="66" width="92" height="12" rx="4" fill="url(#ggold)"/><circle cx="150" cy="56" r="6" fill="#e63946"/><circle cx="122" cy="62" r="4" fill="#2f95e8"/><circle cx="178" cy="62" r="4" fill="#2cb67d"/><circle cx="112" cy="26" r="4" fill="#fff"/><circle cx="150" cy="18" r="4" fill="#fff"/><circle cx="188" cy="26" r="4" fill="#fff"/>' },
+      { id: 'gorra', n: 'Gorra', vb: '60 0 200 110', svg: '<path d="M88 92 Q 150 8 212 92 Z" fill="url(#gred)"/><path d="M150 92 L 246 96 Q 244 112 150 106 Z" fill="url(#gred)"/><path d="M150 14 L 150 92" stroke="#a4202c" stroke-width="3"/><circle cx="150" cy="14" r="6" fill="#a4202c"/><path d="M96 88 Q 150 78 204 88" stroke="rgba(255,255,255,.35)" stroke-width="5" fill="none"/>' },
+      { id: 'mono', n: 'Moño', vb: '150 0 110 100', svg: '<ellipse cx="184" cy="48" rx="20" ry="14" fill="url(#gpink)" transform="rotate(-30 184 48)"/><ellipse cx="228" cy="48" rx="20" ry="14" fill="url(#gpink)" transform="rotate(30 228 48)"/><path d="M196 66 L 190 90 M216 66 L 222 90" stroke="#f0569a" stroke-width="8" stroke-linecap="round"/><circle cx="206" cy="50" r="9" fill="#fff"/>' },
+      { id: 'mago', n: 'Mago', vb: '60 -50 180 140', svg: '<path d="M150 -42 L 214 66 L 86 66 Z" fill="url(#gpur)"/><ellipse cx="150" cy="68" rx="76" ry="14" fill="url(#gpur)"/><ellipse cx="150" cy="66" rx="60" ry="8" fill="#5232b3"/><g fill="#fff6b0"><path d="M150 -10 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/><path d="M128 30 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/><path d="M172 34 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z"/></g>' }
+    ],
+    acc: [
+      { id: 'lentes', n: 'Lentes', vb: '90 70 120 60', svg: '<rect x="108" y="90" width="38" height="28" rx="12" fill="url(#gblack)"/><rect x="154" y="90" width="38" height="28" rx="12" fill="url(#gblack)"/><path d="M146 100 L 154 100" stroke="#12131a" stroke-width="5"/><path d="M108 100 L 92 96 M192 100 L 208 96" stroke="#12131a" stroke-width="5" stroke-linecap="round"/><path d="M116 96 L 130 96 M162 96 L 176 96" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round"/>' },
+      { id: 'varita', n: 'Varita', vb: '200 190 100 140', svg: '<path d="M226 316 L 262 236" stroke="url(#gpur)" stroke-width="10" stroke-linecap="round"/><path d="M266 220 l5 12 13 1 -10 9 3 13 -11 -7 -11 7 3 -13 -10 -9 13 -1 Z" fill="url(#gyel)"/><circle cx="288" cy="236" r="3" fill="#fff"/><circle cx="252" cy="212" r="3" fill="#fff"/>' },
+      { id: 'mochila', n: 'Mochila', vb: '90 160 120 160', back: '<rect x="98" y="192" width="104" height="120" rx="26" fill="url(#gpink)"/>', svg: '<path d="M112 184 L 112 280 M188 184 L 188 280" stroke="url(#gpink)" stroke-width="14" stroke-linecap="round"/><rect x="104" y="196" width="18" height="90" rx="9" fill="rgba(255,255,255,.3)"/>' },
+      { id: 'paraguas', n: 'Paraguas', vb: '-40 -50 220 220', svg: '<path d="M60 -20 L 60 300" stroke="url(#gblack)" stroke-width="8" stroke-linecap="round"/><path d="M-32 60 Q 60 -50 152 60 Q 132 44 112 60 Q 92 44 72 60 Q 52 44 32 60 Q 12 44 -8 60 Q -20 48 -32 60 Z" fill="url(#gred)"/><path d="M-8 60 Q 30 -20 60 -38 Q 90 -20 112 60" fill="rgba(255,255,255,.55)"/><path d="M60 -44 L 60 -30" stroke="#12131a" stroke-width="5" stroke-linecap="round"/>' },
+      { id: 'globo', n: 'Globo', vb: '220 0 100 130', svg: '<path d="M232 300 Q 268 200 262 100" stroke="#fff" stroke-width="3" fill="none"/><ellipse cx="262" cy="60" rx="36" ry="44" fill="url(#rballoon)"/><path d="M256 104 L 268 104 L 262 112 Z" fill="#8f1a24"/><ellipse cx="248" cy="40" rx="8" ry="14" fill="rgba(255,255,255,.5)" transform="rotate(-20 248 40)"/>' },
+      { id: 'collar', n: 'Collar', vb: '100 150 100 70', svg: '<path d="M118 170 Q 150 210 182 170" stroke="url(#ggold)" stroke-width="6" fill="none" stroke-linecap="round"/><g fill="#fff"><circle cx="126" cy="180" r="4"/><circle cx="138" cy="190" r="4"/><circle cx="162" cy="190" r="4"/><circle cx="174" cy="180" r="4"/></g><path d="M150 208 C 142 196 132 204 142 212 L 150 220 L 158 212 C 168 204 158 196 150 208 Z" fill="url(#gred)"/>' }
+    ]
+  };
+  var CATS = [['top', '👕'], ['bottom', '👖'], ['shoes', '👟'], ['hair', '🎩'], ['acc', '🎒']];
+  var MISSIONS = [
+    { em: '🌧️', txt: 'lluvia', say: 'para la lluvia', groups: [['top', 'impermeable'], ['shoes', 'botas'], ['acc', 'paraguas']] },
+    { em: '☀️', txt: 'la playa', say: 'para la playa', groups: [['top', 'camiseta'], ['bottom', 'short'], ['acc', 'lentes']] },
+    { em: '🎉', txt: 'la fiesta', say: 'para la fiesta', groups: [['top', 'vestido', 'princesa'], ['hair', 'corona', 'mono'], ['acc', 'collar', 'varita']] },
+    { em: '❄️', txt: 'el frío', say: 'para el frío', groups: [['top', 'sueter'], ['shoes', 'botas'], ['hair', 'gorra']] }
+  ];
+  function find(cat, id) { for (var i = 0; i < ITEMS[cat].length; i++) if (ITEMS[cat][i].id === id) return ITEMS[cat][i]; return null; }
+  var nivel = 1, skin = 1, outfit = { top: 'camiseta', bottom: 'pantalon', shoes: 'tenis', hair: 'corto', acc: null }, cat = 'top';
+  var mission = null, target = null, peekTimer = null, running = false;
+
+  function dollSVG(o, sk, cls) {
+    var back = '', front = '';
+    ['hair', 'acc', 'top'].forEach(function (c) { var it = o[c] && find(c, o[c]); if (it && it.back) back += it.back; });
+    var topIt = o.top && find('top', o.top);
+    var order = ['bottom', 'shoes', 'top', 'hair', 'acc'];
+    order.forEach(function (c) {
+      var it = o[c] && find(c, o[c]); if (!it) return;
+      if (c === 'bottom' && topIt && topIt.dress) return;
+      front += it.svg;
+    });
+    return '<svg viewBox="' + VB + '" class="' + (cls || '') + '"><g filter="url(#dsh)">' + back + body(sk) + front + '</g></svg>';
+  }
+  function miniSVG(cat, it) {
+    if (it.none) return '<span class="none emoji">🚫</span>';
+    var parts = (it.back || '') + it.svg;
+    return '<svg viewBox="' + it.vb + '">' + parts + '</svg>';
+  }
+
+  // ---------- DOM ----------
+  game.innerHTML = '';
+  var hud = document.createElement('div'); hud.className = 'hud';
+  var badgeHolder = document.createElement('span'); var mid = document.createElement('div'); mid.className = 'mid';
+  var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
+  hud.appendChild(badgeHolder); hud.appendChild(mid); hud.appendChild(lvBtn);
+  var main = document.createElement('div'); main.className = 'main';
+  var stage = document.createElement('div'); stage.className = 'stage';
+  stage.innerHTML = '<div class="floor"></div><div class="lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="skins"></div><div class="dollwrap"></div><div class="stagebtns"></div><div class="snap"></div>';
+  var wardrobe = document.createElement('div'); wardrobe.className = 'wardrobe panel';
+  wardrobe.innerHTML = '<div class="tabs"></div><div class="opts"></div>';
+  main.appendChild(stage); main.appendChild(wardrobe);
+  game.appendChild(hud); game.appendChild(main);
+  var skinsEl = stage.querySelector('.skins'), dollWrap = stage.querySelector('.dollwrap'), btns = stage.querySelector('.stagebtns'), snap = stage.querySelector('.snap');
+  var tabsEl = wardrobe.querySelector('.tabs'), optsEl = wardrobe.querySelector('.opts');
+  lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; pickLevel(); });
+
+  SKINS.forEach(function (s, i) {
+    var b = document.createElement('div'); b.className = 'skin'; b.style.background = 'radial-gradient(circle at 38% 30%, ' + s[0] + ', ' + s[1] + ' 55%, ' + s[2] + ')';
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); skin = i; renderSkins(); renderDoll(true); });
+    skinsEl.appendChild(b);
+  });
+  function renderSkins() { var els = skinsEl.children; for (var i = 0; i < els.length; i++) els[i].className = 'skin' + (i === skin ? ' on' : ''); }
+
+  CATS.forEach(function (c) {
+    var t = document.createElement('button'); t.className = 'tab'; t.textContent = c[1]; t.setAttribute('aria-label', c[0]);
+    t.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); cat = c[0]; renderTabs(); renderOpts(); });
+    tabsEl.appendChild(t);
+  });
+  function renderTabs() { var els = tabsEl.children; for (var i = 0; i < els.length; i++) els[i].className = 'tab' + (CATS[i][0] === cat ? ' on' : ''); }
+  function renderOpts() {
+    optsEl.innerHTML = '';
+    ITEMS[cat].forEach(function (it) {
+      var o = document.createElement('div'); o.className = 'card opt' + (outfit[cat] === it.id ? ' ok' : ''); o.setAttribute('data-id', it.id); o.innerHTML = miniSVG(cat, it);
+      o.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); KidsGame.sound.pop();
+        if (cat === 'acc' && outfit.acc === it.id) outfit.acc = null; else outfit[cat] = it.none ? 'nada' : it.id;
+        if (cat === 'top' && it.dress) outfit.bottom = 'nada';
+        renderOpts(); renderDoll(true); sparkleAt(o);
+      });
+      optsEl.appendChild(o);
+    });
+  }
+  function renderDoll(pop) {
+    dollWrap.innerHTML = dollSVG(outfit, skin, pop ? 'pop' : '');
+  }
+  function sparkleAt(el) {
+    var r = el.getBoundingClientRect(), g = game.getBoundingClientRect();
+    for (var i = 0; i < 6; i++) {
+      var s = document.createElement('div'); s.className = 'spark'; s.textContent = KidsGame.pick(['✨', '⭐', '💖']);
+      s.style.left = (r.left - g.left + r.width / 2) + 'px'; s.style.top = (r.top - g.top + r.height / 2) + 'px';
+      var a = Math.random() * Math.PI * 2; s.style.setProperty('--dx', Math.cos(a) * 70 + 'px'); s.style.setProperty('--dy', Math.sin(a) * 70 + 'px');
+      game.appendChild(s); (function (e) { setTimeout(function () { e.remove(); }, 900); })(s);
+    }
+  }
+  function dollSparkles() {
+    var r = dollWrap.getBoundingClientRect(), g = game.getBoundingClientRect();
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement('div'); s.className = 'spark'; s.textContent = KidsGame.pick(['✨', '⭐', '💖', '💫']);
+      s.style.left = (r.left - g.left + r.width * (0.2 + Math.random() * 0.6)) + 'px'; s.style.top = (r.top - g.top + r.height * (0.1 + Math.random() * 0.8)) + 'px';
+      var a = Math.random() * Math.PI * 2; s.style.setProperty('--dx', Math.cos(a) * 90 + 'px'); s.style.setProperty('--dy', Math.sin(a) * 90 + 'px');
+      game.appendChild(s); (function (e) { setTimeout(function () { e.remove(); }, 900); })(s);
+    }
+  }
+
+  // botones del escenario
+  function sbtn(id, txt, cls, fn) { var b = document.createElement('button'); b.id = id; b.className = 'btn ' + cls; b.innerHTML = txt; b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); if (!running) return; KidsGame.sound.tap(); fn(); }); btns.appendChild(b); return b; }
+  sbtn('btn-random', '🎲', 'purple', randomOutfit);
+  sbtn('btn-dance', '💃', 'blue', dance);
+  var doneBtn = sbtn('btn-done', '📷 ¡Listo!', 'green done', done);
+
+  function randomOutfit(noAccNull) {
+    var o = {};
+    o.top = KidsGame.pick(ITEMS.top).id;
+    var dress = find('top', o.top).dress;
+    o.bottom = dress ? 'nada' : KidsGame.pick(ITEMS.bottom.filter(function (b) { return !b.none; })).id;
+    o.shoes = KidsGame.pick(ITEMS.shoes).id; o.hair = KidsGame.pick(ITEMS.hair).id; o.acc = KidsGame.pick(ITEMS.acc).id;
+    if (noAccNull === true) return o;
+    outfit = o; renderOpts(); renderDoll(true); dollSparkles(); KidsGame.sound.pop();
+  }
+  var dancing = false;
+  function dance() {
+    if (dancing) return; dancing = true;
+    var svg = dollWrap.querySelector('svg'); if (svg) svg.classList.add('dance');
+    [523, 659, 784, 659, 523, 659, 784, 1047].forEach(function (f, i) { setTimeout(function () { KidsGame.sound.note(f); }, i * 220); });
+    dollSparkles();
+    setTimeout(function () { dancing = false; var s = dollWrap.querySelector('svg'); if (s) s.classList.remove('dance'); }, 1900);
+  }
+  function fail(missing) {
+    KidsGame.sound.wrong();
+    var svg = dollWrap.querySelector('svg'); if (svg) { svg.classList.remove('shake'); void svg.offsetWidth; svg.classList.add('shake'); }
+    var m = mid.querySelector('.mission, .target'); if (m) { m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); }
+    KidsGame.toast('Falta algo… 🤔'); KidsGame.say('Falta algo');
+  }
+  function done() {
+    if (nivel === 2) {
+      var okCount = 0, icons = mid.querySelectorAll('.icons svg');
+      mission.groups.forEach(function (g, i) { var ok = g.slice(1).indexOf(outfit[g[0]]) >= 0; if (ok) okCount++; if (icons[i]) icons[i].classList.toggle('miss', !ok); });
+      if (okCount < Math.max(1, mission.groups.length - 1)) { fail(); return; }
+    } else if (nivel === 3) {
+      var same = true; ['top', 'bottom', 'shoes', 'hair', 'acc'].forEach(function (c) { var a = outfit[c] || 'nada', b = target[c] || 'nada'; if (find('top', outfit.top).dress && c === 'bottom') a = 'nada'; if (find('top', target.top).dress && c === 'bottom') b = 'nada'; if (a !== b) same = false; });
+      if (!same) { fail(); return; }
+    }
+    snap.classList.remove('on'); void snap.offsetWidth; snap.classList.add('on');
+    KidsGame.sound.pop(); KidsGame.addStar(); dollSparkles(); KidsGame.vibrate(30);
+    running = false;
+    setTimeout(function () {
+      if (nivel === 1) KidsGame.celebrate({ msg: '¡Qué linda!', sub: '¡Ya está lista!', onAgain: function () { running = true; }, onNext: function () { running = true; randomOutfit(); } });
+      else if (nivel === 2) KidsGame.celebrate({ msg: '¡Perfecta!', sub: mission.em + ' Lista para ' + mission.txt, onAgain: function () { newMission(mission); }, onNext: function () { newMission(); } });
+      else KidsGame.celebrate({ msg: '¡Igualita!', sub: '👀 ¡Buena memoria!', onAgain: function () { newTarget(target); }, onNext: function () { newTarget(); } });
+    }, 700);
+  }
+
+  // ---------- niveles ----------
+  function newMission(same) {
+    running = true;
+    var others = MISSIONS.filter(function (m) { return m !== mission; });
+    mission = same || KidsGame.pick(others);
+    outfit = { top: 'camiseta', bottom: 'pantalon', shoes: 'tenis', hair: 'corto', acc: null }; cat = 'top'; renderTabs(); renderOpts(); renderDoll(true);
+    var icons = mission.groups.map(function (g) { var it = find(g[0], g[1]); return '<svg viewBox="' + it.vb + '">' + (it.back || '') + it.svg + '</svg>'; }).join('');
+    mid.innerHTML = '<div class="mission panel"><span class="em emoji">' + mission.em + '</span><div class="txt">Vístela para<br><b>' + mission.txt + '</b></div><div class="icons">' + icons + '</div></div>';
+    doneBtn.innerHTML = '✅ ¡Listo!';
+    KidsGame.say('Vístela ' + mission.say);
+  }
+  function newTarget(same) {
+    running = true; clearTimeout(peekTimer);
+    target = same || randomOutfit(true);
+    outfit = { top: 'camiseta', bottom: 'pantalon', shoes: 'tenis', hair: 'corto', acc: null }; cat = 'top'; renderTabs(); renderOpts(); renderDoll(true);
+    mid.innerHTML = '<div class="target panel"><div class="card" data-t="' + ['top','bottom','shoes','hair','acc'].map(function (c) { return target[c] || 'nada'; }).join(',') + '">' + dollSVG(target, skin) + '<div class="cover">👀</div></div><button class="btn round yellow peek" aria-label="Ver">👀</button></div>';
+    var card = mid.querySelector('.card'), peek = mid.querySelector('.peek');
+    peekTimer = setTimeout(function () { card.classList.add('hidden'); }, 6000);
+    peek.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); card.classList.remove('hidden'); clearTimeout(peekTimer); peekTimer = setTimeout(function () { card.classList.add('hidden'); }, 2500); });
+    doneBtn.innerHTML = '✅ ¡Listo!';
+    KidsGame.say('Vístela igual que la tarjeta');
+  }
+  function startLevel() {
+    running = true; mission = null; target = null; clearTimeout(peekTimer);
+    if (nivel === 1) { mid.innerHTML = '<div class="ttl">¡Vístela como quieras!</div>'; doneBtn.innerHTML = '📷 ¡Listo!'; renderTabs(); renderOpts(); renderDoll(true); KidsGame.say('Vístela como quieras'); }
+    else if (nivel === 2) newMission();
+    else newTarget();
+  }
+  function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
+  function pickLevel() { KidsGame.levelPicker({ onPick: function (n) { nivel = n; setBadge(); startLevel(); } }); }
+  renderSkins(); renderTabs(); renderOpts(); renderDoll(false); setBadge(); pickLevel();
+})();
+</script>
+</body>
+</html>
