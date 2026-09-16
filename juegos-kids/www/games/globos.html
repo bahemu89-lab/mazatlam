@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Globos</title>
+<style>
+  .game { background: linear-gradient(#bde9ff, #eefaff 70%, #d8f3dc); touch-action: none; }
+  .hud {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none;
+    display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px;
+  }
+  .hud > * { pointer-events: auto; }
+  .goal {
+    display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 40px;
+    padding: 6px 16px 6px 8px; box-shadow: 0 5px 0 rgba(0,0,0,.12); font-size: 22px; min-height: 64px;
+  }
+  .goal .dot { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 0 3px rgba(0,0,0,.15); }
+  .goal .dot.any { background: conic-gradient(#e63946, #ffb703, #2cb67d, #3da9fc, #7f5af0, #e63946); }
+  .goal .txt { white-space: nowrap; }
+  .prog { display: flex; gap: 5px; }
+  .prog i { width: 14px; height: 14px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; }
+  .prog i.on { background: #ffb703; box-shadow: 0 0 0 2px #fff; }
+  .modebtn { font-size: 30px; }
+  .balloon {
+    position: absolute; left: 0; top: 0; width: 96px; height: 150px; cursor: pointer;
+    will-change: transform; touch-action: none;
+  }
+  .balloon svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .balloon.shake { animation: bshake .35s; }
+  @keyframes bshake { 0%,100%{margin-left:0} 25%{margin-left:-10px} 75%{margin-left:10px} }
+  .balloon.popped svg { animation: bpop .28s ease-out forwards; }
+  @keyframes bpop { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.35);opacity:.9} 100%{transform:scale(1.8);opacity:0} }
+  .bit { position: absolute; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; animation: bit .6s ease-out forwards; }
+  @keyframes bit { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  .cloud { position: absolute; font-size: 60px; opacity: .8; pointer-events: none; }
+  .msg {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    background: #fff; border-radius: 30px; padding: 16px 28px; font-size: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.2); display: flex; align-items: center; gap: 14px;
+    z-index: 15; pointer-events: none; animation: pop .4s ease-out;
+  }
+  .msg .dot { width: 60px; height: 60px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Globos' });
+(function () {
+  var COLORS = [
+    { n: 'ROJOS',     say: 'rojos',     c: '#e63946', d: '#b5232e' },
+    { n: 'AZULES',    say: 'azules',    c: '#3da9fc', d: '#1d7fcc' },
+    { n: 'VERDES',    say: 'verdes',    c: '#2cb67d', d: '#1e8a5e' },
+    { n: 'AMARILLOS', say: 'amarillos', c: '#ffb703', d: '#d69600' },
+    { n: 'MORADOS',   say: 'morados',   c: '#7f5af0', d: '#5a3ac4' },
+    { n: 'ROSAS',     say: 'rosas',     c: '#f582ae', d: '#d2568a' }
+  ];
+  var mode = 'free', target = null, balloons = [], score = 0, need = 15, speedMul = 1, running = true;
+  var lastSpawn = 0, lastT = 0, colorRounds = 0;
+
+  game.innerHTML = '<span class="cloud" style="left:8%;top:12%">☁️</span><span class="cloud" style="right:10%;top:30%;font-size:44px">☁️</span>';
+  var hud = document.createElement('div'); hud.className = 'hud';
+  var goal = document.createElement('div'); goal.className = 'goal';
+  var prog = document.createElement('div'); prog.className = 'prog';
+  var modeBtn = document.createElement('button'); modeBtn.className = 'btn round purple modebtn'; modeBtn.textContent = '🎯';
+  modeBtn.setAttribute('aria-label', 'Modo color');
+  hud.appendChild(goal); hud.appendChild(prog); hud.appendChild(modeBtn);
+  game.appendChild(hud);
+  modeBtn.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
+    if (mode === 'free') startColorRound(); else startFree();
+  });
+
+  function renderHud() {
+    if (mode === 'free') {
+      goal.innerHTML = '<span class="dot any"></span><span class="txt">¡Toca los globos!</span>';
+    } else {
+      goal.innerHTML = '<span class="dot" style="background:' + target.c + '"></span><span class="txt">Toca los <b>' + target.n + '</b></span>';
+    }
+    prog.innerHTML = '';
+    for (var i = 0; i < need; i++) { var d = document.createElement('i'); if (i < score) d.className = 'on'; prog.appendChild(d); }
+  }
+
+  function showMsg(html) {
+    var m = document.createElement('div'); m.className = 'msg'; m.innerHTML = html;
+    game.appendChild(m); setTimeout(function () { m.remove(); }, 1600);
+  }
+
+  function clearBalloons() { balloons.forEach(function (b) { b.el.remove(); }); balloons = []; }
+
+  function startFree() {
+    mode = 'free'; target = null; score = 0; need = 15; running = true;
+    clearBalloons(); renderHud();
+    showMsg('<span class="emoji">🎈</span> ¡Toca los globos!');
+    KidsGame.say('Toca los globos');
+  }
+  function startColorRound(sameColor) {
+    mode = 'color'; score = 0; need = 10; running = true;
+    if (!sameColor || !target) {
+      var others = COLORS.filter(function (c) { return c !== target; });
+      target = KidsGame.pick(others);
+    }
+    clearBalloons(); renderHud();
+    showMsg('Toca los <span class="dot" style="background:' + target.c + '"></span>');
+    KidsGame.say('Toca los globos ' + target.say);
+  }
+
+  function balloonSVG(col) {
+    return '<svg viewBox="0 0 96 150">' +
+      '<path d="M48 110 Q 40 130 50 150" stroke="#555" stroke-width="2" fill="none"/>' +
+      '<polygon points="42,110 54,110 48,102" fill="' + col.d + '"/>' +
+      '<ellipse cx="48" cy="55" rx="40" ry="50" fill="' + col.c + '" stroke="' + col.d + '" stroke-width="2"/>' +
+      '<ellipse cx="32" cy="32" rx="9" ry="16" fill="rgba(255,255,255,.45)" transform="rotate(-20 32 32)"/>' +
+      '</svg>';
+  }
+
+  function spawn() {
+    var col;
+    if (mode === 'color' && Math.random() < 0.45) col = target;
+    else col = KidsGame.pick(COLORS);
+    var el = document.createElement('div');
+    el.className = 'balloon';
+    el.innerHTML = balloonSVG(col);
+    var W = game.clientWidth, H = game.clientHeight;
+    var b = {
+      el: el, col: col,
+      fx: 0.06 + Math.random() * 0.88, // fracción del ancho
+      y: H + 20,
+      vy: (38 + Math.random() * 30) * speedMul, // px/s
+      phase: Math.random() * Math.PI * 2, amp: 10 + Math.random() * 14,
+      dead: false
+    };
+    el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); hit(b, ev); });
+    game.appendChild(el);
+    balloons.push(b);
+    place(b, 0);
+  }
+  function place(b, t) {
+    var W = game.clientWidth;
+    var x = b.fx * (W - 96) + Math.sin(t / 900 + b.phase) * b.amp;
+    b.el.style.transform = 'translate(' + x + 'px,' + b.y + 'px)';
+  }
+
+  function burst(x, y, color) {
+    for (var i = 0; i < 10; i++) {
+      var d = document.createElement('div'); d.className = 'bit';
+      d.style.background = color; d.style.left = x + 'px'; d.style.top = y + 'px';
+      var a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 50;
+      d.style.setProperty('--dx', Math.cos(a) * r + 'px'); d.style.setProperty('--dy', Math.sin(a) * r + 'px');
+      game.appendChild(d);
+      (function (el) { setTimeout(function () { el.remove(); }, 700); })(d);
+    }
+  }
+
+  function hit(b, ev) {
+    if (b.dead || !running) return;
+    if (mode === 'color' && b.col !== target) {
+      KidsGame.sound.wrong();
+      b.el.classList.remove('shake'); void b.el.offsetWidth; b.el.classList.add('shake');
+      return;
+    }
+    b.dead = true;
+    b.el.classList.add('popped');
+    KidsGame.sound.pop(); KidsGame.addStar(); KidsGame.vibrate(20);
+    var r = game.getBoundingClientRect();
+    burst(ev.clientX - r.left, ev.clientY - r.top, b.col.c);
+    (function (el) { setTimeout(function () { el.remove(); }, 300); })(b.el);
+    balloons = balloons.filter(function (x) { return x !== b; });
+    score++; renderHud();
+    if (score >= need) { running = false; setTimeout(finish, 400); }
+  }
+
+  function finish() {
+    clearBalloons();
+    if (mode === 'free') {
+      KidsGame.celebrate({
+        sub: '¡15 globos!',
+        onNext: function () { startColorRound(); },
+        onAgain: function () { startFree(); }
+      });
+    } else {
+      colorRounds++;
+      KidsGame.celebrate({
+        sub: 'Globos ' + target.n.toLowerCase(),
+        onNext: function () { speedMul = Math.min(speedMul + 0.15, 1.8); startColorRound(false); },
+        onAgain: function () { startColorRound(true); }
+      });
+    }
+  }
+
+  function frame(t) {
+    if (!lastT) lastT = t;
+    var dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
+    if (running) {
+      if (t - lastSpawn > 850 / speedMul && balloons.length < 8) { lastSpawn = t; spawn(); }
+      for (var i = balloons.length - 1; i >= 0; i--) {
+        var b = balloons[i];
+        b.y -= b.vy * dt;
+        if (b.y < -160) { b.el.remove(); balloons.splice(i, 1); continue; }
+        place(b, t);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize', function () { balloons.forEach(function (b) { place(b, lastT); }); });
+  startFree();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

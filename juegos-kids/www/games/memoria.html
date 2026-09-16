@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Memoria</title>
+<style>
+  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 22px; margin-bottom: 8px; }
+  .hud .lvl { background: #fff; border-radius: 30px; padding: 4px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .board {
+    flex: 0 0 auto;
+    display: grid;
+    gap: var(--gap);
+    width: var(--bw);
+    height: var(--bh);
+  }
+  .mcard {
+    position: relative; perspective: 800px; cursor: pointer;
+    min-width: 64px; min-height: 64px;
+  }
+  .mcard .inner {
+    position: absolute; inset: 0; transform-style: preserve-3d;
+    transition: transform .45s cubic-bezier(.4,1.4,.6,1);
+  }
+  .mcard.flipped .inner, .mcard.done .inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: 0 6px 0 rgba(0,0,0,.14);
+  }
+  .face.back {
+    color: #fff; font-size: 44px; font-weight: bold;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    background-size: 100% 100%;
+    text-shadow: 0 3px 0 rgba(0,0,0,.2);
+  }
+  .face.back::after {
+    content: ""; position: absolute; inset: 8px; border-radius: 12px;
+    border: 3px dashed rgba(255,255,255,.55);
+  }
+  .face.front {
+    background: #fff; transform: rotateY(180deg);
+    font-size: var(--fs);
+  }
+  .mcard.done .face.front { background: #d8f3dc; box-shadow: 0 0 0 5px #2cb67d; }
+  .mcard.done .face.front .emoji { animation: bounce .6s 1; }
+  .mcard.bad { animation: shake .4s; }
+  .mcard.pop { animation-fill-mode: backwards; }
+  .mcard:active .inner { transform: scale(.96); }
+  .mcard.flipped:active .inner, .mcard.done:active .inner { transform: rotateY(180deg); }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Memoria' });
+(function () {
+  var ANIMALS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦉','🐴','🦄','🐝','🐢','🐙','🦋','🐞','🐠','🐬','🦀'];
+  var BACKS = [['#f582ae','#ff8906'],['#3da9fc','#7f5af0'],['#2cb67d','#8bd3dd'],['#ffb703','#f582ae']];
+  var LEVELS = [
+    { pairs: 3, cols: 3, rows: 2 },
+    { pairs: 4, cols: 4, rows: 2 },
+    { pairs: 6, cols: 4, rows: 3 },
+    { pairs: 8, cols: 4, rows: 4 }
+  ];
+  var level = 0, cfg, first = null, lock = false, matched = 0, board, hud;
+
+  game.innerHTML = '';
+  hud = document.createElement('div'); hud.className = 'hud';
+  board = document.createElement('div'); board.className = 'board';
+  game.appendChild(hud); game.appendChild(board);
+
+  function layout() {
+    var cols = cfg.cols, rows = cfg.rows;
+    var W = game.clientWidth - 20, H = game.clientHeight - hud.offsetHeight - 28;
+    // En vertical, más filas que columnas
+    if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
+    var gap = 10;
+    var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));
+    size = Math.max(64, Math.min(size, 190));
+    board.style.setProperty('--gap', gap + 'px');
+    board.style.setProperty('--bw', (cols * size + (cols - 1) * gap) + 'px');
+    board.style.setProperty('--bh', (rows * size + (rows - 1) * gap) + 'px');
+    board.style.setProperty('--fs', Math.round(size * 0.58) + 'px');
+    board.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    board.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+  }
+
+  function start() {
+    cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
+    first = null; lock = false; matched = 0;
+    hud.innerHTML = '<span class="lvl">Nivel ' + (level + 1) + '</span><span class="emoji">🧠</span>';
+    board.innerHTML = '';
+    var chosen = KidsGame.shuffle(ANIMALS).slice(0, cfg.pairs);
+    var deck = KidsGame.shuffle(chosen.concat(chosen));
+    var back = BACKS[level % BACKS.length];
+    deck.forEach(function (em, i) {
+      var c = document.createElement('div');
+      c.className = 'mcard pop';
+      c.style.animationDelay = (i * 40) + 'ms';
+      c.dataset.v = em;
+      c.innerHTML = '<div class="inner">' +
+        '<div class="face back" style="--c1:' + back[0] + ';--c2:' + back[1] + '">?</div>' +
+        '<div class="face front"><span class="emoji">' + em + '</span></div></div>';
+      c.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(c); });
+      board.appendChild(c);
+    });
+    layout();
+    KidsGame.say('Encuentra las parejas');
+  }
+
+  function tap(c) {
+    if (lock || c.classList.contains('flipped') || c.classList.contains('done')) return;
+    KidsGame.sound.tap();
+    c.classList.add('flipped');
+    if (!first) { first = c; return; }
+    var a = first, b = c; first = null; lock = true;
+    if (a.dataset.v === b.dataset.v) {
+      setTimeout(function () {
+        a.classList.add('done'); b.classList.add('done');
+        a.classList.remove('flipped'); b.classList.remove('flipped');
+        KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+        matched++; lock = false;
+        if (matched === cfg.pairs) setTimeout(finish, 500);
+      }, 350);
+    } else {
+      setTimeout(function () {
+        KidsGame.sound.wrong();
+        a.classList.add('bad'); b.classList.add('bad');
+        setTimeout(function () {
+          a.classList.remove('flipped', 'bad'); b.classList.remove('flipped', 'bad');
+          lock = false;
+        }, 400);
+      }, 700);
+    }
+  }
+
+  function finish() {
+    KidsGame.celebrate({
+      sub: 'Nivel ' + (level + 1) + ' completo',
+      onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
+      onAgain: function () { start(); }
+    });
+  }
+
+  window.addEventListener('resize', function () { if (cfg) layout(); });
+  start();
+})();
+</script>
+</body>
+</html>

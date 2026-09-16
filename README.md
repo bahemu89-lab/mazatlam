@@ -31,3 +31,11 @@ python3 -m http.server 8080
 
 - Los datos se guardan bajo la clave `bms_pedidos_v1` de `localStorage`, por lo que son locales a cada navegador/equipo.
 - Si en el futuro se necesita acceso multiusuario o centralizado, el modelo de datos (pedidos con folio, establecimiento, estado, artículos) está listo para migrarse a un backend con API.
+
+---
+
+## 🎈 Juegos Mazatlam (app Android para niñas y niños)
+
+En la carpeta [`juegos-kids/`](juegos-kids/) está una app Android sin internet con 16 juegos
+para 4 a 6 años. El APK listo para instalar está en `juegos-kids/dist/JuegosMazatlam.apk`;
+las instrucciones de instalación y compilación están en [`juegos-kids/README.md`](juegos-kids/README.md).

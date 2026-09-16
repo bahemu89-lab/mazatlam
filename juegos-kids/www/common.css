@@ -1,0 +1,70 @@
+/* Base compartida para todos los juegos - niñas y niños de 4 a 6 años */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; touch-action: manipulation;
+  user-select: none; -webkit-user-select: none;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", "Segoe UI", Roboto, sans-serif;
+  background: #fef6e4; color: #172c66;
+}
+body { display: flex; flex-direction: column; }
+
+/* Barra superior con botón de regreso */
+.topbar {
+  flex: 0 0 auto; height: 60px; display: flex; align-items: center; gap: 10px;
+  padding: 0 10px; background: #8bd3dd; box-shadow: 0 3px 0 rgba(0,0,0,.08); z-index: 5;
+}
+.topbar h1 { font-size: 24px; margin: 0; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .stars { font-size: 22px; min-width: 70px; text-align: right; }
+
+/* Área del juego: ocupa el resto de la pantalla */
+.game { flex: 1 1 auto; position: relative; overflow: hidden; }
+
+/* Botones grandes para dedos pequeños */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 64px; min-height: 64px; padding: 8px 18px; border: 0; border-radius: 22px;
+  background: #f582ae; color: #fff; font: inherit; font-size: 26px; font-weight: bold;
+  box-shadow: 0 6px 0 rgba(0,0,0,.18); cursor: pointer; transition: transform .08s;
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.btn.round { width: 64px; height: 64px; padding: 0; border-radius: 50%; }
+.btn.blue { background: #3da9fc; } .btn.green { background: #2cb67d; }
+.btn.yellow { background: #ffb703; color: #5a3d00; } .btn.purple { background: #7f5af0; }
+.btn.big { font-size: 34px; min-height: 84px; padding: 10px 30px; }
+
+/* Tarjetas / fichas tocables */
+.card {
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: 20px; box-shadow: 0 5px 0 rgba(0,0,0,.12);
+  cursor: pointer; transition: transform .12s;
+}
+.card:active { transform: scale(.94); }
+.card.ok { background: #d8f3dc; box-shadow: 0 0 0 5px #2cb67d; }
+.card.bad { animation: shake .35s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+@keyframes pop { 0%{transform:scale(.4);opacity:0} 70%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+.pop { animation: pop .35s ease-out; }
+.bounce { animation: bounce .7s infinite; }
+.emoji { font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1; }
+
+/* Pantalla de celebración */
+#kg-overlay {
+  position: fixed; inset: 0; background: rgba(23,44,102,.55); display: none;
+  align-items: center; justify-content: center; z-index: 50;
+}
+#kg-overlay.show { display: flex; }
+#kg-overlay .box {
+  background: #fff; border-radius: 30px; padding: 24px 30px; text-align: center;
+  max-width: 90vw; animation: pop .4s ease-out;
+}
+#kg-overlay .msg { font-size: 34px; margin: 6px 0 4px; }
+#kg-overlay .sub { font-size: 20px; color: #666; margin-bottom: 14px; }
+#kg-overlay .starsrow { font-size: 44px; margin: 4px 0 10px; }
+#kg-overlay .row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.kg-confetti { position: fixed; top: -20px; width: 12px; height: 18px; border-radius: 3px; z-index: 60; pointer-events: none; animation: kgfall linear forwards; }
+@keyframes kgfall { to { transform: translateY(110vh) rotate(720deg); } }
+
+/* Mensaje flotante breve */
+#kg-toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: #fff; padding: 10px 22px; border-radius: 30px; font-size: 26px; box-shadow: 0 6px 16px rgba(0,0,0,.2); z-index: 40; display: none; }

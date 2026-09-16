@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Colorear</title>
+<style>
+  .game { display: flex; flex-direction: column; }
+  .wrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+  /* Tira de dibujos */
+  .strip {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    overflow-x: auto; overflow-y: hidden; touch-action: pan-x; background: rgba(255,255,255,.5);
+    -webkit-overflow-scrolling: touch;
+  }
+  .strip::-webkit-scrollbar { display: none; }
+  .thumb {
+    flex: 0 0 auto; width: 64px; height: 64px; border-radius: 16px; background: #fff;
+    border: 4px solid transparent; box-shadow: 0 4px 0 rgba(0,0,0,.12); cursor: pointer; padding: 3px;
+    transition: transform .12s;
+  }
+  .thumb svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+  .thumb.sel { border-color: #f582ae; transform: scale(1.08); }
+  .thumb:active { transform: scale(.92); }
+  .strip .btn { flex: 0 0 auto; margin-left: auto; font-size: 22px; min-height: 60px; }
+  /* Escenario */
+  .stage { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 6px; }
+  .stage svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; touch-action: none; }
+  .r { fill: #fff; stroke: #222; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; cursor: pointer; }
+  .d { fill: none; stroke: #222; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; }
+  .k { fill: #222; stroke: none; pointer-events: none; }
+  .thumb .r, .thumb .d { stroke-width: 14; }
+  .stage .r.fx { animation: rpop .3s ease-out; }
+  @keyframes rpop { 0%{stroke-width:6} 40%{stroke-width:16; stroke:#fff} 100%{stroke-width:6} }
+  /* Paleta */
+  .palette {
+    flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-content: center;
+    padding: 8px; background: rgba(255,255,255,.6);
+  }
+  .swatch {
+    width: 64px; height: 64px; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.18);
+    cursor: pointer; transition: transform .12s; display: flex; align-items: center; justify-content: center; font-size: 30px;
+  }
+  .swatch.sel { transform: scale(1.18); border-color: #172c66; box-shadow: 0 0 0 4px #fff, 0 6px 0 rgba(0,0,0,.18); }
+  .swatch:active { transform: scale(.9); }
+  @media (orientation: landscape) {
+    .wrap { flex-direction: row; }
+    .strip { order: 0; flex-direction: column; width: 92px; height: auto; overflow-x: hidden; overflow-y: auto; touch-action: pan-y; padding: 8px 6px; }
+    .strip .btn { margin-left: 0; margin-top: auto; min-width: 72px; padding: 6px; font-size: 20px; }
+    .stage { order: 1; }
+    .palette { order: 2; width: 172px; align-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="wrap">
+    <div class="strip" id="strip"></div>
+    <div class="stage" id="stage"></div>
+    <div class="palette" id="palette"></div>
+  </div>
+</div>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Colorear' });
+
+// ---------- Dibujos (viewBox 0 0 400 400) ----------
+function cloud(cx, cy, s) {
+  return '<path class="r" transform="translate(' + cx + ',' + cy + ') scale(' + s + ')" d="M-50 20 C-72 20 -72 -12 -45 -14 C-45 -42 -5 -48 6 -24 C28 -38 54 -16 42 4 C64 6 58 26 40 22 Z"/>';
+}
+var DRAWINGS = [
+  { id: 'mariposa', name: 'Mariposa', svg:
+    '<path class="d" d="M188 92 C170 60 150 50 140 40"/><path class="d" d="M212 92 C230 60 250 50 260 40"/>' +
+    '<circle class="r" cx="140" cy="38" r="9"/><circle class="r" cx="260" cy="38" r="9"/>' +
+    '<path class="r" d="M182 172 C120 80 40 90 50 170 C56 212 120 232 182 202 Z"/>' +
+    '<path class="r" d="M218 172 C280 80 360 90 350 170 C344 212 280 232 218 202 Z"/>' +
+    '<path class="r" d="M182 216 C120 220 60 250 80 322 C100 362 160 332 182 262 Z"/>' +
+    '<path class="r" d="M218 216 C280 220 340 250 320 322 C300 362 240 332 218 262 Z"/>' +
+    '<circle class="r" cx="105" cy="150" r="20"/><circle class="r" cx="295" cy="150" r="20"/>' +
+    '<circle class="r" cx="125" cy="285" r="14"/><circle class="r" cx="275" cy="285" r="14"/>' +
+    '<ellipse class="r" cx="200" cy="215" rx="22" ry="92"/>' +
+    '<circle class="r" cx="200" cy="110" r="26"/>' +
+    '<circle class="k" cx="191" cy="106" r="4"/><circle class="k" cx="209" cy="106" r="4"/>' },
+  { id: 'casa', name: 'Casa', svg:
+    '<circle class="r" cx="335" cy="65" r="34"/>' +
+    '<path class="d" d="M335 15 L335 5 M335 125 L335 115 M285 65 L275 65 M395 65 L385 65 M300 30 L293 23 M377 107 L370 100 M370 30 L377 23 M300 107 L293 100"/>' +
+    cloud(95, 70, 0.9) +
+    '<rect class="r" x="265" y="95" width="34" height="70"/>' +
+    '<rect class="r" x="85" y="185" width="230" height="180"/>' +
+    '<path class="r" d="M60 190 L200 75 L340 190 Z"/>' +
+    '<rect class="r" x="170" y="265" width="60" height="100" rx="10"/>' +
+    '<circle class="k" cx="218" cy="318" r="5"/>' +
+    '<rect class="r" x="105" y="215" width="50" height="50" rx="6"/>' +
+    '<rect class="r" x="245" y="215" width="50" height="50" rx="6"/>' +
+    '<path class="d" d="M130 215 L130 265 M105 240 L155 240 M270 215 L270 265 M245 240 L295 240"/>' },
+  { id: 'flor', name: 'Flor', svg:
+    '<rect class="r" x="192" y="250" width="16" height="130" rx="8"/>' +
+    '<path class="r" d="M196 330 C150 300 110 320 118 356 C160 366 190 350 196 330 Z"/>' +
+    '<path class="r" d="M204 300 C250 270 290 290 282 326 C240 336 210 320 204 300 Z"/>' +
+    '<ellipse class="r" cx="200" cy="112" rx="40" ry="62" transform="rotate(0 200 180)"/>' +
+    '<ellipse class="r" cx="200" cy="112" rx="40" ry="62" transform="rotate(72 200 180)"/>' +
+    '<ellipse class="r" cx="200" cy="112" rx="40" ry="62" transform="rotate(144 200 180)"/>' +
+    '<ellipse class="r" cx="200" cy="112" rx="40" ry="62" transform="rotate(216 200 180)"/>' +
+    '<ellipse class="r" cx="200" cy="112" rx="40" ry="62" transform="rotate(288 200 180)"/>' +
+    '<circle class="r" cx="200" cy="180" r="42"/>' +
+    '<circle class="k" cx="188" cy="174" r="4"/><circle class="k" cx="212" cy="174" r="4"/>' +
+    '<path class="d" d="M186 190 Q200 202 214 190"/>' },
+  { id: 'pez', name: 'Pez', svg:
+    '<circle class="r" cx="355" cy="95" r="16"/><circle class="r" cx="378" cy="52" r="11"/><circle class="r" cx="345" cy="140" r="8"/>' +
+    '<path class="r" d="M125 200 L45 135 L65 200 L45 265 Z"/>' +
+    '<ellipse class="r" cx="210" cy="205" rx="130" ry="82"/>' +
+    '<path class="r" d="M175 127 C190 85 250 85 262 128 Z"/>' +
+    '<path class="r" d="M175 283 C190 325 250 325 262 282 Z"/>' +
+    '<path class="r" d="M180 215 C200 250 245 258 258 225 C240 200 200 195 180 215 Z"/>' +
+    '<circle class="r" cx="292" cy="182" r="18"/><circle class="k" cx="297" cy="182" r="7"/>' +
+    '<path class="d" d="M316 226 Q328 236 316 246"/>' },
+  { id: 'coche', name: 'Coche', svg:
+    '<circle class="r" cx="62" cy="62" r="32"/>' +
+    '<path class="d" d="M62 14 L62 6 M62 118 L62 110 M14 62 L6 62 M118 62 L110 62 M28 28 L22 22 M96 96 L102 102 M96 28 L102 22 M28 96 L22 102"/>' +
+    cloud(320, 70, 0.9) +
+    '<rect class="r" x="0" y="330" width="400" height="60"/>' +
+    '<path class="d" d="M30 360 L90 360 M150 360 L210 360 M270 360 L330 360"/>' +
+    '<path class="r" d="M40 290 L40 225 Q40 205 60 205 L110 205 L148 145 Q158 132 178 132 L282 132 Q302 132 312 147 L342 205 L360 205 Q380 205 380 225 L380 290 Z"/>' +
+    '<path class="r" d="M140 205 L170 155 L212 155 L212 205 Z"/>' +
+    '<path class="r" d="M232 205 L232 155 L278 155 L308 205 Z"/>' +
+    '<circle class="r" cx="110" cy="290" r="42"/><circle class="r" cx="110" cy="290" r="16"/>' +
+    '<circle class="r" cx="310" cy="290" r="42"/><circle class="r" cx="310" cy="290" r="16"/>' +
+    '<circle class="r" cx="365" cy="245" r="10"/><circle class="r" cx="55" cy="245" r="10"/>' },
+  { id: 'gato', name: 'Gato', svg:
+    '<path class="r" d="M95 160 L110 50 L185 118 Z"/>' +
+    '<path class="r" d="M305 160 L290 50 L215 118 Z"/>' +
+    '<circle class="r" cx="200" cy="215" r="120"/>' +
+    '<circle class="r" cx="155" cy="185" r="24"/><circle class="r" cx="245" cy="185" r="24"/>' +
+    '<circle class="k" cx="158" cy="188" r="9"/><circle class="k" cx="248" cy="188" r="9"/>' +
+    '<path class="r" d="M184 232 L216 232 L200 252 Z"/>' +
+    '<path class="d" d="M200 252 Q186 274 168 262 M200 252 Q214 274 232 262"/>' +
+    '<path class="d" d="M60 235 L130 245 M60 265 L130 258 M340 235 L270 245 M340 265 L270 258"/>' },
+  { id: 'helado', name: 'Helado', svg:
+    '<path class="d" d="M200 66 C210 40 230 34 246 42"/>' +
+    '<path class="r" d="M132 205 L268 205 L200 385 Z"/>' +
+    '<path class="d" d="M160 240 L230 340 M175 300 L245 240 M185 340 L215 340"/>' +
+    '<circle class="r" cx="158" cy="180" r="50"/>' +
+    '<circle class="r" cx="242" cy="180" r="50"/>' +
+    '<circle class="r" cx="200" cy="120" r="56"/>' +
+    '<circle class="r" cx="200" cy="66" r="16"/>' },
+  { id: 'arcoiris', name: 'Arcoíris', svg:
+    rainbow() +
+    cloud(70, 300, 1.15) + cloud(330, 300, 1.15) }
+];
+function rainbow() {
+  var s = '', R = 172, w = 23;
+  for (var i = 0; i < 6; i++) {
+    var ro = R - w * i, ri = ro - w;
+    s += '<path class="r" d="M' + (200 - ro) + ' 300 A' + ro + ' ' + ro + ' 0 0 1 ' + (200 + ro) + ' 300 L' + (200 + ri) + ' 300 A' + ri + ' ' + ri + ' 0 0 0 ' + (200 - ri) + ' 300 Z"/>';
+  }
+  return s;
+}
+function svgFor(d) {
+  return '<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">' + d.svg + '</svg>';
+}
+
+// ---------- Paleta ----------
+var COLORS = ['#ff4d4d', '#ff9f1c', '#ffe14d', '#4cd964', '#2ec4b6', '#3da9fc', '#3a5bd9', '#a06cd5', '#ff7eb6', '#9be7ff', '#a0522d', '#333333'];
+var current = COLORS[0];
+var strip = document.getElementById('strip'), stage = document.getElementById('stage'), palette = document.getElementById('palette');
+
+COLORS.concat(['eraser']).forEach(function (c, i) {
+  var s = document.createElement('div');
+  s.className = 'swatch' + (i === 0 ? ' sel' : '');
+  if (c === 'eraser') { s.style.background = '#fff'; s.innerHTML = '<span class="emoji">🧽</span>'; s.title = 'Borrar'; }
+  else s.style.background = c;
+  s.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    current = c === 'eraser' ? '#fff' : c;
+    var all = palette.querySelectorAll('.swatch');
+    for (var k = 0; k < all.length; k++) all[k].classList.remove('sel');
+    s.classList.add('sel');
+    KidsGame.sound.pop();
+  });
+  palette.appendChild(s);
+});
+
+// ---------- Guardado (opcional) ----------
+function load(id) { try { return JSON.parse(localStorage.getItem('kg-colorear-' + id) || '{}'); } catch (e) { return {}; } }
+function save(id, fills) { try { localStorage.setItem('kg-colorear-' + id, JSON.stringify(fills)); } catch (e) {} }
+
+// ---------- Escenario ----------
+var cur = 0, fills = {};
+function show(i, quiet) {
+  cur = (i + DRAWINGS.length) % DRAWINGS.length;
+  var d = DRAWINGS[cur];
+  stage.innerHTML = svgFor(d);
+  fills = load(d.id);
+  var regions = stage.querySelectorAll('.r');
+  for (var k = 0; k < regions.length; k++) {
+    regions[k].setAttribute('data-i', k);
+    if (fills[k]) regions[k].style.fill = fills[k];
+  }
+  var th = strip.querySelectorAll('.thumb');
+  for (var t = 0; t < th.length; t++) th[t].classList.toggle('sel', t === cur);
+  if (th[cur] && th[cur].scrollIntoView) { try { th[cur].scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {} }
+  var svg = stage.querySelector('svg');
+  svg.classList.add('pop');
+  if (!quiet) KidsGame.say(d.name);
+}
+stage.addEventListener('pointerdown', function (e) {
+  var t = e.target;
+  if (!t || !t.classList || !t.classList.contains('r')) return;
+  e.preventDefault();
+  t.style.fill = current;
+  fills[t.getAttribute('data-i')] = current;
+  save(DRAWINGS[cur].id, fills);
+  t.classList.remove('fx'); void t.getBoundingClientRect(); t.classList.add('fx');
+  KidsGame.sound.tap(); KidsGame.vibrate(15);
+});
+
+// ---------- Tira de miniaturas ----------
+DRAWINGS.forEach(function (d, i) {
+  var th = document.createElement('div');
+  th.className = 'thumb';
+  th.innerHTML = svgFor(d);
+  th.setAttribute('aria-label', d.name);
+  th.addEventListener('pointerdown', function (e) { e.preventDefault(); KidsGame.sound.pop(); show(i); });
+  strip.appendChild(th);
+});
+var done = document.createElement('button');
+done.className = 'btn green'; done.textContent = '✨ Listo';
+done.onclick = function () {
+  var filled = 0, regions = stage.querySelectorAll('.r');
+  for (var k = 0; k < regions.length; k++) if (fills[k] && fills[k] !== '#fff') filled++;
+  KidsGame.addStar(filled >= 3 ? 2 : 1);
+  KidsGame.celebrate({
+    msg: '¡Qué bonito!', sub: DRAWINGS[cur].name,
+    onNext: function () { show(cur + 1); },
+    onAgain: function () {
+      fills = {}; save(DRAWINGS[cur].id, fills);
+      var r = stage.querySelectorAll('.r');
+      for (var k = 0; k < r.length; k++) r[k].style.fill = '';
+      KidsGame.sound.pop();
+    }
+  });
+};
+strip.appendChild(done);
+
+show(0, true);
+</script>
+</body>
+</html>

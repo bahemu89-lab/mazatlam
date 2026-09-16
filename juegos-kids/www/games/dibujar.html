@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Dibujar</title>
+<style>
+  .game { display: flex; flex-direction: column; }
+  .wrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+  .board { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; padding: 6px; }
+  .board canvas {
+    display: block; width: 100%; height: 100%; background: #fff; border-radius: 18px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.12); touch-action: none; cursor: crosshair;
+  }
+  .tools {
+    flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-content: center;
+    padding: 6px; background: rgba(255,255,255,.6);
+  }
+  .tool {
+    width: 64px; height: 64px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.18);
+    cursor: pointer; transition: transform .12s; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; background: #fff; position: relative;
+  }
+  .tool.sel { transform: scale(1.15); border-color: #172c66; box-shadow: 0 0 0 4px #fff, 0 6px 0 rgba(0,0,0,.18); z-index: 1; }
+  .tool:active { transform: scale(.9); }
+  .tool .dot { border-radius: 50%; background: #172c66; }
+  .tool.rainbow { background: conic-gradient(#ff4d4d, #ffe14d, #4cd964, #3da9fc, #a06cd5, #ff7eb6, #ff4d4d); }
+  .tool.action { border-radius: 22px; background: #f582ae; color: #fff; font-size: 30px; }
+  .tool.action.save { background: #3da9fc; }
+  .sep { width: 100%; height: 0; }
+  .sizes { display: flex; gap: 5px; }
+  /* Confirmación en la página */
+  .confirm {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(23,44,102,.45); z-index: 30; border-radius: 0;
+  }
+  .confirm.show { display: flex; }
+  .confirm .box { background: #fff; border-radius: 30px; padding: 24px 30px; text-align: center; animation: pop .3s ease-out; max-width: 90%; }
+  .confirm .q { font-size: 34px; margin-bottom: 18px; }
+  .confirm .row { display: flex; gap: 16px; justify-content: center; }
+  @media (orientation: landscape) {
+    .wrap { flex-direction: row; }
+    .tools { width: 216px; order: 2; overflow-y: auto; touch-action: pan-y; }
+    .tools::-webkit-scrollbar { display: none; }
+    .sep { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="wrap">
+    <div class="board" id="board"><canvas id="cv"></canvas></div>
+    <div class="tools" id="tools"></div>
+  </div>
+  <div class="confirm" id="confirm">
+    <div class="box">
+      <div class="q"><span class="emoji">🗑️</span> ¿Borrar todo?</div>
+      <div class="row">
+        <button class="btn green big" id="confirmYes">Sí ✔</button>
+        <button class="btn blue big" id="confirmNo">No ✖</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Dibujar' });
+
+var board = document.getElementById('board'), cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+var tools = document.getElementById('tools');
+var COLORS = ['#222222', '#ff4d4d', '#ff9f1c', '#ffe14d', '#4cd964', '#2ec4b6', '#3da9fc', '#a06cd5', '#ff7eb6', '#a0522d'];
+var SIZES = [6, 14, 28];
+var STICKERS = ['🌟', '❤️', '🌈', '🦄', '🐱', '🌸', '🍎', '⚽'];
+var mode = 'brush';       // brush | rainbow | eraser | sticker
+var color = COLORS[1], size = SIZES[1], sticker = STICKERS[0], hue = 0;
+var dpr = 1, W = 0, H = 0;
+
+// ---------- Lienzo: tamaño con devicePixelRatio, conservando el dibujo ----------
+function resize() {
+  var r = cv.getBoundingClientRect();
+  var nw = Math.max(1, Math.round(r.width)), nh = Math.max(1, Math.round(r.height));
+  var ndpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (nw === W && nh === H && ndpr === dpr) return;
+  var old = null;
+  if (W && H) { old = document.createElement('canvas'); old.width = cv.width; old.height = cv.height; old.getContext('2d').drawImage(cv, 0, 0); }
+  W = nw; H = nh; dpr = ndpr;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  if (old) ctx.drawImage(old, 0, 0, old.width, old.height, 0, 0, W, H);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+}
+window.addEventListener('resize', function () { setTimeout(resize, 50); });
+if (window.ResizeObserver) { try { new ResizeObserver(function () { resize(); }).observe(board); } catch (e) {} }
+
+// ---------- Dibujo con pointer events (multitáctil por pointerId) ----------
+var pointers = {};
+function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function strokeStyle(p) {
+  if (mode === 'eraser') return '#fff';
+  if (mode === 'rainbow') { p.hue = (p.hue + 5) % 360; return 'hsl(' + p.hue + ',100%,55%)'; }
+  return color;
+}
+function seg(p, to) {
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(to.x, to.y);
+  ctx.lineWidth = mode === 'eraser' ? size * 2.2 : size; ctx.strokeStyle = strokeStyle(p); ctx.stroke();
+  p.x = to.x; p.y = to.y;
+}
+function stamp(at) {
+  var fs = 44 + size * 1.5;
+  ctx.font = fs + 'px "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.fillText(sticker, at.x, at.y);
+}
+cv.addEventListener('pointerdown', function (e) {
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  var p = pos(e);
+  if (mode === 'sticker') { stamp(p); KidsGame.sound.pop(); KidsGame.vibrate(15); return; }
+  p.hue = hue; hue = (hue + 40) % 360;
+  pointers[e.pointerId] = p;
+  seg(p, { x: p.x + 0.01, y: p.y + 0.01 }); // punto
+});
+cv.addEventListener('pointermove', function (e) {
+  var p = pointers[e.pointerId]; if (!p) return;
+  e.preventDefault();
+  var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+  if (evs.length) { for (var i = 0; i < evs.length; i++) seg(p, pos(evs[i])); }
+  else seg(p, pos(e));
+});
+function endPointer(e) { if (pointers[e.pointerId]) { delete pointers[e.pointerId]; } }
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('lostpointercapture', endPointer);
+
+// ---------- Herramientas ----------
+function selectTool(el) {
+  var all = tools.querySelectorAll('.tool.pick');
+  for (var k = 0; k < all.length; k++) all[k].classList.remove('sel');
+  el.classList.add('sel');
+}
+function selectSize(el) {
+  var all = tools.querySelectorAll('.tool.size');
+  for (var k = 0; k < all.length; k++) all[k].classList.remove('sel');
+  el.classList.add('sel');
+}
+function mk(cls, html) { var d = document.createElement('div'); d.className = 'tool ' + cls; d.innerHTML = html; tools.appendChild(d); return d; }
+function onTap(el, fn) { el.addEventListener('pointerdown', function (e) { e.preventDefault(); fn(); }); }
+
+var lastColorEl = null;
+COLORS.forEach(function (c, i) {
+  var el = mk('pick color', ''); el.style.background = c; if (i === 1) { el.classList.add('sel'); lastColorEl = el; }
+  onTap(el, function () { mode = 'brush'; color = c; lastColorEl = el; selectTool(el); KidsGame.sound.tap(); });
+});
+var rb = mk('pick rainbow', ''); rb.id = 'rainbow';
+onTap(rb, function () { mode = 'rainbow'; selectTool(rb); KidsGame.sound.pop(); });
+var er = mk('pick', '<span class="emoji">🧽</span>'); er.id = 'eraser';
+onTap(er, function () { mode = 'eraser'; selectTool(er); KidsGame.sound.tap(); });
+tools.appendChild(document.createElement('div')).className = 'sep';
+SIZES.forEach(function (s, i) {
+  var el = mk('size', '<div class="dot" style="width:' + (s + 6) + 'px;height:' + (s + 6) + 'px"></div>'); if (i === 1) el.classList.add('sel');
+  onTap(el, function () { size = s; if (mode === 'sticker') { mode = 'brush'; selectTool(lastColorEl); } selectSize(el); KidsGame.sound.tap(); });
+});
+STICKERS.forEach(function (st) {
+  var el = mk('pick sticker', '<span class="emoji">' + st + '</span>');
+  onTap(el, function () { mode = 'sticker'; sticker = st; selectTool(el); KidsGame.sound.pop(); });
+});
+var clr = mk('action', '<span class="emoji">🗑️</span>'); clr.id = 'clear';
+var confirmBox = document.getElementById('confirm');
+onTap(clr, function () { KidsGame.sound.tap(); confirmBox.classList.add('show'); KidsGame.say('¿Borrar todo?'); });
+document.getElementById('confirmYes').onclick = function () {
+  confirmBox.classList.remove('show');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  KidsGame.sound.pop(); KidsGame.toast('¡Listo! 🗑️');
+};
+document.getElementById('confirmNo').onclick = function () { confirmBox.classList.remove('show'); KidsGame.sound.tap(); };
+
+var sv = mk('action save', '<span class="emoji">📷</span>'); sv.id = 'save';
+onTap(sv, function () {
+  KidsGame.sound.ok(); KidsGame.addStar();
+  try {
+    var url = cv.toDataURL('image/png');
+    var w = window.open('', '_blank');
+    if (w && w.document) {
+      w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mi dibujo</title></head><body style="margin:0;background:#fef6e4;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + url + '" style="max-width:100%;max-height:100vh"></body></html>');
+      w.document.close();
+    } else {
+      var a = document.createElement('a'); a.href = url; a.download = 'mi-dibujo.png'; a.target = '_blank';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  } catch (e) {}
+  KidsGame.toast('¡Listo! 📷');
+});
+
+resize();
+setTimeout(resize, 100);
+</script>
+</body>
+</html>

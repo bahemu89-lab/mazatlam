@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Laberinto</title>
+<style>
+  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 8px; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 22px; }
+  .hud .lvl { background: #fff; border-radius: 30px; padding: 4px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .hud .who { font-size: 30px; }
+  .area { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; min-width: 0; }
+  .wrap { position: relative; touch-action: none; }
+  canvas { display: block; border-radius: 18px; touch-action: none; }
+  .piece {
+    position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; transition: transform .16s ease-out; will-change: transform;
+  }
+  .piece .emoji { display: block; }
+  .piece.hop .emoji { animation: hop .5s ease-out 3; }
+  .piece .emoji.shake { animation: shake .35s; }
+  .piece.goal .emoji { animation: wig 1.4s ease-in-out infinite; }
+  @keyframes hop { 0%,100%{transform:translateY(0) scale(1)} 40%{transform:translateY(-30%) scale(1.25)} }
+  @keyframes wig { 0%,100%{transform:rotate(-8deg) scale(1)} 50%{transform:rotate(8deg) scale(1.12)} }
+  .pad { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 6px; }
+  .pad .btn { width: 72px; height: 72px; min-width: 72px; min-height: 72px; padding: 0; font-size: 34px; border-radius: 22px; }
+  .pad .up { grid-column: 2; grid-row: 1; }
+  .pad .left { grid-column: 1; grid-row: 2; }
+  .pad .right { grid-column: 3; grid-row: 2; }
+  .pad .down { grid-column: 2; grid-row: 3; }
+  .pad .mid { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 34px; }
+  .side { display: contents; }
+  @media (orientation: landscape) {
+    .game { flex-direction: row; }
+    .area { flex: 1 1 0; align-self: stretch; }
+    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; flex: 0 0 auto; padding: 0 8px; }
+    .hud { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Laberinto' });
+(function () {
+  var LEVELS = [ [5, 5], [7, 7], [9, 9], [11, 9] ];
+  var CHARS = [ ['🐰', '🥕'], ['🐱', '🐟'], ['🐶', '🦴'] ];
+  var WALLS = ['#f582ae', '#7f5af0', '#3da9fc', '#ff8906', '#2cb67d'];
+  var TRAILS = ['#ffd6e7', '#e4dcff', '#d3ecff', '#ffe5c2', '#d8f3dc'];
+
+  var level = 0, cols, rows, cells, px, py, gx, gy, trail, done = false, wallColor, trailColor;
+  var cell = 40, off = 0;
+  var hud, lvlEl, whoEl, area, wrap, canvas, ctx, charEl, goalEl, pad;
+  var dragging = false;
+
+  game.innerHTML = '';
+  hud = document.createElement('div'); hud.className = 'hud';
+  hud.innerHTML = '<span class="lvl">Nivel <b>1</b></span><span class="who emoji"></span>';
+  lvlEl = hud.querySelector('b'); whoEl = hud.querySelector('.who');
+  area = document.createElement('div'); area.className = 'area';
+  wrap = document.createElement('div'); wrap.className = 'wrap';
+  canvas = document.createElement('canvas'); ctx = canvas.getContext('2d');
+  charEl = document.createElement('div'); charEl.className = 'piece char'; charEl.innerHTML = '<span class="emoji"></span>';
+  goalEl = document.createElement('div'); goalEl.className = 'piece goal'; goalEl.innerHTML = '<span class="emoji"></span>';
+  wrap.appendChild(canvas); wrap.appendChild(goalEl); wrap.appendChild(charEl);
+  area.appendChild(wrap);
+  pad = document.createElement('div'); pad.className = 'pad';
+  pad.innerHTML = '<button class="btn blue up">⬆️</button><button class="btn blue left">⬅️</button><div class="mid emoji">🧭</div><button class="btn blue right">➡️</button><button class="btn blue down">⬇️</button>';
+  var side = document.createElement('div'); side.className = 'side';
+  side.appendChild(hud); side.appendChild(pad);
+  game.appendChild(area); game.appendChild(side);
+  // En vertical: hud arriba, laberinto en medio, flechas abajo
+  function order() {
+    var land = window.innerWidth > window.innerHeight;
+    if (land) { if (hud.parentNode !== side) { side.insertBefore(hud, pad); } }
+    else if (hud.parentNode !== game) { game.insertBefore(hud, area); }
+  }
+  order();
+
+  // --- Laberinto: recursive backtracker ---
+  // Cada celda: bits de paredes: 1=arriba, 2=derecha, 4=abajo, 8=izquierda
+  var DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0], OPP = [2, 3, 0, 1];
+  function gen(c, r) {
+    var i, j, grid = [];
+    for (j = 0; j < r; j++) { grid[j] = []; for (i = 0; i < c; i++) grid[j][i] = 15; }
+    var seen = [], stack = [[0, 0]];
+    for (j = 0; j < r; j++) { seen[j] = []; for (i = 0; i < c; i++) seen[j][i] = false; }
+    seen[0][0] = true;
+    while (stack.length) {
+      var cur = stack[stack.length - 1], x = cur[0], y = cur[1], opts = [];
+      for (var d = 0; d < 4; d++) {
+        var nx = x + DX[d], ny = y + DY[d];
+        if (nx >= 0 && ny >= 0 && nx < c && ny < r && !seen[ny][nx]) opts.push(d);
+      }
+      if (!opts.length) { stack.pop(); continue; }
+      var dir = KidsGame.pick(opts), tx = x + DX[dir], ty = y + DY[dir];
+      grid[y][x] &= ~(1 << dir);
+      grid[ty][tx] &= ~(1 << OPP[dir]);
+      seen[ty][tx] = true;
+      stack.push([tx, ty]);
+    }
+    return grid;
+  }
+  function open(x, y, d) { return (cells[y][x] & (1 << d)) === 0; }
+
+  function start(newMaze) {
+    var cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
+    var ch = CHARS[level % CHARS.length];
+    if (newMaze) {
+      cols = cfg[0]; rows = cfg[1];
+      cells = gen(cols, rows);
+      wallColor = WALLS[level % WALLS.length]; trailColor = TRAILS[level % TRAILS.length];
+    }
+    px = 0; py = 0; gx = cols - 1; gy = rows - 1; done = false;
+    trail = [[0, 0]];
+    lvlEl.textContent = String(level + 1);
+    whoEl.textContent = ch[0] + ' ➜ ' + ch[1];
+    charEl.firstChild.textContent = ch[0];
+    goalEl.firstChild.textContent = ch[1];
+    charEl.classList.remove('hop');
+    layout();
+  }
+
+  function layout() {
+    var W = area.clientWidth - 4, H = area.clientHeight - 4;
+    if (W < 40 || H < 40) return;
+    // Si la pantalla es vertical y el laberinto es ancho, lo giramos
+    if (W < H && cols > rows || W > H && rows > cols) { cells = transpose(cells); var t = cols; cols = rows; rows = t; t = px; px = py; py = t; t = gx; gx = gy; gy = t; trail = trail.map(function (p) { return [p[1], p[0]]; }); }
+    cell = Math.floor(Math.min(W / cols, H / rows));
+    off = Math.round(cell * 0.12);
+    var cw = cell * cols + off * 2, chh = cell * rows + off * 2;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cw * dpr); canvas.height = Math.round(chh * dpr);
+    canvas.style.width = cw + 'px'; canvas.style.height = chh + 'px';
+    wrap.style.width = cw + 'px'; wrap.style.height = chh + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    [charEl, goalEl].forEach(function (el) {
+      el.style.width = cell + 'px'; el.style.height = cell + 'px';
+      el.firstChild.style.fontSize = Math.round(cell * 0.7) + 'px';
+    });
+    place(goalEl, gx, gy); place(charEl, px, py);
+    draw();
+  }
+  function transpose(g) {
+    var out = [], i, j;
+    for (i = 0; i < cols; i++) { out[i] = []; for (j = 0; j < rows; j++) {
+      var v = g[j][i], w = 0;
+      if (v & 1) w |= 8; if (v & 8) w |= 1; if (v & 2) w |= 4; if (v & 4) w |= 2;
+      out[i][j] = w;
+    } }
+    return out;
+  }
+  function place(el, x, y) { el.style.transform = 'translate(' + (off + x * cell) + 'px,' + (off + y * cell) + 'px)'; }
+
+  function draw() {
+    var w = canvas.width, h = canvas.height, x, y;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.restore();
+    // fondo
+    ctx.fillStyle = '#fff';
+    rr(off, off, cell * cols, cell * rows, off * 1.2); ctx.fill();
+    // rastro
+    ctx.fillStyle = trailColor;
+    for (var i = 0; i < trail.length; i++) {
+      x = trail[i][0]; y = trail[i][1];
+      rr(off + x * cell + cell * 0.18, off + y * cell + cell * 0.18, cell * 0.64, cell * 0.64, cell * 0.2); ctx.fill();
+    }
+    // meta
+    ctx.fillStyle = '#fff3b0';
+    rr(off + gx * cell + off * 0.6, off + gy * cell + off * 0.6, cell - off * 1.2, cell - off * 1.2, cell * 0.2); ctx.fill();
+    // paredes
+    ctx.strokeStyle = wallColor; ctx.lineWidth = off * 1.7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) {
+      var v = cells[y][x], x0 = off + x * cell, y0 = off + y * cell, x1 = x0 + cell, y1 = y0 + cell;
+      if (v & 1) { ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); }
+      if (v & 8) { ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); }
+      if ((v & 4) && y === rows - 1) { ctx.moveTo(x0, y1); ctx.lineTo(x1, y1); }
+      if ((v & 2) && x === cols - 1) { ctx.moveTo(x1, y0); ctx.lineTo(x1, y1); }
+    }
+    ctx.stroke();
+  }
+  function rr(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // --- Movimiento ---
+  function step(d) {
+    if (done) return false;
+    if (!open(px, py, d)) return false;
+    px += DX[d]; py += DY[d];
+    var last = trail[trail.length - 1];
+    if (trail.length > 1 && trail[trail.length - 2][0] === px && trail[trail.length - 2][1] === py) trail.pop();
+    else if (!(last[0] === px && last[1] === py)) trail.push([px, py]);
+    draw(); place(charEl, px, py);
+    if (px === gx && py === gy) win();
+    return true;
+  }
+  function tryDir(d) {
+    if (done) return;
+    if (step(d)) KidsGame.sound.tap();
+    else { KidsGame.sound.wrong(); var e = charEl.firstChild; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); }
+  }
+  // Camino corto (máx 3 pasos) hacia la celda del dedo, solo por pasillos abiertos
+  function pathTo(tx, ty, limit) {
+    if (tx === px && ty === py) return [];
+    var q = [[px, py]], prev = {}, key = function (x, y) { return x + ',' + y; }, dist = {};
+    dist[key(px, py)] = 0;
+    while (q.length) {
+      var c = q.shift(), cd = dist[key(c[0], c[1])];
+      if (cd >= limit) continue;
+      for (var d = 0; d < 4; d++) {
+        if (!open(c[0], c[1], d)) continue;
+        var nx = c[0] + DX[d], ny = c[1] + DY[d], k = key(nx, ny);
+        if (dist[k] != null) continue;
+        dist[k] = cd + 1; prev[k] = d;
+        if (nx === tx && ny === ty) {
+          var path = [], cx = nx, cy = ny;
+          while (!(cx === px && cy === py)) { var pd = prev[key(cx, cy)]; path.unshift(pd); cx -= DX[pd]; cy -= DY[pd]; }
+          return path;
+        }
+        q.push([nx, ny]);
+      }
+    }
+    return null;
+  }
+  function follow(ev) {
+    var r = canvas.getBoundingClientRect();
+    var tx = Math.floor((ev.clientX - r.left - off) / cell), ty = Math.floor((ev.clientY - r.top - off) / cell);
+    if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) return;
+    var path = pathTo(tx, ty, 3);
+    if (!path || !path.length) return;
+    for (var i = 0; i < path.length && !done; i++) step(path[i]);
+    KidsGame.sound.tap();
+  }
+  wrap.addEventListener('pointerdown', function (ev) {
+    if (done) return;
+    dragging = true;
+    try { wrap.setPointerCapture(ev.pointerId); } catch (e) {}
+    follow(ev); ev.preventDefault();
+  });
+  wrap.addEventListener('pointermove', function (ev) { if (dragging) { follow(ev); ev.preventDefault(); } });
+  function endDrag() { dragging = false; }
+  wrap.addEventListener('pointerup', endDrag); wrap.addEventListener('pointercancel', endDrag);
+
+  pad.querySelectorAll('.btn').forEach(function (b) {
+    var d = b.classList.contains('up') ? 0 : b.classList.contains('right') ? 1 : b.classList.contains('down') ? 2 : 3;
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tryDir(d); });
+  });
+  document.addEventListener('keydown', function (ev) {
+    var m = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[ev.key];
+    if (m != null) tryDir(m);
+  });
+
+  function win() {
+    done = true; dragging = false;
+    charEl.classList.add('hop');
+    KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
+    setTimeout(function () {
+      KidsGame.celebrate({
+        sub: CHARS[level % CHARS.length][0] + ' encontró ' + CHARS[level % CHARS.length][1],
+        onNext: function () { level++; start(true); },
+        onAgain: function () { start(true); }
+      });
+    }, 900);
+  }
+
+  window.addEventListener('resize', function () { order(); layout(); });
+  start(true);
+  KidsGame.say('Lleva al animalito hasta su comida');
+})();
+</script>
+</body>
+</html>

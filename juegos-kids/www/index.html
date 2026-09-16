@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Juegos de Mazatlam</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { overflow: hidden; }
+  .menubar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #8bd3dd; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+  .menubar h1 { flex: 1; margin: 0; font-size: 28px; text-align: center; }
+  .menubar .total { font-size: 22px; background: #fff; border-radius: 30px; padding: 6px 14px; white-space: nowrap; }
+  .menubar .logo { font-size: 34px; }
+  .grid { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; display: grid; gap: 14px;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); align-content: start; }
+  .tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+          aspect-ratio: 1 / 1; border-radius: 26px; color: #fff; text-decoration: none; font-weight: bold; font-size: 20px;
+          box-shadow: 0 7px 0 rgba(0,0,0,.15); transition: transform .1s; text-align: center; padding: 6px; }
+  .tile:active { transform: scale(.94); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+  .tile .emoji { font-size: 58px; }
+  .tile span.name { text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+  @media (min-width: 900px) { .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } .tile .emoji { font-size: 72px; } .tile { font-size: 24px; } }
+  .c1{background:#f582ae}.c2{background:#3da9fc}.c3{background:#2cb67d}.c4{background:#ff8906}.c5{background:#7f5af0}.c6{background:#e53170}.c7{background:#00a8a8}.c8{background:#f9a825;color:#5a3d00}
+  .c8 span.name{text-shadow:none}
+  .footer { flex: 0 0 auto; text-align: center; font-size: 14px; color: #6b7a99; padding: 4px; }
+</style>
+</head>
+<body>
+  <div class="menubar">
+    <div class="logo emoji">🎈</div>
+    <h1>¡A jugar!</h1>
+    <div class="total" id="total">⭐ 0</div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="footer">Juegos de Mazatlam · sin internet</div>
+<script src="common.js"></script>
+<script>
+  var juegos = [
+    { f: 'memoria',      n: 'Memoria',        e: '🐵', c: 'c1' },
+    { f: 'colorear',     n: 'Colorear',       e: '🎨', c: 'c2' },
+    { f: 'rompecabezas', n: 'Rompecabezas',   e: '🧩', c: 'c3' },
+    { f: 'globos',       n: 'Globos',         e: '🎈', c: 'c4' },
+    { f: 'letras',       n: 'Letras',         e: '🔤', c: 'c5' },
+    { f: 'numeros',      n: 'Números',        e: '🔢', c: 'c6' },
+    { f: 'formas',       n: 'Formas y colores', e: '🔺', c: 'c7' },
+    { f: 'sombras',      n: 'Sombras',        e: '🐘', c: 'c8' },
+    { f: 'dibujar',      n: 'Dibujar',        e: '🖍️', c: 'c2' },
+    { f: 'piano',        n: 'Piano',          e: '🎹', c: 'c1' },
+    { f: 'simon',        n: 'Simón dice',     e: '🟢', c: 'c4' },
+    { f: 'atrapa',       n: 'Atrapa al topo', e: '🐹', c: 'c3' },
+    { f: 'laberinto',    n: 'Laberinto',      e: '🐰', c: 'c6' },
+    { f: 'alimenta',     n: 'Alimenta',       e: '🍌', c: 'c5' },
+    { f: 'monstruo',     n: 'Crea tu monstruo', e: '👾', c: 'c8' },
+    { f: 'gato',         n: 'Tres en raya',   e: '🐱', c: 'c7' }
+  ];
+  var grid = document.getElementById('grid');
+  juegos.forEach(function (j) {
+    var a = document.createElement('a');
+    a.className = 'tile ' + j.c; a.href = 'games/' + j.f + '.html';
+    a.innerHTML = '<span class="emoji">' + j.e + '</span><span class="name">' + j.n + '</span>';
+    a.addEventListener('pointerdown', function () { KidsGame.sound.tap(); });
+    grid.appendChild(a);
+  });
+  try { document.getElementById('total').textContent = '⭐ ' + (localStorage.getItem('kg-total-stars') || 0); } catch (e) {}
+</script>
+</body>
+</html>

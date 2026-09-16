@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Sombras</title>
+<style>
+  .game { display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px; touch-action: none; }
+  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; }
+  .hint { flex: 0 0 auto; font-size: 22px; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); display: flex; align-items: center; gap: 8px; }
+  .slot, .obj {
+    width: var(--sz); height: var(--sz); min-width: 64px; min-height: 64px;
+    border-radius: 22px; display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--sz) * 0.62);
+  }
+  .slot { background: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.12); border: 4px dashed #cfd8ea; position: relative; }
+  .slot .emoji { filter: brightness(0); opacity: .82; transition: filter .3s, opacity .3s, transform .3s; }
+  .slot.hover { border-color: #3da9fc; transform: scale(1.08); background: #eaf6ff; }
+  .slot.ok { border-style: solid; border-color: #2cb67d; background: #d8f3dc; }
+  .slot.ok .emoji { filter: none; opacity: 1; animation: bounce .6s 1; }
+  .slot.bad { animation: shake .35s; }
+  .obj { background: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.14); cursor: grab; touch-action: none; transition: transform .15s, opacity .2s; }
+  .obj.dragging { opacity: .25; }
+  .obj.gone { visibility: hidden; }
+  .obj.bad { animation: shake .35s; }
+  .ghost {
+    position: absolute; left: 0; top: 0; pointer-events: none; z-index: 20;
+    width: var(--sz); height: var(--sz); display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--sz) * 0.72); filter: drop-shadow(0 10px 8px rgba(0,0,0,.3));
+    transform: translate(-50%, -60%) scale(1.15);
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Sombras' });
+(function () {
+  var SETS = [
+    ['🐶','🐱','🐰','🐘','🦒','🐢','🐟','🦋','🐓','🐴','🐧','🦀'],
+    ['🍎','🍌','🍇','🍓','🍉','🍍','🥕','🍒','🍐','🥑','🌽','🍄'],
+    ['🚗','🚌','🚲','✈️','🚁','🚂','⛵','🚀','🚜','🛵','🚤','🎈'],
+    ['🧸','⚽','🪁','🎸','🎺','🧩','🪀','🎨','🚂','🪆','🎲','🏀'],
+    ['🌻','🌵','🌳','🍄','🌈','☂️','🔑','⭐','🏠','🔔','🎩','👑']
+  ];
+  var round = 0, count = 3, items = [], slots = [], placed = 0;
+  var hint = document.createElement('div'); hint.className = 'hint';
+  var top = document.createElement('div'); top.className = 'row';
+  var bottom = document.createElement('div'); bottom.className = 'row';
+  game.innerHTML = '';
+  game.appendChild(top); game.appendChild(hint); game.appendChild(bottom);
+
+  function layout() {
+    var n = items.length || 3;
+    var W = game.clientWidth - 16, H = game.clientHeight - hint.offsetHeight - 40;
+    var gap = 14;
+    var sz = Math.floor(Math.min((W - (n - 1) * gap) / n, H / 2.6, 200));
+    sz = Math.max(64, sz);
+    game.style.setProperty('--sz', sz + 'px');
+    game.style.setProperty('--gap', gap + 'px');
+  }
+
+  function start() {
+    count = Math.min(3 + Math.floor(round / 2), 5);
+    var set = SETS[round % SETS.length];
+    items = KidsGame.shuffle(set).slice(0, count);
+    placed = 0; slots = [];
+    top.innerHTML = ''; bottom.innerHTML = '';
+    hint.innerHTML = '<span class="emoji">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0)">🐶</span>';
+    items.forEach(function (em, i) {
+      var s = document.createElement('div');
+      s.className = 'slot pop'; s.style.animationDelay = (i * 60) + 'ms';
+      s.dataset.v = em;
+      s.innerHTML = '<span class="emoji">' + em + '</span>';
+      top.appendChild(s); slots.push(s);
+    });
+    KidsGame.shuffle(items).forEach(function (em, i) {
+      var o = document.createElement('div');
+      o.className = 'obj pop'; o.style.animationDelay = (200 + i * 60) + 'ms';
+      o.dataset.v = em;
+      o.innerHTML = '<span class="emoji">' + em + '</span>';
+      o.addEventListener('pointerdown', function (ev) { startDrag(ev, o); });
+      bottom.appendChild(o);
+    });
+    layout();
+    KidsGame.say('¿Dónde va cada sombra?');
+  }
+
+  var drag = null;
+  function startDrag(ev, o) {
+    if (drag || o.classList.contains('gone')) return;
+    ev.preventDefault();
+    KidsGame.sound.tap();
+    var g = document.createElement('div');
+    g.className = 'ghost';
+    g.innerHTML = '<span class="emoji">' + o.dataset.v + '</span>';
+    game.appendChild(g);
+    drag = { o: o, g: g, id: ev.pointerId, hover: null };
+    o.classList.add('dragging');
+    moveGhost(ev.clientX, ev.clientY);
+    try { o.setPointerCapture(ev.pointerId); } catch (e) {}
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+  }
+  function gameXY(cx, cy) {
+    var r = game.getBoundingClientRect();
+    return { x: cx - r.left, y: cy - r.top };
+  }
+  function moveGhost(cx, cy) {
+    var p = gameXY(cx, cy);
+    drag.g.style.transform = 'translate(' + (p.x - drag.g.offsetWidth / 2) + 'px,' + (p.y - drag.g.offsetHeight * 0.6) + 'px) scale(1.15)';
+    var over = slotAt(cx, cy);
+    if (drag.hover && drag.hover !== over) drag.hover.classList.remove('hover');
+    if (over && !over.classList.contains('ok')) over.classList.add('hover');
+    drag.hover = over;
+  }
+  function slotAt(cx, cy) {
+    for (var i = 0; i < slots.length; i++) {
+      var r = slots[i].getBoundingClientRect();
+      var m = 12;
+      if (cx >= r.left - m && cx <= r.right + m && cy >= r.top - m && cy <= r.bottom + m) return slots[i];
+    }
+    return null;
+  }
+  function onMove(ev) { if (drag && ev.pointerId === drag.id) { ev.preventDefault(); moveGhost(ev.clientX, ev.clientY); } }
+  function onUp(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    var d = drag; drag = null;
+    d.g.remove();
+    d.o.classList.remove('dragging');
+    if (d.hover) d.hover.classList.remove('hover');
+    var target = slotAt(ev.clientX, ev.clientY);
+    if (target && !target.classList.contains('ok') && target.dataset.v === d.o.dataset.v) {
+      target.classList.add('ok');
+      d.o.classList.add('gone');
+      KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+      placed++;
+      if (placed === items.length) setTimeout(finish, 600);
+    } else if (target) {
+      KidsGame.sound.wrong();
+      target.classList.remove('bad'); void target.offsetWidth; target.classList.add('bad');
+      d.o.classList.remove('bad'); void d.o.offsetWidth; d.o.classList.add('bad');
+      setTimeout(function () { target.classList.remove('bad'); d.o.classList.remove('bad'); }, 400);
+    }
+  }
+
+  function finish() {
+    KidsGame.celebrate({
+      sub: 'Ronda ' + (round + 1),
+      onNext: function () { round++; start(); },
+      onAgain: function () { start(); }
+    });
+  }
+
+  window.addEventListener('resize', layout);
+  start();
+})();
+</script>
+</body>
+</html>

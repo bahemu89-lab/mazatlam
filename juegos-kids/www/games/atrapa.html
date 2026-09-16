@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Atrapa al topo</title>
+<style>
+  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; background: linear-gradient(#c8f0d0, #9fdc9f); touch-action: none; }
+  .prog { flex: 0 0 auto; display: flex; gap: 8px; margin-bottom: 10px; background: rgba(255,255,255,.7); padding: 8px 14px; border-radius: 30px; }
+  .prog i { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; transition: transform .2s; }
+  .prog i.on { background: #ffb703; box-shadow: 0 0 0 3px #fff; transform: scale(1.15); }
+  .board { flex: 0 0 auto; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh); }
+  .hole { position: relative; overflow: hidden; min-width: 64px; min-height: 64px; cursor: pointer; }
+  .hole .pit {
+    position: absolute; left: 8%; right: 8%; bottom: 6%; height: 34%; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 40%, #3b2a1a, #6b4a2b 70%, #8a6a45);
+    box-shadow: inset 0 6px 10px rgba(0,0,0,.5);
+  }
+  .hole .rim {
+    position: absolute; left: 8%; right: 8%; bottom: 6%; height: 34%; border-radius: 50%; z-index: 3;
+    background: linear-gradient(transparent 50%, #7a5533 50%, #5e3f23);
+    clip-path: inset(50% 0 0 0);
+    pointer-events: none;
+  }
+  .hole .critter {
+    position: absolute; left: 0; right: 0; bottom: 14%; z-index: 2; text-align: center;
+    font-size: var(--fs); transform: translateY(130%); transition: transform .18s ease-out;
+    pointer-events: none;
+  }
+  .hole.up .critter { transform: translateY(0); }
+  .hole.up .critter .emoji { display: inline-block; animation: wiggle .5s infinite; }
+  @keyframes wiggle { 0%,100%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} }
+  .hole.caught .critter { transition: transform .25s, opacity .25s; transform: translateY(-40%) scale(1.3); opacity: 0; }
+  .hole.caught .critter .emoji { animation: none; }
+  .plus {
+    position: absolute; left: 50%; top: 30%; transform: translateX(-50%); z-index: 6; pointer-events: none;
+    font-size: 30px; font-weight: bold; color: #ff3d7f; text-shadow: 0 2px 0 #fff, 0 0 8px #fff;
+    animation: floatup .8s ease-out forwards;
+  }
+  @keyframes floatup { 0%{opacity:0;transform:translate(-50%,10px) scale(.6)} 30%{opacity:1;transform:translate(-50%,-10px) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-70px) scale(1)} }
+  .lvl { position: absolute; left: 12px; top: 10px; font-size: 20px; background: #fff; border-radius: 30px; padding: 4px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Atrapa al topo' });
+(function () {
+  var ANIMALS = ['🐹','🐭','🐰','🐿️','🦔','🐸','🐥','🐻','🦊','🐱'];
+  var LEVELS = [
+    { cols: 3, rows: 3, up: 1200, gap: 1000 },
+    { cols: 3, rows: 3, up: 1050, gap: 850 },
+    { cols: 4, rows: 3, up: 950, gap: 700 },
+    { cols: 4, rows: 3, up: 850, gap: 600 },
+    { cols: 4, rows: 3, up: 800, gap: 500 }
+  ];
+  var level = 0, cfg, holes = [], caught = 0, running = false, timer = null;
+  game.innerHTML = '';
+  var lvlEl = document.createElement('div'); lvlEl.className = 'lvl';
+  var prog = document.createElement('div'); prog.className = 'prog';
+  var board = document.createElement('div'); board.className = 'board';
+  game.appendChild(lvlEl); game.appendChild(prog); game.appendChild(board);
+
+  function layout() {
+    var cols = cfg.cols, rows = cfg.rows;
+    var W = game.clientWidth - 16, H = game.clientHeight - prog.offsetHeight - 26;
+    if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
+    var gap = 8;
+    var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));
+    size = Math.max(64, Math.min(size, 220));
+    board.style.setProperty('--gap', gap + 'px');
+    board.style.setProperty('--bw', (cols * size + (cols - 1) * gap) + 'px');
+    board.style.setProperty('--bh', (rows * size + (rows - 1) * gap) + 'px');
+    board.style.setProperty('--fs', Math.round(size * 0.55) + 'px');
+    board.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    board.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+  }
+
+  function renderProg() {
+    prog.innerHTML = '';
+    for (var i = 0; i < 10; i++) { var d = document.createElement('i'); if (i < caught) d.className = 'on'; prog.appendChild(d); }
+  }
+
+  function start() {
+    cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
+    caught = 0; holes = []; running = true;
+    lvlEl.textContent = 'Nivel ' + (level + 1);
+    board.innerHTML = '';
+    for (var i = 0; i < cfg.cols * cfg.rows; i++) {
+      var h = document.createElement('div');
+      h.className = 'hole';
+      h.innerHTML = '<div class="pit"></div><div class="critter"><span class="emoji"></span></div><div class="rim"></div>';
+      var obj = { el: h, em: h.querySelector('.emoji'), busy: false, value: 0, t: null };
+      (function (o) { o.el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(o); }); })(obj);
+      board.appendChild(h); holes.push(obj);
+    }
+    renderProg(); layout();
+    KidsGame.say('¡Atrapa a los animalitos!');
+    clearTimeout(timer);
+    timer = setTimeout(popOne, 600);
+  }
+
+  function popOne() {
+    if (!running) return;
+    var free = holes.filter(function (h) { return !h.busy; });
+    if (free.length) {
+      var h = KidsGame.pick(free);
+      var flower = Math.random() < 0.2;
+      h.busy = true; h.value = flower ? 2 : 1;
+      h.em.textContent = flower ? '🌼' : KidsGame.pick(ANIMALS);
+      h.el.classList.remove('caught'); h.el.classList.add('up');
+      h.t = setTimeout(function () { hide(h); }, cfg.up);
+    }
+    timer = setTimeout(popOne, cfg.gap * (0.7 + Math.random() * 0.6));
+  }
+  function hide(h) {
+    clearTimeout(h.t); h.t = null;
+    h.el.classList.remove('up');
+    setTimeout(function () { if (!h.el.classList.contains('up')) { h.el.classList.remove('caught'); h.busy = false; } }, 260);
+  }
+
+  function tap(h) {
+    if (!running || !h.busy || !h.el.classList.contains('up') || h.el.classList.contains('caught')) return;
+    clearTimeout(h.t);
+    h.el.classList.add('caught');
+    KidsGame.sound.pop(); KidsGame.vibrate(20);
+    KidsGame.addStar(h.value);
+    var p = document.createElement('div'); p.className = 'plus';
+    p.textContent = '¡+' + h.value + '!';
+    h.el.appendChild(p); setTimeout(function () { p.remove(); }, 850);
+    setTimeout(function () { h.el.classList.remove('up', 'caught'); h.busy = false; }, 300);
+    caught = Math.min(caught + 1, 10); renderProg();
+    if (caught >= 10) { running = false; clearTimeout(timer); setTimeout(finish, 500); }
+  }
+
+  function finish() {
+    holes.forEach(function (h) { clearTimeout(h.t); h.el.classList.remove('up'); h.busy = false; });
+    KidsGame.celebrate({
+      sub: 'Nivel ' + (level + 1),
+      onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
+      onAgain: function () { start(); }
+    });
+  }
+
+  window.addEventListener('resize', function () { if (cfg) layout(); });
+  start();
+})();
+</script>
+</body>
+</html>
