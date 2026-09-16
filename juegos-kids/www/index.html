@@ -7,28 +7,44 @@
 <link rel="stylesheet" href="common.css">
 <style>
   body { overflow: hidden; }
-  .menubar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #8bd3dd; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
-  .menubar h1 { flex: 1; margin: 0; font-size: 28px; text-align: center; }
-  .menubar .total { font-size: 22px; background: #fff; border-radius: 30px; padding: 6px 14px; white-space: nowrap; }
-  .menubar .logo { font-size: 34px; }
-  .grid { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; display: grid; gap: 14px;
+  .menubar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 14px; position: relative; z-index: 5;
+             background: linear-gradient(180deg, #62cdf0 0%, #33a6d6 100%);
+             box-shadow: 0 4px 0 #1f7fae, 0 10px 18px rgba(0,40,80,.25), inset 0 2px 0 rgba(255,255,255,.55); }
+  .menubar::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 45%; background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0)); pointer-events: none; }
+  .menubar h1 { flex: 1; margin: 0; font-size: 32px; text-align: center; }
+  .menubar .total { font-size: 22px; background: linear-gradient(180deg, #fff7d6, #ffe08a); color: #7a4b00; border-radius: 30px; padding: 6px 16px; white-space: nowrap;
+                    box-shadow: 0 3px 0 #d9a520, 0 5px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
+  .menubar .logo { font-size: 36px; animation: float 3s ease-in-out infinite; }
+  .grid { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 16px 30px; display: grid; gap: 18px;
           grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); align-content: start; }
-  .tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-          aspect-ratio: 1 / 1; border-radius: 26px; color: #fff; text-decoration: none; font-weight: bold; font-size: 20px;
-          box-shadow: 0 7px 0 rgba(0,0,0,.15); transition: transform .1s; text-align: center; padding: 6px; }
-  .tile:active { transform: scale(.94); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
-  .tile .emoji { font-size: 58px; }
-  .tile span.name { text-shadow: 0 2px 0 rgba(0,0,0,.2); }
-  @media (min-width: 900px) { .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } .tile .emoji { font-size: 72px; } .tile { font-size: 24px; } }
-  .c1{background:#f582ae}.c2{background:#3da9fc}.c3{background:#2cb67d}.c4{background:#ff8906}.c5{background:#7f5af0}.c6{background:#e53170}.c7{background:#00a8a8}.c8{background:#f9a825;color:#5a3d00}
-  .c8 span.name{text-shadow:none}
-  .footer { flex: 0 0 auto; text-align: center; font-size: 14px; color: #6b7a99; padding: 4px; }
+  .tile { --a: #ff9ccb; --b: #f0569a; --d: #b8306f;
+          position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+          aspect-ratio: 1 / 1; border-radius: 30px; color: #fff; text-decoration: none; font-weight: 900; font-size: 20px;
+          background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.45), rgba(255,255,255,0) 45%), linear-gradient(160deg, var(--a) 0%, var(--b) 100%);
+          border: 3px solid rgba(255,255,255,.7);
+          box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,30,80,.28), inset 0 2px 0 rgba(255,255,255,.6), inset 0 -4px 0 rgba(0,0,0,.08);
+          transition: transform .1s, box-shadow .1s; text-align: center; padding: 6px; line-height: 1.1; }
+  .tile::before { content: ""; position: absolute; left: 6%; right: 6%; top: 4%; height: 40%; border-radius: 30px; pointer-events: none;
+                  background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+  .tile .gloss { position: absolute; inset: 0; border-radius: 27px; overflow: hidden; pointer-events: none; }
+  .tile .gloss::after { content: ""; position: absolute; top: -20%; bottom: -20%; width: 30%; left: 0;
+                 background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.4), rgba(255,255,255,0)); transform: translateX(-140%) skewX(-20deg); }
+  .tile.shine .gloss::after { animation: shine 1.1s ease-in-out; }
+  .tile:active { transform: scale(.95) translateY(6px); box-shadow: 0 2px 0 var(--d), 0 6px 10px rgba(0,30,80,.25), inset 0 2px 0 rgba(255,255,255,.6); }
+  .tile .emoji { font-size: 60px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)); transition: transform .15s; }
+  .tile:active .emoji { transform: scale(1.1); }
+  .tile span.name { text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 4px 8px rgba(0,0,0,.2); padding: 2px 10px; border-radius: 14px; background: rgba(0,0,0,.12); }
+  @media (min-width: 900px) { .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px; } .tile .emoji { font-size: 76px; } .tile { font-size: 24px; } }
+  .c1{--a:#ff9ccb;--b:#f0569a;--d:#b8306f}.c2{--a:#7dd0ff;--b:#2f95e8;--d:#1a63a8}.c3{--a:#8ef0b0;--b:#24b36c;--d:#14784a}.c4{--a:#ffc077;--b:#ff7a1a;--d:#b8500a}
+  .c5{--a:#b39cff;--b:#7f5af0;--d:#5232b3}.c6{--a:#ff8fb1;--b:#e53170;--d:#a11f4e}.c7{--a:#7fe3e0;--b:#00a8a8;--d:#00706f}.c8{--a:#ffe98a;--b:#ffb703;--d:#c47f00;color:#6a3f00}
+  .c8 span.name{text-shadow:0 1px 0 rgba(255,255,255,.5);background:rgba(255,255,255,.25)}
+  .footer { flex: 0 0 auto; text-align: center; font-size: 14px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); padding: 4px; position: relative; z-index: 2; }
 </style>
 </head>
 <body>
   <div class="menubar">
     <div class="logo emoji">🎈</div>
-    <h1>¡A jugar!</h1>
+    <h1 class="title-outline">¡A jugar!</h1>
     <div class="total" id="total">⭐ 0</div>
   </div>
   <div class="grid" id="grid"></div>
@@ -57,10 +73,13 @@
   juegos.forEach(function (j) {
     var a = document.createElement('a');
     a.className = 'tile ' + j.c; a.href = 'games/' + j.f + '.html';
-    a.innerHTML = '<span class="emoji">' + j.e + '</span><span class="name">' + j.n + '</span>';
+    a.innerHTML = '<span class="gloss"></span><span class="emoji">' + j.e + '</span><span class="name">' + j.n + '</span>';
     a.addEventListener('pointerdown', function () { KidsGame.sound.tap(); });
+    a.style.animationDelay = (Math.random() * 3) + 's';
     grid.appendChild(a);
   });
+  // Destello aleatorio en los mosaicos
+  setInterval(function () { var t = grid.children[KidsGame.rand(grid.children.length)]; if (!t) return; t.classList.remove('shine'); void t.offsetWidth; t.classList.add('shine'); }, 1400);
   try { document.getElementById('total').textContent = '⭐ ' + (localStorage.getItem('kg-total-stars') || 0); } catch (e) {}
 </script>
 </body>

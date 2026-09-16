@@ -20,7 +20,7 @@ rm -rf "$BUILD"; mkdir -p "$BUILD/proj/assets"
 cp -r "$HERE/android/." "$BUILD/proj/"
 rm -f "$BUILD/proj/MainActivity.java.txt"
 cp -r "$HERE/www" "$BUILD/proj/assets/www"
-rm -f "$BUILD/proj/assets/www/ESPECIFICACION.md"
+rm -f "$BUILD/proj/assets/www/ESPECIFICACION.md" "$BUILD/proj/assets/www/GUIA-VISUAL.md"
 
 echo ">> Ensamblando APK (apktool)"
 java -jar "$TOOLS/apktool.jar" b "$BUILD/proj" -o "$BUILD/unsigned.apk" --use-aapt2 -q

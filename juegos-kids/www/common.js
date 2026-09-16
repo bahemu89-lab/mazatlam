@@ -85,7 +85,7 @@
     o.querySelector('.msg').textContent = opts.msg || pick(['¡Muy bien!', '¡Excelente!', '¡Lo lograste!', '¡Bravo!', '¡Genial!']);
     o.querySelector('.sub').textContent = opts.sub || '';
     var s = opts.stars == null ? 3 : opts.stars;
-    o.querySelector('.starsrow').textContent = '⭐'.repeat(Math.max(0, s));
+    var sr = o.querySelector('.starsrow'); sr.innerHTML = ''; for (var si = 0; si < Math.max(0, s); si++) { var sp = document.createElement('span'); sp.textContent = '⭐'; sp.style.animationDelay = (0.15 + si * 0.18) + 's'; sr.appendChild(sp); }
     var row = o.querySelector('.row'); row.innerHTML = '';
     function btn(txt, cls, fn) { var b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = txt; b.onclick = function () { sounds.tap(); o.classList.remove('show'); fn && fn(); }; row.appendChild(b); }
     if (opts.onNext) btn('Siguiente ▶', 'green', opts.onNext);
