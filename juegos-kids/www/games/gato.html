@@ -267,10 +267,10 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     });
     lineSvg.classList.remove('show'); void lineSvg.offsetWidth; lineSvg.classList.add('show');
   }
-  function burst(els) {
+  function burst(els, n) {
     els.forEach(function (el) {
       var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      for (var i = 0; i < 7; i++) {
+      for (var i = 0; i < (n || 7); i++) {
         var d = document.createElement('div'); d.className = 'spark emoji'; d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
         var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
         d.style.left = cx + 'px'; d.style.top = cy + 'px';
@@ -288,7 +288,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     if (w === 0) {
       if (nivel === 3 && !twoPlayers) {
         // Contra el robot perfecto, empatar es ganar
-        KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells);
+        KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells, 4);
         setTimeout(function () {
           KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: '¡Le empataste al robot perfecto! ¡Eso es ganar!', stars: 3, onAgain: function () { newRound(true); } });
         }, 900);

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Mi mascota</title>
+<style>
+  .game { display: flex; flex-direction: column; touch-action: none; overflow: hidden; background: linear-gradient(180deg, #ffe9f2, #ffd6e6); }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 4px; gap: 8px; z-index: 5; }
+  .hud .name { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #c2427a, 0 4px 8px rgba(0,0,0,.25), -1px -1px 0 #c2427a, 1px -1px 0 #c2427a, -1px 1px 0 #c2427a, 1px 1px 0 #c2427a; }
+  .lvbtn { font-size: 30px; }
+  .meters { flex: 0 0 auto; margin: 2px 10px 6px; padding: 8px 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; z-index: 5; }
+  .meter { display: flex; align-items: center; gap: 6px; }
+  .meter .ic { font-size: 28px; }
+  .meter .bar { width: 110px; height: 20px; border-radius: 12px; background: linear-gradient(180deg, #d5dceb, #edf1f9); box-shadow: inset 0 2px 4px rgba(0,0,0,.28), 0 1px 0 #fff; overflow: hidden; position: relative; }
+  .meter .bar i { display: block; height: 100%; border-radius: 12px; width: 50%; transition: width .4s; background: linear-gradient(180deg, #8ef0b0, #24b36c); box-shadow: inset 0 3px 0 rgba(255,255,255,.55), inset 0 -2px 0 rgba(0,0,0,.12); }
+  .meter .bar i.mid { background: linear-gradient(180deg, #ffe98a, #ffb703); }
+  .meter .bar i.low { background: linear-gradient(180deg, #ff9a8b, #e63946); }
+  .meter .bar i.full::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.7), rgba(255,255,255,0)); width: 40%; animation: shine 1.6s linear infinite; }
+  .meter.flash .ic { animation: pop .5s; }
+  .room { flex: 1 1 auto; position: relative; margin: 0 10px 8px; border-radius: 28px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 8px 0 #d9a7be, 0 16px 28px rgba(90,20,60,.25), inset 0 2px 0 #fff;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 22px, rgba(255,255,255,0) 22px 44px), linear-gradient(180deg, #ffd9e8 0%, #f4bfd8 100%); }
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; box-shadow: 0 -6px 14px rgba(0,0,0,.18);
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, rgba(0,0,0,0) 2px 90px), linear-gradient(180deg, #d69a5c 0%, #b8763f 100%); }
+  .board { position: absolute; left: 0; right: 0; bottom: 34%; height: 14px; background: linear-gradient(180deg, #fff, #e8d5dc); box-shadow: 0 3px 4px rgba(0,0,0,.2); }
+  .rug { position: absolute; left: 50%; bottom: 3%; width: 62%; height: 22%; transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%, #ffb3c7 0 38%, #ff7fa3 39% 56%, #ffb3c7 57% 78%, #e05a86 79%); box-shadow: 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 0 rgba(0,0,0,.08); }
+  .window { position: absolute; left: 6%; top: 8%; width: 130px; height: 120px; border-radius: 16px; border: 8px solid #fff; overflow: hidden;
+    background: linear-gradient(180deg, #7fd0ff, #d9f2ff); box-shadow: 0 6px 0 #d9a7be, 0 10px 18px rgba(0,0,0,.2), inset 0 0 30px rgba(255,255,255,.4); }
+  .window::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 8px; margin-left: -4px; background: #fff; }
+  .window::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 8px; margin-top: -4px; background: #fff; }
+  .window .sun { position: absolute; right: 14px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff8c4, #ffd83d 70%); box-shadow: 0 0 20px 6px rgba(255,216,61,.6); }
+  .window .cl { position: absolute; left: 10px; top: 30px; font-size: 30px; opacity: .95; animation: cloudmove 14s linear infinite; }
+  @keyframes cloudmove { from { transform: translateX(-50px); } to { transform: translateX(140px); } }
+  .curtain { position: absolute; left: calc(6% - 12px); top: calc(8% - 12px); width: 40px; height: 150px; border-radius: 10px 4px 20px 20px; z-index: 1;
+    background: linear-gradient(90deg, #ff8fb1, #ffc3d6 60%, #ff8fb1); box-shadow: 0 6px 10px rgba(0,0,0,.2), inset 0 -20px 0 rgba(0,0,0,.05); }
+  .curtain.r { left: auto; left: calc(6% + 130px - 28px); transform: scaleX(-1); }
+  .bed { position: absolute; right: 4%; bottom: 8%; width: 200px; height: 110px; }
+  .bed .head { position: absolute; right: 0; bottom: 30px; width: 26px; height: 110px; border-radius: 12px 12px 4px 4px; background: linear-gradient(90deg, #8b5a2b, #c68a4b 60%, #8b5a2b); box-shadow: 0 6px 10px rgba(0,0,0,.25); }
+  .bed .mat { position: absolute; left: 0; right: 14px; bottom: 30px; height: 44px; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #e9eef8); box-shadow: 0 6px 0 #c9d2e6, 0 10px 14px rgba(0,0,0,.22), inset 0 2px 0 #fff; }
+  .bed .blanket { position: absolute; left: 0; right: 80px; bottom: 44px; height: 44px; border-radius: 14px 14px 6px 6px; background: linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: inset 0 3px 0 rgba(255,255,255,.4), 0 4px 8px rgba(0,0,0,.2); }
+  .bed .pillow { position: absolute; right: 22px; bottom: 60px; width: 62px; height: 34px; border-radius: 14px; background: linear-gradient(180deg, #fff, #ffe9a8); box-shadow: 0 4px 6px rgba(0,0,0,.2), inset 0 2px 0 #fff; }
+  .bed .leg { position: absolute; bottom: 12px; width: 14px; height: 24px; background: linear-gradient(90deg, #6b3a14, #a2622b); border-radius: 0 0 6px 6px; }
+  .bed .shadow { position: absolute; left: -10px; right: -10px; bottom: 4px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.2); filter: blur(4px); }
+  #lamp { position: absolute; right: 6%; top: 8%; z-index: 6; font-size: 36px; border-radius: 50%; width: 72px; height: 72px; padding: 0; --a: #ffe98a; --b: #ffb703; --d: #c47f00; }
+  #lamp.on { box-shadow: 0 6px 0 var(--d), 0 0 40px 14px rgba(255,220,80,.85), inset 0 2px 0 rgba(255,255,255,.6); }
+  #pet { position: absolute; left: 50%; top: 48%; width: var(--ps); height: var(--ps); margin: calc(var(--ps) / -2) 0 0 calc(var(--ps) / -2); border-radius: 50%; z-index: 2;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 30%, #ffb703 100%);
+    box-shadow: 0 0 0 5px #fff, 0 0 0 9px #ffd166, 0 12px 24px rgba(0,0,0,.3), inset 0 -10px 16px rgba(0,0,0,.14);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
+  #pet::after { content: ""; position: absolute; left: 12%; right: 12%; top: 6%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0)); pointer-events: none; }
+  #pet .face { font-size: calc(var(--ps) * .58); animation: breathe 3s ease-in-out infinite; position: relative; z-index: 1; transform-origin: 50% 90%; }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04) translateY(-3px); } }
+  #pet.munch .face { animation: munch .35s ease-in-out 3; }
+  @keyframes munch { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.12,.88) translateY(4px); } }
+  #pet.jump { animation: pjump .6s ease-out; }
+  @keyframes pjump { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-50px) scale(.95,1.08); } 60% { transform: translateY(0) scale(1.08,.9); } 100% { transform: translateY(0) scale(1); } }
+  #pet.happy { animation: pjump .5s ease-out 3; }
+  #pet.hit { animation: shake .4s; }
+  #pet.sleeping { background: radial-gradient(circle at 35% 28%, #dbe6ff 0%, #9fb4ff 30%, #4a5fd0 100%); box-shadow: 0 0 0 5px #fff, 0 0 0 9px #8fa4ff, 0 12px 24px rgba(0,0,0,.4), inset 0 -10px 16px rgba(0,0,0,.2); }
+  #pet.sleeping .face { animation: breathe 4.5s ease-in-out infinite; filter: brightness(.8); }
+  .petshadow { position: absolute; left: 50%; top: calc(48% + var(--ps) * .5 + 6px); width: calc(var(--ps) * 1.05); height: calc(var(--ps) * .22); transform: translateX(-50%); border-radius: 50%; background: rgba(60,20,40,.28); filter: blur(3px); z-index: 1; }
+  .mood { position: absolute; left: calc(50% + var(--ps) * .32); top: calc(48% - var(--ps) * .62); z-index: 3; width: 74px; height: 74px; border-radius: 50% 50% 50% 8px; display: flex; align-items: center; justify-content: center; font-size: 42px;
+    background: linear-gradient(180deg, #fff, #f1f4fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 8px 14px rgba(0,0,0,.2); animation: float 3s ease-in-out infinite; }
+  .mood.pop { animation: pop .4s ease-out; }
+  .dirt { position: absolute; width: 34px; height: 28px; border-radius: 50% 40% 55% 45%; z-index: 2; pointer-events: none;
+    background: radial-gradient(circle at 40% 35%, #a8734a, #6b4423); box-shadow: inset 0 -3px 0 rgba(0,0,0,.2), 0 2px 3px rgba(0,0,0,.25); opacity: .95; transition: transform .25s, opacity .25s; }
+  .dirt.gone { transform: scale(0); opacity: 0; }
+  .bub { position: absolute; width: 22px; height: 22px; border-radius: 50%; z-index: 6; pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,1), rgba(200,240,255,.6) 60%, rgba(255,255,255,.1)); border: 2px solid rgba(255,255,255,.8);
+    animation: bubup 1.1s ease-out forwards; }
+  @keyframes bubup { 0% { transform: translate(0,0) scale(.4); opacity: 1; } 100% { transform: translate(var(--dx), -90px) scale(1.2); opacity: 0; } }
+  .heart { position: absolute; z-index: 6; pointer-events: none; font-size: 30px; animation: heartup 1.2s ease-out forwards; }
+  @keyframes heartup { 0% { transform: translate(0,0) scale(.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(var(--dx), -120px) scale(1.2); opacity: 0; } }
+  .zz { position: absolute; z-index: 8; pointer-events: none; font-size: 34px; animation: zzup 2.4s ease-out forwards; }
+  @keyframes zzup { 0% { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(40px,-140px) scale(1.3); opacity: 0; } }
+  .ftxt { position: absolute; left: 50%; top: 26%; transform: translateX(-50%); z-index: 9; pointer-events: none; font-size: 36px; font-weight: 900; color: #ff3d7f; text-shadow: 0 2px 0 #fff, 0 0 10px #fff; animation: up 1.3s ease-out forwards; white-space: nowrap; }
+  @keyframes up { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
+  .night { position: absolute; inset: 0; z-index: 5; background: radial-gradient(circle at 50% 55%, rgba(20,30,90,.35), rgba(8,12,50,.78) 80%); opacity: 0; pointer-events: none; transition: opacity .8s; }
+  .night.on { opacity: 1; }
+  .night i { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 2px #fff; animation: twinkle 2s ease-in-out infinite alternate; }
+  @keyframes twinkle { from { opacity: .2; transform: scale(.7); } to { opacity: 1; transform: scale(1.2); } }
+  .tray { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 7; display: flex; gap: 10px; padding: 8px 12px; animation: pop .3s ease-out; }
+  .food, #sponge, .pill { width: 74px; height: 74px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 44px; cursor: grab; touch-action: none;
+    background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: 0 5px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 #fff; }
+  .ghost { position: absolute; z-index: 20; font-size: 60px; pointer-events: none; transform: translate(-50%, -50%) scale(1.15); filter: drop-shadow(0 10px 8px rgba(0,0,0,.35)); }
+  #sponge { position: absolute; left: 20px; bottom: 20px; z-index: 7; font-size: 50px; width: 84px; height: 84px; border-radius: 50%; cursor: grab; touch-action: none; }
+  #sponge.drag { transform: scale(1.15); box-shadow: 0 2px 0 #c9d2e6, 0 14px 18px rgba(0,0,0,.3); }
+  #ball { position: absolute; left: 0; top: 0; width: 84px; height: 84px; z-index: 7; display: flex; align-items: center; justify-content: center; font-size: 64px; cursor: pointer; touch-action: none; will-change: transform; }
+  #ball .emoji { display: block; animation: spin 1.2s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ballshadow { position: absolute; width: 70px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.25); filter: blur(3px); z-index: 1; }
+  .counter { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 7; display: flex; gap: 8px; padding: 8px 16px; border-radius: 30px; font-size: 22px; align-items: center; }
+  .counter i { width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; box-shadow: inset 0 2px 3px rgba(0,0,0,.2); }
+  .counter i.on { background: linear-gradient(180deg, #ffe98a, #ffb703); box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0,0,0,.25); }
+  .actions { flex: 0 0 auto; display: flex; justify-content: center; gap: 12px; padding: 0 10px 10px; flex-wrap: wrap; z-index: 5; }
+  .actions .btn { min-width: 108px; min-height: 76px; font-size: 38px; padding: 6px 14px; flex-direction: column; gap: 0; }
+  .actions .btn small { font-size: 15px; letter-spacing: .5px; }
+  .actions .btn.on { outline: 5px solid #fff; outline-offset: 2px; }
+  .actions .btn.alert { animation: bounce .7s infinite; }
+  .picker { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.3), rgba(60,10,40,.55) 75%); }
+  .picker .box { padding: 20px 26px; text-align: center; max-width: 94vw; }
+  .picker .ttl { font-size: 32px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); margin-bottom: 14px; }
+  .picker .row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .pet-btn { width: 132px; height: 148px; border-radius: 30px; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative;
+    background: linear-gradient(180deg, #fff 0%, #e6ecfb 100%); font: inherit; font-weight: 900; font-size: 20px; color: #1f2f6b;
+    box-shadow: 0 7px 0 #b9c4dc, 0 14px 22px rgba(20,40,90,.25), inset 0 2px 0 #fff; transition: transform .1s, box-shadow .1s; }
+  .pet-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 #b9c4dc, 0 6px 10px rgba(20,40,90,.2); }
+  .pet-btn.last { outline: 5px solid #ffb703; outline-offset: 2px; }
+  .pet-btn .med { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 58px; animation: float 3s ease-in-out infinite;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 35%, #ffb703 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #ffd166, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12); }
+  .pet-btn:nth-child(2) .med { animation-delay: -.7s; } .pet-btn:nth-child(3) .med { animation-delay: -1.4s; } .pet-btn:nth-child(4) .med { animation-delay: -2.1s; }
+  @media (max-height: 700px) { .window { width: 100px; height: 90px; } .curtain { height: 116px; } .curtain.r { left: calc(6% + 100px - 28px); } .bed { width: 160px; height: 90px; } .meter .bar { width: 90px; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Mi mascota' });
+(function () {
+  var PETS = [['🐶', 'Perrito'], ['🐱', 'Gatito'], ['🐰', 'Conejito'], ['🐼', 'Pandita']];
+  var NEEDS = [
+    { k: 'hambre',    ic: '🍎', mul: 1.2 },
+    { k: 'limpieza',  ic: '🛁', mul: 0.8 },
+    { k: 'diversion', ic: '🎾', mul: 1.1 },
+    { k: 'sueno',     ic: '💤', mul: 0.9 },
+    { k: 'salud',     ic: '🩹', mul: 0 }
+  ];
+  var RATE = [0, 0.17, 0.34, 0.5];
+  var nivel = 1, pet = PETS[0], needs = {}, running = false, mode = null, happyShown = false;
+  var lastT = 0, eating = 0, sneezeT = 0, saveT = 0, ball = null, taps = 0, spots = [], sleepZ = 0;
+  var saved = null; try { saved = JSON.parse(localStorage.getItem('kg-mascota') || 'null'); } catch (e) { saved = null; }
+
+  game.innerHTML = '';
+  var hud = document.createElement('div'); hud.className = 'hud';
+  var badgeHolder = document.createElement('span'); var nameEl = document.createElement('div'); nameEl.className = 'name';
+  var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
+  hud.appendChild(badgeHolder); hud.appendChild(nameEl); hud.appendChild(lvBtn);
+  var meters = document.createElement('div'); meters.className = 'meters panel';
+  var room = document.createElement('div'); room.className = 'room';
+  room.innerHTML = '<div class="window"><div class="sun"></div><span class="cl">☁️</span></div><div class="curtain"></div><div class="curtain r"></div>' +
+    '<div class="board"></div><div class="floor"></div><div class="rug"></div>' +
+    '<div class="bed"><div class="shadow"></div><div class="leg" style="left:10px"></div><div class="leg" style="right:30px"></div><div class="head"></div><div class="mat"></div><div class="blanket"></div><div class="pillow"></div></div>' +
+    '<button id="lamp" class="btn" aria-label="Lámpara">💡</button>' +
+    '<div class="petshadow"></div><div id="pet"><span class="face emoji"></span></div><div class="mood"><span class="emoji">😊</span></div><div class="night"></div>';
+  var actions = document.createElement('div'); actions.className = 'actions';
+  game.appendChild(hud); game.appendChild(meters); game.appendChild(room); game.appendChild(actions);
+  var petEl = room.querySelector('#pet'), faceEl = petEl.querySelector('.face'), moodEl = room.querySelector('.mood'), night = room.querySelector('.night'), lamp = room.querySelector('#lamp');
+  for (var si = 0; si < 14; si++) { var st = document.createElement('i'); st.style.left = (Math.random() * 100) + '%'; st.style.top = (Math.random() * 60) + '%'; st.style.animationDelay = (-Math.random() * 2) + 's'; night.appendChild(st); }
+  lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; setMode(null); save(); pickLevel(); });
+
+  function actBtn(id, em, txt, cls, fn) {
+    var b = document.createElement('button'); b.className = 'btn ' + cls; b.id = id; b.innerHTML = '<span>' + em + '</span><small>' + txt + '</small>';
+    b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); if (!running) return; KidsGame.sound.tap(); fn(); });
+    actions.appendChild(b); return b;
+  }
+  var bFeed = actBtn('act-feed', '🍎', 'Comer', 'green', function () { setMode(mode === 'feed' ? null : 'feed'); });
+  var bBath = actBtn('act-bath', '🛁', 'Baño', 'blue', function () { setMode(mode === 'bath' ? null : 'bath'); });
+  var bPlay = actBtn('act-play', '🎾', 'Jugar', 'yellow', function () { setMode(mode === 'play' ? null : 'play'); });
+  var bSleep = actBtn('act-sleep', '💤', 'Dormir', 'purple', function () { setMode(mode === 'sleep' ? null : 'sleep'); });
+  var bHeal = actBtn('act-heal', '🩹', 'Curar', '', function () { setMode(mode === 'heal' ? null : 'heal'); });
+  lamp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); if (!running) return; KidsGame.sound.tap(); setMode(mode === 'sleep' ? null : 'sleep'); });
+
+  function layout() {
+    var r = room.clientHeight, w = room.clientWidth;
+    var ps = Math.max(150, Math.min(240, Math.min(r * 0.44, w * 0.35)));
+    room.style.setProperty('--ps', ps + 'px');
+  }
+  window.addEventListener('resize', layout);
+
+  // ---------- medidores ----------
+  var meterEls = {};
+  function buildMeters() {
+    meters.innerHTML = ''; meterEls = {};
+    activeNeeds().forEach(function (n) {
+      var m = document.createElement('div'); m.className = 'meter'; m.innerHTML = '<span class="ic emoji">' + n.ic + '</span><div class="bar"><i></i></div>';
+      meters.appendChild(m); meterEls[n.k] = m;
+    });
+    bHeal.style.display = nivel === 3 ? '' : 'none';
+  }
+  function activeNeeds() { return NEEDS.filter(function (n) { return n.k !== 'salud' || nivel === 3; }); }
+  function renderMeters() {
+    activeNeeds().forEach(function (n) {
+      var v = needs[n.k], i = meterEls[n.k].querySelector('i');
+      i.style.width = Math.round(v) + '%'; i.className = v >= 80 ? 'full' : v >= 60 ? '' : v >= 35 ? 'mid' : 'low';
+    });
+    var vals = activeNeeds().map(function (n) { return needs[n.k]; });
+    var mn = Math.min.apply(null, vals);
+    var face = mode === 'sleep' ? '😴' : eating > 0 ? '😋' : mn < 35 ? '🥲' : '😊';
+    var cur = moodEl.textContent.trim();
+    if (cur !== face) { moodEl.innerHTML = '<span class="emoji">' + face + '</span>'; moodEl.classList.remove('pop'); void moodEl.offsetWidth; moodEl.classList.add('pop'); }
+    if (mn >= 80) { if (!happyShown) { happyShown = true; celebrateHappy(); } } else if (mn < 60) happyShown = false;
+  }
+  function fulfilled(k, txt) {
+    needs[k] = 100; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    meterEls[k].classList.remove('flash'); void meterEls[k].offsetWidth; meterEls[k].classList.add('flash');
+    floatText(txt); sparks(); save();
+  }
+  function celebrateHappy() {
+    running = false; setMode(null);
+    petEl.classList.add('happy');
+    setTimeout(function () {
+      petEl.classList.remove('happy');
+      KidsGame.celebrate({ msg: '¡Está feliz!', sub: pet[0] + ' ' + pet[1] + ' 💕', stars: 3,
+        onAgain: function () { activeNeeds().forEach(function (n) { needs[n.k] = 35 + Math.random() * 25; }); happyShown = false; running = true; renderMeters(); save(); KidsGame.say('¡Cuídalo otra vez!'); } });
+    }, 900);
+  }
+
+  // ---------- efectos ----------
+  function floatText(t) { var d = document.createElement('div'); d.className = 'ftxt'; d.textContent = t; room.appendChild(d); setTimeout(function () { d.remove(); }, 1300); }
+  function petCenter() { var pr = petEl.getBoundingClientRect(), rr = room.getBoundingClientRect(); return { x: pr.left - rr.left + pr.width / 2, y: pr.top - rr.top + pr.height / 2, r: pr.width / 2 }; }
+  function hearts(n) {
+    var c = petCenter();
+    for (var i = 0; i < (n || 6); i++) { var h = document.createElement('div'); h.className = 'heart'; h.textContent = KidsGame.pick(['❤️', '💖', '💕']);
+      h.style.left = (c.x - 15 + (Math.random() - 0.5) * c.r) + 'px'; h.style.top = (c.y - c.r * 0.5) + 'px'; h.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px'); h.style.animationDelay = (i * 0.08) + 's';
+      room.appendChild(h); (function (el) { setTimeout(function () { el.remove(); }, 1800); })(h); }
+  }
+  function sparks() {
+    var c = petCenter();
+    for (var i = 0; i < 10; i++) { var h = document.createElement('div'); h.className = 'heart'; h.textContent = KidsGame.pick(['✨', '⭐', '💫']);
+      var a = Math.random() * Math.PI * 2; h.style.left = (c.x + Math.cos(a) * c.r) + 'px'; h.style.top = (c.y + Math.sin(a) * c.r) + 'px'; h.style.setProperty('--dx', (Math.cos(a) * 80) + 'px');
+      room.appendChild(h); (function (el) { setTimeout(function () { el.remove(); }, 1300); })(h); }
+  }
+  function bubbles(x, y, n) {
+    for (var i = 0; i < (n || 3); i++) { var b = document.createElement('div'); b.className = 'bub'; var s = 12 + Math.random() * 18; b.style.width = b.style.height = s + 'px';
+      b.style.left = (x - s / 2 + (Math.random() - 0.5) * 30) + 'px'; b.style.top = (y - s / 2) + 'px'; b.style.setProperty('--dx', ((Math.random() - 0.5) * 60) + 'px');
+      room.appendChild(b); (function (el) { setTimeout(function () { el.remove(); }, 1100); })(b); }
+  }
+  function overPet(x, y, extra) { var c = petCenter(); var dx = x - c.x, dy = y - c.y; return Math.sqrt(dx * dx + dy * dy) < c.r + (extra || 30); }
+  function roomXY(ev) { var rr = room.getBoundingClientRect(); return { x: ev.clientX - rr.left, y: ev.clientY - rr.top }; }
+
+  // ---------- modos ----------
+  var modeEls = [];
+  function setMode(m) {
+    modeEls.forEach(function (e) { e.remove(); }); modeEls = []; ball = null; spots = [];
+    [bFeed, bBath, bPlay, bSleep, bHeal].forEach(function (b) { b.classList.remove('on'); });
+    if (mode === 'sleep') { night.classList.remove('on'); lamp.classList.remove('on'); petEl.classList.remove('sleeping'); }
+    mode = m;
+    if (m === 'feed') { bFeed.classList.add('on'); tray(['🍎', '🥕', '🍌', '🍪'], 'food', eat); KidsGame.say('Dale de comer'); }
+    if (m === 'heal') { bHeal.classList.add('on'); bHeal.classList.remove('alert'); tray(['🩹', '💊', '🍵'], 'pill', heal); KidsGame.say('Cúralo'); }
+    if (m === 'bath') { bBath.classList.add('on'); startBath(); KidsGame.say('Frota con la esponja'); }
+    if (m === 'play') { bPlay.classList.add('on'); startPlay(); KidsGame.say('Toca la pelota'); }
+    if (m === 'sleep') { bSleep.classList.add('on'); night.classList.add('on'); lamp.classList.add('on'); petEl.classList.add('sleeping'); KidsGame.say('Shhh, a dormir'); }
+    renderMeters();
+  }
+  function tray(items, cls, onDrop) {
+    var t = document.createElement('div'); t.className = 'tray panel';
+    items.forEach(function (em) {
+      var f = document.createElement('div'); f.className = cls; f.innerHTML = '<span class="emoji">' + em + '</span>';
+      var ghost = null;
+      f.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); f.setPointerCapture(ev.pointerId);
+        ghost = document.createElement('div'); ghost.className = 'ghost emoji'; ghost.textContent = em; room.appendChild(ghost);
+        var p = roomXY(ev); ghost.style.left = p.x + 'px'; ghost.style.top = p.y + 'px'; KidsGame.sound.tap();
+      });
+      f.addEventListener('pointermove', function (ev) { if (!ghost) return; var p = roomXY(ev); ghost.style.left = p.x + 'px'; ghost.style.top = p.y + 'px'; });
+      function drop(ev) {
+        if (!ghost) return; var p = roomXY(ev); ghost.remove(); ghost = null;
+        if (overPet(p.x, p.y, 40)) onDrop(em); else KidsGame.sound.tap();
+      }
+      f.addEventListener('pointerup', drop); f.addEventListener('pointercancel', drop);
+      t.appendChild(f);
+    });
+    room.appendChild(t); modeEls.push(t);
+  }
+  function eat(em) {
+    var before = needs.hambre; needs.hambre = Math.min(100, needs.hambre + 30); eating = 1.8;
+    petEl.classList.remove('munch'); void petEl.offsetWidth; petEl.classList.add('munch');
+    KidsGame.sound.pop(); hearts(5);
+    if (before < 80 && needs.hambre >= 80) { fulfilled('hambre', '¡Qué rico!'); setTimeout(function () { if (mode === 'feed') setMode(null); }, 900); }
+    else if (needs.hambre >= 100) floatText('¡Lleno! 😋');
+    renderMeters();
+  }
+  function heal(em) {
+    petEl.classList.remove('jump'); void petEl.offsetWidth; petEl.classList.add('jump'); hearts(6);
+    fulfilled('salud', '¡Sanito!'); setTimeout(function () { if (mode === 'heal') setMode(null); }, 900); renderMeters();
+  }
+  function startBath() {
+    var n = Math.max(2, Math.ceil((100 - needs.limpieza) / 18)); var c = petCenter();
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('div'); d.className = 'dirt'; var a = Math.random() * Math.PI * 2, r = Math.random() * c.r * 0.7;
+      var x = c.x + Math.cos(a) * r, y = c.y + Math.sin(a) * r; d.style.left = (x - 17) + 'px'; d.style.top = (y - 14) + 'px'; d.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      room.appendChild(d); spots.push({ el: d, x: x, y: y }); modeEls.push(d);
+    }
+    var sp = document.createElement('div'); sp.id = 'sponge'; sp.className = 'food'; sp.innerHTML = '<span class="emoji">🧽</span>';
+    var dragging = false, lastBub = 0, step = (100 - needs.limpieza) / n, base = needs.limpieza;
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); sp.setPointerCapture(ev.pointerId); dragging = true; sp.classList.add('drag'); KidsGame.sound.tap(); });
+    sp.addEventListener('pointermove', function (ev) {
+      if (!dragging) return; var p = roomXY(ev);
+      sp.style.left = (p.x - 42) + 'px'; sp.style.top = (p.y - 42) + 'px'; sp.style.bottom = 'auto';
+      if (overPet(p.x, p.y, 20)) {
+        var now = performance.now(); if (now - lastBub > 70) { lastBub = now; bubbles(p.x, p.y, 2); }
+        for (var i = spots.length - 1; i >= 0; i--) { var s = spots[i]; if (Math.abs(s.x - p.x) < 44 && Math.abs(s.y - p.y) < 40) { s.el.classList.add('gone'); spots.splice(i, 1); KidsGame.sound.pop(); needs.limpieza = Math.min(100, base + step * (n - spots.length)); renderMeters(); } }
+        if (!spots.length) { fulfilled('limpieza', '¡Limpio! ✨'); setTimeout(function () { if (mode === 'bath') setMode(null); }, 900); dragging = false; }
+      }
+    });
+    function stop() { dragging = false; sp.classList.remove('drag'); }
+    sp.addEventListener('pointerup', stop); sp.addEventListener('pointercancel', stop);
+    room.appendChild(sp); modeEls.push(sp);
+  }
+  function startPlay() {
+    taps = 0;
+    var b = document.createElement('div'); b.id = 'ball'; b.innerHTML = '<span class="emoji">🎾</span>';
+    var sh = document.createElement('div'); sh.className = 'ballshadow';
+    var cnt = document.createElement('div'); cnt.className = 'counter panel'; cnt.innerHTML = '🎾 <i></i><i></i><i></i><i></i><i></i>';
+    room.appendChild(sh); room.appendChild(b); room.appendChild(cnt); modeEls.push(b, sh, cnt);
+    ball = { el: b, sh: sh, cnt: cnt, x: room.clientWidth * 0.3, y: room.clientHeight * 0.3, vx: 120, vy: 0 };
+    b.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); if (!ball) return;
+      taps++; KidsGame.sound.pop(); KidsGame.vibrate(15);
+      ball.vy = -Math.max(420, Math.min(700, room.clientHeight * 1.1)); ball.vx = (Math.random() - 0.5) * 400;
+      petEl.classList.remove('jump'); void petEl.offsetWidth; petEl.classList.add('jump');
+      var dots = cnt.querySelectorAll('i'); for (var i = 0; i < dots.length; i++) dots[i].className = i < taps ? 'on' : '';
+      if (taps >= 5) { fulfilled('diversion', '¡Yupi! 🎉'); petEl.classList.add('happy'); setTimeout(function () { petEl.classList.remove('happy'); if (mode === 'play') setMode(null); }, 1500); ball = null; }
+    });
+  }
+  function updateBall(dt) {
+    if (!ball) return;
+    var W = room.clientWidth, H = room.clientHeight, floorY = H * 0.9;
+    ball.vy += 1300 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+    if (ball.y > floorY) { ball.y = floorY; ball.vy = -Math.abs(ball.vy) * 0.75; if (Math.abs(ball.vy) < 60) ball.vy = -320; }
+    if (ball.x < 42) { ball.x = 42; ball.vx = Math.abs(ball.vx); } if (ball.x > W - 42) { ball.x = W - 42; ball.vx = -Math.abs(ball.vx); }
+    if (ball.y < 42) { ball.y = 42; ball.vy = Math.abs(ball.vy); }
+    ball.el.style.transform = 'translate(' + (ball.x - 42) + 'px,' + (ball.y - 42) + 'px)';
+    var h = Math.max(0, (floorY - ball.y) / floorY); ball.sh.style.transform = 'translate(' + (ball.x - 35) + 'px,' + (floorY + 30) + 'px) scale(' + (1 - h * 0.5) + ')'; ball.sh.style.opacity = 0.3 - h * 0.15;
+  }
+
+  // ---------- bucle ----------
+  function update(dt) {
+    var rate = RATE[nivel];
+    activeNeeds().forEach(function (n) {
+      if (n.k === 'sueno' && mode === 'sleep') return;
+      needs[n.k] = Math.max(0, needs[n.k] - rate * n.mul * dt);
+    });
+    if (mode === 'sleep') {
+      var before = needs.sueno; needs.sueno = Math.min(100, needs.sueno + 9 * dt);
+      sleepZ -= dt; if (sleepZ <= 0) { sleepZ = 0.8; var c = petCenter(); var z = document.createElement('div'); z.className = 'zz'; z.textContent = '💤'; z.style.left = (c.x + c.r * 0.4) + 'px'; z.style.top = (c.y - c.r * 0.6) + 'px'; room.appendChild(z); setTimeout(function () { z.remove(); }, 2400); }
+      if (before < 100 && needs.sueno >= 100) { fulfilled('sueno', '¡Buenos días! ☀️'); setTimeout(function () { if (mode === 'sleep') setMode(null); }, 1200); }
+    }
+    if (eating > 0) eating -= dt;
+    if (nivel === 3 && mode !== 'sleep') {
+      sneezeT -= dt;
+      if (sneezeT <= 0) { sneezeT = 28 + Math.random() * 18; if (needs.salud > 45) sneeze(); }
+    }
+    updateBall(dt);
+    saveT += dt; if (saveT > 5) { saveT = 0; save(); }
+    renderMeters();
+  }
+  function sneeze() {
+    needs.salud = 30; petEl.classList.remove('hit'); void petEl.offsetWidth; petEl.classList.add('hit');
+    floatText('¡Achís! 🤧'); KidsGame.sound.wrong(); bHeal.classList.add('alert'); KidsGame.say('¡Achís! Está malito');
+    moodEl.innerHTML = '<span class="emoji">🤧</span>';
+  }
+  function frame(now) {
+    if (!lastT) lastT = now; var dt = Math.min((now - lastT) / 1000, 0.1); lastT = now;
+    if (running) update(dt);
+    requestAnimationFrame(frame);
+  }
+  function save() { try { localStorage.setItem('kg-mascota', JSON.stringify({ pet: pet[0], needs: needs, t: Date.now() })); } catch (e) {} }
+
+  // ---------- inicio ----------
+  function begin() {
+    faceEl.textContent = pet[0]; nameEl.textContent = pet[1];
+    if (saved && saved.needs && saved.pet === pet[0]) { activeNeeds().forEach(function (n) { needs[n.k] = typeof saved.needs[n.k] === 'number' ? saved.needs[n.k] : 60; }); }
+    else activeNeeds().forEach(function (n) { needs[n.k] = 45 + Math.random() * 25; });
+    if (typeof needs.salud !== 'number') needs.salud = 90;
+    buildMeters(); layout(); happyShown = false; sneezeT = 20 + Math.random() * 15; setMode(null); running = true; renderMeters(); save();
+    KidsGame.say('Cuida a tu ' + pet[1].toLowerCase());
+  }
+  function pickPet() {
+    var pk = document.createElement('div'); pk.className = 'picker';
+    pk.innerHTML = '<div class="box panel"><div class="ttl">¿Cuál es tu mascota?</div><div class="row"></div></div>';
+    var row = pk.querySelector('.row');
+    PETS.forEach(function (p) {
+      var b = document.createElement('button'); b.className = 'pet-btn' + (saved && saved.pet === p[0] ? ' last' : '');
+      b.innerHTML = '<span class="med"><span class="emoji">' + p[0] + '</span></span><span>' + p[1] + '</span>';
+      b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.pop(); pet = p; pk.remove(); begin(); });
+      row.appendChild(b);
+    });
+    game.appendChild(pk);
+  }
+  function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
+  function pickLevel() { KidsGame.levelPicker({ onPick: function (n) { nivel = n; setBadge(); pickPet(); } }); }
+  setBadge(); buildMeters(); layout(); pickLevel(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

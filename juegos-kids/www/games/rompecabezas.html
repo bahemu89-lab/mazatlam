@@ -254,7 +254,7 @@
   }
 
   function layout() {
-    var W = game.clientWidth - 16, H = game.clientHeight - 82, gap = 8, n = tiles.length, F = 36;
+    var W = game.clientWidth - 16, H = game.clientHeight - 82, gap = 8, n = tiles.length, F = 36, B = 6;
     if (!n || W < 50 || H < 50) return;
     var portrait = H > W;
     wrap.className = 'wrap' + (portrait ? ' portrait' : '');
@@ -276,13 +276,13 @@
     // Tamaño de las fichas en la bandeja para que quepan todas
     if (portrait) {
       trows = level === 3 ? 3 : 2; tcols = Math.ceil(n / trows);
-      tw = (W - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
-      var availH = parseFloat(tray.style.height) - (trows + 1) * gap;
+      tw = (W - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
+      var availH = parseFloat(tray.style.height) - B - (trows + 1) * gap;
       if (trows * th > availH) { th = availH / trows; tw = th * tileW / tileH; }
     } else {
       tcols = level === 3 ? 3 : 2; trows = Math.ceil(n / tcols);
-      tw = (parseFloat(tray.style.width) - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
-      if (trows * th > H - (trows + 1) * gap) { th = (H - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
+      tw = (parseFloat(tray.style.width) - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
+      if (trows * th > H - B - (trows + 1) * gap) { th = (H - B - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
     }
     trayScale = Math.min(1, tw / tileW);
     if (level === 3) trayScale *= 0.82;

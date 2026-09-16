@@ -12,9 +12,9 @@
   .tools { position: absolute; top: 8px; right: 8px; z-index: 3; }
   .tools .btn { font-size: 30px; }
   .menu { justify-content: center; gap: 22px; }
-  .menu .btn { width: min(88vw, 460px); min-height: 100px; font-size: min(7vw, 34px); gap: 16px; animation: float 3.4s ease-in-out infinite; }
-  .menu .btn:nth-child(3) { animation-delay: -1.2s; } .menu .btn:nth-child(4) { animation-delay: -2.3s; }
-  .menu .btn .emoji { font-size: 1.5em; }
+  .menu > .btn { width: min(88vw, 460px); min-height: 100px; font-size: min(7vw, 34px); gap: 16px; animation: float 3.4s ease-in-out infinite; }
+  .menu > .btn:nth-child(3) { animation-delay: -1.2s; } .menu > .btn:nth-child(4) { animation-delay: -2.3s; }
+  .menu > .btn .emoji { font-size: 1.5em; }
   /* Encuentra la forma / el color */
   .find { justify-content: center; }
   .target { display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -61,6 +61,13 @@
     background: linear-gradient(180deg, #ffffff, #eef2fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.2), inset 0 2px 0 #fff; }
   .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
   @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  .baskets.n4 .bname { font-size: min(3.2vw, 18px); padding: 3px 10px; }
+  .baskets.n4 .bname svg { width: 20px; height: 20px; }
+  @media (max-width: 900px) {
+    .choices.six { max-width: 480px; }
+    .sort .hint { margin-top: 66px; }
+    .baskets.n3 .bname { font-size: min(3.6vw, 20px); }
+  }
 </style>
 </head>
 <body>
@@ -291,7 +298,7 @@
       bins = KidsGame.shuffle(colorPool()).slice(0, nb).map(function (c) { return { c: c, s: null }; });
     }
     s.appendChild(el('div', 'hint', byShape ? '🧺 Forma y color en su canasta' : '🧺 Pon cada figura en su canasta'));
-    area = el('div', 'area'); basketsEl = el('div', 'baskets');
+    area = el('div', 'area'); basketsEl = el('div', 'baskets n' + nb);
     bins.forEach(function (b) {
       var d = el('div', 'basket'); d.dataset.color = b.c.id; d.dataset.shape = b.s ? b.s.id : '';
       d.innerHTML = basketSVG(b.c.hex) + '<span class="bname" style="background-color:' + b.c.hex + '">' + (b.s ? shapeSVG(b.s, b.c.hex) + b.s.short + ' ' : '') + b.c.name + '</span>';
@@ -381,7 +388,7 @@
 
   window.addEventListener('resize', function () { if (ACTS[act] === 'sort') layoutSort(); });
   // Expuesto para pruebas
-  window.__formas = { setLevel: function (n) { level = n; showMenu(); }, get level() { return level; }, start: startAct };
+  window.__formas = { setLevel: function (n) { level = n; showMenu(); }, get level() { return level; }, start: startAct, sort: function (r) { act = 2; roundsInAct = r || 0; sortRound(); } };
   pickLevel();
 })();
 </script>

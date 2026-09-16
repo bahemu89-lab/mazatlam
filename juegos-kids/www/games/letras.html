@@ -14,9 +14,9 @@
   .tools .btn { font-size: 30px; }
   /* Menú de modos */
   .menu { justify-content: center; gap: 26px; }
-  .menu .btn { width: min(88vw, 480px); min-height: 108px; font-size: min(7vw, 34px); gap: 16px; animation: float 3.4s ease-in-out infinite; }
-  .menu .btn:nth-child(3) { animation-delay: -1.7s; }
-  .menu .btn .emoji { font-size: 1.5em; }
+  .menu > .btn { width: min(88vw, 480px); min-height: 108px; font-size: min(7vw, 34px); gap: 16px; animation: float 3.4s ease-in-out infinite; }
+  .menu > .btn:nth-child(3) { animation-delay: -1.7s; }
+  .menu > .btn .emoji { font-size: 1.5em; }
   /* Escucha y toca */
   .listen { justify-content: center; gap: min(2vh, 14px); }
   /* Medallón brillante para la imagen protagonista */
@@ -72,7 +72,7 @@
     background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 40%);
     box-shadow: inset 0 0 0 3px rgba(0,0,0,.25), inset 0 8px 18px rgba(0,0,0,.35); }
   .tracebox svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .tracebox text { font-family: inherit; font-weight: 900; font-size: 210px; stroke-linejoin: round; }
+  .tracebox text { font-family: inherit; font-weight: 900; stroke-linejoin: round; }
   .tracebox .glow { fill: none; stroke: rgba(255,255,255,.4); stroke-width: 16; filter: url(#chalkglow); }
   .tracebox .dark { fill: rgba(0,0,0,.25); stroke: rgba(0,0,0,.35); stroke-width: 6; }
   .tracebox .lite { fill: rgba(255,255,255,.12); stroke: rgba(255,255,255,.9); stroke-width: 5; stroke-dasharray: 14 10; stroke-linecap: round; }
@@ -247,9 +247,9 @@
     box = el('div', 'tracebox');
     box.innerHTML = '<svg viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet">' +
       '<defs><filter id="chalkglow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter></defs>' +
-      '<text class="glow" x="240" y="212" text-anchor="middle">A a</text>' +
-      '<text class="dark" x="243" y="216" text-anchor="middle">A a</text>' +
-      '<text class="lite" x="240" y="212" text-anchor="middle">A a</text></svg><canvas></canvas><div class="tray"></div>';
+      '<text class="glow" x="240" y="212" font-size="210" text-anchor="middle">A a</text>' +
+      '<text class="dark" x="243" y="216" font-size="210" text-anchor="middle">A a</text>' +
+      '<text class="lite" x="240" y="212" font-size="210" text-anchor="middle">A a</text></svg><canvas></canvas><div class="tray"></div>';
     svgText = box.querySelectorAll('text'); canvas = box.querySelector('canvas'); ctx = canvas.getContext('2d');
     var acts = el('div', 'actions');
     var clr = el('button', 'btn yellow', '🧹'), ok = el('button', 'btn green big', '✅');
@@ -311,7 +311,8 @@
   function showLetter() {
     var P = tracePool(); if (idx >= P.length) idx = 0;
     var L = P[idx], w = KidsGame.pick(wordsFor(L)) || ['', ''];
-    Array.prototype.forEach.call(svgText, function (t) { t.textContent = traceText(L); });
+    var txt = traceText(L), fs = level === 1 ? 290 : level === 3 ? 250 : 210, y = level === 1 ? 232 : level === 3 ? 196 : 212;
+    Array.prototype.forEach.call(svgText, function (t, i) { t.textContent = txt; t.setAttribute('font-size', fs); t.setAttribute('y', y + (i === 1 ? 4 : 0)); });
     hint.innerHTML = '<span class="emoji">' + w[0] + '</span> ' + w[1];
     hint.dataset.word = w[1];
     strokes = []; redraw();

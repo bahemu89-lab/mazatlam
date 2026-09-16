@@ -6,44 +6,97 @@
 <link rel="stylesheet" href="../common.css">
 <title>Piano de animales</title>
 <style>
-  .game { display: flex; flex-direction: column; }
+  /* Escenario: telón rojo con pliegues, cenefa, foco de luz y piso de madera */
+  .game {
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(ellipse 46% 70% at 50% 6%, rgba(255,236,170,.38), rgba(255,236,170,0) 70%),
+      repeating-linear-gradient(90deg, #5e0c22 0px, #a51d3d 34px, #d0405f 52px, #a51d3d 70px, #5e0c22 104px);
+  }
+  .game::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 58px; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 52px 44px at 50% 0, #e2556f 0 56%, #7e1230 58%, rgba(0,0,0,0) 62%) 0 0 / 104px 58px repeat-x,
+      linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,0));
+    filter: drop-shadow(0 6px 6px rgba(0,0,0,.45));
+  }
+  .game::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 70% at 50% 20%, rgba(255,225,160,.28), rgba(255,225,160,0) 70%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 2px, rgba(0,0,0,0) 2px 118px),
+      repeating-linear-gradient(180deg, rgba(255,255,255,.04) 0 1px, rgba(0,0,0,0) 1px 9px),
+      linear-gradient(180deg, #8a5630 0%, #5e3617 60%, #3d2210 100%);
+    box-shadow: inset 0 6px 0 #a56b3c, inset 0 10px 14px rgba(0,0,0,.35), 0 -14px 24px rgba(0,0,0,.45);
+  }
   .top {
     flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
-    padding: 8px 10px; background: rgba(255,255,255,.55);
+    padding: 10px 10px 8px; position: relative; z-index: 2;
+    background: linear-gradient(180deg, rgba(20,6,16,.55), rgba(20,6,16,.32));
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,.14), 0 6px 14px rgba(0,0,0,.3);
   }
+  /* Instrumentos: medallones dorados con brillo */
   .inst {
-    width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 4px solid #fff;
-    box-shadow: 0 4px 0 rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center;
-    font-size: 34px; cursor: pointer; transition: transform .12s;
+    width: 64px; height: 64px; border-radius: 50%; border: 3px solid #f7dd8a; position: relative;
+    background: radial-gradient(circle at 35% 28%, #fffdf4 0, #f6e6b8 45%, #d8b356 100%);
+    box-shadow: 0 5px 0 #8a6a1e, 0 10px 16px rgba(0,0,0,.5), inset 0 2px 0 #fff, inset 0 -5px 8px rgba(120,80,0,.22);
+    display: flex; align-items: center; justify-content: center; font-size: 34px; cursor: pointer; transition: transform .12s, box-shadow .12s;
   }
-  .inst.sel { border-color: #172c66; transform: scale(1.12); background: #fff5c8; }
+  .inst::after { content: ""; position: absolute; left: 14%; right: 14%; top: 5%; height: 34%; border-radius: 50%; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); }
+  .inst.sel { border-color: #fff; transform: scale(1.12); box-shadow: 0 0 0 4px #ffd54a, 0 0 24px 6px rgba(255,213,74,.65), 0 5px 0 #8a6a1e, 0 10px 16px rgba(0,0,0,.5), inset 0 2px 0 #fff; }
   .inst:active { transform: scale(.9); }
   .top .btn { font-size: 22px; min-height: 64px; padding: 6px 16px; }
-  .top .btn.sel { box-shadow: 0 0 0 5px #172c66, 0 6px 0 rgba(0,0,0,.18); }
+  .top .btn.sel { box-shadow: 0 0 0 4px #fff, 0 0 22px 6px rgba(255,255,255,.55), 0 6px 0 var(--d), 0 12px 18px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.6); }
   .top .spacer { width: 14px; }
-  .status { flex: 0 0 auto; text-align: center; font-size: 26px; min-height: 40px; padding: 4px; }
-  .dots { display: inline-flex; gap: 5px; flex-wrap: wrap; justify-content: center; vertical-align: middle; margin-left: 10px; }
-  .dot { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid #172c66; box-sizing: border-box; }
-  .dot.on { background: #ffb703; }
-  .dot.cur { transform: scale(1.35); background: #f582ae; }
+  .top .hud { display: flex; align-items: center; gap: 8px; }
+  .top .kg-level-badge { font-size: 18px; padding: 6px 14px; white-space: nowrap; }
+  .top .lvbtn { width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 26px; }
+  .status { flex: 0 0 auto; text-align: center; font-size: 26px; min-height: 40px; padding: 6px 4px 2px; position: relative; z-index: 2; color: #fff; font-weight: 900; text-shadow: 0 2px 0 rgba(0,0,0,.5), 0 4px 10px rgba(0,0,0,.45); }
+  .dots { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: center; vertical-align: middle; margin-left: 10px; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; box-sizing: border-box; background: radial-gradient(circle at 35% 30%, #ffffff, #cbd5e5 55%, #8593ad); box-shadow: 0 2px 3px rgba(0,0,0,.55), inset 0 -2px 3px rgba(0,0,0,.2); transition: transform .15s; }
+  .dot.on { background: radial-gradient(circle at 35% 30%, #fff6c8, #ffc21a 55%, #c47f00); box-shadow: 0 0 10px rgba(255,213,74,.9), 0 2px 3px rgba(0,0,0,.5); }
+  .dot.cur { transform: scale(1.35); background: radial-gradient(circle at 35% 30%, #ffe0ee, #f582ae 55%, #b8306f); box-shadow: 0 0 12px rgba(245,130,174,.95), 0 2px 3px rgba(0,0,0,.5); }
   .bars {
-    flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; justify-content: center; gap: 8px;
-    padding: 10px 12px 16px; touch-action: none;
+    flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-end; justify-content: center; gap: 10px;
+    padding: 12px 12px 22px; touch-action: none; position: relative; z-index: 1;
   }
+  /* Teclas de xilófono: degradado con luz a la izquierda, tapa brillante, canto grueso y sombra */
   .bar {
-    flex: 1 1 0; min-width: 0; max-width: 130px; border-radius: 22px; border: 5px solid rgba(0,0,0,.15);
-    box-shadow: 0 8px 0 rgba(0,0,0,.18); display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    padding: 10px 4px; cursor: pointer; transition: transform .1s, filter .1s; position: relative; user-select: none;
+    --c: #ff6b6b; --l: #ffb0b0; --d: #a33; --g: rgba(255,107,107,.8);
+    --sh: 0 9px 0 var(--d), 0 15px 0 rgba(0,0,0,.28), 0 24px 26px rgba(0,0,0,.55);
+    flex: 1 1 0; min-width: 0; max-width: 130px; border-radius: 18px 18px 24px 24px; border: 0; position: relative; user-select: none;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.38) 0, rgba(255,255,255,.1) 28%, rgba(0,0,0,0) 55%, rgba(0,0,0,.2) 100%),
+      linear-gradient(180deg, var(--l) 0, var(--c) 16%, var(--c) 100%);
+    box-shadow: var(--sh), inset 0 3px 0 rgba(255,255,255,.6), inset 0 -3px 0 rgba(0,0,0,.14);
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 12px 4px 10px; cursor: pointer; transition: transform .08s, filter .08s, box-shadow .08s;
   }
-  .bar .name { font-size: 22px; font-weight: bold; color: rgba(0,0,0,.55); }
-  .bar .animal { font-size: 44px; font-size: min(56px, 9vw); line-height: 1; pointer-events: none; }
-  .bar.lit { transform: translateY(-10px) scale(1.04); filter: brightness(1.25); box-shadow: 0 0 0 6px #fff, 0 14px 0 rgba(0,0,0,.18); }
-  .bar.hint { animation: hint .7s infinite; }
+  .bar::before { content: ""; position: absolute; left: 10%; right: 10%; top: 3%; height: 12%; border-radius: 14px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.05)); }
+  .bar .name { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: .5px; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 4px 6px rgba(0,0,0,.3); position: relative; }
+  .bar .animal {
+    font-size: 44px; font-size: min(56px, 9vw); line-height: 1; pointer-events: none; padding: 8px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.8), rgba(255,255,255,.25) 62%, rgba(255,255,255,0) 72%);
+    animation: float 3.2s ease-in-out infinite;
+  }
+  .bar:nth-child(2n) .animal { animation-delay: -1.1s; }
+  .bar:nth-child(3n) .animal { animation-delay: -2.2s; }
+  .bar.lit {
+    transform: translateY(7px); filter: brightness(1.14) saturate(1.2);
+    box-shadow: 0 3px 0 var(--d), 0 6px 0 rgba(0,0,0,.28), 0 10px 14px rgba(0,0,0,.45), 0 0 36px 10px var(--g), inset 0 3px 0 rgba(255,255,255,.8);
+  }
+  .bar.hint { animation: hint .8s infinite; }
   .bar.hint::after {
     content: '👆'; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 44px; pointer-events: none;
-    animation: bounce .7s infinite;
+    filter: drop-shadow(0 4px 4px rgba(0,0,0,.4)); animation: bounce .7s infinite;
   }
-  @keyframes hint { 0%,100%{ box-shadow: 0 8px 0 rgba(0,0,0,.18), 0 0 0 0 #fff; } 50%{ box-shadow: 0 8px 0 rgba(0,0,0,.18), 0 0 0 10px #fff; filter: brightness(1.2); } }
+  @keyframes hint {
+    0%,100% { box-shadow: var(--sh), 0 0 0 0 rgba(255,255,255,.95), inset 0 3px 0 rgba(255,255,255,.6); }
+    50% { box-shadow: var(--sh), 0 0 0 12px rgba(255,255,255,0), 0 0 30px 6px rgba(255,255,255,.7), inset 0 3px 0 rgba(255,255,255,.6); filter: brightness(1.2); }
+  }
+  /* Notas musicales que flotan al tocar */
+  .np { position: absolute; pointer-events: none; z-index: 4; font-size: 30px; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 8px var(--g), 0 2px 4px rgba(0,0,0,.4); animation: npfly 1s ease-out forwards; }
+  @keyframes npfly { 0%{ transform: translate(-50%,0) scale(.5) rotate(0deg); opacity: 0 } 15%{ opacity: 1 } 100%{ transform: translate(calc(-50% + var(--dx)), -150px) scale(1.25) rotate(var(--r)); opacity: 0 } }
   @media (orientation: portrait) {
     .top .btn { font-size: 20px; padding: 6px 12px; }
   }
@@ -69,9 +122,19 @@ var NOTES = [
   { f: 493.88, n: 'Si',  a: '🐼', c: '#a06cd5' },
   { f: 523.25, n: 'Do',  a: '🐨', c: '#ff7eb6' }
 ];
-// Estrellita: C C G G A A G, F F E E D D C
-var SONG = [0, 0, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0];
-var SONG_DUR = [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2];
+// Canciones: índices de NOTES + duraciones en tiempos. "chunks" = frases para repetir (nivel 3)
+var SONGS = {
+  // Estrellita: C C G G A A G, F F E E D D C
+  estrellita: { name: 'Estrellita', notes: [0, 0, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0], dur: [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2], chunks: [[0, 4], [4, 7], [7, 11], [11, 14]] },
+  // Martinillo (Fray Santiago): C D E C, C D E C, E F G, E F G, G A G F E C, G A G F E C, C G C, C G C
+  martinillo: { name: 'Martinillo', notes: [0, 1, 2, 0, 0, 1, 2, 0, 2, 3, 4, 2, 3, 4, 4, 5, 4, 3, 2, 0, 4, 5, 4, 3, 2, 0, 0, 4, 0, 0, 4, 0],
+    dur: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, .5, .5, .5, .5, 1, 1, .5, .5, .5, .5, 1, 1, 1, 1, 2, 1, 1, 2] }
+};
+var nivel = 1, SONG = SONGS.estrellita.notes, SONG_DUR = SONGS.estrellita.dur, SONG_NAME = 'Estrellita', CHUNKS = null, chunk = 0;
+function setSong(n) {
+  var s = n === 2 ? SONGS.martinillo : SONGS.estrellita;
+  SONG = s.notes; SONG_DUR = s.dur; SONG_NAME = s.name; CHUNKS = n === 3 ? s.chunks : null; chunk = 0;
+}
 
 // ---------- Audio propio (instrumentos) ----------
 var AC = window.AudioContext || window.webkitAudioContext, actx = null;
@@ -110,20 +173,48 @@ function play(freq) {
   }
 }
 
+// ---------- Utilidades de color ----------
+function shade(hex, amt) {
+  var h = hex.replace('#', ''); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  var n = parseInt(h, 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  function f(v) { v = amt > 0 ? v + (255 - v) * amt : v * (1 + amt); return Math.max(0, Math.min(255, Math.round(v))); }
+  return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+}
+function rgba(hex, a) {
+  var h = hex.replace('#', ''); var n = parseInt(h, 16);
+  return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
 // ---------- UI ----------
 var topEl = document.getElementById("top"), statusEl = document.getElementById("status"), barsEl = document.getElementById('bars');
 var bars = [], litTimers = {};
 NOTES.forEach(function (n, i) {
   var b = document.createElement('div');
-  b.className = 'bar'; b.style.background = n.c; b.style.height = (100 - i * 5.5) + '%';
+  b.className = 'bar'; b.style.height = (100 - i * 5.5) + '%';
+  b.style.setProperty('--c', n.c); b.style.setProperty('--l', shade(n.c, .45)); b.style.setProperty('--d', shade(n.c, -.42)); b.style.setProperty('--g', rgba(n.c, .85));
   b.innerHTML = '<div class="name">' + n.n + '</div><div class="animal emoji">' + n.a + '</div>';
   b.setAttribute('data-i', i);
   barsEl.appendChild(b); bars.push(b);
 });
+var NOTE_GLYPHS = ['♪', '♫', '♩', '♬'];
+function notes(i) {
+  if (barsEl.querySelectorAll('.np').length > 24) return;
+  var b = bars[i], x = b.offsetLeft + b.offsetWidth / 2, y = b.offsetTop + 6;
+  for (var k = 0; k < 2; k++) {
+    var s = document.createElement('span'); s.className = 'np'; s.textContent = KidsGame.pick(NOTE_GLYPHS);
+    s.style.left = (x + (Math.random() - .5) * b.offsetWidth * .5) + 'px'; s.style.top = y + 'px';
+    s.style.setProperty('--g', b.style.getPropertyValue('--g'));
+    s.style.setProperty('--dx', ((Math.random() - .5) * 60) + 'px'); s.style.setProperty('--r', ((Math.random() - .5) * 50) + 'deg');
+    s.style.animationDelay = (k * .08) + 's';
+    barsEl.appendChild(s);
+    (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
+  }
+}
 function light(i, ms) {
   var b = bars[i];
   clearTimeout(litTimers[i]); b.classList.remove('lit'); void b.offsetWidth; b.classList.add('lit');
   litTimers[i] = setTimeout(function () { b.classList.remove('lit'); }, ms || 260);
+  notes(i);
 }
 
 // Instrumentos
@@ -141,6 +232,14 @@ var sp = document.createElement('div'); sp.className = 'spacer'; topEl.appendChi
 var followBtn = document.createElement('button'); followBtn.className = 'btn purple'; followBtn.id = 'follow'; followBtn.textContent = '🎵 Sigue la canción';
 var listenBtn = document.createElement('button'); listenBtn.className = 'btn blue'; listenBtn.id = 'listen'; listenBtn.textContent = '🎼 Escuchar';
 topEl.appendChild(followBtn); topEl.appendChild(listenBtn);
+var hud = document.createElement('div'); hud.className = 'hud'; topEl.appendChild(hud);
+function buildHud() {
+  hud.innerHTML = '';
+  hud.appendChild(KidsGame.levelBadge(nivel));
+  var b = document.createElement('button'); b.className = 'btn round yellow lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
+  b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
+  hud.appendChild(b);
+}
 
 // ---------- Modos ----------
 var mode = 'free', step = 0, listenTimers = [];
@@ -153,27 +252,39 @@ function dotsHtml() {
 function clearHints() { for (var i = 0; i < bars.length; i++) bars[i].classList.remove('hint'); }
 function stopListen() { listenTimers.forEach(clearTimeout); listenTimers = []; }
 function freeMode() {
-  stopListen(); clearHints(); mode = 'free'; step = 0;
+  stopListen(); clearHints(); mode = 'free'; step = 0; chunk = 0;
   followBtn.classList.remove('sel'); listenBtn.classList.remove('sel');
   setStatus('<span class="emoji">🎹</span> ¡Toca!');
 }
 function startFollow() {
-  stopListen(); clearHints(); mode = 'follow'; step = 0;
+  stopListen(); clearHints(); mode = 'follow'; step = 0; chunk = 0;
   followBtn.classList.add('sel'); listenBtn.classList.remove('sel');
-  showHint();
-  KidsGame.say('Toca la barra que brilla');
+  if (CHUNKS) { playChunk(); KidsGame.say('Escucha y repite'); }
+  else { showHint(); KidsGame.say('Toca la barra que brilla'); }
 }
 function showHint() {
   clearHints();
-  if (step < SONG.length) bars[SONG[step]].classList.add('hint');
+  if (!CHUNKS && step < SONG.length) bars[SONG[step]].classList.add('hint');
   setStatus('<span class="emoji">👆</span> ' + dotsHtml());
+}
+// Nivel 3 (eco): suena una frase de 3-4 notas y ella la repite sin ayuda
+function playChunk() {
+  stopListen(); clearHints();
+  var c = CHUNKS[chunk]; step = c[0]; mode = 'echo';
+  setStatus('<span class="emoji">👂</span> Escucha ' + dotsHtml());
+  var t = 0, beat = 420;
+  for (var k = c[0]; k < c[1]; k++) (function (k) {
+    listenTimers.push(setTimeout(function () { step = k; setStatus('<span class="emoji">👂</span> Escucha ' + dotsHtml()); play(NOTES[SONG[k]].f); light(SONG[k], beat * SONG_DUR[k] - 80); }, t));
+    t += beat * SONG_DUR[k];
+  })(k);
+  listenTimers.push(setTimeout(function () { step = c[0]; mode = 'follow'; setStatus('<span class="emoji">👆</span> Tu turno ' + dotsHtml()); }, t + 350));
 }
 function finishFollow() {
   clearHints(); mode = 'free'; followBtn.classList.remove('sel');
   setStatus('<span class="emoji">🌟</span> ' + dotsHtml());
-  KidsGame.addStar(2);
+  KidsGame.addStar(nivel === 3 ? 3 : 2);
   setTimeout(function () {
-    KidsGame.celebrate({ msg: '¡Estrellita!', sub: 'Tocaste la canción', onAgain: startFollow, onNext: freeMode });
+    KidsGame.celebrate({ msg: '¡' + SONG_NAME + '!', sub: 'Tocaste la canción', stars: nivel === 1 ? 2 : 3, onAgain: startFollow, onNext: freeMode });
   }, 500);
 }
 function listen() {
@@ -190,7 +301,8 @@ function listen() {
   listenTimers.push(setTimeout(function () { step = SONG.length; setStatus('<span class="emoji">🎼</span> ' + dotsHtml()); }, t));
   listenTimers.push(setTimeout(function () { KidsGame.sound.ok(); startFollow(); }, t + 600));
 }
-followBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'follow') freeMode(); else startFollow(); };
+// Nivel 3: "Sigue la canción" primero toca toda la canción y luego pide repetir por frases
+followBtn.onclick = function () { KidsGame.sound.tap(); if (mode !== 'free') freeMode(); else if (CHUNKS) listen(); else startFollow(); };
 listenBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'listen') freeMode(); else listen(); };
 
 // ---------- Toques (con deslizamiento entre barras) ----------
@@ -200,7 +312,16 @@ function hit(i) {
   if (mode === 'follow') {
     if (i === SONG[step]) {
       step++;
-      if (step >= SONG.length) finishFollow(); else showHint();
+      if (step >= SONG.length) finishFollow();
+      else if (CHUNKS && step >= CHUNKS[chunk][1]) {
+        chunk++; mode = 'echo'; setStatus('<span class="emoji">🌟</span> ¡Bien! ' + dotsHtml());
+        listenTimers.push(setTimeout(function () { KidsGame.sound.ok(); }, 200));
+        listenTimers.push(setTimeout(playChunk, 900));
+      }
+      else showHint();
+    } else if (CHUNKS) {
+      mode = 'echo'; KidsGame.sound.wrong(); KidsGame.toast('Escucha otra vez 👂');
+      listenTimers.push(setTimeout(playChunk, 900));
     }
   }
 }
@@ -227,7 +348,12 @@ barsEl.addEventListener('pointerup', end);
 barsEl.addEventListener('pointercancel', end);
 document.addEventListener('pointerup', end);
 
-freeMode();
+// ---------- Niveles ----------
+function start(n) { nivel = n; setSong(n); buildHud(); freeMode(); }
+function pickLevel() { stopListen(); clearHints(); mode = 'free'; KidsGame.levelPicker({ onPick: start }); }
+
+setStatus('<span class="emoji">🎹</span> ¡Toca!');
+pickLevel();
 </script>
 </body>
 </html>
