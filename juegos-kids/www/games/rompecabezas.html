@@ -153,7 +153,8 @@
       bw = W - trayW - 10; bh = H;
       tray.style.width = trayW + 'px'; tray.style.height = '100%';
     }
-    boardW = Math.floor(Math.min(bw, bh * 4 / 3)); boardH = Math.floor(boardW * 3 / 4);
+    // Múltiplo de 24 para que todas las fichas midan píxeles enteros (sin líneas entre fichas)
+    boardW = Math.max(24, Math.floor(Math.min(bw, bh * 4 / 3) / 24) * 24); boardH = boardW * 3 / 4;
     tileW = boardW / cols; tileH = boardH / rows;
     board.style.width = boardW + 'px'; board.style.height = boardH + 'px';
     // Tamaño de las fichas en la bandeja para que quepan todas
@@ -192,7 +193,7 @@
     e.preventDefault();
     dragging = { t: t, id: e.pointerId };
     t.idx = Array.prototype.indexOf.call(tray.children, t.el);
-    t.state = 'drag';
+    t.state = 'drag'; t.el.style.animationDelay = '';
     document.body.appendChild(t.el); t.el.className = 'tile drag';
     styleTile(t); moveTo(t, e.clientX, e.clientY);
     KidsGame.sound.tap();
