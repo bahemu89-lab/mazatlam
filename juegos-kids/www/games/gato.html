@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Tres en raya</title>
+<style>
+  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 10px; }
+  .score { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 30px; padding: 6px 18px; box-shadow: 0 4px 0 rgba(0,0,0,.1); font-size: 24px; }
+  .score .p { display: flex; align-items: center; gap: 6px; }
+  .score .p .emoji { font-size: 32px; }
+  .score .vs { color: #999; }
+  .turn { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; font-size: 24px; min-height: 52px; }
+  .turn .emoji { font-size: 42px; display: inline-block; }
+  .turn .emoji.bounce { animation: bounce .7s infinite; }
+  .boardwrap { flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: var(--bs); height: var(--bs); background: #7f5af0; padding: 10px; border-radius: 26px; box-shadow: 0 8px 0 rgba(0,0,0,.15); }
+  .cell { border-radius: 18px; min-width: 64px; min-height: 64px; font-size: calc(var(--bs) * .2); }
+  .cell .emoji { display: block; }
+  .cell.filled { cursor: default; }
+  .cell.filled:active { transform: none; }
+  .cell.filled .emoji { animation: pop .35s ease-out; }
+  .cell.win { background: #fff3b0; box-shadow: 0 0 0 6px #ffb703, 0 0 26px #ffd166; animation: glow .6s ease-in-out infinite alternate; }
+  .cell.win .emoji { animation: bounce .6s infinite; }
+  @keyframes glow { from { box-shadow: 0 0 0 6px #ffb703, 0 0 10px #ffd166; } to { box-shadow: 0 0 0 8px #ff8906, 0 0 34px #ffb703; } }
+  .cell.hint { background: #f3efff; }
+  .foot { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .foot .btn { font-size: 20px; min-height: 64px; padding: 6px 16px; }
+  .foot .btn.on { box-shadow: 0 0 0 4px #2cb67d, 0 6px 0 rgba(0,0,0,.18); }
+  /* pantalla de elección */
+  .pick { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #fef6e4; z-index: 3; }
+  .pick h2 { margin: 0; font-size: 30px; text-align: center; }
+  .pick .choices { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .pick .choice { width: 110px; height: 110px; font-size: 64px; border-radius: 28px; }
+  .pick .choice.taken { opacity: .3; pointer-events: none; }
+  .pick .mode { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  @media (orientation: landscape) {
+    .game { flex-direction: row; flex-wrap: wrap; align-content: center; justify-content: center; }
+    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex: 0 0 auto; width: 300px; }
+    .boardwrap { flex: 1 1 0; align-self: stretch; }
+  }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Tres en raya' });
+(function () {
+  var PIECES = ['🐱', '🐶', '🦄', '🌟'];
+  var BOTS = ['🤖', '🐭'];
+  var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  var twoPlayers = false, p1 = null, p2 = null, board, turn, busy = false, score = [0, 0], over = false;
+  var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [];
+
+  game.innerHTML = '';
+  var side = document.createElement('div'); side.className = 'side';
+  scoreEl = document.createElement('div'); scoreEl.className = 'score';
+  turnEl = document.createElement('div'); turnEl.className = 'turn';
+  wrap = document.createElement('div'); wrap.className = 'boardwrap';
+  boardEl = document.createElement('div'); boardEl.className = 'board';
+  foot = document.createElement('div'); foot.className = 'foot';
+  foot.innerHTML = '<button class="btn purple mode-btn">👧👦 Dos jugadores</button><button class="btn blue new-btn">🔄 Nuevo</button>';
+  wrap.appendChild(boardEl);
+  side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot);
+  game.appendChild(side); game.appendChild(wrap);
+  for (var i = 0; i < 9; i++) {
+    var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i; c.innerHTML = '<span class="emoji"></span>';
+    c.addEventListener('pointerdown', onCell); boardEl.appendChild(c); cells.push(c);
+  }
+  pickEl = document.createElement('div'); pickEl.className = 'pick';
+  game.appendChild(pickEl);
+
+  function order() {
+    // Vertical: marcador, turno, tablero, botones. Horizontal: panel lateral + tablero
+    var land = window.innerWidth > window.innerHeight;
+    if (land) { if (scoreEl.parentNode !== side) { side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot); } if (side.parentNode !== game) game.insertBefore(side, wrap); }
+    else { game.insertBefore(scoreEl, wrap); game.insertBefore(turnEl, wrap); game.appendChild(foot); if (side.parentNode) side.parentNode.removeChild(side); }
+    layout();
+  }
+  function layout() {
+    var W = wrap.clientWidth - 8, H = wrap.clientHeight - 8;
+    var s = Math.max(200, Math.min(W, H, 560));
+    game.style.setProperty('--bs', s + 'px');
+  }
+
+  // --- Elegir ficha ---
+  function showPick(who) {
+    pickEl.innerHTML = '';
+    var h = document.createElement('h2');
+    h.textContent = who === 1 ? (twoPlayers ? '👧 Jugador 1: elige tu ficha' : '¿Con cuál quieres jugar?') : '👦 Jugador 2: elige tu ficha';
+    var ch = document.createElement('div'); ch.className = 'choices';
+    PIECES.forEach(function (e) {
+      var b = document.createElement('button'); b.className = 'btn choice emoji'; b.textContent = e;
+      if (who === 2 && e === p1) b.classList.add('taken');
+      b.style.background = KidsGame.pick(['#f582ae', '#3da9fc', '#2cb67d', '#ffb703']);
+      b.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); KidsGame.sound.pop();
+        if (who === 1) { p1 = e; if (twoPlayers) showPick(2); else { p2 = KidsGame.pick(BOTS); startGame(); } }
+        else { p2 = e; startGame(); }
+      });
+      ch.appendChild(b);
+    });
+    pickEl.appendChild(h); pickEl.appendChild(ch);
+    if (who === 1) {
+      var m = document.createElement('div'); m.className = 'mode';
+      var b1 = document.createElement('button'); b1.className = 'btn ' + (twoPlayers ? '' : 'green on'); b1.textContent = '🤖 Contra el robot';
+      var b2 = document.createElement('button'); b2.className = 'btn ' + (twoPlayers ? 'green on' : ''); b2.textContent = '👧👦 Dos jugadores';
+      b1.style.fontSize = b2.style.fontSize = '20px';
+      b1.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); twoPlayers = false; showPick(1); });
+      b2.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); twoPlayers = true; showPick(1); });
+      m.appendChild(b1); m.appendChild(b2); pickEl.appendChild(m);
+    }
+    pickEl.style.display = 'flex';
+    KidsGame.say(who === 1 ? 'Elige tu ficha' : 'Jugador dos, elige tu ficha');
+  }
+
+  function startGame() {
+    pickEl.style.display = 'none';
+    score = [0, 0]; renderScore();
+    foot.querySelector('.mode-btn').textContent = twoPlayers ? '🤖 Contra el robot' : '👧👦 Dos jugadores';
+    newRound(true);
+  }
+  function newRound(firstIsP1) {
+    board = [0,0,0,0,0,0,0,0,0]; over = false; busy = false;
+    cells.forEach(function (c) { c.className = 'cell card'; c.firstChild.textContent = ''; });
+    turn = firstIsP1 ? 1 : 2;
+    renderTurn();
+    if (turn === 2 && !twoPlayers) botMove();
+  }
+  function renderScore() {
+    scoreEl.innerHTML = '<span class="p"><span class="emoji">' + p1 + '</span> ' + stars(score[0]) + '</span><span class="vs">·</span><span class="p"><span class="emoji">' + p2 + '</span> ' + stars(score[1]) + '</span>';
+  }
+  function stars(n) { return n ? '⭐'.repeat(Math.min(n, 5)) + (n > 5 ? ' ' + n : '') : '–'; }
+  function renderTurn() {
+    var e = turn === 1 ? p1 : p2;
+    var txt = twoPlayers ? (turn === 1 ? 'Turno de ' : 'Turno de ') : (turn === 1 ? '¡Tu turno!' : 'Piensa...');
+    turnEl.innerHTML = '<span>' + txt + '</span><span class="emoji bounce">' + e + '</span>';
+  }
+
+  function onCell(ev) {
+    ev.preventDefault();
+    if (over || busy) return;
+    if (turn === 2 && !twoPlayers) return;
+    var i = parseInt(this.dataset.i, 10);
+    if (board[i]) { KidsGame.sound.wrong(); this.classList.remove('bad'); void this.offsetWidth; this.classList.add('bad'); return; }
+    play(i, turn);
+  }
+  function play(i, who) {
+    board[i] = who;
+    cells[i].classList.add('filled'); cells[i].firstChild.textContent = who === 1 ? p1 : p2;
+    KidsGame.sound.pop(); KidsGame.vibrate(20);
+    var w = winner();
+    if (w) return finish(w);
+    if (board.indexOf(0) < 0) return finish(0);
+    turn = who === 1 ? 2 : 1;
+    renderTurn();
+    if (turn === 2 && !twoPlayers) botMove();
+  }
+  function winner() {
+    for (var k = 0; k < LINES.length; k++) {
+      var l = LINES[k];
+      if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[1]] === board[l[2]]) return { who: board[l[0]], line: l };
+    }
+    return null;
+  }
+  // Robot suave: 70% al azar, 30% inteligente (gana o bloquea)
+  function botMove() {
+    busy = true;
+    setTimeout(function () {
+      if (over) return;
+      var free = []; for (var i = 0; i < 9; i++) if (!board[i]) free.push(i);
+      if (!free.length) return;
+      var choice = null;
+      if (Math.random() < 0.3) choice = findLine(2) != null ? findLine(2) : findLine(1);
+      if (choice == null) choice = KidsGame.pick(free);
+      busy = false;
+      play(choice, 2);
+    }, 700);
+  }
+  function findLine(who) {
+    for (var k = 0; k < LINES.length; k++) {
+      var l = LINES[k], cnt = 0, empty = -1;
+      for (var j = 0; j < 3; j++) { if (board[l[j]] === who) cnt++; else if (!board[l[j]]) empty = l[j]; }
+      if (cnt === 2 && empty >= 0) return empty;
+    }
+    return null;
+  }
+
+  function finish(w) {
+    over = true; busy = true;
+    turnEl.innerHTML = '';
+    if (w === 0) {
+      KidsGame.toast('¡Empate! 🤝', 1500); KidsGame.addStar(1); KidsGame.sound.ok();
+      setTimeout(function () {
+        KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: 'Los dos jugaron muy bien', stars: 1, say: false, onAgain: function () { newRound(true); } });
+      }, 900);
+      return;
+    }
+    w.line.forEach(function (i) { cells[i].classList.add('win'); });
+    score[w.who - 1]++; renderScore();
+    var pieceWon = w.who === 1 ? p1 : p2;
+    if (w.who === 1 || twoPlayers) {
+      KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
+      setTimeout(function () {
+        KidsGame.celebrate({
+          msg: twoPlayers ? '¡Ganó ' + pieceWon + '!' : '¡Ganaste!', sub: pieceWon + ' hizo tres en raya',
+          onAgain: function () { newRound(w.who !== 1); }
+        });
+      }, 1100);
+    } else {
+      // El robot ganó: sin drama, otra vez
+      KidsGame.sound.pop(); KidsGame.toast('¡Casi! Otra vez 💪', 1800); KidsGame.say('¡Casi! Otra vez');
+      setTimeout(function () { newRound(true); }, 2000);
+    }
+  }
+
+  foot.querySelector('.mode-btn').addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); KidsGame.sound.tap(); twoPlayers = !twoPlayers; p1 = p2 = null; showPick(1);
+  });
+  foot.querySelector('.new-btn').addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); KidsGame.sound.tap(); p1 = p2 = null; showPick(1);
+  });
+
+  window.addEventListener('resize', order);
+  order();
+  showPick(1);
+})();
+</script>
+</body>
+</html>

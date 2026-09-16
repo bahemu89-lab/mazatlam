@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Rompecabezas</title>
+<style>
+  .wrap { position: absolute; inset: 8px; display: flex; gap: 10px; }
+  .wrap.portrait { flex-direction: column; }
+  .boardbox { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
+  .board {
+    position: relative; background: #fff; border-radius: 10px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 0 0 5px #8bd3dd;
+  }
+  .board.done { animation: bounce .7s 2; box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 0 0 6px #ffb703; }
+  .ghost { position: absolute; inset: 0; opacity: .25; background-size: 100% 100%; background-repeat: no-repeat; border-radius: 10px; }
+  .slot { position: absolute; border: 2px dashed rgba(23,44,102,.22); }
+  .board.done .slot, .board.done .ghost { display: none; }
+  .tray {
+    flex: 0 0 auto; background: rgba(139,211,221,.35); border-radius: 18px;
+    display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: var(--gap); padding: var(--gap);
+    overflow: hidden;
+  }
+  .tile {
+    background-repeat: no-repeat; border-radius: 8px; outline: 3px solid #fff; outline-offset: -3px;
+    box-shadow: 0 4px 0 rgba(0,0,0,.18); cursor: grab; touch-action: none; flex: 0 0 auto;
+    animation: pop .3s ease-out;
+  }
+  .tile.drag { position: fixed; z-index: 20; box-shadow: 0 14px 22px rgba(0,0,0,.35); animation: none; border-radius: 4px; }
+  .tile.placed { position: absolute; box-shadow: none; outline: none; border-radius: 0; cursor: default; animation: pop .3s ease-out; }
+  .lvl { position: absolute; left: 12px; top: 10px; z-index: 3; font-size: 20px; font-weight: bold; background: #ffb703; color: #5a3d00; border-radius: 20px; padding: 3px 12px; box-shadow: 0 3px 0 rgba(0,0,0,.12); pointer-events: none; }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Rompecabezas' });
+
+  var S = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">';
+  var SCENES = [
+    // 1. Sol sonriente, colinas, árbol y casa
+    S + '<rect width="400" height="300" fill="#a8dcff"/>' +
+    '<g stroke="#ffb703" stroke-width="6" stroke-linecap="round"><line x1="320" y1="8" x2="320" y2="24"/><line x1="320" y1="116" x2="320" y2="132"/><line x1="258" y1="70" x2="274" y2="70"/><line x1="366" y1="70" x2="382" y2="70"/><line x1="276" y1="26" x2="288" y2="38"/><line x1="352" y1="102" x2="364" y2="114"/><line x1="276" y1="114" x2="288" y2="102"/><line x1="352" y1="38" x2="364" y2="26"/></g>' +
+    '<circle cx="320" cy="70" r="36" fill="#ffd166"/><circle cx="308" cy="63" r="4" fill="#5a3d00"/><circle cx="332" cy="63" r="4" fill="#5a3d00"/><path d="M305 80 Q320 95 335 80" stroke="#5a3d00" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="70" cy="62" rx="36" ry="18" fill="#fff"/><ellipse cx="98" cy="52" rx="28" ry="17" fill="#fff"/><ellipse cx="190" cy="40" rx="30" ry="14" fill="#fff"/>' +
+    '<ellipse cx="110" cy="320" rx="240" ry="110" fill="#8ac926"/><ellipse cx="340" cy="330" rx="220" ry="100" fill="#6ab04c"/>' +
+    '<rect x="238" y="200" width="18" height="62" fill="#8d5524"/><circle cx="247" cy="180" r="42" fill="#2cb67d"/><circle cx="224" cy="196" r="28" fill="#2cb67d"/><circle cx="270" cy="196" r="28" fill="#2cb67d"/><circle cx="235" cy="170" r="5" fill="#e63946"/><circle cx="262" cy="186" r="5" fill="#e63946"/><circle cx="250" cy="205" r="5" fill="#e63946"/>' +
+    '<rect x="60" y="170" width="110" height="90" fill="#f582ae"/><polygon points="48,172 115,112 182,172" fill="#e63946"/><rect x="100" y="210" width="30" height="50" rx="4" fill="#8d5524"/><rect x="70" y="185" width="24" height="24" fill="#a8dcff" stroke="#fff" stroke-width="3"/><rect x="138" y="185" width="24" height="24" fill="#a8dcff" stroke="#fff" stroke-width="3"/>' +
+    '<circle cx="30" cy="252" r="7" fill="#ffd166"/><circle cx="330" cy="272" r="7" fill="#f582ae"/><circle cx="380" cy="256" r="7" fill="#fff"/><circle cx="200" cy="282" r="6" fill="#ffd166"/></svg>',
+    // 2. Bajo el mar
+    S + '<rect width="400" height="300" fill="#3da9fc"/><rect y="0" width="400" height="120" fill="#5bbcff"/>' +
+    '<ellipse cx="200" cy="305" rx="270" ry="50" fill="#f6d28c"/>' +
+    '<g stroke="#2cb67d" stroke-width="11" fill="none" stroke-linecap="round"><path d="M40 300 C60 250 20 230 45 180 C60 150 30 140 50 100"/><path d="M360 300 C340 250 380 230 355 180 C340 150 370 140 350 110"/><path d="M300 300 C310 270 290 250 305 220"/></g>' +
+    '<ellipse cx="150" cy="120" rx="46" ry="28" fill="#ff8906"/><polygon points="106,120 72,94 72,146" fill="#ff8906"/><path d="M138 96 Q146 120 138 144" stroke="#fff" stroke-width="6" fill="none"/><circle cx="170" cy="112" r="7" fill="#fff"/><circle cx="172" cy="112" r="3.5" fill="#172c66"/>' +
+    '<ellipse cx="280" cy="200" rx="40" ry="24" fill="#f582ae"/><polygon points="318,200 350,178 350,222" fill="#f582ae"/><circle cx="262" cy="194" r="6" fill="#fff"/><circle cx="260" cy="194" r="3" fill="#172c66"/>' +
+    '<ellipse cx="300" cy="66" rx="24" ry="14" fill="#ffd166"/><polygon points="322,66 340,54 340,78" fill="#ffd166"/><circle cx="290" cy="63" r="3" fill="#172c66"/>' +
+    '<ellipse cx="110" cy="220" rx="22" ry="13" fill="#7f5af0"/><polygon points="88,220 70,208 70,232" fill="#7f5af0"/><circle cx="120" cy="217" r="3" fill="#fff"/>' +
+    '<polygon points="200,240 207,260 228,260 211,273 217,294 200,282 183,294 189,273 172,260 193,260" fill="#e63946"/>' +
+    '<g fill="none" stroke="#fff" stroke-width="3" opacity=".8"><circle cx="60" cy="60" r="8"/><circle cx="80" cy="35" r="5"/><circle cx="230" cy="160" r="6"/><circle cx="245" cy="140" r="4"/><circle cx="370" cy="40" r="6"/></g></svg>',
+    // 3. Cohete en el espacio
+    S + '<rect width="400" height="300" fill="#1b1f5e"/>' +
+    '<g fill="#fff"><circle cx="30" cy="30" r="3"/><circle cx="120" cy="20" r="2"/><circle cx="200" cy="15" r="3"/><circle cx="380" cy="30" r="2"/><circle cx="20" cy="150" r="2"/><circle cx="140" cy="250" r="3"/><circle cx="300" cy="270" r="2"/><circle cx="380" cy="200" r="3"/><circle cx="250" cy="110" r="2"/><circle cx="100" cy="120" r="3"/><circle cx="350" cy="140" r="2"/><circle cx="60" cy="280" r="2"/><polygon points="270,240 274,252 286,252 276,259 280,271 270,264 260,271 264,259 254,252 266,252" fill="#ffd166"/></g>' +
+    '<circle cx="320" cy="80" r="38" fill="#ff8906"/><circle cx="308" cy="70" r="8" fill="#ffb703"/><circle cx="334" cy="92" r="6" fill="#ffb703"/><ellipse cx="320" cy="84" rx="62" ry="14" fill="none" stroke="#ffd166" stroke-width="6"/>' +
+    '<circle cx="70" cy="220" r="32" fill="#2cb67d"/><circle cx="60" cy="210" r="8" fill="#1e9c66"/><circle cx="84" cy="232" r="6" fill="#1e9c66"/>' +
+    '<circle cx="60" cy="60" r="22" fill="#eee"/><circle cx="52" cy="55" r="5" fill="#ccc"/><circle cx="66" cy="68" r="3" fill="#ccc"/>' +
+    '<polygon points="180,202 200,270 220,202" fill="#ffb703"/><polygon points="190,202 200,240 210,202" fill="#ff8906"/>' +
+    '<polygon points="172,150 138,215 174,205" fill="#e63946"/><polygon points="228,150 262,215 226,205" fill="#e63946"/>' +
+    '<path d="M200 40 C232 70 236 130 230 205 L170 205 C164 130 168 70 200 40 Z" fill="#fff"/><path d="M200 40 C216 55 224 75 228 96 L172 96 C176 75 184 55 200 40 Z" fill="#e63946"/>' +
+    '<circle cx="200" cy="132" r="17" fill="#3da9fc" stroke="#e63946" stroke-width="5"/><rect x="176" y="175" width="48" height="8" fill="#3da9fc"/></svg>',
+    // 4. Pastel de cumpleaños
+    S + '<rect width="400" height="300" fill="#fde2e4"/><rect y="232" width="400" height="68" fill="#c9a26b"/>' +
+    '<g fill="#7f5af0"><circle cx="40" cy="30" r="5"/><circle cx="200" cy="40" r="4"/><circle cx="140" cy="60" r="4"/></g><g fill="#2cb67d"><circle cx="250" cy="25" r="4"/><circle cx="110" cy="25" r="5"/></g><g fill="#3da9fc"><circle cx="300" cy="50" r="5"/><circle cx="170" cy="20" r="4"/></g>' +
+    '<circle cx="50" cy="90" r="26" fill="#e63946"/><path d="M50 116 Q40 150 55 180" stroke="#666" stroke-width="2" fill="none"/><circle cx="85" cy="130" r="24" fill="#3da9fc"/><path d="M85 154 Q95 180 80 200" stroke="#666" stroke-width="2" fill="none"/>' +
+    '<circle cx="345" cy="95" r="26" fill="#2cb67d"/><path d="M345 121 Q355 150 340 180" stroke="#666" stroke-width="2" fill="none"/><circle cx="310" cy="140" r="22" fill="#ffb703"/><path d="M310 162 Q300 185 315 205" stroke="#666" stroke-width="2" fill="none"/>' +
+    '<ellipse cx="200" cy="236" rx="120" ry="16" fill="#fff"/>' +
+    '<rect x="110" y="176" width="180" height="60" rx="8" fill="#f582ae"/><path d="M110 182 Q125 202 140 182 Q155 202 170 182 Q185 202 200 182 Q215 202 230 182 Q245 202 260 182 Q275 202 290 182" stroke="#fff" stroke-width="8" fill="none"/>' +
+    '<rect x="130" y="126" width="140" height="54" rx="8" fill="#ffb703"/><path d="M130 132 Q145 150 160 132 Q175 150 190 132 Q205 150 220 132 Q235 150 250 132 Q262 150 270 132" stroke="#fff" stroke-width="7" fill="none"/>' +
+    '<rect x="152" y="90" width="12" height="38" rx="3" fill="#3da9fc"/><rect x="194" y="90" width="12" height="38" rx="3" fill="#2cb67d"/><rect x="236" y="90" width="12" height="38" rx="3" fill="#7f5af0"/>' +
+    '<g fill="#ffd166"><ellipse cx="158" cy="80" rx="7" ry="12"/><ellipse cx="200" cy="80" rx="7" ry="12"/><ellipse cx="242" cy="80" rx="7" ry="12"/></g><g fill="#ff8906"><ellipse cx="158" cy="84" rx="3" ry="6"/><ellipse cx="200" cy="84" rx="3" ry="6"/><ellipse cx="242" cy="84" rx="3" ry="6"/></g></svg>',
+    // 5. Arcoíris con nubes y flores
+    S + '<rect width="400" height="300" fill="#cbeeff"/>' +
+    '<g fill="none" stroke-width="16"><path d="M20 262 A180 180 0 0 1 380 262" stroke="#e63946"/><path d="M36 262 A164 164 0 0 1 364 262" stroke="#ff8906"/><path d="M52 262 A148 148 0 0 1 348 262" stroke="#ffd166"/><path d="M68 262 A132 132 0 0 1 332 262" stroke="#2cb67d"/><path d="M84 262 A116 116 0 0 1 316 262" stroke="#3da9fc"/><path d="M100 262 A100 100 0 0 1 300 262" stroke="#7f5af0"/></g>' +
+    '<rect y="262" width="400" height="38" fill="#8ac926"/>' +
+    '<g fill="#fff"><ellipse cx="55" cy="250" rx="46" ry="24"/><ellipse cx="30" cy="262" rx="30" ry="18"/><ellipse cx="85" cy="264" rx="32" ry="18"/><ellipse cx="345" cy="250" rx="46" ry="24"/><ellipse cx="320" cy="264" rx="32" ry="18"/><ellipse cx="372" cy="262" rx="30" ry="18"/><ellipse cx="200" cy="50" rx="34" ry="16"/><ellipse cx="225" cy="42" rx="26" ry="14"/></g>' +
+    '<g stroke="#2cb67d" stroke-width="5" stroke-linecap="round"><line x1="140" y1="300" x2="140" y2="232"/><line x1="200" y1="300" x2="200" y2="222"/><line x1="260" y1="300" x2="260" y2="232"/></g>' +
+    '<g fill="#f582ae"><circle cx="140" cy="216" r="9"/><circle cx="140" cy="248" r="9"/><circle cx="124" cy="232" r="9"/><circle cx="156" cy="232" r="9"/></g><circle cx="140" cy="232" r="8" fill="#ffd166"/>' +
+    '<g fill="#3da9fc"><circle cx="200" cy="204" r="10"/><circle cx="200" cy="240" r="10"/><circle cx="182" cy="222" r="10"/><circle cx="218" cy="222" r="10"/></g><circle cx="200" cy="222" r="9" fill="#ffd166"/>' +
+    '<g fill="#ffd166"><circle cx="260" cy="216" r="9"/><circle cx="260" cy="248" r="9"/><circle cx="244" cy="232" r="9"/><circle cx="276" cy="232" r="9"/></g><circle cx="260" cy="232" r="8" fill="#ff8906"/>' +
+    '<circle cx="330" cy="60" r="30" fill="#ffd166"/></svg>',
+    // 6. Gatito
+    S + '<rect width="400" height="300" fill="#fff3b0"/><circle cx="60" cy="50" r="18" fill="#ffd166"/><circle cx="340" cy="60" r="12" fill="#f582ae"/><circle cx="370" cy="110" r="8" fill="#3da9fc"/><circle cx="40" cy="130" r="8" fill="#2cb67d"/>' +
+    '<path d="M280 235 C340 240 345 170 305 165" stroke="#f4a261" stroke-width="20" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="200" cy="232" rx="82" ry="60" fill="#f4a261"/><ellipse cx="200" cy="245" rx="44" ry="34" fill="#fbd3b3"/>' +
+    '<ellipse cx="160" cy="286" rx="24" ry="12" fill="#f7b27a"/><ellipse cx="240" cy="286" rx="24" ry="12" fill="#f7b27a"/>' +
+    '<polygon points="138,95 150,26 192,74" fill="#f4a261"/><polygon points="262,95 250,26 208,74" fill="#f4a261"/><polygon points="150,84 156,44 182,74" fill="#f582ae"/><polygon points="250,84 244,44 218,74" fill="#f582ae"/>' +
+    '<circle cx="200" cy="130" r="70" fill="#f4a261"/>' +
+    '<g stroke="#e08a4a" stroke-width="6" stroke-linecap="round"><line x1="200" y1="66" x2="200" y2="86"/><line x1="184" y1="70" x2="188" y2="88"/><line x1="216" y1="70" x2="212" y2="88"/></g>' +
+    '<circle cx="175" cy="122" r="15" fill="#fff"/><circle cx="225" cy="122" r="15" fill="#fff"/><circle cx="177" cy="124" r="8" fill="#172c66"/><circle cx="227" cy="124" r="8" fill="#172c66"/><circle cx="180" cy="120" r="3" fill="#fff"/><circle cx="230" cy="120" r="3" fill="#fff"/>' +
+    '<polygon points="200,150 191,141 209,141" fill="#f582ae"/><path d="M200 150 Q192 162 182 155 M200 150 Q208 162 218 155" stroke="#172c66" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<g stroke="#172c66" stroke-width="2.5" stroke-linecap="round"><line x1="120" y1="140" x2="165" y2="148"/><line x1="120" y1="158" x2="165" y2="156"/><line x1="280" y1="140" x2="235" y2="148"/><line x1="280" y1="158" x2="235" y2="156"/></g>' +
+    '<circle cx="160" cy="150" r="7" fill="#f582ae" opacity=".7"/><circle cx="240" cy="150" r="7" fill="#f582ae" opacity=".7"/></svg>'
+  ];
+  var LEVELS = [[2, 2], [3, 2], [3, 3], [4, 3]];
+  var level = 0, scene = 0, cols = 2, rows = 2, tiles = [], placed = 0, url = '';
+  var boardW = 0, boardH = 0, tileW = 0, tileH = 0, trayScale = 1, dragging = null;
+
+  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+  game.innerHTML = '';
+  var lvlEl = el('div', 'lvl');
+  var wrap = el('div', 'wrap'), boardBox = el('div', 'boardbox'), board = el('div', 'board'), tray = el('div', 'tray');
+  boardBox.appendChild(board); wrap.appendChild(boardBox); wrap.appendChild(tray);
+  game.appendChild(wrap); game.appendChild(lvlEl);
+  // Expuesto para pruebas
+  window.__pz = { get cols() { return cols; }, get rows() { return rows; } };
+
+  function start() {
+    var lv = LEVELS[Math.min(level, LEVELS.length - 1)]; cols = lv[0]; rows = lv[1];
+    url = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SCENES[scene % SCENES.length]) + '")';
+    board.className = 'board'; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; placed = 0; dragging = null;
+    lvlEl.textContent = 'Nivel ' + (level + 1);
+    var ghost = el('div', 'ghost'); ghost.style.backgroundImage = url; board.appendChild(ghost);
+    var all = [];
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var slot = el('div', 'slot'); slot.dataset.c = c; slot.dataset.r = r; board.appendChild(slot);
+      all.push({ c: c, r: r });
+    }
+    KidsGame.shuffle(all).forEach(function (t, i) {
+      var d = el('div', 'tile'); d.style.backgroundImage = url; d.style.animationDelay = (i * 50) + 'ms';
+      d.dataset.c = t.c; d.dataset.r = t.r;
+      t.el = d; t.state = 'tray';
+      d.addEventListener('pointerdown', function (e) { down(e, t); });
+      tray.appendChild(d); tiles.push(t);
+    });
+    layout();
+    KidsGame.say('Arma el rompecabezas');
+  }
+
+  function layout() {
+    var W = game.clientWidth - 16, H = game.clientHeight - 16, gap = 8, n = tiles.length;
+    if (!n || W < 50 || H < 50) return;
+    var portrait = H > W;
+    wrap.className = 'wrap' + (portrait ? ' portrait' : '');
+    var bw, bh, tw, th, tcols, trows;
+    if (portrait) {
+      var trayH = Math.max(130, Math.floor(H * 0.3));
+      bw = W; bh = H - trayH - 10;
+      tray.style.width = '100%'; tray.style.height = trayH + 'px';
+    } else {
+      var trayW = Math.max(160, Math.floor(W * 0.28));
+      bw = W - trayW - 10; bh = H;
+      tray.style.width = trayW + 'px'; tray.style.height = '100%';
+    }
+    boardW = Math.floor(Math.min(bw, bh * 4 / 3)); boardH = Math.floor(boardW * 3 / 4);
+    tileW = boardW / cols; tileH = boardH / rows;
+    board.style.width = boardW + 'px'; board.style.height = boardH + 'px';
+    // Tamaño de las fichas en la bandeja para que quepan todas
+    if (portrait) {
+      trows = 2; tcols = Math.ceil(n / trows);
+      tw = (W - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
+      var availH = parseFloat(tray.style.height) - (trows + 1) * gap;
+      if (trows * th > availH) { th = availH / trows; tw = th * tileW / tileH; }
+    } else {
+      tcols = 2; trows = Math.ceil(n / tcols);
+      tw = (parseFloat(tray.style.width) - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
+      if (trows * th > H - (trows + 1) * gap) { th = (H - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
+    }
+    trayScale = Math.min(1, tw / tileW);
+    tray.style.setProperty('--gap', gap + 'px');
+    Array.prototype.forEach.call(board.querySelectorAll('.slot'), function (s) {
+      s.style.left = (s.dataset.c * tileW) + 'px'; s.style.top = (s.dataset.r * tileH) + 'px';
+      s.style.width = tileW + 'px'; s.style.height = tileH + 'px';
+    });
+    tiles.forEach(styleTile);
+  }
+
+  function styleTile(t) {
+    var s = t.state === 'tray' ? trayScale : 1, e = t.el;
+    e.style.width = (tileW * s) + 'px'; e.style.height = (tileH * s) + 'px';
+    e.style.backgroundSize = (boardW * s) + 'px ' + (boardH * s) + 'px';
+    e.style.backgroundPosition = (-t.c * tileW * s) + 'px ' + (-t.r * tileH * s) + 'px';
+    if (t.state === 'placed') { e.style.left = (t.c * tileW) + 'px'; e.style.top = (t.r * tileH) + 'px'; }
+  }
+
+  function moveTo(t, x, y) {
+    t.el.style.left = (x - tileW / 2) + 'px'; t.el.style.top = (y - tileH * 0.6) + 'px';
+  }
+  function down(e, t) {
+    if (t.state !== 'tray' || dragging) return;
+    e.preventDefault();
+    dragging = { t: t, id: e.pointerId };
+    t.idx = Array.prototype.indexOf.call(tray.children, t.el);
+    t.state = 'drag';
+    document.body.appendChild(t.el); t.el.className = 'tile drag';
+    styleTile(t); moveTo(t, e.clientX, e.clientY);
+    KidsGame.sound.tap();
+  }
+  function move(e) {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    e.preventDefault(); moveTo(dragging.t, e.clientX, e.clientY);
+  }
+  function up(e) {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    var t = dragging.t; dragging = null;
+    var br = board.getBoundingClientRect();
+    var tl = parseFloat(t.el.style.left), tt = parseFloat(t.el.style.top);
+    var dx = tl - (br.left + t.c * tileW), dy = tt - (br.top + t.r * tileH);
+    if (Math.sqrt(dx * dx + dy * dy) < 0.35 * tileW) {
+      t.state = 'placed'; t.el.className = 'tile placed'; board.appendChild(t.el); styleTile(t);
+      KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+      placed++;
+      if (placed === tiles.length) finish();
+    } else {
+      t.state = 'tray'; t.el.className = 'tile'; t.el.style.left = ''; t.el.style.top = '';
+      var ref = tray.children[t.idx] || null; tray.insertBefore(t.el, ref); styleTile(t);
+      KidsGame.sound.pop();
+    }
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', up);
+
+  function finish() {
+    board.classList.add('done');
+    KidsGame.confetti(30);
+    setTimeout(function () {
+      KidsGame.celebrate({
+        sub: 'Nivel ' + (level + 1) + ' completo',
+        onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); scene++; start(); },
+        onAgain: function () { start(); }
+      });
+    }, 1300);
+  }
+
+  window.addEventListener('resize', layout);
+  start();
+})();
+</script>
+</body>
+</html>

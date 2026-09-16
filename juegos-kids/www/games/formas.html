@@ -257,10 +257,9 @@
     if (hit && hit.dataset.color === p.dataset.color) {
       var br = hit.getBoundingClientRect();
       p.classList.add('gone');
-      p.style.transform = 'translate(' + (br.left + br.width / 2 - (r.left + r.width / 2) + (r.left - r.left)) + 'px,' + (br.top + br.height / 2 - (r.top + r.height / 2)) + 'px) scale(0)';
-      // La traslación anterior ya incluye el desplazamiento de arrastre, así que se recalcula desde la posición original
-      var ox = parseFloat(p.style.left), oy = parseFloat(p.style.top), ar = area.getBoundingClientRect();
-      p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + r.width / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + r.height / 2)) + 'px) scale(0)';
+      // Se anima desde la posición original (left/top) hacia el centro de la canasta
+      var ox = parseFloat(p.style.left), oy = parseFloat(p.style.top), sz = parseFloat(p.style.width), ar = area.getBoundingClientRect();
+      p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + sz / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + sz / 2)) + 'px) scale(0)';
       KidsGame.sound.pop(); replay(hit, 'got'); scored();
       pieces = pieces.filter(function (x) { return x !== p; });
       setTimeout(function () { p.remove(); }, 350);
