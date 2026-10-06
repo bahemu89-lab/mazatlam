@@ -33,6 +33,16 @@
   .hud .emoji { font-size: 36px; animation: float 3s ease-in-out infinite; }
   .hud .kg-level-badge { font-size: 20px; padding: 6px 16px; }
   .hud .lvbtn { font-size: 28px; margin-left: 4px; }
+  .hud .moves {
+    padding: 6px 16px; border-radius: 30px; font-weight: 900; color: #fff; font-size: 20px; white-space: nowrap;
+    background: linear-gradient(180deg, #7dd0ff 0%, #2f95e8 100%);
+    text-shadow: 0 2px 0 #1a63a8, 0 3px 6px rgba(0,0,0,.3);
+    box-shadow: 0 5px 0 #1a63a8, 0 10px 16px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7);
+  }
+  .hud .moves.tri { background: linear-gradient(180deg, #b39cff 0%, #7f5af0 100%); text-shadow: 0 2px 0 #5232b3; box-shadow: 0 5px 0 #5232b3, 0 10px 16px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7); }
+  .mcard.mix { transition: transform .7s cubic-bezier(.4,1.3,.5,1); z-index: 5; }
+  .mcard.mix .inner { animation: none; }
+  @media (max-width: 700px) { .hud { gap: 8px; font-size: 20px; } .hud .lvl { padding: 6px 14px; } .hud .moves { font-size: 17px; padding: 6px 12px; } }
   /* Tapete de fieltro debajo del tablero */
   .board {
     position: relative; z-index: 1; flex: 0 0 auto; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh);
@@ -131,14 +141,16 @@ var game = KidsGame.init({ title: 'Memoria' });
 (function () {
   var ANIMALS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦉','🐴','🦄','🐝','🐢','🐙','🦋','🐞','🐠','🐬','🦀'];
   var BACKS = [['#ff7fb0','#c9186a'],['#4fb8ff','#4a2ed0'],['#4fd894','#137a7a'],['#ffc93c','#e8508a']];
-  // Dificultad: 1 = pocas parejas, 2 = medio, 3 = muchas parejas y menos tiempo para verlas
+  // Dificultad: 1 = pocas parejas ... 4 = Experto: 15 parejas, tríos, las cartas se mezclan y casi no hay tiempo para verlas
   var DIFF = {
     1: { rounds: [{ pairs: 3, cols: 3, rows: 2 }, { pairs: 4, cols: 4, rows: 2 }], reveal: 850 },
-    2: { rounds: [{ pairs: 6, cols: 4, rows: 3 }, { pairs: 8, cols: 4, rows: 4 }], reveal: 650 },
-    3: { rounds: [{ pairs: 10, cols: 5, rows: 4 }, { pairs: 12, cols: 6, rows: 4 }], reveal: 420 }
+    2: { rounds: [{ pairs: 6, cols: 4, rows: 3 }, { pairs: 8, cols: 4, rows: 4 }], reveal: 600 },
+    3: { rounds: [{ pairs: 10, cols: 5, rows: 4 }, { pairs: 12, cols: 6, rows: 4 }], reveal: 420 },
+    4: { rounds: [{ pairs: 15, cols: 6, rows: 5, mix: 5 }, { pairs: 10, need: 3, cols: 6, rows: 5, mix: 5 }], reveal: 350 }
   };
+  var LABELS = { 1: '4 parejas', 2: '8 parejas', 3: '12 parejas', 4: '15 parejas · tríos · se mezclan' };
   var nivel = 1, LEVELS = DIFF[1].rounds;
-  var level = 0, cfg, first = null, lock = false, matched = 0, board, hud, running = false;
+  var level = 0, cfg, open = [], lock = false, matched = 0, moves = 0, mixed = false, board, hud, movesEl, running = false;
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
@@ -146,17 +158,20 @@ var game = KidsGame.init({ title: 'Memoria' });
   game.appendChild(hud); game.appendChild(board);
 
   function pickLevel() {
-    running = false; lock = true; first = null;
+    running = false; lock = true; open = [];
     board.innerHTML = ''; hud.innerHTML = '';
-    KidsGame.levelPicker({ onPick: function (n) { nivel = n; LEVELS = DIFF[n].rounds; level = 0; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { nivel = n; LEVELS = DIFF[n].rounds; level = 0; start(); } });
   }
   function buildHud() {
-    hud.innerHTML = '<span class="lvl">Ronda ' + (level + 1) + '</span><span class="emoji">🧠</span>';
+    hud.innerHTML = '<span class="lvl">Ronda ' + (level + 1) + '</span><span class="emoji">' + (cfg.need === 3 ? '🎯' : '🧠') + '</span>';
+    movesEl = document.createElement('span'); movesEl.className = 'moves' + (cfg.need === 3 ? ' tri' : '');
+    hud.appendChild(movesEl); updateMoves();
     hud.appendChild(KidsGame.levelBadge(nivel));
     var b = document.createElement('button'); b.className = 'btn round purple lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
     b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
     hud.appendChild(b);
   }
+  function updateMoves() { if (movesEl) movesEl.textContent = (cfg.need === 3 ? '3️⃣ ' : '') + '👆 ' + moves; }
 
   function layout() {
     var cols = cfg.cols, rows = cfg.rows;
@@ -191,11 +206,14 @@ var game = KidsGame.init({ title: 'Memoria' });
 
   function start() {
     cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
-    first = null; lock = false; matched = 0; running = true;
+    open = []; lock = false; matched = 0; moves = 0; mixed = false; running = true;
     buildHud();
     board.innerHTML = '';
+    var need = cfg.need || 2;
     var chosen = KidsGame.shuffle(ANIMALS).slice(0, cfg.pairs);
-    var deck = KidsGame.shuffle(chosen.concat(chosen));
+    var deck = chosen;
+    for (var k = 1; k < need; k++) deck = deck.concat(chosen);
+    deck = KidsGame.shuffle(deck);
     var back = BACKS[level % BACKS.length];
     deck.forEach(function (em, i) {
       var c = document.createElement('div');
@@ -203,13 +221,14 @@ var game = KidsGame.init({ title: 'Memoria' });
       c.style.animationDelay = (i * 40) + 'ms';
       c.dataset.v = em;
       c.innerHTML = '<div class="inner">' +
-        '<div class="face back" style="--c1:' + back[0] + ';--c2:' + back[1] + '"><span class="q">?</span><i class="shine" style="animation-delay:' + (i * 0.37) + 's"></i></div>' +
+        '<div class="face back" style="--c1:' + back[0] + ';--c2:' + back[1] + '"><span class="q">' + (need === 3 ? '3' : '?') + '</span><i class="shine" style="animation-delay:' + (i * 0.37) + 's"></i></div>' +
         '<div class="face front"><span class="emoji">' + em + '</span></div></div>';
       c.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(c); });
       board.appendChild(c);
     });
     layout();
-    KidsGame.say('Encuentra las parejas');
+    KidsGame.say(need === 3 ? 'Encuentra los tríos: tres iguales' : 'Encuentra las parejas');
+    if (cfg.mix) setTimeout(function () { if (running) KidsGame.toast('👀 ¡Ojo! Se van a mezclar', 1800); }, 1200);
   }
 
   function tap(c) {
@@ -217,38 +236,80 @@ var game = KidsGame.init({ title: 'Memoria' });
     KidsGame.sound.tap();
     c.classList.remove('pop'); c.style.animationDelay = '';
     c.classList.add('flipped');
-    if (!first) { first = c; return; }
-    var a = first, b = c; first = null; lock = true;
-    if (a.dataset.v === b.dataset.v) {
+    open.push(c);
+    var need = cfg.need || 2;
+    if (open.length === 1) return;
+    var cur = open.slice();
+    var ok = cur.every(function (x) { return x.dataset.v === cur[0].dataset.v; });
+    if (ok && cur.length < need) return; // en tríos: dos iguales, falta la tercera
+    moves++; updateMoves();
+    open = []; lock = true;
+    if (ok) {
       setTimeout(function () {
-        a.classList.add('done'); b.classList.add('done');
-        a.classList.remove('flipped'); b.classList.remove('flipped');
+        cur.forEach(function (x) { x.classList.add('done'); x.classList.remove('flipped'); sparkle(x); });
         KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-        sparkle(a); sparkle(b);
         matched++; lock = false;
         if (matched === cfg.pairs) setTimeout(finish, 500);
+        else if (cfg.mix && !mixed && matched === cfg.mix) remix();
       }, 350);
     } else {
       setTimeout(function () {
         KidsGame.sound.wrong();
-        a.classList.add('bad'); b.classList.add('bad');
+        cur.forEach(function (x) { x.classList.add('bad'); });
         setTimeout(function () {
-          a.classList.remove('flipped', 'bad'); b.classList.remove('flipped', 'bad');
+          cur.forEach(function (x) { x.classList.remove('flipped', 'bad'); });
           if (running) lock = false;
         }, 400);
       }, DIFF[nivel].reveal);
     }
   }
 
+  // Experto: las cartas que faltan cambian de lugar (animación FLIP) para obligar a memorizar de nuevo
+  function remix() {
+    mixed = true; lock = true;
+    var all = Array.prototype.slice.call(board.children);
+    var free = all.filter(function (c) { return !c.classList.contains('done'); });
+    var before = {}; all.forEach(function (c, i) { before[i] = c.getBoundingClientRect(); c._i = i; });
+    var perm = KidsGame.shuffle(free);
+    // nuevo orden: las hechas se quedan, las libres se permutan entre sus huecos
+    var order = all.map(function (c) { return c.classList.contains('done') ? c : perm.pop(); });
+    KidsGame.toast('🔀 ¡Se mezclaron!', 1600); KidsGame.say('¡Se mezclaron!'); KidsGame.sound.pop();
+    order.forEach(function (c) { board.appendChild(c); });
+    order.forEach(function (c) {
+      var r = c.getBoundingClientRect(), b = before[c._i];
+      c.style.transition = 'none';
+      c.style.transform = 'translate(' + (b.left - r.left) + 'px,' + (b.top - r.top) + 'px)';
+      c.classList.remove('pop');
+    });
+    void board.offsetWidth;
+    order.forEach(function (c, i) {
+      c.classList.add('mix');
+      c.style.transition = '';
+      c.style.transitionDelay = (i * 12) + 'ms';
+      c.style.transform = 'translate(0,0)';
+    });
+    setTimeout(function () {
+      order.forEach(function (c) { c.classList.remove('mix'); c.style.transform = ''; c.style.transitionDelay = ''; });
+      if (running) lock = false;
+    }, 1100);
+  }
+
   function finish() {
+    var best = cfg.pairs, ratio = moves / best;
+    var stars = ratio <= 1.6 ? 3 : (ratio <= 2.4 ? 2 : 1);
+    var last = level >= LEVELS.length - 1;
+    if (last) KidsGame.levelDone(nivel);
     KidsGame.celebrate({
-      sub: 'Ronda ' + (level + 1) + ' completa',
+      sub: 'Ronda ' + (level + 1) + ' · ' + moves + ' movimientos' + (stars === 3 ? ' · ¡súper memoria!' : ''),
+      stars: stars,
       onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
       onAgain: function () { start(); }
     });
   }
 
   window.addEventListener('resize', function () { if (cfg && running) layout(); });
+  // Expuesto para pruebas
+  window.__mem = { get cfg() { return cfg; }, get matched() { return matched; }, get moves() { return moves; }, get lock() { return lock; }, get mixed() { return mixed; } };
   pickLevel();
 })();
 </script>

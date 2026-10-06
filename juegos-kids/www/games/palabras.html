@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Forma la palabra</title>
+<style>
+  /* Escena: pared suave arriba y escritorio de madera abajo, con bloques de letras decorativos */
+  .game {
+    background:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #ffe8c2 0%, #ffd9a8 56%, #ffd9a8 56.5%, #c98b48 57%, #b8763a 72%, #9e6230 100%);
+  }
+  .game::before { /* veta de la madera */
+    content: ""; position: absolute; left: 0; right: 0; top: 57%; bottom: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 8px, rgba(0,0,0,0) 8px 30px, rgba(0,0,0,.06) 30px 34px, rgba(0,0,0,0) 34px 58px);
+    box-shadow: inset 0 10px 18px rgba(80,40,0,.35), inset 0 4px 0 rgba(255,235,200,.45);
+  }
+  .deco { position: absolute; z-index: 0; pointer-events: none; opacity: .5; font-size: 54px; font-weight: 900; color: #fff; width: 78px; height: 78px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; text-shadow: 0 3px 0 rgba(0,0,0,.2);
+    background: linear-gradient(135deg, var(--a), var(--b) 60%, var(--d) 140%); box-shadow: 0 7px 0 var(--d), 0 14px 18px rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.6); animation: float 4s ease-in-out infinite; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; gap: min(1.6vh, 12px); z-index: 1; }
+  .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 28px; }
+  .tools { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 8px; }
+  .tools .btn { font-size: 30px; }
+  .prog { position: absolute; top: 80px; right: 12px; z-index: 3; display: flex; gap: 5px; flex-direction: column; align-items: flex-end; }
+  .dots { display: flex; gap: 5px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(180deg, #fff, #d9dff0); box-shadow: 0 2px 0 #b9c2d9, inset 0 1px 0 #fff; }
+  .dot.on { background: radial-gradient(circle at 35% 30%, #fff, #ffd166 40%, #f5a623); box-shadow: 0 2px 0 #c97d0b, 0 0 8px rgba(255,200,80,.8); }
+  .count { font-size: 18px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 3px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520, inset 0 1px 0 #fff; }
+  @media (max-width: 820px) { .prog { top: 8px; right: 50%; transform: translateX(50%); flex-direction: column-reverse; } }
+
+  .top { display: flex; align-items: center; justify-content: center; gap: min(4vw, 36px); flex: 0 0 auto; margin-top: min(6vh, 50px); }
+  .medal {
+    position: relative; width: min(22vh, 30vw, 170px); height: min(22vh, 30vw, 170px); border-radius: 50%; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #fff6d0 32%, #ffd166 70%, #f5a623 100%);
+    box-shadow: 0 10px 0 #c97d0b, 0 18px 28px rgba(90,50,0,.3), inset 0 4px 0 rgba(255,255,255,.9), inset 0 -8px 0 rgba(180,110,0,.25), 0 0 0 7px #fff, 0 0 0 11px rgba(255,209,102,.6);
+    animation: float 3.6s ease-in-out infinite;
+  }
+  .medal::before { content: ""; position: absolute; left: 12%; right: 12%; top: 6%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); pointer-events: none; }
+  .pic { font-size: min(14vh, 19vw, 108px); filter: drop-shadow(0 8px 6px rgba(90,50,0,.35)); }
+  .model { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: min(40vw, 300px); }
+  .word { font-size: min(8vh, 9vw, 58px); font-weight: 900; letter-spacing: 3px; white-space: nowrap; color: #fff; text-shadow: 0 3px 0 #1f7fae, 0 6px 10px rgba(0,0,0,.3), -2px -2px 0 #1f7fae, 2px -2px 0 #1f7fae, -2px 2px 0 #1f7fae, 2px 2px 0 #1f7fae; transition: opacity .4s; }
+  .word.hidden { opacity: 0; }
+  .word.syll { letter-spacing: 1px; font-size: min(6vh, 7vw, 44px); }
+  .timer { height: 12px; width: min(40vw, 260px); border-radius: 8px; background: rgba(0,0,0,.15); box-shadow: inset 0 2px 3px rgba(0,0,0,.25); overflow: hidden; }
+  .timer i { display: block; height: 100%; width: 100%; border-radius: 8px; background: linear-gradient(180deg, #8ef0b0, #24b36c); box-shadow: inset 0 2px 0 rgba(255,255,255,.6); transform-origin: left; }
+  .timer i.run { animation: shrink 3s linear forwards; }
+  @keyframes shrink { to { transform: scaleX(0); } }
+  .eye { font-size: min(6vh, 40px); filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
+  .tip { font-size: min(3.2vh, 22px); color: #6b3f00; font-weight: 900; text-shadow: 0 1px 0 #fff; text-align: center; }
+
+  /* Casillas donde caen las letras / sílabas */
+  .slots { display: flex; gap: min(1.4vw, 10px); justify-content: center; flex-wrap: wrap; flex: 0 0 auto; max-width: 96vw; padding: 8px 0; }
+  .slot {
+    --s: min(11vw, 11vh, 86px);
+    width: var(--s); height: var(--s); border-radius: 16px; display: flex; align-items: center; justify-content: center; position: relative;
+    font-size: calc(var(--s) * .6); font-weight: 900; color: #1f2f6b; line-height: 1;
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.3)); border: 4px dashed rgba(31,47,107,.35);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.5);
+    transition: transform .12s, background .2s, border-color .2s;
+  }
+  .slot.syl { --s: min(13vw, 11vh, 92px); width: auto; min-width: var(--s); padding: 0 10px; font-size: calc(var(--s) * .5); }
+  .slots.long .slot { --s: min(8.6vw, 9vh, 70px); }
+  .slots.long .slot.syl { --s: min(10vw, 10vh, 76px); }
+  .slot.hot { border-color: #ffb703; background: linear-gradient(180deg, #fff7d6, #ffe6a8); transform: scale(1.08); }
+  .slot.full { border-style: solid; border-color: #fff; color: #fff; background: linear-gradient(135deg, var(--a, #bfe6ff), var(--b, #3da9fc) 55%, var(--d, #1a63a8) 130%);
+    box-shadow: 0 6px 0 var(--d, #1a63a8), 0 10px 16px rgba(20,40,90,.28), inset 0 3px 0 rgba(255,255,255,.7), inset 0 -4px 0 rgba(0,0,0,.15); text-shadow: 0 3px 0 var(--d, #1a63a8), 0 5px 8px rgba(0,0,0,.3); cursor: pointer; }
+  .slot.good { --a: #c6ffd9; --b: #2fd27a; --d: #148a4d; animation: flash .6s; }
+  .slot.cursor { border-color: #ffb703; animation: blinkb 1s infinite; }
+  @keyframes blinkb { 0%,100% { box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 0 0 0 rgba(255,183,3,0); } 50% { box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 0 0 6px rgba(255,183,3,.55); } }
+  @keyframes flash { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(120,255,170,.9); } 40% { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(120,255,170,0); } 100% { transform: scale(1); } }
+  .slot.bad { animation: shake .35s; border-color: #ff6f61; }
+
+  /* Bandeja de bloques de plástico con bisel */
+  .tray { display: flex; flex-wrap: wrap; gap: min(1.6vw, 12px); justify-content: center; align-content: flex-start; flex: 0 0 auto; max-width: 96vw; min-height: min(12vh, 100px); padding: 10px 12px; border-radius: 26px;
+    background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.2)); box-shadow: inset 0 3px 8px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.5); }
+  .block {
+    --a: #ffd0e4; --b: #f582ae; --d: #b8306f; --s: min(11vw, 11vh, 86px);
+    position: relative; width: var(--s); height: var(--s); border-radius: 18px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none;
+    font-size: calc(var(--s) * .6); font-weight: 900; color: #fff; line-height: 1;
+    background: linear-gradient(135deg, var(--a) 0%, var(--b) 55%, var(--d) 130%);
+    box-shadow: 0 8px 0 var(--d), 0 14px 20px rgba(20,40,90,.28), inset 0 3px 0 rgba(255,255,255,.7), inset 3px 0 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.15), inset -3px 0 0 rgba(0,0,0,.08);
+    text-shadow: 0 3px 0 var(--d), 0 6px 8px rgba(0,0,0,.3);
+    animation: pop .35s ease-out backwards, float 3.2s ease-in-out infinite;
+  }
+  .block.syl { width: auto; min-width: var(--s); padding: 0 12px; font-size: calc(var(--s) * .5); }
+  .block::before { content: ""; position: absolute; left: 10%; right: 10%; top: 6%; height: 34%; border-radius: 14px 14px 40% 40%; background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); pointer-events: none; }
+  .block::after { content: ""; position: absolute; inset: 9%; border-radius: 12px; border: 3px solid rgba(255,255,255,.35); box-shadow: inset 0 2px 4px rgba(0,0,0,.12); pointer-events: none; }
+  .block.used { visibility: hidden; animation: none; }
+  .block.drag { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; animation: none; transform: scale(1.15); transition: none; box-shadow: 0 14px 0 var(--d), 0 26px 30px rgba(20,40,90,.35), inset 0 3px 0 rgba(255,255,255,.7); }
+  .block.back { transition: transform .3s ease-out; }
+  .block.bad { animation: shake .35s; }
+
+  /* Teclado */
+  .kbd { display: flex; flex-direction: column; gap: 8px; align-items: center; flex: 0 0 auto; padding: 10px; max-width: 98vw; border-radius: 26px;
+    background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.25)); box-shadow: inset 0 3px 8px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.5); }
+  .krow { display: flex; gap: 7px; justify-content: center; }
+  .key { --a: #ffffff; --b: #e4ebf7; --d: #b4bfd6; --s: min(8.4vw, 8.5vh, 84px);
+    width: var(--s); height: var(--s); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; position: relative;
+    font-size: calc(var(--s) * .55); font-weight: 900; color: #1f2f6b; line-height: 1;
+    background: linear-gradient(180deg, var(--a), var(--b)); box-shadow: 0 6px 0 var(--d), 0 10px 14px rgba(20,40,90,.2), inset 0 2px 0 #fff; text-shadow: 0 1px 0 #fff; transition: transform .06s, box-shadow .06s; }
+  .key.down, .key:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--d), 0 3px 6px rgba(20,40,90,.2), inset 0 2px 0 #fff; }
+  .key.del { --a: #ffd0e4; --b: #f582ae; --d: #b8306f; color: #fff; text-shadow: 0 2px 0 var(--d); width: calc(var(--s) * 1.25); }
+  .key.vow { --a: #fff4c2; --b: #ffe08a; --d: #d9a520; }
+
+  .actions { display: flex; align-items: center; justify-content: center; gap: 18px; flex: 0 0 auto; min-height: 70px; }
+  .actions .btn { font-size: 44px; min-width: 150px; min-height: 76px; }
+  .actions .btn.off { opacity: .45; filter: saturate(.4); }
+  .wrongs { font-size: 28px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #ff9c93, #ff6f61); padding: 8px 18px; border-radius: 30px; box-shadow: 0 5px 0 #b8413a, 0 8px 14px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.5); text-shadow: 0 2px 0 rgba(0,0,0,.2); animation: pop .35s; display: none; }
+  .wrongs.show { display: block; }
+  .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 31; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  @media (max-height: 700px) { .top { margin-top: 40px; } .medal { width: min(18vh, 30vw, 170px); height: min(18vh, 30vw, 170px); } .pic { font-size: min(11vh, 19vw, 108px); } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Forma la palabra' });
+
+  // Banco de palabras: [emoji, PALABRA, sílabas]
+  var WORDS = [
+    ['☀️','SOL',['SOL']], ['🍞','PAN',['PAN']], ['🐻','OSO',['O','SO']], ['🌊','MAR',['MAR']], ['🐱','GATO',['GA','TO']],
+    ['🦆','PATO',['PA','TO']], ['🌙','LUNA',['LU','NA']], ['🏠','CASA',['CA','SA']], ['🐟','PEZ',['PEZ']], ['🍇','UVA',['U','VA']],
+    ['👁️','OJO',['O','JO']], ['🧄','AJO',['A','JO']], ['🐸','RANA',['RA','NA']], ['🐮','VACA',['VA','CA']], ['🐒','MONO',['MO','NO']],
+    ['🐺','LOBO',['LO','BO']], ['☁️','NUBE',['NU','BE']], ['🌸','FLOR',['FLOR']], ['🚂','TREN',['TREN']], ['🍐','PERA',['PE','RA']],
+    ['🌹','ROSA',['RO','SA']], ['👄','BOCA',['BO','CA']], ['✋','MANO',['MA','NO']], ['🦶','PIE',['PIE']], ['☝️','DEDO',['DE','DO']],
+    ['🛏️','CAMA',['CA','MA']], ['☕','TAZA',['TA','ZA']], ['🥥','COCO',['CO','CO']], ['🍍','PIÑA',['PI','ÑA']], ['👦','NIÑO',['NI','ÑO']],
+    ['🧃','JUGO',['JU','GO']], ['🌮','TACO',['TA','CO']], ['🥝','KIWI',['KI','WI']], ['🏝️','ISLA',['IS','LA']], ['💧','AGUA',['A','GUA']],
+    ['🍃','HOJA',['HO','JA']], ['🪺','NIDO',['NI','DO']], ['👢','BOTA',['BO','TA']], ['🦁','LEÓN',['LE','ÓN']], ['🐭','RATÓN',['RA','TÓN']],
+    ['🐶','PERRO',['PE','RRO']], ['🎈','GLOBO',['GLO','BO']], ['📖','LIBRO',['LI','BRO']], ['🪑','SILLA',['SI','LLA']], ['🥛','LECHE',['LE','CHE']],
+    ['🧀','QUESO',['QUE','SO']], ['🍬','DULCE',['DUL','CE']], ['🚗','COCHE',['CO','CHE']], ['⛵','BARCO',['BAR','CO']], ['✈️','AVIÓN',['A','VIÓN']],
+    ['🐷','CERDO',['CER','DO']], ['🐥','POLLO',['PO','LLO']], ['🐯','TIGRE',['TI','GRE']], ['🦓','CEBRA',['CE','BRA']], ['🍓','FRESA',['FRE','SA']],
+    ['🍋','LIMÓN',['LI','MÓN']], ['🐙','PULPO',['PUL','PO']], ['🥚','HUEVO',['HUE','VO']], ['🦉','BÚHO',['BÚ','HO']], ['🔥','FUEGO',['FUE','GO']],
+    ['❄️','NIEVE',['NIE','VE']], ['🌳','ÁRBOL',['ÁR','BOL']], ['🔑','LLAVE',['LLA','VE']], ['⏰','RELOJ',['RE','LOJ']], ['🧢','GORRO',['GO','RRO']],
+    ['✏️','LÁPIZ',['LÁ','PIZ']], ['🎂','PASTEL',['PAS','TEL']], ['🐬','DELFÍN',['DEL','FÍN']], ['🚚','CAMIÓN',['CA','MIÓN']],
+    ['⚽','PELOTA',['PE','LO','TA']], ['🐢','TORTUGA',['TOR','TU','GA']], ['🐰','CONEJO',['CO','NE','JO']], ['👟','ZAPATO',['ZA','PA','TO']],
+    ['🍎','MANZANA',['MAN','ZA','NA']], ['🍦','HELADO',['HE','LA','DO']], ['⭐','ESTRELLA',['ES','TRE','LLA']], ['🐴','CABALLO',['CA','BA','LLO']],
+    ['🍌','PLÁTANO',['PLÁ','TA','NO']], ['🦒','JIRAFA',['JI','RA','FA']], ['🤡','PAYASO',['PA','YA','SO']], ['🍅','TOMATE',['TO','MA','TE']],
+    ['👕','CAMISA',['CA','MI','SA']], ['🪆','MUÑECA',['MU','ÑE','CA']], ['🕷️','ARAÑA',['A','RA','ÑA']], ['🐝','ABEJA',['A','BE','JA']],
+    ['🎁','REGALO',['RE','GA','LO']], ['🍪','GALLETA',['GA','LLE','TA']], ['🐋','BALLENA',['BA','LLE','NA']], ['🔔','CAMPANA',['CAM','PA','NA']],
+    ['👑','CORONA',['CO','RO','NA']], ['🎸','GUITARRA',['GUI','TA','RRA']], ['🎒','MOCHILA',['MO','CHI','LA']], ['🪞','ESPEJO',['ES','PE','JO']],
+    ['🪟','VENTANA',['VEN','TA','NA']], ['🥄','CUCHARA',['CU','CHA','RA']], ['✂️','TIJERAS',['TI','JE','RAS']], ['🏅','MEDALLA',['ME','DA','LLA']],
+    ['🍊','NARANJA',['NA','RAN','JA']], ['🐑','OVEJA',['O','VE','JA']], ['🐌','CARACOL',['CA','RA','COL']],
+    ['🦋','MARIPOSA',['MA','RI','PO','SA']], ['🐘','ELEFANTE',['E','LE','FAN','TE']], ['🚲','BICICLETA',['BI','CI','CLE','TA']], ['🦖','DINOSAURIO',['DI','NO','SAU','RIO']]
+  ];
+  var PAL = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
+    ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
+  var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
+  var LETTERS = 'ABCDEFGHIJLMNÑOPRSTUVZ'.split('');
+  var KEYS = ['ABCDEFGHI', 'JKLMNÑOPQ', 'RSTUVWXYZ'];
+  var ROUNDS = 8;
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
+  function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function norm(s) { return s.toUpperCase().replace(/[ÁÀÄ]/g, 'A').replace(/[ÉÈË]/g, 'E').replace(/[ÍÌÏ]/g, 'I').replace(/[ÓÒÖ]/g, 'O').replace(/[ÚÙÜ]/g, 'U'); }
+  function chars(s) { return s.split(''); }
+  function sparks(node, color) {
+    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 14; i++) {
+      var d = document.createElement('div'); d.className = 'spark';
+      var ang = (i / 14) * Math.PI * 2, dist = 60 + Math.random() * 70;
+      d.style.left = (cx - 7) + 'px'; d.style.top = (cy - 7) + 'px';
+      d.style.setProperty('--c', color || COLORS[i % COLORS.length]);
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px'); d.style.setProperty('--dy', Math.sin(ang) * dist - 30 + 'px');
+      d.style.animationDelay = (Math.random() * 90) + 'ms';
+      document.body.appendChild(d);
+      (function (n) { setTimeout(function () { n.remove(); }, 900); })(d);
+    }
+  }
+  function paint(node, p) { node.style.setProperty('--a', p[0]); node.style.setProperty('--b', p[1]); node.style.setProperty('--d', p[2]); }
+
+  /* ---------- Estado ---------- */
+  var level = 1, round = 0, cur = null, slots = [], tray = null, trayEl = null, wordEl = null, picEl = null, medal = null, slotsEl = null, timerEl = null, tipEl = null;
+  var dotsEl = null, countEl = null, checkBtn = null, wrongsEl = null, lock = false, used = [], misses = 0, timers = [];
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+  function poolFor(n) {
+    return WORDS.filter(function (w) {
+      var L = norm(w[1]).length;
+      if (n === 1) return L <= 4 && w[1] === norm(w[1]);
+      if (n === 2) return L >= 5 && L <= 6;
+      if (n === 3) return w[2].length >= 2;
+      return L >= 4 && L <= 7;
+    });
+  }
+  function pickLevel() {
+    clearTimers(); lock = true; game.innerHTML = '';
+    KidsGame.levelPicker({
+      labels: { 1: 'Copia 3-4 letras', 2: 'Memoria 5 letras', 3: 'Sílabas', 4: 'Teclado sin modelo' },
+      onPick: function (n) { startLevel(n); }
+    });
+  }
+  function startLevel(n) { level = n; round = 0; used = []; buildScreen(); nextWord(); }
+
+  function hud() {
+    var h = el('div', 'hud');
+    var b = el('button', 'btn round yellow', '🎚️'); b.setAttribute('aria-label', 'Nivel');
+    onTap(b, function () { KidsGame.sound.tap(); pickLevel(); });
+    h.appendChild(b); h.appendChild(KidsGame.levelBadge(level));
+    return h;
+  }
+  function decorate(s) {
+    var pos = [[3, 62], [90, 64], [8, 86], [88, 88], [48, 90], [26, 94], [70, 94]];
+    var L = 'ABCMOSZ'.split('');
+    pos.forEach(function (p, i) {
+      var d = el('div', 'deco', L[i]); d.style.left = p[0] + '%'; d.style.top = p[1] + '%'; paint(d, PAL[i % PAL.length]);
+      d.style.animationDelay = (-i * 0.7) + 's'; d.style.transform = 'rotate(' + ((i * 37) % 30 - 15) + 'deg)';
+      s.appendChild(d);
+    });
+  }
+
+  function buildScreen() {
+    clearTimers(); game.innerHTML = '';
+    var s = el('div', 'screen'); decorate(s);
+    s.appendChild(hud());
+    var tools = el('div', 'tools');
+    var sayB = el('button', 'btn round blue', '🔊'); sayB.setAttribute('aria-label', 'Repetir');
+    onTap(sayB, function () { if (!cur) return; KidsGame.sound.tap(); KidsGame.say(cur[1].toLowerCase()); replay(picEl, 'pop'); });
+    tools.appendChild(sayB);
+    if (level >= 3) {
+      var slow = el('button', 'btn round purple', '🐢'); slow.setAttribute('aria-label', 'Sílabas despacio');
+      onTap(slow, function () { if (!cur) return; KidsGame.sound.tap(); saySlow(); });
+      tools.appendChild(slow);
+    }
+    s.appendChild(tools);
+    var prog = el('div', 'prog'); countEl = el('div', 'count'); dotsEl = el('div', 'dots');
+    for (var i = 0; i < ROUNDS; i++) dotsEl.appendChild(el('div', 'dot'));
+    prog.appendChild(countEl); prog.appendChild(dotsEl); s.appendChild(prog);
+
+    var top = el('div', 'top');
+    medal = el('div', 'medal'); picEl = el('div', 'pic emoji'); medal.appendChild(picEl);
+    onTap(medal, function () { if (!cur) return; KidsGame.sound.tap(); KidsGame.say(cur[1].toLowerCase()); replay(picEl, 'pop'); });
+    var model = el('div', 'model');
+    wordEl = el('div', 'word'); model.appendChild(wordEl);
+    if (level === 2) { timerEl = el('div', 'timer', '<i></i>'); model.appendChild(timerEl); }
+    tipEl = el('div', 'tip'); model.appendChild(tipEl);
+    top.appendChild(medal); top.appendChild(model); s.appendChild(top);
+
+    slotsEl = el('div', 'slots'); s.appendChild(slotsEl);
+    if (level === 4) { trayEl = buildKeyboard(); } else { trayEl = el('div', 'tray'); }
+    s.appendChild(trayEl);
+    var acts = el('div', 'actions');
+    wrongsEl = el('div', 'wrongs');
+    if (level >= 3) {
+      checkBtn = el('button', 'btn green off', '✔'); checkBtn.setAttribute('aria-label', 'Comprobar');
+      onTap(checkBtn, function () { check(); });
+      acts.appendChild(checkBtn);
+    }
+    acts.appendChild(wrongsEl);
+    s.appendChild(acts);
+    game.appendChild(s);
+  }
+  function buildKeyboard() {
+    var k = el('div', 'kbd');
+    KEYS.forEach(function (row, ri) {
+      var r = el('div', 'krow');
+      chars(row).forEach(function (L) {
+        var key = el('div', 'key' + ('AEIOU'.indexOf(L) >= 0 ? ' vow' : ''), L);
+        key.dataset.l = L;
+        onTap(key, function () { pressKey(L, key); });
+        r.appendChild(key);
+      });
+      if (ri === 2) { var del = el('div', 'key del', '⌫'); onTap(del, function () { backspace(del); }); r.appendChild(del); }
+      k.appendChild(r);
+    });
+    return k;
+  }
+  function updateProgress() {
+    countEl.textContent = round + ' / ' + ROUNDS;
+    Array.prototype.forEach.call(dotsEl.children, function (d, i) { d.classList.toggle('on', i < round); });
+  }
+  function saySlow() { KidsGame.say(cur[2].map(function (s) { return s.toLowerCase(); }).join('... ')); }
+
+  /* ---------- Nueva palabra ---------- */
+  function nextWord() {
+    clearTimers(); lock = false; misses = 0;
+    var pool = poolFor(level).filter(function (w) { return used.indexOf(w[1]) < 0; });
+    if (!pool.length) { used = []; pool = poolFor(level); }
+    cur = KidsGame.pick(pool); used.push(cur[1]);
+    picEl.textContent = cur[0]; replay(picEl, 'pop');
+    wordEl.className = 'word'; wrongsEl.className = 'wrongs'; tipEl.textContent = '';
+    updateProgress();
+    var pieces, expected;
+    if (level === 3) { expected = cur[2].slice(); pieces = expected.slice(); }
+    else { expected = chars(cur[1]); pieces = expected.slice(); }
+    // Modelo
+    if (level === 1) wordEl.textContent = cur[1];
+    else if (level === 2) { wordEl.textContent = cur[1]; timerEl.firstChild.className = ''; void timerEl.offsetWidth; timerEl.firstChild.className = 'run';
+      later(function () { wordEl.classList.add('hidden'); tipEl.innerHTML = '<span class="emoji eye">🙈</span>'; }, 3000); }
+    else if (level === 3) { wordEl.innerHTML = '<span class="emoji eye">🔊</span>'; tipEl.textContent = cur[2].length + ' sílabas'; }
+    else { wordEl.innerHTML = '<span class="emoji eye">🔊</span>'; tipEl.textContent = expected.length + ' letras'; }
+    // Casillas
+    slotsEl.innerHTML = ''; slots = [];
+    slotsEl.classList.toggle('long', expected.length > 6);
+    expected.forEach(function (ex, i) {
+      var sl = el('div', 'slot' + (level === 3 ? ' syl' : '')); sl.dataset.i = i; sl.dataset.expect = ex;
+      slots.push({ el: sl, expect: ex, val: null, block: null, locked: false });
+      if (level >= 3) onTap(sl, function () { returnSlot(i); });
+      slotsEl.appendChild(sl);
+    });
+    // Bandeja
+    if (level < 4) {
+      var extra = [];
+      if (level === 2) { var cand = KidsGame.shuffle(LETTERS.filter(function (L) { return norm(cur[1]).indexOf(L) < 0; })); extra = cand.slice(0, 2); }
+      if (level === 3) {
+        var all = []; WORDS.forEach(function (w) { if (w !== cur) w[2].forEach(function (s) { if (cur[2].indexOf(s) < 0 && all.indexOf(s) < 0) all.push(s); }); });
+        extra = KidsGame.shuffle(all).slice(0, round < 4 ? 1 : 2);
+      }
+      var list = KidsGame.shuffle(pieces.concat(extra));
+      trayEl.innerHTML = ''; tray = [];
+      var pal = KidsGame.shuffle(PAL);
+      list.forEach(function (p, i) {
+        var b = el('div', 'block' + (level === 3 ? ' syl' : ''), p); b.dataset.v = p;
+        paint(b, pal[i % pal.length]); b.style.animationDelay = (i * 60) + 'ms, ' + (-i * 0.9) + 's';
+        tray.push({ el: b, v: p, pal: pal[i % pal.length] });
+        makeDraggable(b, tray[tray.length - 1]);
+        trayEl.appendChild(b);
+      });
+    } else { setCursor(); }
+    if (checkBtn) checkBtn.classList.add('off');
+    KidsGame.say(cur[1].toLowerCase());
+    if (level === 3) later(saySlow, 1600);
+  }
+
+  /* ---------- Arrastre ---------- */
+  var drag = null;
+  function makeDraggable(b, item) {
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); if (lock || drag || b.classList.contains('used')) return;
+      var r = b.getBoundingClientRect();
+      drag = { item: item, id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: e.clientX - r.left, oy: e.clientY - r.top, moved: false, ghost: null, w: r.width, h: r.height };
+      try { b.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    b.addEventListener('pointermove', function (e) {
+      if (!drag || drag.id !== e.pointerId || drag.item !== item) return; e.preventDefault();
+      if (!drag.moved) { if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 8) return; drag.moved = true; startGhost(e); }
+      moveGhost(e);
+    });
+    function end(e) {
+      if (!drag || drag.id !== e.pointerId || drag.item !== item) return;
+      var d = drag; drag = null;
+      if (!d.moved) { KidsGame.sound.tap(); tapPlace(item); return; }
+      var hot = slotsEl.querySelector('.slot.hot'); if (hot) hot.classList.remove('hot');
+      var target = slotAt(e.clientX, e.clientY);
+      d.ghost.remove();
+      if (target == null) { KidsGame.sound.pop(); return; }
+      place(item, target, true);
+    }
+    b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
+  }
+  function startGhost(e) {
+    var g = drag.item.el.cloneNode(true); g.classList.add('drag'); g.style.width = drag.w + 'px'; g.style.height = drag.h + 'px';
+    document.body.appendChild(g); drag.ghost = g; drag.item.el.style.opacity = '.35';
+  }
+  function moveGhost(e) {
+    var g = drag.ghost; g.style.left = (e.clientX - drag.ox) + 'px'; g.style.top = (e.clientY - drag.oy) + 'px';
+    var t = slotAt(e.clientX, e.clientY);
+    slots.forEach(function (s, i) { s.el.classList.toggle('hot', i === t); });
+  }
+  function slotAt(x, y) {
+    for (var i = 0; i < slots.length; i++) {
+      var r = slots[i].el.getBoundingClientRect();
+      if (x >= r.left - 6 && x <= r.right + 6 && y >= r.top - 6 && y <= r.bottom + 6 && !slots[i].locked && slots[i].val == null) return i;
+    }
+    return null;
+  }
+  function firstEmpty() { for (var i = 0; i < slots.length; i++) if (slots[i].val == null) return i; return null; }
+  function tapPlace(item) { var i = firstEmpty(); if (i == null) return; place(item, i, false); }
+
+  // Coloca una pieza en la casilla i. En niveles 1-2 se comprueba al instante.
+  function place(item, i, dragged) {
+    var s = slots[i]; item.el.style.opacity = '';
+    if (level <= 2 && item.v !== s.expect) {
+      KidsGame.sound.wrong(); replay(s.el, 'bad'); replay(item.el, 'bad'); misses++;
+      if (level === 2 && misses >= 2 && wordEl.classList.contains('hidden')) { peek(); }
+      return;
+    }
+    s.val = item.v; s.block = item; item.el.classList.add('used');
+    s.el.textContent = item.v; s.el.classList.add('full'); paint(s.el, item.pal);
+    if (level <= 2) { s.el.classList.add('good'); replay(s.el, 'good'); KidsGame.sound.pop(); sparks(s.el, '#7dffb0'); if (firstEmpty() == null) complete(); }
+    else { KidsGame.sound.pop(); if (firstEmpty() == null) checkBtn.classList.remove('off'); }
+  }
+  function peek() { misses = 0; wordEl.classList.remove('hidden'); tipEl.textContent = ''; later(function () { wordEl.classList.add('hidden'); tipEl.innerHTML = '<span class="emoji eye">🙈</span>'; }, 1200); }
+  // Nivel 3-4: tocar una casilla llena la vacía
+  function returnSlot(i) {
+    var s = slots[i]; if (lock || s.locked || s.val == null) return;
+    KidsGame.sound.tap(); clearSlot(s); if (checkBtn) checkBtn.classList.add('off'); setCursor();
+  }
+  function clearSlot(s) {
+    if (s.block) { s.block.el.classList.remove('used'); replay(s.block.el, 'pop'); }
+    s.val = null; s.block = null; s.el.textContent = ''; s.el.classList.remove('full', 'good'); s.el.style.cssText = '';
+  }
+
+  /* ---------- Teclado (nivel 4) ---------- */
+  function setCursor() { if (level !== 4) return; var i = firstEmpty(); slots.forEach(function (s, j) { s.el.classList.toggle('cursor', j === i); }); }
+  function pressKey(L, key) {
+    if (lock) return; KidsGame.sound.tap(); replay(key, 'down'); setTimeout(function () { key.classList.remove('down'); }, 120);
+    var i = firstEmpty(); if (i == null) return;
+    var s = slots[i]; s.val = L; s.el.textContent = L; s.el.classList.add('full'); paint(s.el, PAL[1]);
+    setCursor(); if (firstEmpty() == null) checkBtn.classList.remove('off');
+  }
+  function backspace(key) {
+    if (lock) return; KidsGame.sound.pop(); replay(key, 'down'); setTimeout(function () { key.classList.remove('down'); }, 120);
+    for (var i = slots.length - 1; i >= 0; i--) if (slots[i].val != null && !slots[i].locked) { clearSlot(slots[i]); break; }
+    checkBtn.classList.add('off'); setCursor();
+  }
+
+  /* ---------- Comprobar (niveles 3-4) ---------- */
+  function check() {
+    if (lock || firstEmpty() != null) { if (!lock) { KidsGame.sound.wrong(); replay(checkBtn, 'bad'); } return; }
+    var wrong = 0;
+    slots.forEach(function (s) {
+      if (s.locked) return;
+      var ok = level === 3 ? s.val === s.expect : norm(s.val) === norm(s.expect);
+      if (ok) { s.locked = true; s.el.classList.add('good'); replay(s.el, 'good'); paint(s.el, PAL[2]); sparks(s.el, '#7dffb0'); }
+      else { wrong++; replay(s.el, 'bad'); }
+    });
+    if (!wrong) { complete(); return; }
+    KidsGame.sound.wrong(); KidsGame.vibrate(40);
+    wrongsEl.textContent = '✘ ' + wrong; replay(wrongsEl, 'pop'); wrongsEl.classList.add('show');
+    KidsGame.say(wrong === 1 ? 'Una letra no está bien' : wrong + ' no están bien');
+    lock = true;
+    later(function () {
+      slots.forEach(function (s) { if (!s.locked) clearSlot(s); });
+      lock = false; checkBtn.classList.add('off'); setCursor();
+    }, 700);
+  }
+
+  function complete() {
+    lock = true; round++; updateProgress();
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); sparks(medal, '#ffe066'); replay(picEl, 'bounce');
+    wordEl.className = 'word'; wordEl.textContent = cur[1]; tipEl.textContent = '';
+    slots.forEach(function (s, i) { setTimeout(function () { replay(s.el, 'good'); }, i * 70); });
+    KidsGame.say(cur[1].toLowerCase() + '. ¡Muy bien!');
+    later(function () {
+      picEl.classList.remove('bounce');
+      if (round >= ROUNDS) {
+        KidsGame.levelDone(level);
+        KidsGame.celebrate({ sub: '¡' + ROUNDS + ' palabras!', stars: 3,
+          onNext: function () { if (level < 4) startLevel(level + 1); else pickLevel(); },
+          onAgain: function () { startLevel(level); } });
+      } else nextWord();
+    }, 1500);
+  }
+
+  // Ganchos para pruebas
+  window.__palabras = {
+    get level() { return level; }, get word() { return cur; }, get round() { return round; },
+    slots: function () { return slots.map(function (s) { return s.val; }); },
+    solve: function () { slots.forEach(function (s, i) { if (s.val != null) return; if (level === 4) { s.val = norm(s.expect); s.el.textContent = s.val; s.el.classList.add('full'); } else { var it = null; tray.forEach(function (t) { if (!it && !t.el.classList.contains('used') && t.v === s.expect) it = t; }); if (it) place(it, i, false); } }); if (level >= 3) { checkBtn.classList.remove('off'); check(); } },
+    place: function (v, i) { var it = null; tray.forEach(function (t) { if (!it && !t.el.classList.contains('used') && t.v === v) it = t; }); if (it) place(it, i == null ? firstEmpty() : i, false); },
+    key: function (L) { pressKey(L, trayEl.querySelector('.key')); }, check: check, start: startLevel
+  };
+  pickLevel();
+})();
+</script>
+</body>
+</html>

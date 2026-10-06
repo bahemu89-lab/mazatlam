@@ -81,6 +81,9 @@
   .p5 { --c1: #fff8d0; --c2: #ffb703; --c3: #c47f00; }
   .p6 { --c1: #dbfaf9; --c2: #00b3b3; --c3: #00706f; }
 
+  .med.ok.first { transform: scale(1.08); box-shadow: 0 9px 0 var(--c3), 0 18px 26px rgba(30,10,80,.35), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.6), inset 0 3px 0 rgba(255,255,255,.7); }
+  .hud .left { font-size: 22px; font-weight: 900; color: #5232b3; white-space: nowrap; text-shadow: 0 1px 0 #fff; }
+  .instr .txt.long { font-size: clamp(16px, 2.3vw, 24px); white-space: normal; text-align: center; }
   .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
            box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
   .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
@@ -149,16 +152,37 @@ var game = KidsGame.init({ title: 'El intruso' });
     [ { n: 'cosas grandes', s: 'algo grande', items: ['🐘','🦒','🐳','🏔️','🚌','🏠','🌳','🚂'] },
       { n: 'cosas pequeñas', s: 'algo pequeño', items: ['🐜','🐝','🐞','🐌','🐁','🔑','💍','🌰'] } ]
   ];
-  var LEVELS = [
-    { n: 4, groups: [CATS] },
-    { n: 6, groups: SUBS },
-    { n: 9, groups: ATTR }
+  // Nivel 4 (Experto): categorías por propiedad abstracta; se explica en voz alta por qué
+  var ABSTRACT = [
+    [ { n: 'cosas que flotan', s: 'algo que flota', why: 'flotan en el agua', items: ['⛵','🦆','🎈','🛟','🍎','🪵','🛶','🥥','🏄','🛳️','🧊','🍃'] },
+      { n: 'cosas que se hunden', s: 'algo que se hunde', why: 'se hunden en el agua', items: ['🪨','🔑','⚓','🔩','🪙','🧱','🔨','🥄'] } ],
+    [ { n: 'seres vivos', s: 'un ser vivo', why: 'están vivos, crecen y comen', items: ['🐶','🌳','🐟','🌻','🐝','🐸','🍄','👧','🐱','🌵','🐢','🦋'] },
+      { n: 'cosas sin vida', s: 'algo que no está vivo', why: 'no están vivos', items: ['🪨','🚗','🧸','🪑','📱','🎈','🔑','🧱','⚽','🪣'] } ],
+    [ { n: 'cosas calientes', s: 'algo caliente', why: 'queman o están calientes', items: ['☀️','🔥','☕','🌶️','🌋','🍲','🕯️','🍳','♨️','🍵','🥘','🌞'] },
+      { n: 'cosas frías', s: 'algo frío', why: 'están fríos', items: ['❄️','⛄','🍦','🧊','🐧','🍧','🏔️','🥶','☃️','🌨️'] } ],
+    [ { n: 'cosas que se comen crudas', s: 'algo que se come crudo', why: 'se comen sin cocinar', items: ['🍎','🍌','🥕','🍓','🥒','🍇','🥬','🍉','🍊','🍒','🥝','🍐'] },
+      { n: 'cosas que se cocinan', s: 'algo que hay que cocinar', why: 'hay que cocinarlos primero', items: ['🍗','🥚','🍚','🍝','🥔','🍕','🥩','🫘','🍞','🥞'] } ],
+    [ { n: 'cosas que usan electricidad', s: 'algo que usa electricidad', why: 'necesitan electricidad', items: ['📺','💡','📱','🔌','🖥️','🎮','🤖','🔋','💻','🎧','🖨️','📻'] },
+      { n: 'cosas sin electricidad', s: 'algo que no usa electricidad', why: 'funcionan sin electricidad', items: ['🪑','📚','🧸','🎈','⚽','🪁','✏️','🧩','🪣','🧹'] } ],
+    [ { n: 'cosas que vuelan', s: 'algo que vuela', why: 'pueden volar', items: ['✈️','🦋','🐝','🚁','🐦','🎈','🚀','🦅','🦇','🪁','🐞','🛸'] },
+      { n: 'cosas que no vuelan', s: 'algo que no vuela', why: 'no vuelan', items: ['🐢','🐌','🚗','🐟','🐘','🐄','🐍','🚲','🪨','🐷'] } ],
+    [ { n: 'cosas del día', s: 'algo del día', why: 'son del día', items: ['☀️','🌈','🌻','🏖️','🕶️','🌤️','🐓','🦋','🌞','⛱️'] },
+      { n: 'cosas de la noche', s: 'algo de la noche', why: 'son de la noche', items: ['🌙','⭐','🦉','🛏️','🔦','🦇','🌌','😴','🌠','🕯️'] } ],
+    [ { n: 'cosas blandas', s: 'algo blando', why: 'son blandos', items: ['🧸','🛏️','🍮','☁️','🧁','🍞','🐑','🧶','🛋️','🍡'] },
+      { n: 'cosas duras', s: 'algo duro', why: 'son duros', items: ['🪨','🧱','💎','🔩','🥥','🪙','🔨','⚓','🪵','🥄'] } ]
   ];
+  var LEVELS = [
+    { n: 4, k: 1, groups: [CATS] },
+    { n: 6, k: 1, groups: SUBS.concat([ATTR[0]]) },
+    { n: 9, k: 1, groups: ATTR.concat(ABSTRACT.slice(5, 6)) },
+    { n: 12, k: 2, groups: ABSTRACT }
+  ];
+  var LABELS = { 1: '4 fichas', 2: '6 fichas · parecidos', 3: '9 fichas · sutiles', 4: '12 fichas · 2 intrusos' };
   var ROUNDS = 8;
   var PALETTE = ['p1','p2','p3','p4','p5','p6'];
 
-  var nivel = 0, cfg = null, round = 0, lock = false, running = false;
-  var hud, dots, instr, board, grid;
+  var nivel = 0, cfg = null, round = 0, lock = false, running = false, foundN = 0;
+  var hud, dots, instr, instrTxt, board, grid, left;
 
   function build() {
     game.innerHTML = '';
@@ -167,6 +191,7 @@ var game = KidsGame.init({ title: 'El intruso' });
     dots = document.createElement('div'); dots.className = 'dots';
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
+    left = document.createElement('span'); left.className = 'left'; hud.appendChild(left);
     var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
@@ -174,8 +199,9 @@ var game = KidsGame.init({ title: 'El intruso' });
 
     instr = document.createElement('div'); instr.className = 'instr panel';
     instr.innerHTML = '<span class="ico emoji">🔍</span><span class="txt">¿Cuál no va con los demás?</span>';
+    instrTxt = instr.querySelector('.txt');
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊'; sp.setAttribute('aria-label', 'Repetir');
-    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say('¿Cuál no va con los demás?'); });
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(question()); });
     instr.appendChild(sp);
     game.appendChild(instr);
 
@@ -183,11 +209,12 @@ var game = KidsGame.init({ title: 'El intruso' });
     grid = document.createElement('div'); grid.className = 'grid';
     board.appendChild(grid); game.appendChild(board);
   }
+  function question() { return cfg.k === 2 ? 'Hay dos intrusos. ¿Cuáles no van con los demás?' : '¿Cuál no va con los demás?'; }
 
   function showPicker() {
     running = false; lock = true;
     if (grid) grid.innerHTML = '';
-    KidsGame.levelPicker({ key: 'intruso', onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'intruso', labels: LABELS, onPick: function (lv) { start(lv); } });
   }
 
   function start(lv) {
@@ -197,20 +224,20 @@ var game = KidsGame.init({ title: 'El intruso' });
   }
 
   function makeRound() {
-    var n = cfg.n, tries = 0;
-    while (tries++ < 50) {
+    var n = cfg.n, k = cfg.k, tries = 0;
+    while (tries++ < 200) {
       var group = KidsGame.pick(cfg.groups);
-      var mains = group.filter(function (s) { return s.items.length >= n - 1; });
+      var mains = group.filter(function (s) { return s.items.length >= n - k; });
       if (!mains.length) continue;
       var main = KidsGame.pick(mains);
       var others = group.filter(function (s) { return s !== main; });
       if (!others.length) continue;
       var other = KidsGame.pick(others);
       var cand = other.items.filter(function (e) { return main.items.indexOf(e) < 0; });
-      if (!cand.length) continue;
-      var intruder = KidsGame.pick(cand);
-      var items = KidsGame.shuffle(main.items).slice(0, n - 1).map(function (e) { return { e: e, ok: false }; });
-      items.push({ e: intruder, ok: true });
+      if (cand.length < k) continue;
+      var intr = KidsGame.shuffle(cand).slice(0, k);
+      var items = KidsGame.shuffle(main.items).slice(0, n - k).map(function (e) { return { e: e, ok: false }; });
+      intr.forEach(function (e) { items.push({ e: e, ok: true }); });
       return { items: KidsGame.shuffle(items), main: main, other: other };
     }
     return null;
@@ -220,8 +247,12 @@ var game = KidsGame.init({ title: 'El intruso' });
   function newRound() {
     if (!running) return;
     cur = makeRound();
-    lock = false;
+    if (!cur) { cfg = LEVELS[Math.max(0, nivel - 2)]; cur = makeRound(); cfg = LEVELS[nivel - 1]; }
+    lock = false; foundN = 0;
     grid.innerHTML = '';
+    instrTxt.textContent = cfg.k === 2 ? '¡Hay 2 intrusos! ¿Cuáles no van?' : '¿Cuál no va con los demás?';
+    instrTxt.classList.toggle('long', cfg.k === 2);
+    left.textContent = cfg.k === 2 ? '🔍 2' : '';
     cur.items.forEach(function (it, i) {
       var m = document.createElement('div');
       m.className = 'med pop ' + KidsGame.pick(PALETTE);
@@ -234,16 +265,16 @@ var game = KidsGame.init({ title: 'El intruso' });
       grid.appendChild(m);
     });
     layout();
-    KidsGame.say('¿Cuál no va con los demás?');
+    KidsGame.say(question());
   }
 
   function layout() {
     if (!cfg || !grid) return;
     var n = cfg.n;
-    var cols = n === 4 ? 2 : (n === 6 ? 3 : 3), rows = n / cols;
+    var cols = n === 4 ? 2 : (n === 12 ? 4 : 3), rows = n / cols;
     var W = board.clientWidth - 10, H = board.clientHeight - 10;
     if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
-    var gap = n === 9 ? 14 : 22;
+    var gap = n >= 9 ? 14 : 22;
     var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));
     size = Math.max(64, Math.min(size, 230));
     grid.style.setProperty('--gap', gap + 'px');
@@ -269,23 +300,30 @@ var game = KidsGame.init({ title: 'El intruso' });
       (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
     }
   }
+  function explain() {
+    var o = cur.other, m = cur.main;
+    if (cfg.k === 2) return '¡Sí! Esos dos son ' + o.n + (o.why ? ': ' + o.why : '') + '. Los demás son ' + m.n + (m.why ? ' porque ' + m.why : '') + '.';
+    return '¡Sí! Es ' + o.s + '. Los demás son ' + m.n + (m.why ? ': ' + m.why : '') + '.';
+  }
 
   function tap(m, it) {
-    if (lock || !running) return;
+    if (lock || !running || m.classList.contains('ok')) return;
     if (it.ok) {
-      lock = true;
+      foundN++;
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       m.classList.add('ok');
-      var all = grid.querySelectorAll('.med');
-      for (var i = 0; i < all.length; i++) if (all[i] !== m) all[i].classList.add('dim');
       var r = m.getBoundingClientRect(), g = game.getBoundingClientRect();
       sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 22);
-      KidsGame.say('¡Sí! Es ' + cur.other.s + '. Los demás son ' + cur.main.n + '.');
+      if (foundN < cfg.k) { m.classList.add('first'); left.textContent = '🔍 1'; KidsGame.say('¡Uno! Falta otro intruso'); KidsGame.toast('✅ ¡Uno! Falta otro', 1300); return; }
+      lock = true; left.textContent = '';
+      var all = grid.querySelectorAll('.med');
+      for (var i = 0; i < all.length; i++) if (!all[i].classList.contains('ok')) all[i].classList.add('dim');
+      KidsGame.say(explain());
       dots.children[round].classList.add('on');
       round++;
       setTimeout(function () {
         if (round >= ROUNDS) finish(); else newRound();
-      }, 1500);
+      }, cfg.k === 2 ? 2600 : 1600);
     } else {
       KidsGame.sound.wrong(); KidsGame.vibrate(20);
       m.classList.remove('bad'); void m.offsetWidth; m.classList.add('bad');
@@ -295,14 +333,25 @@ var game = KidsGame.init({ title: 'El intruso' });
 
   function finish() {
     running = false;
+    KidsGame.levelDone(nivel);
     KidsGame.celebrate({
-      sub: '¡Encontraste ' + ROUNDS + ' intrusos!',
-      onNext: function () { start(Math.min(3, nivel + 1)); },
+      sub: '¡Encontraste ' + (ROUNDS * cfg.k) + ' intrusos!',
+      onNext: function () { start(Math.min(4, nivel + 1)); },
       onAgain: function () { start(nivel); }
     });
   }
 
   window.addEventListener('resize', layout);
+  // Expuesto para pruebas
+  window.__intr = {
+    get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get cfg() { return cfg; }, explain: explain,
+    solve: function () {
+      if (lock || !cur) return false;
+      var meds = grid.querySelectorAll('.med'), out = [];
+      cur.items.forEach(function (it, i) { if (it.ok && !meds[i].classList.contains('ok')) { meds[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); out.push(it.e); } });
+      return out.join('');
+    }
+  };
   showPicker();
 })();
 </script>

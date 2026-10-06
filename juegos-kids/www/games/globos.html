@@ -94,11 +94,18 @@
     text-shadow: 0 2px 0 #b35a00, 0 4px 8px rgba(0,0,0,.3);
     box-shadow: 0 8px 0 #b35a00, 0 20px 30px rgba(0,0,0,.35), inset 0 3px 0 rgba(255,255,255,.7);
     display: flex; align-items: center; gap: 14px; border: 4px solid #fff;
-    z-index: 15; pointer-events: none; animation: pop .4s ease-out;
+    z-index: 15; pointer-events: none; animation: pop .4s ease-out; white-space: nowrap; max-width: 96vw;
   }
   .msg .dot { width: 64px; height: 64px; }
   .msg .emoji { font-size: 44px; }
   .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  /* Nivel Experto: los globos llevan números o letras; el objetivo cambia cada ronda */
+  .balloon .lbl { font-family: inherit; font-weight: 900; fill: #fff; stroke-width: 2.5; paint-order: stroke; stroke-linejoin: round; letter-spacing: 1px; }
+  .balloon.bnc svg { animation: bbounce .45s ease-out; }
+  @keyframes bbounce { 0%{transform:translateY(0) scale(1)} 35%{transform:translateY(26px) scale(1.08,.9)} 70%{transform:translateY(-10px) scale(.96,1.05)} 100%{transform:translateY(0) scale(1)} }
+  .goal .big { font-size: 30px; padding: 0 10px; border-radius: 20px; background: rgba(255,255,255,.25); box-shadow: inset 0 2px 0 rgba(255,255,255,.4); }
+  .goal .nx { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; height: 48px; border-radius: 50%; border: 3px solid #fff; font-size: 28px;
+    background: radial-gradient(circle at 35% 30%, #fff6c8, #ffb703 60%, #b06f00); color: #5a3500; text-shadow: none; box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 6px 10px rgba(0,0,0,.25); }
 </style>
 </head>
 <body>
@@ -114,15 +121,26 @@ var game = KidsGame.init({ title: 'Globos' });
     { n: 'MORADOS',   say: 'morados',   id: 'morado',   l: '#c3b0ff', c: '#7f5af0', d: '#3f2696' },
     { n: 'ROSAS',     say: 'rosas',     id: 'rosa',     l: '#ffc2dc', c: '#f582ae', d: '#b03a6c' }
   ];
-  // Dificultad: 1 = lentos y grandes, 2 = normal, 3 = rápidos, pequeños, más señuelos y dos colores objetivo
+  // Dificultad: 1 = lentos y grandes, 2 = normal, 3 = rápidos, pequeños, más señuelos y dos colores objetivo,
+  // 4 = Experto: globos con números/letras y un objetivo que cambia (pares, de menor a mayor, vocales, impares) a 1.6x
   var DIFF = {
     1: { speed: 0.7,  size: 1.35, freeNeed: 10, colorNeed: 8,  targetProb: 0.6,  targets: 1, max: 6, spawn: 1000 },
-    2: { speed: 1.0,  size: 1.0,  freeNeed: 15, colorNeed: 10, targetProb: 0.45, targets: 1, max: 8, spawn: 850 },
-    3: { speed: 1.45, size: 0.78, freeNeed: 15, colorNeed: 12, targetProb: 0.3,  targets: 2, max: 10, spawn: 650 }
+    2: { speed: 1.1,  size: 0.95, freeNeed: 15, colorNeed: 12, targetProb: 0.4,  targets: 1, max: 9, spawn: 780 },
+    3: { speed: 1.5,  size: 0.78, freeNeed: 15, colorNeed: 14, targetProb: 0.3,  targets: 2, max: 10, spawn: 600 },
+    4: { speed: 1.6,  size: 0.82, freeNeed: 12, colorNeed: 10, targetProb: 0.45, targets: 1, max: 10, spawn: 620, expert: true }
   };
+  var LABELS = { 1: 'Lentos y grandes', 2: 'Un color, 12 globos', 3: 'Dos colores, rápidos', 4: 'Números y letras' };
+  // Retos del nivel Experto
+  var VOWELS = 'AEIOU'.split(''), CONS = 'BCDFGLMNPRST'.split('');
+  var EXPERT = [
+    { id: 'pares',   txt: 'Toca los <b class="big">PARES</b>',          say: 'Toca los globos con números pares',   need: 10 },
+    { id: 'orden',   txt: 'De <b>MENOR</b> a <b>MAYOR</b>',             say: 'Toca los números de menor a mayor',   need: 8 },
+    { id: 'vocales', txt: 'Toca las <b class="big">VOCALES</b>',        say: 'Toca los globos con vocales',         need: 10 },
+    { id: 'impares', txt: 'Toca los <b class="big">IMPARES</b>',        say: 'Toca los globos con números impares', need: 10 }
+  ];
   var nivel = 1, D = DIFF[1];
   var mode = 'free', targets = [], balloons = [], score = 0, need = 15, speedMul = 1, running = false;
-  var lastSpawn = 0, lastT = 0, colorRounds = 0;
+  var lastSpawn = 0, lastT = 0, colorRounds = 0, task = null, taskIdx = 0, taskOrder = [];
 
   // Degradados compartidos (un solo <defs> para todos los globos)
   var defs = '<svg class="defs" aria-hidden="true"><defs>';
@@ -161,7 +179,8 @@ var game = KidsGame.init({ title: 'Globos' });
   modeBtn.addEventListener('pointerdown', function (ev) {
     ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
     if (!running) return;
-    if (mode === 'free') startColorRound(); else startFree();
+    if (D.expert) startExpertRound(false);
+    else if (mode === 'free') startColorRound(); else startFree();
   });
   lvBtn.addEventListener('pointerdown', function (ev) {
     ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel();
@@ -169,17 +188,21 @@ var game = KidsGame.init({ title: 'Globos' });
 
   function pickLevel() {
     running = false; clearBalloons(); hud.style.visibility = 'hidden';
-    KidsGame.levelPicker({ onPick: function (n) {
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) {
       nivel = n; D = DIFF[n]; speedMul = D.speed; colorRounds = 0;
       game.style.setProperty('--bs', D.size);
       badgeWrap.innerHTML = ''; badgeWrap.appendChild(KidsGame.levelBadge(n));
-      hud.style.visibility = ''; startFree();
+      hud.style.visibility = '';
+      if (D.expert) { taskOrder = KidsGame.shuffle(EXPERT); taskIdx = 0; startExpertRound(false); } else startFree();
     } });
   }
 
   function dotHtml(c) { return '<span class="dot" style="--c:' + c.c + ';--d:' + c.d + '"></span>'; }
   function renderHud() {
-    if (mode === 'free') {
+    if (mode === 'expert') {
+      goal.innerHTML = '<span class="emoji" style="font-size:30px">🔢</span><span class="txt">' + task.txt + '</span>' +
+        (task.id === 'orden' ? '<span class="nx">' + (score + 1) + '</span>' : '');
+    } else if (mode === 'free') {
       goal.innerHTML = '<span class="dot any"></span><span class="txt">¡Toca los globos!</span>';
     } else {
       var dots = targets.map(dotHtml).join('<span class="plus">+</span>');
@@ -213,9 +236,39 @@ var game = KidsGame.init({ title: 'Globos' });
     showMsg('Toca los ' + targets.map(dotHtml).join('<span class="plus">+</span>'));
     KidsGame.say('Toca los globos ' + targets.map(function (t) { return t.say; }).join(' y '));
   }
+  // Experto: el objetivo cambia cada ronda (pares → de menor a mayor → vocales → impares, en orden aleatorio)
+  function startExpertRound(same) {
+    mode = 'expert'; score = 0; running = true; targets = [];
+    if (!same) { task = taskOrder[taskIdx % taskOrder.length]; taskIdx++; }
+    need = task.need;
+    clearBalloons(); renderHud();
+    showMsg('<span class="emoji">🔢</span> ' + task.txt);
+    KidsGame.say(task.say);
+  }
+  // Etiqueta (número o letra) para un globo nuevo según el reto; ~45% son objetivo
+  function expertLabel() {
+    var want = Math.random() < D.targetProb;
+    if (task.id === 'pares' || task.id === 'impares') {
+      var even = task.id === 'pares' ? want : !want;
+      return String(even ? KidsGame.pick([2, 4, 6, 8]) : KidsGame.pick([1, 3, 5, 7, 9]));
+    }
+    if (task.id === 'vocales') return want ? KidsGame.pick(VOWELS) : KidsGame.pick(CONS);
+    // orden: el número que sigue está en pantalla con buena probabilidad; el resto son cercanos (mayores o ya tocados)
+    var nx = score + 1, onScreen = balloons.some(function (b) { return b.lbl === String(nx); });
+    if (!onScreen && Math.random() < 0.65) return String(nx);
+    var cands = [];
+    for (var k = Math.max(1, nx - 2); k <= Math.min(need, nx + 3); k++) if (k !== nx) cands.push(k);
+    return String(cands.length ? KidsGame.pick(cands) : nx);
+  }
+  function isExpertTarget(lbl) {
+    if (task.id === 'pares') return (+lbl) % 2 === 0;
+    if (task.id === 'impares') return (+lbl) % 2 === 1;
+    if (task.id === 'vocales') return VOWELS.indexOf(lbl) >= 0;
+    return lbl === String(score + 1);
+  }
 
   // Globo renderizado: cuerpo con radial, borde oscuro, brillo doble, nudo y cuerda ondulada
-  function balloonSVG(col) {
+  function balloonSVG(col, lbl) {
     return '<svg viewBox="0 0 96 150">' +
       '<path d="M48 114 q -9 10 0 20 q 9 10 -2 16" stroke="url(#g-string)" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
       '<g class="body">' +
@@ -226,20 +279,22 @@ var game = KidsGame.init({ title: 'Globos' });
       '<ellipse cx="24" cy="58" rx="3" ry="6" fill="#fff" fill-opacity=".55" transform="rotate(-10 24 58)"/>' +
       '<ellipse cx="66" cy="88" rx="10" ry="5" fill="#fff" fill-opacity=".22" transform="rotate(-35 66 88)"/>' +
       '<ellipse cx="48" cy="116" rx="7" ry="3.2" fill="' + col.d + '"/>' +
+      (lbl ? '<text class="lbl" x="48" y="78" font-size="52" text-anchor="middle" stroke="' + col.d + '">' + lbl + '</text>' : '') +
       '</g></svg>';
   }
 
   function spawn() {
-    var col;
+    var col, lbl = null;
     if (mode === 'color' && Math.random() < D.targetProb) col = KidsGame.pick(targets);
     else col = KidsGame.pick(COLORS);
+    if (mode === 'expert') lbl = expertLabel();
     var el = document.createElement('div');
     el.className = 'balloon';
-    el.innerHTML = balloonSVG(col);
+    el.innerHTML = balloonSVG(col, lbl);
     el.querySelector('svg').style.animationDelay = (-Math.random() * 2.6) + 's';
     var W = game.clientWidth, H = game.clientHeight;
     var b = {
-      el: el, col: col,
+      el: el, col: col, lbl: lbl,
       fx: 0.06 + Math.random() * 0.88, // fracción del ancho
       y: H + 20,
       vy: (38 + Math.random() * 30) * speedMul, // px/s
@@ -279,6 +334,13 @@ var game = KidsGame.init({ title: 'Globos' });
       b.el.classList.remove('shake'); void b.el.offsetWidth; b.el.classList.add('shake');
       return;
     }
+    if (mode === 'expert' && !isExpertTarget(b.lbl)) {
+      // Globo equivocado: rebota (en "orden" rebota el número fuera de turno)
+      KidsGame.sound.wrong();
+      b.el.classList.remove("bnc"); void b.el.offsetWidth; b.el.classList.add("bnc");
+      if (task.id === 'orden') KidsGame.toast('Busca el ' + (score + 1), 900);
+      return;
+    }
     b.dead = true;
     b.el.classList.add('popped');
     KidsGame.sound.pop(); KidsGame.addStar(); KidsGame.vibrate(20);
@@ -292,14 +354,21 @@ var game = KidsGame.init({ title: 'Globos' });
 
   function finish() {
     clearBalloons();
-    if (mode === 'free') {
+    if (mode === 'expert') {
+      colorRounds++; KidsGame.levelDone(nivel);
+      KidsGame.celebrate({
+        msg: '¡Campeona!', sub: task.txt.replace(/<[^>]+>/g, '') + ' ✔',
+        onNext: function () { speedMul = Math.min(speedMul + 0.1, D.speed * 1.5); startExpertRound(false); },
+        onAgain: function () { startExpertRound(true); }
+      });
+    } else if (mode === 'free') {
       KidsGame.celebrate({
         sub: '¡' + need + ' globos!',
         onNext: function () { startColorRound(); },
         onAgain: function () { startFree(); }
       });
     } else {
-      colorRounds++;
+      colorRounds++; KidsGame.levelDone(nivel);
       KidsGame.celebrate({
         sub: 'Globos ' + targets.map(function (t) { return t.n.toLowerCase(); }).join(' y '),
         onNext: function () { speedMul = Math.min(speedMul + 0.15, D.speed * 1.8); startColorRound(false); },
@@ -324,6 +393,9 @@ var game = KidsGame.init({ title: 'Globos' });
   }
 
   window.addEventListener('resize', function () { balloons.forEach(function (b) { place(b, lastT); }); });
+  // Estado para pruebas
+  window.__globos = function () { return { nivel: nivel, mode: mode, score: score, need: need, task: task && task.id, targets: targets.map(function (t) { return t.id; }),
+    balloons: balloons.map(function (b) { return { lbl: b.lbl, col: b.col.id, target: mode === 'expert' ? isExpertTarget(b.lbl) : mode === 'color' ? isTarget(b.col) : true }; }) }; };
   pickLevel();
   requestAnimationFrame(frame);
 })();

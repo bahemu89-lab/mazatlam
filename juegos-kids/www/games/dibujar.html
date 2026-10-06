@@ -75,6 +75,25 @@
   .confirm .box { background: linear-gradient(180deg, #ffffff, #f3f6ff); border: 4px solid #fff; border-radius: 30px; padding: 24px 30px; text-align: center; animation: pop .3s ease-out; max-width: 90%; box-shadow: 0 10px 0 #c9d2e6, 0 30px 50px rgba(0,0,0,.35), inset 0 2px 0 #fff; }
   .confirm .q { font-size: 34px; margin-bottom: 18px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); }
   .confirm .row { display: flex; gap: 16px; justify-content: center; }
+  /* Figuras geométricas y giro */
+  .tool .glyph { font-size: 36px; line-height: 1; color: #1f2f6b; display: inline-block; transition: transform .15s; text-shadow: 0 2px 2px rgba(0,0,0,.2); }
+  .tool.rot { flex-direction: column; gap: 0; }
+  .tool.rot .glyph { font-size: 26px; color: #fff; }
+  .tool.rot small { font-size: 16px; color: #fff; line-height: 1; font-weight: 900; }
+  .tool.action.done { --a: #8ef0b0; --b: #24b36c; --d: #14784a; font-size: 34px; }
+  /* Reto del nivel Experto: instrucción + lista para marcar */
+  .task { position: absolute; left: 18px; right: 18px; top: 16px; z-index: 3; display: none; padding: 8px 12px 10px; border-radius: 5px 5px 18px 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(241,246,255,.94)); box-shadow: 0 6px 0 #c9d2e6, 0 10px 18px rgba(20,40,90,.22); animation: pop .35s ease-out; }
+  .task.show { display: block; }
+  .task .tt { display: flex; align-items: center; gap: 10px; font-size: 20px; color: #1f2f6b; line-height: 1.15; }
+  .task .tt b { color: #ff3d7f; }
+  .task .spk { width: 52px; height: 52px; min-width: 52px; min-height: 52px; font-size: 24px; flex: 0 0 auto; }
+  .task .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+  .chip { min-height: 56px; padding: 4px 16px; border-radius: 28px; background: #fff; border: 3px solid #dfe6f4; font-size: 20px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 3px 0 #c9d2e6; transition: transform .1s; }
+  .chip:active { transform: scale(.95); }
+  .chip.on { background: linear-gradient(180deg, #e9ffe9, #b9f0c4); border-color: #6fdc8c; box-shadow: 0 3px 0 #3fa864; }
+  .chip.on::before { content: '✔'; color: #14784a; }
+  .hintchip { font-size: 15px; color: #6b7a99; }
   @media (orientation: landscape) {
     .wrap { flex-direction: row; }
     .tools { width: 296px; order: 2; gap: 6px 8px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 2px 0 #fff, inset 3px 0 0 rgba(31,47,107,.08), -6px 0 14px rgba(20,40,90,.18); }
@@ -107,8 +126,9 @@ var tools = document.getElementById('tools');
 var COLORS = ['#222222', '#ff4d4d', '#ff9f1c', '#ffe14d', '#4cd964', '#2ec4b6', '#3da9fc', '#a06cd5', '#ff7eb6', '#a0522d'];
 var SIZES = [6, 14, 28];
 var STICKERS = ['🌟', '❤️', '🌈', '🦄', '🐱', '🌸', '🍎', '⚽'];
-var mode = 'brush';       // brush | rainbow | eraser | sticker
-var color = COLORS[1], size = SIZES[1], sticker = STICKERS[0], hue = 0, mirror = false;
+var SHAPES = [['circ', '●'], ['sq', '■'], ['tri', '▲'], ['rect', '▬'], ['dia', '◆'], ['star', '★'], ['heart', '♥']];
+var mode = 'brush';       // brush | rainbow | eraser | sticker | shape
+var color = COLORS[1], size = SIZES[1], sticker = STICKERS[0], shape = 'circ', rot = 0, hue = 0, mirror = false;
 var dpr = 1, W = 0, H = 0;
 var nivel = 1;
 
@@ -182,31 +202,62 @@ function seg(p, to) {
   ctx.shadowBlur = 0;
   p.x = to.x; p.y = to.y;
 }
-function stampAt(x, y, fs) {
-  ctx.font = fs + 'px "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#000';
-  ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
-  ctx.fillText(sticker, x, y);
-  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  // calcomanía que salta (DOM) + chispas
+function popAt(x, y, html, fs) {
   var cr = cv.getBoundingClientRect(), br = board.getBoundingClientRect();
   var bx = cr.left - br.left + x, by = cr.top - br.top + y;
-  var g = document.createElement('span'); g.className = 'stpop emoji'; g.textContent = sticker; g.style.fontSize = fs + 'px';
+  var g = document.createElement('span'); g.className = 'stpop emoji'; g.innerHTML = html; g.style.fontSize = fs + 'px';
   g.style.left = bx + 'px'; g.style.top = by + 'px'; board.appendChild(g);
   setTimeout(function () { g.remove(); }, 600);
   burst(bx, by, ['#fff', '#ffe14d', '#ff7eb6', '#3da9fc']);
 }
+function stampAt(x, y, fs, r) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(r * Math.PI / 180);
+  ctx.font = fs + 'px "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+  ctx.fillText(sticker, 0, 0);
+  ctx.restore();
+  popAt(x, y, sticker, fs);
+}
 function stamp(at) {
   var fs = 44 + size * 1.5;
-  stampAt(at.x, at.y, fs);
-  if (mirror) stampAt(W - at.x, at.y, fs);
+  stampAt(at.x, at.y, fs, rot);
+  if (mirror) stampAt(W - at.x, at.y, fs, -rot);
+}
+// Figuras geométricas con rotación (composición)
+function shapePath(kind, s) {
+  ctx.beginPath();
+  switch (kind) {
+    case 'circ': ctx.arc(0, 0, s / 2, 0, Math.PI * 2); break;
+    case 'sq': ctx.rect(-s / 2, -s / 2, s, s); break;
+    case 'rect': ctx.rect(-s * 0.7, -s * 0.33, s * 1.4, s * 0.66); break;
+    case 'tri': ctx.moveTo(0, -s / 2); ctx.lineTo(s / 2, s / 2); ctx.lineTo(-s / 2, s / 2); ctx.closePath(); break;
+    case 'dia': ctx.moveTo(0, -s / 2); ctx.lineTo(s / 2, 0); ctx.lineTo(0, s / 2); ctx.lineTo(-s / 2, 0); ctx.closePath(); break;
+    case 'star': for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? s * 0.21 : s * 0.52; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); break;
+    case 'heart': ctx.moveTo(0, s * 0.42); ctx.bezierCurveTo(-s * 0.62, -s * 0.02, -s * 0.28, -s * 0.56, 0, -s * 0.2); ctx.bezierCurveTo(s * 0.28, -s * 0.56, s * 0.62, -s * 0.02, 0, s * 0.42); break;
+  }
+}
+function shapeAt(x, y, s, r) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(r * Math.PI / 180);
+  ctx.fillStyle = color; ctx.strokeStyle = shade(color, -.35); ctx.lineWidth = 3; ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+  shapePath(shape, s); ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.stroke();
+  ctx.restore();
+  popAt(x, y, '<span style="color:' + color + '">' + glyphOf(shape) + '</span>', s * 0.9);
+}
+function glyphOf(k) { for (var i = 0; i < SHAPES.length; i++) if (SHAPES[i][0] === k) return SHAPES[i][1]; return '●'; }
+function placeShape(at) {
+  var s = 48 + size * 2.4;
+  shapeAt(at.x, at.y, s, rot);
+  if (mirror) shapeAt(W - at.x, at.y, s, -rot);
 }
 cv.addEventListener('pointerdown', function (e) {
   e.preventDefault();
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   var p = pos(e);
   if (mode === 'sticker') { stamp(p); KidsGame.sound.pop(); KidsGame.vibrate(15); return; }
+  if (mode === 'shape') { placeShape(p); KidsGame.sound.pop(); KidsGame.vibrate(15); return; }
   p.hue = hue; hue = (hue + 40) % 360;
   pointers[e.pointerId] = p;
   seg(p, { x: p.x + 0.01, y: p.y + 0.01 }); // punto
@@ -223,10 +274,164 @@ cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
 cv.addEventListener('lostpointercapture', endPointer);
 
+// ---------- Medición de tinta (para "Listo" y "Completa el dibujo") ----------
+function inkCount(x0, y0, x1, y1) {
+  // cuenta píxeles no blancos muestreando cada 3 px (en coordenadas CSS)
+  var n = 0; try {
+    var sx = Math.max(0, Math.round(x0 * dpr)), sy = Math.max(0, Math.round(y0 * dpr));
+    var sw = Math.min(cv.width - sx, Math.round((x1 - x0) * dpr)), sh = Math.min(cv.height - sy, Math.round((y1 - y0) * dpr));
+    if (sw <= 0 || sh <= 0) return 0;
+    // copia reducida en un lienzo temporal (lectura rápida, sin avisos del navegador)
+    var tw = Math.max(1, Math.round(sw / (3 * dpr))), th = Math.max(1, Math.round(sh / (3 * dpr)));
+    var tmp = document.createElement('canvas'); tmp.width = tw; tmp.height = th;
+    var tc = tmp.getContext('2d', { willReadFrequently: true }); tc.drawImage(cv, sx, sy, sw, sh, 0, 0, tw, th);
+    var d = tc.getImageData(0, 0, tw, th).data;
+    for (var i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] < 690) n++;
+  } catch (e) { return 9999; }
+  return n;
+}
+function inkFraction() { var samples = Math.ceil(W / 3) * Math.ceil(H / 3); return inkCount(0, 0, W, H) / Math.max(1, samples); }
+function clearCanvas() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }
+
+// ---------- Nivel Experto: "Dibuja lo que te digo" y "Completa el dibujo" ----------
+var PROMPTS = [
+  { t: 'una casa con tres ventanas y un sol', items: ['🏠 casa', '🪟 3 ventanas', '☀️ sol'] },
+  { t: 'un animal que no existe con seis patas', items: ['🐾 animal raro', '6️⃣ 6 patas', '👀 ojos'] },
+  { t: 'un árbol con cinco manzanas y un pájaro', items: ['🌳 árbol', '🍎 5 manzanas', '🐦 pájaro'] },
+  { t: 'una persona con sombrero y un perro a su lado', items: ['🧍 persona', '🎩 sombrero', '🐶 perro'] },
+  { t: 'un cohete con dos ventanas y tres estrellas', items: ['🚀 cohete', '🪟 2 ventanas', '⭐ 3 estrellas'] },
+  { t: 'un pastel con cuatro velas y una cereza', items: ['🎂 pastel', '🕯️ 4 velas', '🍒 cereza'] },
+  { t: 'un robot con una antena y botones de colores', items: ['🤖 robot', '📡 antena', '🔴 botones'] },
+  { t: 'una flor grande, una flor pequeña y una mariposa', items: ['🌸 flor grande', '🌼 flor pequeña', '🦋 mariposa'] },
+  { t: 'un coche con cuatro ruedas bajo la lluvia', items: ['🚗 coche', '⚫ 4 ruedas', '🌧️ lluvia'] },
+  { t: 'un pez en el mar con tres burbujas', items: ['🐟 pez', '🌊 mar', '🫧 3 burbujas'] },
+  { t: 'un castillo con dos torres y una bandera', items: ['🏰 castillo', '🗼 2 torres', '🚩 bandera'] },
+  { t: 'un monstruo amable con tres ojos y sonrisa', items: ['👾 monstruo', '👁️ 3 ojos', '😊 sonrisa'] }
+];
+// Plantillas "medio dibujo": se dibuja la mitad izquierda; x=1 es el eje central
+var HALVES = {
+  mariposa: { n: 'la mariposa', e: '🦋', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.ellipse(tx(1), ty(.5), s * .06, s * .34, 0, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(tx(.5), ty(.36), s * .24, s * .17, -.4, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(tx(.58), ty(.7), s * .17, s * .13, .4, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(.95), ty(.18)); ctx.lineTo(tx(.7), ty(.04)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(.68), ty(.04), s * .02, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tx(.5), ty(.36), s * .05, 0, Math.PI * 2); ctx.stroke();
+  } },
+  cara: { n: 'la cara', e: '😊', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.arc(tx(1), ty(.5), s * .42, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(.7), ty(.42), s * .045, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx(.6), ty(.32)); ctx.quadraticCurveTo(tx(.7), ty(.27), tx(.8), ty(.32)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(1), ty(.58), s * .2, Math.PI / 2, Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(1), ty(.46)); ctx.lineTo(tx(.92), ty(.58)); ctx.lineTo(tx(1), ty(.58)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(.55), ty(.56), s * .035, 0, Math.PI * 2); ctx.stroke();
+  } },
+  casa: { n: 'la casa', e: '🏠', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.moveTo(tx(1), ty(.12)); ctx.lineTo(tx(.5), ty(.45)); ctx.lineTo(tx(.6), ty(.45)); ctx.lineTo(tx(.6), ty(.88)); ctx.lineTo(tx(1), ty(.88)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(.6), ty(.45)); ctx.lineTo(tx(1), ty(.45)); ctx.stroke();
+    ctx.beginPath(); ctx.rect(tx(.68), ty(.54), s * .08, s * .12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(.9), ty(.88)); ctx.lineTo(tx(.9), ty(.66)); ctx.lineTo(tx(1), ty(.66)); ctx.stroke();
+  } },
+  corazon: { n: 'el corazón', e: '❤️', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.moveTo(tx(1), ty(.3)); ctx.bezierCurveTo(tx(.95), ty(.05), tx(.5), ty(.05), tx(.5), ty(.35)); ctx.bezierCurveTo(tx(.5), ty(.6), tx(.8), ty(.75), tx(1), ty(.92)); ctx.stroke();
+  } },
+  arbol: { n: 'el árbol', e: '🌳', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.moveTo(tx(.9), ty(.95)); ctx.lineTo(tx(.9), ty(.62)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(1), ty(.4), s * .34, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(.8), ty(.38), s * .05, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(.68), ty(.52), s * .05, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(.6), ty(.95)); ctx.lineTo(tx(1), ty(.95)); ctx.stroke();
+  } },
+  estrella: { n: 'la estrella', e: '⭐', draw: function (tx, ty, s) {
+    ctx.beginPath();
+    for (var i = 5; i <= 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? .19 : .45; var x = 1 + Math.cos(a) * rr * 2, y = .5 + Math.sin(a) * rr; if (i === 5) ctx.moveTo(tx(x), ty(y)); else ctx.lineTo(tx(x), ty(y)); }
+    ctx.stroke();
+  } },
+  flor: { n: 'la flor', e: '🌸', draw: function (tx, ty, s) {
+    ctx.beginPath(); ctx.arc(tx(1), ty(.42), s * .1, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    [[.56, .42], [.7, .22], [.7, .62]].forEach(function (c) { ctx.beginPath(); ctx.arc(tx(c[0]), ty(c[1]), s * .11, 0, Math.PI * 2); ctx.stroke(); });
+    ctx.beginPath(); ctx.arc(tx(1), ty(.14), s * .11, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx(1), ty(.7), s * .11, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx(1), ty(.81)); ctx.lineTo(tx(1), ty(.98)); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(tx(.82), ty(.88), s * .1, s * .045, -.5, 0, Math.PI * 2); ctx.stroke();
+  } }
+};
+var expert = null, roundN = 0;
+var task = document.createElement('div'); task.className = 'task'; board.appendChild(task);
+function box() { var s = Math.min(W, H) * 0.78; return { s: s, x0: W / 2 - s / 2, y0: H / 2 - s / 2 }; }
+function drawHalf(key) {
+  var b = box(), tx = function (x) { return b.x0 + x * b.s / 2; }, ty = function (y) { return b.y0 + y * b.s; };
+  ctx.save(); ctx.strokeStyle = '#8f9bb3'; ctx.fillStyle = '#8f9bb3'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.setLineDash([12, 10]); ctx.beginPath(); ctx.moveTo(W / 2, b.y0 - 12); ctx.lineTo(W / 2, b.y0 + b.s + 12); ctx.strokeStyle = '#c3cbe0'; ctx.stroke();
+  ctx.setLineDash([]); ctx.strokeStyle = '#8f9bb3';
+  HALVES[key].draw(tx, ty, b.s);
+  ctx.restore();
+}
+function renderTask() {
+  if (!expert) { task.classList.remove('show'); task.innerHTML = ''; return; }
+  var html = '';
+  if (expert.kind === 'prompt') {
+    html = '<div class="tt"><button class="btn round yellow spk" aria-label="Oír">🔊</button><span>Dibuja <b>' + expert.p.t + '</b></span></div><div class="chips">' +
+      expert.p.items.map(function (it, i) { return '<span class="chip' + (expert.done[i] ? ' on' : '') + '" data-i="' + i + '">' + it + '</span>'; }).join('') +
+      '<span class="hintchip">👆 marca lo que ya dibujaste</span></div>';
+  } else {
+    html = '<div class="tt"><button class="btn round yellow spk" aria-label="Oír">🔊</button><span>' + HALVES[expert.key].e + ' Completa <b>' + HALVES[expert.key].n + '</b>: dibuja la otra mitad igual</span></div>';
+  }
+  task.innerHTML = html; task.classList.add('show');
+  task.querySelector('.spk').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); sayTask(); });
+  var chips = task.querySelectorAll('.chip');
+  for (var i = 0; i < chips.length; i++) (function (ch) {
+    ch.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      var k = +ch.getAttribute('data-i'); expert.done[k] = !expert.done[k]; ch.classList.toggle('on', expert.done[k]); KidsGame.sound.pop();
+    });
+  })(chips[i]);
+}
+function sayTask() {
+  if (!expert) return;
+  KidsGame.say(expert.kind === 'prompt' ? 'Dibuja ' + expert.p.t : 'Completa ' + HALVES[expert.key].n + '. Dibuja la otra mitad igual');
+}
+function startExpert(same) {
+  clearCanvas();
+  if (!same || !expert) {
+    if (roundN % 2 === 0) {
+      var p = KidsGame.pick(PROMPTS.filter(function (x) { return !expert || x !== expert.p; }));
+      expert = { kind: 'prompt', p: p, done: p.items.map(function () { return false; }) };
+    } else {
+      var keys = Object.keys(HALVES).filter(function (k) { return !expert || k !== expert.key; });
+      expert = { kind: 'half', key: KidsGame.pick(keys) };
+    }
+  } else if (expert.kind === 'prompt') expert.done = expert.p.items.map(function () { return false; });
+  if (expert.kind === 'half') { mirror = false; var mr = document.getElementById('mirror'); if (mr) mr.classList.remove('sel'); drawHalf(expert.key); }
+  renderTask(); sayTask();
+}
+function checkExpert() {
+  if (!expert) return;
+  if (expert.kind === 'prompt') {
+    var missing = expert.done.filter(function (d) { return !d; }).length;
+    if (inkFraction() < 0.012) { KidsGame.sound.wrong(); KidsGame.toast('Dibuja primero ✏️'); KidsGame.say('Dibuja primero'); return; }
+    if (missing) { KidsGame.sound.wrong(); KidsGame.toast('Marca lo que ya dibujaste ✔ (' + missing + ')', 1800); KidsGame.say('Faltan cosas por dibujar o marcar'); return; }
+  } else {
+    var b = box(), left = inkCount(b.x0, b.y0 - 14, W / 2 - 2, b.y0 + b.s + 14), right = inkCount(W / 2 + 2, b.y0 - 14, b.x0 + b.s, b.y0 + b.s + 14);
+    if (right < 150 || right < left * 0.45) { KidsGame.sound.wrong(); KidsGame.toast('Falta dibujar el otro lado 👉', 1800); KidsGame.say('Falta dibujar la otra mitad'); return; }
+  }
+  KidsGame.sound.ok(); KidsGame.addStar(3); roundN++;
+  KidsGame.levelDone(4);
+  KidsGame.celebrate({ msg: expert.kind === 'prompt' ? '¡Qué imaginación!' : '¡Está completo!', sub: expert.kind === 'prompt' ? '🗣️ ' + expert.p.t : HALVES[expert.key].e + ' ' + HALVES[expert.key].n,
+    onNext: function () { startExpert(false); }, onAgain: function () { roundN--; startExpert(true); } });
+}
+function finishFree() {
+  var f = inkFraction();
+  if (f < 0.01) { KidsGame.sound.wrong(); KidsGame.toast('Dibuja algo primero ✏️'); KidsGame.say('Dibuja algo primero'); return; }
+  KidsGame.sound.ok(); KidsGame.addStar(nivel);
+  KidsGame.levelDone(nivel);
+  KidsGame.celebrate({ msg: '¡Qué bonito!', sub: '🖼️ Tu dibujo está listo', onAgain: function () { clearCanvas(); KidsGame.sound.pop(); } });
+}
+
 // ---------- Herramientas (según nivel) ----------
 function selectTool(el) {
   var all = tools.querySelectorAll('.tool.pick');
-  for (var k = 0; k < all.length; k++) all[k].classList.remove('sel');
+  for (var k = 0; k < all.length; k++) { all[k].classList.remove('sel'); var g = all[k].querySelector('.glyph'); if (g) { g.style.color = ''; g.style.transform = ''; } }
   if (el) el.classList.add('sel');
 }
 function selectSize(el) {
@@ -240,7 +445,8 @@ function onTap(el, fn) { el.addEventListener('pointerdown', function (e) { e.pre
 var confirmBox = document.getElementById('confirm');
 document.getElementById('confirmYes').onclick = function () {
   confirmBox.classList.remove('show');
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  clearCanvas();
+  if (expert && expert.kind === 'half') drawHalf(expert.key);
   KidsGame.sound.pop(); KidsGame.toast('¡Listo! 🗑️');
 };
 document.getElementById('confirmNo').onclick = function () { confirmBox.classList.remove('show'); KidsGame.sound.tap(); };
@@ -260,11 +466,12 @@ function buildTools() {
   if (colors.indexOf(color) < 0) color = COLORS[1];
   if (nivel === 1) size = SIZES[1];
   if (nivel < 3) { mirror = false; if (mode === 'sticker' || mode === 'rainbow') mode = 'brush'; }
+  if (nivel < 2) { rot = 0; if (mode === 'shape') mode = 'brush'; }
   lastColorEl = null;
   colors.forEach(function (c, i) {
     var el = mk('pick color', crayon(c, i)); el.setAttribute('aria-label', 'Color');
     if (c === color) { lastColorEl = el; if (mode === 'brush') el.classList.add('sel'); }
-    onTap(el, function () { mode = 'brush'; color = c; lastColorEl = el; selectTool(el); KidsGame.sound.tap(); });
+    onTap(el, function () { color = c; lastColorEl = el; if (mode !== 'shape') { mode = 'brush'; selectTool(el); } else { var sh = tools.querySelector('.tool.shape.sel'); if (sh) sh.querySelector('.glyph').style.color = c; } KidsGame.sound.tap(); });
   });
   if (nivel >= 3) {
     var rb = mk('pick rainbow', ''); rb.id = 'rainbow'; if (mode === 'rainbow') rb.classList.add('sel');
@@ -277,6 +484,20 @@ function buildTools() {
       var el = mk('size', '<div class="dot" style="width:' + (s + 6) + 'px;height:' + (s + 6) + 'px"></div>'); if (s === size) el.classList.add('sel');
       onTap(el, function () { size = s; if (mode === 'sticker') { mode = 'brush'; selectTool(lastColorEl); } selectSize(el); KidsGame.sound.tap(); });
     });
+    // Figuras geométricas (nivel 2+) y rotación (nivel 3+)
+    SHAPES.forEach(function (sh) {
+      var el = mk('pick shape', '<span class="glyph">' + sh[1] + '</span>'); el.setAttribute('aria-label', 'Figura');
+      if (mode === 'shape' && shape === sh[0]) { el.classList.add('sel'); el.querySelector('.glyph').style.color = color; }
+      onTap(el, function () { mode = 'shape'; shape = sh[0]; selectTool(el); el.querySelector('.glyph').style.color = color; el.querySelector('.glyph').style.transform = 'rotate(' + rot + 'deg)'; KidsGame.sound.pop(); });
+    });
+    if (nivel >= 3) {
+      var rt = mk('toggle rot', '<span class="glyph" style="transform:rotate(' + rot + 'deg)">▲</span><small>↻</small>'); rt.id = 'rotate'; rt.setAttribute('aria-label', 'Girar');
+      onTap(rt, function () {
+        rot = (rot + 45) % 360; rt.querySelector('.glyph').style.transform = 'rotate(' + rot + 'deg)';
+        var sel = tools.querySelector('.tool.shape.sel .glyph'); if (sel) sel.style.transform = 'rotate(' + rot + 'deg)';
+        KidsGame.sound.tap(); KidsGame.toast('Giro ' + rot + '°');
+      });
+    }
   }
   if (nivel >= 3) {
     STICKERS.forEach(function (st) {
@@ -304,13 +525,24 @@ function buildTools() {
     } catch (e) {}
     KidsGame.toast('¡Listo! 📷');
   });
+  var ok = mk('action done', nivel === 4 ? '✔' : '✨'); ok.id = 'finish'; ok.setAttribute('aria-label', 'Listo');
+  onTap(ok, function () { KidsGame.sound.tap(); if (nivel === 4) checkExpert(); else finishFree(); });
   if (!tools.querySelector('.tool.pick.sel') && lastColorEl) { mode = 'brush'; lastColorEl.classList.add('sel'); }
   setTimeout(resize, 50);
 }
 
-// ---------- Niveles: herramientas desbloqueadas ----------
-function start(n) { nivel = n; buildTools(); }
-function pickLevel() { KidsGame.levelPicker({ onPick: start }); }
+// ---------- Niveles: herramientas desbloqueadas y retos ----------
+function start(n) {
+  nivel = n; buildTools();
+  if (n === 4) { setTimeout(function () { resize(); startExpert(false); }, 120); }
+  else { expert = null; renderTask(); if (n === 3) { mirror = true; var mr = document.getElementById('mirror'); if (mr) mr.classList.add('sel'); KidsGame.say('Espejo: dibuja y se copia al otro lado'); } }
+}
+function pickLevel() {
+  KidsGame.levelPicker({
+    labels: { 1: '6 colores', 2: 'Tamaños y figuras', 3: 'Espejo, arcoíris, giro y calcomanías', 4: 'Dibuja lo que te digo y completa el dibujo' },
+    onPick: start
+  });
+}
 
 resize();
 setTimeout(resize, 100);

@@ -45,6 +45,17 @@
     transition: transform .12s, box-shadow .12s; animation: pop .35s ease-out backwards, float 3.2s ease-in-out infinite;
   }
   .choices.four .block { width: min(21vw, 20vh, 140px); height: min(21vw, 20vh, 140px); font-size: min(12vw, 11vh, 82px); }
+  .choices.five .block { width: min(17vw, 17vh, 118px); height: min(17vw, 17vh, 118px); font-size: min(10vw, 9vh, 70px); border-radius: 18px; }
+  .choices.syl .block { font-size: min(8vw, 7.5vh, 54px); letter-spacing: 1px; }
+  /* Pregunta visual: ¿empieza / termina / falta? */
+  .ask { display: flex; align-items: center; gap: 8px; font-size: min(4.6vw, 24px); font-weight: 900; color: #1f2f6b; border-radius: 30px; padding: 6px 18px; white-space: nowrap;
+    background: linear-gradient(180deg, #ffffff, #eef2fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.2), inset 0 2px 0 #fff; animation: pop .35s ease-out; }
+  .ask .emoji { font-size: 1.3em; }
+  .word .gap { display: inline-block; min-width: .7em; color: #ffd166; border-bottom: 6px solid #ffd166; line-height: .9; margin: 0 2px; text-shadow: 0 3px 0 #c97d0b, -2px -2px 0 #c97d0b, 2px -2px 0 #c97d0b, -2px 2px 0 #c97d0b, 2px 2px 0 #c97d0b; }
+  .word .gap.now { animation: blinkgap 1s ease-in-out infinite; }
+  .word .gap.fill { border-bottom-color: #2fd27a; animation: pop .3s ease-out; }
+  @keyframes blinkgap { 0%,100% { border-bottom-color: #ffd166; } 50% { border-bottom-color: #fff; } }
+  .tracebox text.cursive { font-family: "Segoe Script", "Comic Sans MS", "Bradley Hand", "Snell Roundhand", cursive; font-style: italic; font-weight: 700; letter-spacing: 4px; }
   .choices .block::before { content: ""; position: absolute; left: 10%; right: 10%; top: 6%; height: 34%; border-radius: 16px 16px 40% 40%; background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); pointer-events: none; }
   .choices .block::after { content: ""; position: absolute; inset: 10%; border-radius: 14px; border: 3px solid rgba(255,255,255,.35); box-shadow: inset 0 2px 4px rgba(0,0,0,.12); pointer-events: none; }
   .choices .block:active { transform: scale(.94) translateY(5px); box-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(20,40,90,.25), inset 0 3px 0 rgba(255,255,255,.6); animation: none; }
@@ -117,6 +128,19 @@
     M:'eme', N:'ene', 'Ñ':'eñe', O:'o', P:'pe', Q:'cu', R:'erre', S:'ese', T:'te', U:'u', V:'uve', W:'doble u',
     X:'equis', Y:'i griega', Z:'zeta' };
   var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
+  // Nivel 4 (Experto): palabras cortas sin acentos: [emoji, palabra, primera sílaba]
+  var EXPERT = [
+    ['🦆','Pato','PA'], ['🐒','Mono','MO'], ['🌙','Luna','LU'], ['🏠','Casa','CA'], ['🐮','Vaca','VA'], ['🐺','Lobo','LO'], ['🥥','Coco','CO'],
+    ['🍩','Dona','DO'], ['🌮','Taco','TA'], ['🐸','Rana','RA'], ['🌵','Nopal','NO'], ['🥝','Kiwi','KI'], ['🐢','Tortuga','TOR'], ['🦓','Cebra','CE'],
+    ['🐟','Pez','PEZ'], ['🌞','Sol','SOL'], ['🍞','Pan','PAN'], ['🐱','Gato','GA'], ['🐶','Perro','PE'], ['🍎','Manzana','MAN'], ['🌸','Flor','FLOR'],
+    ['🎈','Globo','GLO'], ['🍓','Fresa','FRE'], ['🐷','Cerdo','CER'], ['🦊','Zorro','ZO'], ['🐼','Panda','PAN'], ['🦁','Leona','LE'], ['🍉','Sandia','SAN']
+  ];
+  var VOWELS = 'AEIOU'.split('');
+  var ACC = { 'Á':'A', 'É':'E', 'Í':'I', 'Ó':'O', 'Ú':'U', 'Ü':'U' };
+  function norm(ch) { ch = ch.toUpperCase(); return ACC[ch] || ch; }
+  var ASKS = { inicio: ['🔤', '¿Con qué letra EMPIEZA?'], fin: ['🏁', '¿Con qué letra TERMINA?'], medio: ['🔍', '¿Qué letra FALTA?'],
+    syl: ['🧩', '¿Con qué SÍLABA empieza?'], vow: ['🅰️', '¿Qué VOCALES faltan?'] };
+  var LABELS = { 1: 'Vocales, 2 opciones', 2: 'Todas, minúsculas', 3: 'Termina y en medio', 4: 'Sílabas y palabras' };
   // Paletas de los bloques: [claro, medio, oscuro]
   var BLOCKS = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
     ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
@@ -150,7 +174,7 @@
   function nOptions() { return level === 1 ? 2 : level === 2 ? 3 : 4; }
   function pickLevel() {
     mode = 'levels'; game.innerHTML = '';
-    KidsGame.levelPicker({ onPick: function (n) { level = n; idx = 0; showMenu(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; idx = 0; showMenu(); } });
   }
   // Pastilla de nivel + botón 🎚️ (vuelve al selector)
   function hud() {
@@ -174,7 +198,7 @@
   }
 
   /* ---------- Modo 1: Escucha y toca ---------- */
-  var pic, word, choices, lastWord = null, correct = 0, lock = false;
+  var pic, word, choices, ask, lastWord = null, correct = 0, lock = false, qType = 'inicio', vowTask = null, curAnswer = null;
   function startListen() {
     mode = 'listen'; game.innerHTML = '';
     var s = el('div', 'screen listen');
@@ -184,36 +208,50 @@
     tools.appendChild(sw);
     var medal = el('div', 'medal');
     pic = el('div', 'pic emoji'); word = el('div', 'word'); choices = el('div', 'choices' + (nOptions() === 4 ? ' four' : ''));
+    ask = el('div', 'ask');
     medal.appendChild(pic);
     onTap(medal, function () { if (lastWord) { KidsGame.sound.tap(); KidsGame.say(lastWord[1]); replay(pic, 'pop'); } });
-    s.appendChild(hud()); s.appendChild(tools); s.appendChild(medal); s.appendChild(word); s.appendChild(choices);
+    s.appendChild(hud()); s.appendChild(tools); s.appendChild(medal); s.appendChild(ask); s.appendChild(word); s.appendChild(choices);
     game.appendChild(s);
     nextListen();
   }
+  function setAsk(type) { qType = type; ask.innerHTML = '<span class="emoji">' + ASKS[type][0] + '</span>' + ASKS[type][1]; replay(ask, 'pop'); }
+  function buildBlocks(opts, answer, cls, onPick) {
+    choices.className = 'choices ' + cls; choices.innerHTML = '';
+    var pal = KidsGame.shuffle(BLOCKS);
+    opts.forEach(function (l, i) {
+      var c = el('div', 'block'); c.textContent = l;
+      c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
+      c.style.setProperty('--a', pal[i % pal.length][0]); c.style.setProperty('--b', pal[i % pal.length][1]); c.style.setProperty('--d', pal[i % pal.length][2]);
+      onTap(c, function () { onPick(c, l); });
+      choices.appendChild(c);
+    });
+  }
+  // Nivel 1-2: ¿con qué letra empieza? Nivel 3: también ¿con qué termina? y ¿qué letra falta en medio? (con parecidas)
   function nextListen() {
-    var pool = poolWords(), w;
+    if (level === 4) return nextExpert();
+    var pool = poolWords(), w, type = 'inicio';
     do { w = KidsGame.pick(pool); } while (w === lastWord && pool.length > 1);
     lastWord = w;
-    var L = letterOf(w);
+    var name = w[1], L = letterOf(w), html;
+    if (level === 3) {
+      type = KidsGame.pick(['inicio', 'fin', 'medio', 'fin', 'medio']);
+      if (type === 'fin') { L = norm(name.slice(-1)); html = name.slice(0, -1) + '<span class="gap now">_</span>'; }
+      else if (type === 'medio') { var k = 1 + KidsGame.rand(name.length - 2); L = norm(name.charAt(k)); html = name.slice(0, k) + '<span class="gap now">_</span>' + name.slice(k + 1); }
+      else html = name;
+      if (!/^[A-ZÑ]$/.test(L)) { type = 'inicio'; L = letterOf(w); html = name; }
+    } else html = '<b>' + L + '</b>' + name.slice(1);
     pic.textContent = w[0]; replay(pic, 'pop');
-    // Nivel 3: la palabra se muestra sin resaltar la primera letra
-    word.innerHTML = level === 3 ? w[1] : '<b>' + L + '</b>' + w[1].slice(1);
+    word.innerHTML = html; setAsk(type);
     var others = [];
     if (level === 3) others = KidsGame.shuffle(LOOKALIKE[L] || []).slice(0, 2);
     var rest = KidsGame.shuffle(letterPool().filter(function (l) { return l !== L && others.indexOf(l) < 0; }));
     while (others.length < nOptions() - 1) others.push(rest.pop());
-    var opts = KidsGame.shuffle([L].concat(others));
-    choices.innerHTML = '';
-    var pal = KidsGame.shuffle(BLOCKS);
-    opts.forEach(function (l, i) {
-      var c = el('div', 'block'); c.textContent = level === 3 ? l.toLowerCase() : l;
-      c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
-      c.style.setProperty('--a', pal[i][0]); c.style.setProperty('--b', pal[i][1]); c.style.setProperty('--d', pal[i][2]);
-      onTap(c, function () { pickLetter(c, l, L); });
-      choices.appendChild(c);
-    });
+    var lower = level >= 2; curAnswer = L;
+    buildBlocks(KidsGame.shuffle([L].concat(others)).map(function (l) { return lower ? l.toLowerCase() : l; }), L, nOptions() === 4 ? 'four' : '',
+      function (c, l) { pickLetter(c, l.toUpperCase(), L); });
     lock = false;
-    KidsGame.say(w[1]);
+    KidsGame.say(name + '. ' + ASKS[type][1]);
   }
   function pickLetter(c, l, L) {
     if (lock) return;
@@ -221,15 +259,70 @@
       lock = true; c.classList.add('ok'); sparks(c, '#7dffb0');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       replay(pic, 'bounce'); correct++;
-      KidsGame.say(NAMES[L] + ' de ' + lastWord[1]);
-      setTimeout(function () {
-        pic.classList.remove('bounce');
-        if (correct % 8 === 0) {
-          KidsGame.celebrate({ sub: '¡' + correct + ' palabras!', onNext: nextListen, onAgain: nextListen });
-        } else nextListen();
-      }, 1000);
+      var g = word.querySelector('.gap'); if (g) { g.textContent = level >= 2 ? L.toLowerCase() : L; g.className = 'gap fill'; }
+      KidsGame.say(NAMES[L] + (qType === 'fin' ? '. ' + lastWord[1] + ' termina con ' + NAMES[L] : ' de ' + lastWord[1]));
+      afterRight();
     } else {
       KidsGame.sound.wrong(); replay(c, 'bad');
+    }
+  }
+  function afterRight() {
+    setTimeout(function () {
+      pic.classList.remove('bounce');
+      if (correct % 8 === 0) {
+        KidsGame.levelDone(level);
+        KidsGame.celebrate({ sub: '¡' + correct + ' palabras!', onNext: nextListen, onAgain: nextListen });
+      } else nextListen();
+    }, 1000);
+  }
+  // ---- Nivel 4 (Experto): sílabas y vocales que faltan ----
+  function sylOptions(syl) {
+    var i = 0; while (i < syl.length && VOWELS.indexOf(syl.charAt(i)) < 0) i++;
+    var v = syl.charAt(i), others = KidsGame.shuffle(VOWELS.filter(function (x) { return x !== v; })).slice(0, 3);
+    return KidsGame.shuffle([syl].concat(others.map(function (x) { return syl.slice(0, i) + x + syl.slice(i + 1); })));
+  }
+  function nextExpert() {
+    var w; do { w = KidsGame.pick(EXPERT); } while (w === lastWord);
+    lastWord = w;
+    var name = w[1].toUpperCase(), type = KidsGame.pick(['syl', 'vow']);
+    pic.textContent = w[0]; replay(pic, 'pop'); setAsk(type); lock = false;
+    if (type === 'syl') {
+      word.innerHTML = w[1]; curAnswer = w[2];
+      buildBlocks(sylOptions(w[2]), w[2], 'four syl', function (c, l) {
+        if (lock) return;
+        if (l === w[2]) {
+          lock = true; c.classList.add('ok'); sparks(c, '#7dffb0'); KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+          replay(pic, 'bounce'); correct++;
+          word.innerHTML = '<b>' + w[1].slice(0, w[2].length) + '</b>' + w[1].slice(w[2].length);
+          KidsGame.say(w[2].toLowerCase() + ', de ' + w[1]);
+          afterRight();
+        } else { KidsGame.sound.wrong(); replay(c, 'bad'); }
+      });
+      KidsGame.say(w[1] + '. ¿Con qué sílaba empieza?');
+    } else {
+      // Vocales: P_T_ → se llenan en orden tocando A E I O U
+      var blanks = [], html = '';
+      for (var i = 0; i < name.length; i++) {
+        if (VOWELS.indexOf(name.charAt(i)) >= 0) { html += '<span class="gap' + (blanks.length ? '' : ' now') + '">_</span>'; blanks.push(name.charAt(i)); }
+        else html += name.charAt(i);
+      }
+      word.innerHTML = html;
+      vowTask = { blanks: blanks, at: 0 }; curAnswer = blanks.slice();
+      buildBlocks(VOWELS, null, 'five', function (c, l) {
+        if (lock) return;
+        var gaps = word.querySelectorAll('.gap');
+        if (l === vowTask.blanks[vowTask.at]) {
+          KidsGame.sound.pop(); sparks(c, '#7dffb0'); replay(c, 'pop');
+          gaps[vowTask.at].textContent = l; gaps[vowTask.at].className = 'gap fill'; vowTask.at++;
+          if (vowTask.at < gaps.length) { gaps[vowTask.at].classList.add('now'); KidsGame.say(NAMES[l]); }
+          else {
+            lock = true; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); replay(pic, 'bounce'); correct++;
+            KidsGame.say(w[1] + '. ¡Muy bien!');
+            afterRight();
+          }
+        } else { KidsGame.sound.wrong(); replay(c, 'bad'); }
+      });
+      KidsGame.say(w[1] + '. ¿Qué vocales faltan?');
     }
   }
 
@@ -262,7 +355,7 @@
     onTap(clr, function () { KidsGame.sound.pop(); strokes = []; redraw(); });
     onTap(ok, doneLetter);
     onTap(sw, function () { KidsGame.sound.tap(); startListen(); });
-    onTap(hint, function () { KidsGame.sound.tap(); KidsGame.say(NAMES[tracePool()[idx]] + ', de ' + hint.dataset.word); });
+    onTap(hint, function () { KidsGame.sound.tap(); KidsGame.say(level === 4 ? hint.dataset.word : NAMES[tracePool()[idx]] + ', de ' + hint.dataset.word); });
 
     canvas.addEventListener('pointerdown', function (e) {
       e.preventDefault(); if (drawing) return;
@@ -280,9 +373,10 @@
 
     layoutTrace(); showLetter();
   }
-  function tracePool() { return letterPool(); }
-  // Texto del pizarrón según nivel: 1 = mayúscula, 2 = mayúscula y minúscula, 3 = minúscula
-  function traceText(L) { return level === 1 ? L : level === 2 ? L + ' ' + L.toLowerCase() : L.toLowerCase(); }
+  // Nivel 4: se trazan palabras completas (en letra ligada), no letras sueltas
+  function tracePool() { return level === 4 ? EXPERT.map(function (w) { return w[1]; }) : letterPool(); }
+  // Texto del pizarrón según nivel: 1 = mayúscula, 2 = mayúscula y minúscula, 3 = minúscula, 4 = palabra en cursiva
+  function traceText(L) { return level === 1 ? L : level === 2 ? L + ' ' + L.toLowerCase() : level === 3 ? L.toLowerCase() : L.toLowerCase(); }
   function pos(e) { var r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; }
   // Crayón arcoíris: el tono avanza a lo largo del trazo; borde suave en 3 capas (halo, cuerpo, brillo)
   function drawSeg(hue, a, b, i) {
@@ -310,25 +404,27 @@
   }
   function showLetter() {
     var P = tracePool(); if (idx >= P.length) idx = 0;
-    var L = P[idx], w = KidsGame.pick(wordsFor(L)) || ['', ''];
+    var L = P[idx], w = level === 4 ? EXPERT[idx] : (KidsGame.pick(wordsFor(L)) || ['', '']);
     var txt = traceText(L), fs = level === 1 ? 290 : level === 3 ? 250 : 210, y = level === 1 ? 232 : level === 3 ? 196 : 212;
-    Array.prototype.forEach.call(svgText, function (t, i) { t.textContent = txt; t.setAttribute('font-size', fs); t.setAttribute('y', y + (i === 1 ? 4 : 0)); });
+    if (level === 4) { fs = Math.min(190, Math.floor(700 / txt.length)); y = 190; }
+    Array.prototype.forEach.call(svgText, function (t, i) { t.textContent = txt; t.setAttribute('font-size', fs); t.setAttribute('y', y + (i === 1 ? 4 : 0)); t.classList.toggle('cursive', level === 4); });
     hint.innerHTML = '<span class="emoji">' + w[0] + '</span> ' + w[1];
     hint.dataset.word = w[1];
     strokes = []; redraw();
     replay(box, 'pop');
-    KidsGame.say(NAMES[L] + ', de ' + w[1]);
+    KidsGame.say(level === 4 ? 'Traza la palabra ' + w[1] : NAMES[L] + ', de ' + w[1]);
   }
   function doneLetter() {
     if (traceLock) return; traceLock = true;
     var P = tracePool(), L = P[idx];
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); KidsGame.confetti(25); sparks(box, '#ffe066');
-    KidsGame.say(NAMES[L]);
+    KidsGame.say(level === 4 ? L : NAMES[L]);
     box.classList.remove('pop'); replay(box, 'bounce');
     setTimeout(function () {
       box.classList.remove('bounce'); traceLock = false;
       if (idx === P.length - 1) {
-        KidsGame.celebrate({ sub: '¡Todas las letras!',
+        KidsGame.levelDone(level);
+        KidsGame.celebrate({ sub: level === 4 ? '¡Todas las palabras!' : '¡Todas las letras!',
           onNext: function () { idx = 0; showLetter(); }, onAgain: function () { idx = 0; showLetter(); } });
       } else { idx++; showLetter(); }
     }, 900);
@@ -336,7 +432,9 @@
 
   window.addEventListener('resize', function () { if (mode === 'trace') layoutTrace(); });
   // Expuesto para pruebas
-  window.__letras = { setLevel: function (n) { level = n; idx = 0; showMenu(); }, get level() { return level; } };
+  window.__letras = { setLevel: function (n) { level = n; idx = 0; showMenu(); }, get level() { return level; }, get mode() { return mode; },
+    get q() { return { type: qType, word: lastWord && lastWord[1], correct: correct, idx: idx, pool: tracePool().length, vow: vowTask && vowTask.blanks.slice() }; },
+    get answer() { return curAnswer; } };
   pickLevel();
 })();
 </script>

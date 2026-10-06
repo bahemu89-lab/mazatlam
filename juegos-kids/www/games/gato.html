@@ -42,6 +42,12 @@
   .cell.win .emoji { animation: bounce .6s infinite; }
   @keyframes glow { from { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 5px #ffb703, 0 0 14px #ffd166; } to { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 7px #ff8906, 0 0 34px #ffb703; } }
   .cell.hint { background: #f3efff; }
+  /* Nivel Experto: tablero 4x4 "cuatro en raya" con gravedad (las fichas caen) */
+  .board.n4 { gap: 8px; padding: 12px; }
+  .board.n4 .cell { font-size: calc(var(--bs) * .15); border-radius: 14px; }
+  .board.n4 .cell.filled .emoji { animation: piecedrop .5s cubic-bezier(.3,1.2,.5,1); }
+  @keyframes piecedrop { 0%{transform:translateY(-320%) scale(.9);opacity:.5} 60%{transform:translateY(0) scale(1.1,.85);opacity:1} 80%{transform:translateY(-14%) scale(.95,1.08)} 100%{transform:translateY(0) scale(1)} }
+  .board.n4 .cell.drop { background: linear-gradient(180deg, #ffe9a8, #fff4cf); }
   /* Línea ganadora con brillo */
   .winline { position: absolute; inset: 14px; width: calc(100% - 28px); height: calc(100% - 28px); pointer-events: none; z-index: 2; overflow: visible; display: none; }
   .winline.show { display: block; }
@@ -82,10 +88,19 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   var PIECES = ['🐱', '🐶', '🦄', '🌟'];
   var BOTS = ['🤖', '🐭'];
   var PALS = [ { a: '#ff9ccb', b: '#f0569a', d: '#b8306f' }, { a: '#7dd0ff', b: '#2f95e8', d: '#1a63a8' }, { a: '#8ef0b0', b: '#24b36c', d: '#14784a' }, { a: '#ffe98a', b: '#ffb703', d: '#c47f00' } ];
-  var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  // Líneas ganadoras: 3 en raya (3x3) o 4 en raya (4x4)
+  function linesFor(n) {
+    var L = [], i, j, row, col;
+    for (i = 0; i < n; i++) { row = []; col = []; for (j = 0; j < n; j++) { row.push(i * n + j); col.push(j * n + i); } L.push(row); L.push(col); }
+    var d1 = [], d2 = []; for (i = 0; i < n; i++) { d1.push(i * n + i); d2.push(i * n + (n - 1 - i)); } L.push(d1); L.push(d2);
+    return L;
+  }
+  var N = 3, LINES = linesFor(3), GRAVITY = false;
   var twoPlayers = false, p1 = null, p2 = null, board, turn, busy = false, score = [0, 0], over = false;
-  // Nivel del robot: 1 = 15% listo, 2 = 50% listo, 3 = perfecto (empatar es ganar)
+  // Nivel del robot: 1 = 15% listo, 2 = 75% listo, 3 = perfecto (empatar es ganar),
+  // 4 = Experto: tablero 4x4 con gravedad (cuatro en raya) y robot que mira varias jugadas adelante
   var nivel = 1, badgeEl = null;
+  var LABELS = { 1: 'Robot distraído', 2: 'Robot listo', 3: 'Robot perfecto', 4: '4 en raya, fichas caen' };
   var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [], lineSvg;
 
   game.innerHTML = '';
@@ -100,10 +115,17 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   wrap.appendChild(boardEl);
   side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot);
   game.appendChild(side); game.appendChild(wrap);
-  for (var i = 0; i < 9; i++) {
-    var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i; c.innerHTML = '<span class="emoji"></span>';
-    c.addEventListener('pointerdown', onCell); boardEl.appendChild(c); cells.push(c);
+  function buildBoard(n) {
+    N = n; LINES = linesFor(n); GRAVITY = n === 4;
+    cells.forEach(function (c) { c.remove(); }); cells = [];
+    boardEl.classList.toggle('n4', n === 4);
+    boardEl.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)'; boardEl.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+    for (var i = 0; i < n * n; i++) {
+      var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i; c.innerHTML = '<span class="emoji"></span>';
+      c.addEventListener('pointerdown', onCell); boardEl.insertBefore(c, lineSvg || null); cells.push(c);
+    }
   }
+  buildBoard(3);
   lineSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   lineSvg.setAttribute('class', 'winline'); lineSvg.setAttribute('viewBox', '0 0 300 300'); lineSvg.setAttribute('preserveAspectRatio', 'none');
   lineSvg.innerHTML = '<defs><linearGradient id="wl" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="300"><stop offset="0" stop-color="#ffd166"/><stop offset=".5" stop-color="#ff8906"/><stop offset="1" stop-color="#ff5fa0"/></linearGradient></defs>' +
@@ -165,7 +187,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     newRound(true);
   }
   function newRound(firstIsP1) {
-    board = [0,0,0,0,0,0,0,0,0]; over = false; busy = false;
+    board = []; for (var k = 0; k < N * N; k++) board.push(0); over = false; busy = false;
     cells.forEach(function (c) { c.className = 'cell card'; c.firstChild.textContent = ''; });
     lineSvg.classList.remove('show');
     turn = firstIsP1 ? 1 : 2;
@@ -178,7 +200,7 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   function stars(n) { return n ? '⭐'.repeat(Math.min(n, 5)) + (n > 5 ? ' ' + n : '') : '–'; }
   function renderTurn() {
     var e = turn === 1 ? p1 : p2;
-    var txt = twoPlayers ? (turn === 1 ? 'Turno de ' : 'Turno de ') : (turn === 1 ? '¡Tu turno!' : 'Piensa...');
+    var txt = twoPlayers ? 'Turno de ' : (turn === 1 ? (GRAVITY ? '¡Tu turno! 4 en raya' : '¡Tu turno!') : 'Piensa...');
     turnEl.innerHTML = '<span>' + txt + '</span><span class="emoji bounce">' + e + '</span>';
   }
 
@@ -187,8 +209,17 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     if (over || busy) return;
     if (turn === 2 && !twoPlayers) return;
     var i = parseInt(this.dataset.i, 10);
+    if (GRAVITY) { var d = dropIndex(board, i % N); if (d < 0) { KidsGame.sound.wrong(); this.classList.remove('bad'); void this.offsetWidth; this.classList.add('bad'); return; } i = d; }
     if (board[i]) { KidsGame.sound.wrong(); this.classList.remove('bad'); void this.offsetWidth; this.classList.add('bad'); return; }
     play(i, turn);
+  }
+  // Gravedad: la ficha cae a la casilla libre más baja de la columna (-1 si está llena)
+  function dropIndex(b, col) { for (var r = N - 1; r >= 0; r--) if (!b[r * N + col]) return r * N + col; return -1; }
+  function legalMoves(b) {
+    var m = [], i;
+    if (GRAVITY) { for (i = 0; i < N; i++) { var d = dropIndex(b, i); if (d >= 0) m.push(d); } }
+    else for (i = 0; i < b.length; i++) if (!b[i]) m.push(i);
+    return m;
   }
   function play(i, who) {
     board[i] = who;
@@ -201,39 +232,69 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     renderTurn();
     if (turn === 2 && !twoPlayers) botMove();
   }
+  function lineOwner(b, l) {
+    var w = b[l[0]]; if (!w) return 0;
+    for (var j = 1; j < l.length; j++) if (b[l[j]] !== w) return 0;
+    return w;
+  }
   function winner() {
-    for (var k = 0; k < LINES.length; k++) {
-      var l = LINES[k];
-      if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[1]] === board[l[2]]) return { who: board[l[0]], line: l };
-    }
+    for (var k = 0; k < LINES.length; k++) { var w = lineOwner(board, LINES[k]); if (w) return { who: w, line: LINES[k] }; }
     return null;
   }
-  // Robot: nivel 1 = 15% listo, nivel 2 = 50% listo (gana o bloquea), nivel 3 = perfecto (minimax)
+  // Robot: nivel 1 = 15% listo, nivel 2 = 75% listo (gana o bloquea), nivel 3 = perfecto (minimax),
+  // nivel 4 = gana/bloquea y mira 3 jugadas adelante (alfa-beta con heurística)
   function botMove() {
     busy = true;
     setTimeout(function () {
       if (over) return;
-      var free = []; for (var i = 0; i < 9; i++) if (!board[i]) free.push(i);
+      var free = legalMoves(board);
       if (!free.length) return;
       var choice = null;
-      if (nivel === 3) choice = bestMove();
-      else if (Math.random() < (nivel === 2 ? 0.5 : 0.15)) choice = findLine(2) != null ? findLine(2) : findLine(1);
+      if (nivel >= 3) choice = bestMove(2);
+      else if (Math.random() < (nivel === 2 ? 0.75 : 0.15)) choice = findLine(2) != null ? findLine(2) : findLine(1);
       if (choice == null) choice = KidsGame.pick(free);
       busy = false;
       play(choice, 2);
     }, 700);
   }
   function findLine(who) {
+    var legal = legalMoves(board);
     for (var k = 0; k < LINES.length; k++) {
       var l = LINES[k], cnt = 0, empty = -1;
-      for (var j = 0; j < 3; j++) { if (board[l[j]] === who) cnt++; else if (!board[l[j]]) empty = l[j]; }
-      if (cnt === 2 && empty >= 0) return empty;
+      for (var j = 0; j < l.length; j++) { if (board[l[j]] === who) cnt++; else if (!board[l[j]]) empty = l[j]; }
+      if (cnt === l.length - 1 && empty >= 0 && legal.indexOf(empty) >= 0) return empty;
     }
     return null;
   }
   function winOf(b) {
-    for (var k = 0; k < LINES.length; k++) { var l = LINES[k]; if (b[l[0]] && b[l[0]] === b[l[1]] && b[l[1]] === b[l[2]]) return b[l[0]]; }
+    for (var k = 0; k < LINES.length; k++) { var w = lineOwner(b, LINES[k]); if (w) return w; }
     return 0;
+  }
+  // Heurística 4x4: líneas abiertas para el robot cuentan a favor, para la niña en contra
+  var HW = [0, 1, 12, 120, 10000];
+  function heur(b) {
+    var sc = 0;
+    for (var k = 0; k < LINES.length; k++) {
+      var l = LINES[k], r = 0, h = 0;
+      for (var j = 0; j < l.length; j++) { if (b[l[j]] === 2) r++; else if (b[l[j]] === 1) h++; }
+      if (r && h) continue;
+      sc += HW[r] - HW[h];
+    }
+    return sc;
+  }
+  function alphabeta(b, who, depth, alpha, beta) {
+    var w = winOf(b);
+    if (w === 2) return 10000 + depth; if (w === 1) return -10000 - depth;
+    var moves = legalMoves(b);
+    if (!moves.length) return 0;
+    if (depth === 0) return heur(b);
+    var best = who === 2 ? -Infinity : Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      b[moves[i]] = who; var v = alphabeta(b, who === 2 ? 1 : 2, depth - 1, alpha, beta); b[moves[i]] = 0;
+      if (who === 2) { if (v > best) best = v; if (v > alpha) alpha = v; } else { if (v < best) best = v; if (v < beta) beta = v; }
+      if (beta <= alpha) break;
+    }
+    return best;
   }
   function minimax(b, who, depth) {
     var w = winOf(b);
@@ -247,19 +308,23 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     }
     return best;
   }
-  function bestMove() {
-    var best = -99, moves = [];
-    for (var i = 0; i < 9; i++) {
-      if (board[i]) continue;
-      board[i] = 2; var v = minimax(board, 1, 1); board[i] = 0;
+  function bestMove(who) {
+    who = who || 2;
+    var best = -Infinity, moves = [], legal = legalMoves(board), opp = who === 2 ? 1 : 2;
+    for (var k = 0; k < legal.length; k++) {
+      var i = legal[k], v;
+      board[i] = who;
+      if (GRAVITY) { v = alphabeta(board, opp, 6, -Infinity, Infinity); if (who === 1) v = -v; }
+      else { v = minimax(board, opp, 1); if (who === 1) v = -v; }
+      board[i] = 0;
       if (v > best) { best = v; moves = [i]; } else if (v === best) moves.push(i);
     }
     return moves.length ? KidsGame.pick(moves) : null;
   }
 
   function drawLine(l) {
-    var C = [50, 150, 250], a = l[0], b = l[2];
-    var x1 = C[a % 3], y1 = C[Math.floor(a / 3)], x2 = C[b % 3], y2 = C[Math.floor(b / 3)];
+    var C = N === 4 ? [37.5, 112.5, 187.5, 262.5] : [50, 150, 250], a = l[0], b = l[l.length - 1];
+    var x1 = C[a % N], y1 = C[Math.floor(a / N)], x2 = C[b % N], y2 = C[Math.floor(b / N)];
     // alarga un poco la línea hacia afuera de las casillas
     var dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy), ex = dx / len * 22, ey = dy / len * 22;
     lineSvg.querySelectorAll('line').forEach(function (ln) {
@@ -286,11 +351,12 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     over = true; busy = true;
     turnEl.innerHTML = '';
     if (w === 0) {
-      if (nivel === 3 && !twoPlayers) {
-        // Contra el robot perfecto, empatar es ganar
+      if (nivel >= 3 && !twoPlayers) {
+        // Contra el robot perfecto/experto, empatar es ganar
         KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells, 4);
         setTimeout(function () {
-          KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: '¡Le empataste al robot perfecto! ¡Eso es ganar!', stars: 3, onAgain: function () { newRound(true); } });
+          KidsGame.levelDone(nivel);
+          KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: nivel === 4 ? '¡Le empataste al robot experto! ¡Eso es ganar!' : '¡Le empataste al robot perfecto! ¡Eso es ganar!', stars: 3, onAgain: function () { newRound(true); } });
         }, 900);
         return;
       }
@@ -308,8 +374,9 @@ var game = KidsGame.init({ title: 'Tres en raya' });
       KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
       burst(w.line.map(function (i) { return cells[i]; }));
       setTimeout(function () {
+        if (!twoPlayers) KidsGame.levelDone(nivel);
         KidsGame.celebrate({
-          msg: twoPlayers ? '¡Ganó ' + pieceWon + '!' : '¡Ganaste!', sub: pieceWon + ' hizo tres en raya',
+          msg: twoPlayers ? '¡Ganó ' + pieceWon + '!' : '¡Ganaste!', sub: pieceWon + ' hizo ' + (N === 4 ? 'cuatro' : 'tres') + ' en raya',
           onAgain: function () { newRound(w.who !== 1); }
         });
       }, 1100);
@@ -328,12 +395,17 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   });
   function showPicker() {
     over = true; busy = true; pickEl.style.display = 'none';
-    KidsGame.levelPicker({ key: 'gato', onPick: function (n) {
+    KidsGame.levelPicker({ key: 'gato', labels: LABELS, onPick: function (n) {
       nivel = n;
       var nb = KidsGame.levelBadge(nivel); foot.replaceChild(nb, badgeEl); badgeEl = nb;
+      buildBoard(n === 4 ? 4 : 3); layout();
+      if (n === 4) { KidsGame.toast('Las fichas caen: ¡4 en raya! 🪂', 2200); }
       p1 = p2 = null; showPick(1);
     } });
   }
+  // Expuesto para pruebas
+  window.__gato = { state: function () { return { board: board ? board.slice() : null, n: N, turn: turn, over: over, busy: busy, nivel: nivel, twoPlayers: twoPlayers, score: score.slice(), gravity: GRAVITY }; },
+    best: function () { return bestMove(1); }, legal: function () { return legalMoves(board); } };
   foot.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
 
   window.addEventListener('resize', order);

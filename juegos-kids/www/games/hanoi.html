@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Torre</title>
+<style>
+  .game {
+    display: flex; flex-direction: column; align-items: center; padding: 10px 12px; gap: 10px;
+    background:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 100% 45% at 50% 115%, rgba(80,20,60,.45), rgba(0,0,0,0) 60%),
+      linear-gradient(180deg, #ffd1e8 0%, #d9a6ff 50%, #8a5cf6 100%);
+  }
+  /* estrellitas de fondo */
+  .game::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .6;
+    background:
+      radial-gradient(circle at 8% 25%, rgba(255,255,255,.9) 0 3px, rgba(255,255,255,0) 4px),
+      radial-gradient(circle at 20% 60%, rgba(255,255,255,.8) 0 2px, rgba(255,255,255,0) 3px),
+      radial-gradient(circle at 90% 20%, rgba(255,255,255,.9) 0 3px, rgba(255,255,255,0) 4px),
+      radial-gradient(circle at 80% 55%, rgba(255,255,255,.8) 0 2px, rgba(255,255,255,0) 3px),
+      radial-gradient(circle at 50% 12%, rgba(255,255,255,.8) 0 2px, rgba(255,255,255,0) 3px),
+      radial-gradient(circle at 35% 35%, rgba(255,255,255,.7) 0 2px, rgba(255,255,255,0) 3px),
+      radial-gradient(circle at 65% 40%, rgba(255,255,255,.7) 0 2px, rgba(255,255,255,0) 3px);
+  }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 14px; border-radius: 40px; max-width: 100%; flex-wrap: wrap; justify-content: center; }
+  .hud .btn.round { width: 64px; height: 64px; font-size: 28px; }
+  .hud .btn { font-size: 20px; min-height: 64px; padding: 6px 14px; white-space: nowrap; }
+  .hud .btn .n { display: inline-block; margin-left: 6px; min-width: 28px; padding: 2px 8px; border-radius: 14px; background: rgba(255,255,255,.85); color: #5232b3; font-size: 18px; text-shadow: none; }
+  .hud .btn.off { opacity: .45; filter: saturate(.3); pointer-events: none; }
+  .mv { display: flex; flex-direction: column; align-items: center; line-height: 1; min-width: 96px; }
+  .mv .big { font-size: 32px; font-weight: 900; color: #7f5af0; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); }
+  .mv .big small { font-size: 18px; color: #9a8fc4; }
+  .mv .lbl { font-size: 13px; color: #6b5aa0; font-weight: 800; white-space: nowrap; }
+
+  .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  .world { position: relative; width: var(--W); height: var(--H); }
+  .base { position: absolute; left: 0; right: 0; bottom: 0; height: var(--bh); border-radius: 18px;
+    background: linear-gradient(180deg, #d59a5a 0%, #a86a30 55%, #7a4a1c 100%);
+    box-shadow: 0 10px 0 #4e2d0c, 0 20px 30px rgba(40,10,0,.45), inset 0 4px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(0,0,0,.2); }
+  .base::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: repeating-linear-gradient(95deg, rgba(255,255,255,.08) 0 8px, rgba(0,0,0,.06) 8px 18px); }
+  .pole { position: absolute; bottom: calc(var(--bh) - 6px); width: 18px; margin-left: -9px; border-radius: 9px 9px 4px 4px;
+    background: linear-gradient(90deg, #7a4a1c 0%, #c98a4b 35%, #e0a86a 50%, #a86a30 100%);
+    box-shadow: 0 0 0 2px rgba(0,0,0,.08), 4px 0 10px rgba(0,0,0,.25); }
+  .pole::before { content: ""; position: absolute; left: -9px; right: -9px; top: -8px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #ffd9a8, #c98a4b 70%, #7a4a1c); box-shadow: 0 2px 4px rgba(0,0,0,.35); }
+  .zone { position: absolute; top: 0; bottom: 0; }
+  .zone.target::after { content: "⭐"; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); font-size: calc(var(--bh) * .75); line-height: 1; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); animation: bounce 1.6s ease-in-out infinite; }
+  .zone.over .glow { opacity: 1; }
+  .zone .glow { position: absolute; left: 10%; right: 10%; bottom: var(--bh); height: 60%; border-radius: 30px; opacity: 0; pointer-events: none; transition: opacity .2s;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%); }
+  .disc { position: absolute; left: 0; top: 0; width: var(--w); height: var(--h); z-index: 3; transition: transform .35s cubic-bezier(.3,1.2,.4,1); will-change: transform; }
+  .disc.drag { transition: none; z-index: 10; }
+  .disc.lifted { z-index: 9; }
+  .disc .body {
+    --c1: #ffd6e8; --c2: #f0569a; --c3: #b8306f;
+    position: relative; width: 100%; height: 100%; border-radius: calc(var(--h) / 2);
+    background: linear-gradient(180deg, var(--c1) 0%, var(--c2) 60%, var(--c2) 100%);
+    box-shadow: 0 6px 0 var(--c3), 0 10px 14px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.75), inset 0 -4px 0 rgba(0,0,0,.12);
+  }
+  .disc .body::before { content: ""; position: absolute; left: 6%; right: 6%; top: 8%; height: 36%; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); }
+  .disc .body::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 18px; margin-left: -9px; pointer-events: none; opacity: .18;
+    background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(0,0,0,0) 50%, rgba(0,0,0,.6)); border-radius: 4px; }
+  .disc.lifted .body { animation: hover 1s ease-in-out infinite; box-shadow: 0 6px 0 var(--c3), 0 22px 26px rgba(0,0,0,.4), 0 0 0 4px rgba(255,255,255,.75), inset 0 2px 0 rgba(255,255,255,.75); }
+  .disc.drag .body { box-shadow: 0 6px 0 var(--c3), 0 26px 30px rgba(0,0,0,.45), 0 0 0 4px rgba(255,255,255,.75), inset 0 2px 0 rgba(255,255,255,.75); transform: scale(1.05); }
+  @keyframes hover { 0%,100% { transform: translateY(0) scale(1.04); } 50% { transform: translateY(-6px) scale(1.04); } }
+  .disc.bad .body { animation: shake .4s; }
+  .disc.win .body { animation: winbounce .6s ease-out backwards; }
+  @keyframes winbounce { 0% { transform: scale(1); } 40% { transform: scale(1.12, .88); } 70% { transform: scale(.95, 1.08) translateY(-6px); } 100% { transform: scale(1); } }
+  .d1 .body { --c1: #ffd6e8; --c2: #f0569a; --c3: #b8306f; }
+  .d2 .body { --c1: #ffe9cc; --c2: #ff8a1a; --c3: #b8500a; }
+  .d3 .body { --c1: #fff6b0; --c2: #ffc800; --c3: #c47f00; }
+  .d4 .body { --c1: #dbffe6; --c2: #24b36c; --c3: #14784a; }
+  .d5 .body { --c1: #d4f0ff; --c2: #2f95e8; --c3: #1a63a8; }
+  .d6 .body { --c1: #dcccff; --c2: #8a5cf6; --c3: #5232b3; }
+  .hand { position: absolute; left: 0; top: 0; z-index: 20; font-size: 54px; pointer-events: none; transition: transform .5s ease-in-out, opacity .3s; opacity: 0; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); }
+  .hand.show { opacity: 1; }
+
+  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
+           box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
+  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  @media (max-width: 800px) { .hud { gap: 6px; padding: 6px 8px; } .hud .btn { font-size: 17px; padding: 6px 10px; } .mv { min-width: 80px; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Torre' });
+(function () {
+  var CFG = { 1: { n: 3, hints: 5 }, 2: { n: 4, hints: 3 }, 3: { n: 5, hints: 0 }, 4: { n: 6, hints: 0 } };
+  var LABELS = { 1: '3 discos', 2: '4 discos', 3: '5 discos', 4: '6 discos · meta al centro' };
+
+  var nivel = 0, cfg = null, running = false, lock = false;
+  var n = 3, pegs = [[], [], []], target = 2, moves = 0, opt = 0, hintsLeft = 0, hintsUsed = 0;
+  var hud, mvEl, hintBtn, targetBtn, stage, world, zones = [], discEls = {}, hand;
+  var geo = { W: 0, H: 0, bh: 0, h: 0, zone: 0 };
+
+  function build() {
+    game.innerHTML = '';
+    hud = document.createElement('div'); hud.className = 'hud panel';
+    hud.appendChild(KidsGame.levelBadge(nivel));
+    mvEl = document.createElement('div'); mvEl.className = 'mv'; hud.appendChild(mvEl);
+    if (cfg.hints > 0) {
+      hintBtn = document.createElement('button'); hintBtn.className = 'btn purple'; hintBtn.innerHTML = '👀 Enséñame<span class="n">' + hintsLeft + '</span>';
+      hintBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); showHint(); });
+      hud.appendChild(hintBtn);
+    } else hintBtn = null;
+    if (nivel === 4) {
+      targetBtn = document.createElement('button'); targetBtn.className = 'btn green';
+      targetBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); target = target === 2 ? 1 : 2; KidsGame.say(target === 1 ? 'Ahora la meta es la torre del centro' : 'Ahora la meta es la torre de la derecha'); reset(); });
+      hud.appendChild(targetBtn);
+    } else targetBtn = null;
+    var rb = document.createElement('button'); rb.className = 'btn round blue'; rb.textContent = '🔄'; rb.setAttribute('aria-label', 'Reiniciar');
+    rb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); reset(); });
+    hud.appendChild(rb);
+    var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); explain(); });
+    hud.appendChild(sp);
+    var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
+    lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+    hud.appendChild(lb);
+    game.appendChild(hud);
+
+    stage = document.createElement('div'); stage.className = 'stage';
+    world = document.createElement('div'); world.className = 'world';
+    stage.appendChild(world); game.appendChild(stage);
+    stage.addEventListener('pointerdown', onDown);
+    stage.addEventListener('pointermove', onMove);
+    stage.addEventListener('pointerup', onUp);
+    stage.addEventListener('pointercancel', onUp);
+  }
+  function explain() {
+    KidsGame.say('Pasa toda la torre a la torre con la estrella. Mueve un disco a la vez y nunca pongas un disco grande sobre uno pequeño.');
+  }
+  function showPicker() {
+    running = false; lock = true;
+    if (world) world.innerHTML = '';
+    KidsGame.levelPicker({ key: 'hanoi', labels: LABELS, onPick: function (lv) { start(lv); } });
+  }
+  function start(lv) {
+    nivel = lv; cfg = CFG[lv]; n = cfg.n; target = 2; running = true;
+    hintsLeft = cfg.hints; hintsUsed = 0;
+    build(); reset();
+    setTimeout(explain, 500);
+  }
+  function reset() {
+    moves = 0; opt = Math.pow(2, n) - 1; lock = false; lifted = null; dragging = false;
+    pegs = [[], [], []];
+    for (var d = n; d >= 1; d--) pegs[0].push(d);
+    renderWorld(); layout(); updateHud();
+  }
+  function updateHud() {
+    mvEl.innerHTML = '<span class="big">' + moves + ' <small>/ ' + opt + '</small></span><span class="lbl">movimientos</span>';
+    if (hintBtn) { hintBtn.querySelector('.n').textContent = hintsLeft; hintBtn.classList.toggle('off', hintsLeft <= 0); }
+    if (targetBtn) targetBtn.textContent = target === 1 ? '🎯 centro' : '🎯 derecha';
+  }
+  function renderWorld() {
+    world.innerHTML = ''; zones = []; discEls = {};
+    var base = document.createElement('div'); base.className = 'base'; world.appendChild(base);
+    for (var p = 0; p < 3; p++) {
+      var z = document.createElement('div'); z.className = 'zone' + (p === target ? ' target' : '');
+      z.innerHTML = '<div class="glow"></div>'; world.appendChild(z); zones.push(z);
+      var pole = document.createElement('div'); pole.className = 'pole'; world.appendChild(pole); z.pole = pole;
+    }
+    for (var d = 1; d <= n; d++) {
+      var el = document.createElement('div'); el.className = 'disc d' + d; el.innerHTML = '<div class="body"></div>';
+      world.appendChild(el); discEls[d] = el;
+    }
+    hand = document.createElement('div'); hand.className = 'hand emoji'; hand.textContent = '👆'; world.appendChild(hand);
+  }
+  function layout() {
+    if (!world || !stage) return;
+    var W = Math.min(stage.clientWidth - 8, 980), H = stage.clientHeight - 10;
+    var bh = Math.max(26, Math.min(44, H * 0.08));
+    var h = Math.floor(Math.min(62, (H - bh - 70) / (n + 1)));
+    H = Math.min(H, bh + h * (n + 1) + 110);
+    geo = { W: W, H: H, bh: bh, h: h, zone: W / 3 };
+    world.style.setProperty('--W', W + 'px'); world.style.setProperty('--H', H + 'px'); world.style.setProperty('--bh', bh + 'px');
+    var poleH = h * (n + 1) + 10;
+    zones.forEach(function (z, p) {
+      z.style.left = (p * geo.zone) + 'px'; z.style.width = geo.zone + 'px';
+      z.pole.style.left = (p * geo.zone + geo.zone / 2) + 'px'; z.pole.style.height = poleH + 'px';
+    });
+    var maxW = geo.zone - 14, minW = Math.max(64, maxW * 0.32);
+    for (var d = 1; d <= n; d++) {
+      var w = n === 1 ? maxW : minW + (maxW - minW) * (d - 1) / (n - 1);
+      discEls[d].style.setProperty('--w', w + 'px'); discEls[d].style.setProperty('--h', h + 'px'); discEls[d].w = w;
+    }
+    placeAll(true);
+  }
+  function discPos(d, p, i) {
+    var w = discEls[d].w;
+    return { x: p * geo.zone + geo.zone / 2 - w / 2, y: geo.H - geo.bh - (i + 1) * geo.h + 2 };
+  }
+  function setXY(el, x, y, instant) {
+    if (instant) el.style.transition = 'none';
+    el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    if (instant) { void el.offsetWidth; el.style.transition = ''; }
+  }
+  function placeAll(instant) {
+    for (var p = 0; p < 3; p++) for (var i = 0; i < pegs[p].length; i++) {
+      var d = pegs[p][i], pos = discPos(d, p, i);
+      if (lifted && lifted.d === d) continue;
+      setXY(discEls[d], pos.x, pos.y, instant);
+    }
+    if (lifted && !dragging) liftOver(lifted.d, lifted.p);
+  }
+  function liftOver(d, p) {
+    var w = discEls[d].w, x = p * geo.zone + geo.zone / 2 - w / 2, y = geo.H - geo.bh - (n + 2) * geo.h - 30;
+    setXY(discEls[d], x, Math.max(4, y), false);
+  }
+
+  // ---------- Interacción ----------
+  var lifted = null, dragging = false, startX = 0, startY = 0, offX = 0, offY = 0, pid = null;
+  function pegAt(x) { var r = world.getBoundingClientRect(); return Math.max(0, Math.min(2, Math.floor((x - r.left) / geo.zone))); }
+  function onDown(ev) {
+    if (lock || !running) return;
+    ev.preventDefault();
+    var p = pegAt(ev.clientX);
+    if (lifted) {
+      // ya hay un disco levantado (modo toque): soltar en la torre tocada
+      if (p === lifted.p) { dragging = true; pid = ev.pointerId; startX = ev.clientX; startY = ev.clientY; var r0 = world.getBoundingClientRect(); var pos0 = discPos(lifted.d, lifted.p, pegs[lifted.p].length); offX = ev.clientX - r0.left - pos0.x - discEls[lifted.d].w / 2; offY = 0; discEls[lifted.d].classList.add('drag'); discEls[lifted.d].classList.remove('lifted'); try { stage.setPointerCapture(ev.pointerId); } catch (e) {} moveTo(ev); return; }
+      drop(p); return;
+    }
+    if (!pegs[p].length) { KidsGame.sound.tap(); return; }
+    var d = pegs[p][pegs[p].length - 1];
+    lifted = { d: d, p: p }; dragging = true; pid = ev.pointerId;
+    startX = ev.clientX; startY = ev.clientY;
+    var r = world.getBoundingClientRect(), pos = discPos(d, p, pegs[p].length - 1);
+    offX = ev.clientX - r.left - pos.x - discEls[d].w / 2; offY = ev.clientY - r.top - pos.y;
+    discEls[d].classList.add('drag');
+    try { stage.setPointerCapture(ev.pointerId); } catch (e) {}
+    KidsGame.sound.tap();
+    moveTo(ev);
+  }
+  function moveTo(ev) {
+    var r = world.getBoundingClientRect(), d = lifted.d, w = discEls[d].w;
+    var x = ev.clientX - r.left - w / 2 - offX, y = ev.clientY - r.top - geo.h / 2 - 20;
+    x = Math.max(-w * 0.3, Math.min(geo.W - w * 0.7, x)); y = Math.max(-10, Math.min(geo.H - geo.h, y));
+    discEls[d].style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    var p = pegAt(ev.clientX);
+    zones.forEach(function (z, i) { z.classList.toggle('over', i === p); });
+  }
+  function onMove(ev) {
+    if (!dragging || !lifted || ev.pointerId !== pid) return;
+    ev.preventDefault(); moveTo(ev);
+  }
+  function onUp(ev) {
+    if (!dragging || !lifted || ev.pointerId !== pid) return;
+    ev.preventDefault();
+    dragging = false; pid = null;
+    zones.forEach(function (z) { z.classList.remove('over'); });
+    var el = discEls[lifted.d]; el.classList.remove('drag');
+    var p = pegAt(ev.clientX), small = Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) < 12;
+    if (small && p === lifted.p) {
+      // toque: dejar el disco levantado esperando la segunda torre
+      el.classList.add('lifted'); liftOver(lifted.d, lifted.p);
+      return;
+    }
+    drop(p);
+  }
+  function drop(p) {
+    var d = lifted.d, from = lifted.p, el = discEls[d];
+    el.classList.remove('lifted', 'drag');
+    var top = pegs[p].length ? pegs[p][pegs[p].length - 1] : 99;
+    if (p === from) { lifted = null; placeAll(false); return; }
+    if (top < d) {
+      // rechazado: regresa con sacudida
+      KidsGame.sound.wrong(); KidsGame.vibrate(40);
+      lifted = null; placeAll(false);
+      el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad');
+      var topEl = discEls[top]; topEl.classList.remove('bad'); void topEl.offsetWidth; topEl.classList.add('bad');
+      KidsGame.say('No. El grande no va sobre el pequeño.');
+      return;
+    }
+    pegs[from].pop(); pegs[p].push(d); lifted = null; moves++;
+    KidsGame.sound.pop(); updateHud(); placeAll(false);
+    var pos = discPos(d, p, pegs[p].length - 1);
+    setTimeout(function () { if (pegs[p].length === n && p === target) win(); }, 100);
+    sparkleAt(pos.x + el.w / 2, pos.y + geo.h / 2, 6);
+  }
+
+  // ---------- Pista: siguiente movimiento óptimo ----------
+  function pegOf(d) { for (var p = 0; p < 3; p++) if (pegs[p].indexOf(d) >= 0) return p; return -1; }
+  function nextMove(k, tgt) {
+    if (k === 0) return null;
+    var p = pegOf(k);
+    if (p === tgt) return nextMove(k - 1, tgt);
+    var other = 3 - p - tgt;
+    var m = nextMove(k - 1, other);
+    return m || { from: p, to: tgt, d: k };
+  }
+  function showHint() {
+    if (lock || !running || hintsLeft <= 0 || lifted) return;
+    var m = nextMove(n, target);
+    if (!m) return;
+    hintsLeft--; hintsUsed++; updateHud();
+    lock = true; KidsGame.sound.tap();
+    var el = discEls[m.d], r = world.getBoundingClientRect();
+    var from = discPos(m.d, m.from, pegs[m.from].length - 1);
+    hand.style.transition = 'none'; hand.style.transform = 'translate(' + (from.x + el.w / 2 - 20) + 'px,' + (from.y - 10) + 'px)';
+    void hand.offsetWidth; hand.style.transition = ''; hand.classList.add('show');
+    KidsGame.say('Mira: este disco va aquí.');
+    setTimeout(function () {
+      lifted = { d: m.d, p: m.from }; liftOver(m.d, m.from);
+      hand.style.transform = 'translate(' + (from.x + el.w / 2 - 20) + 'px,' + (Math.max(4, geo.H - geo.bh - (n + 2) * geo.h - 30) - 10) + 'px)';
+    }, 500);
+    setTimeout(function () {
+      var to = discPos(m.d, m.to, pegs[m.to].length);
+      var yTop = Math.max(4, geo.H - geo.bh - (n + 2) * geo.h - 30);
+      setXY(el, to.x, yTop, false);
+      hand.style.transform = 'translate(' + (to.x + el.w / 2 - 20) + 'px,' + (yTop - 10) + 'px)';
+    }, 1100);
+    setTimeout(function () {
+      hand.classList.remove('show'); lock = false;
+      drop(m.to);
+    }, 1800);
+  }
+
+  function sparkleAt(x, y, k) {
+    var g = game.getBoundingClientRect(), r = world.getBoundingClientRect();
+    sparkle(x + r.left - g.left, y + r.top - g.top, k);
+  }
+  function sparkle(x, y, k) {
+    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
+    for (var i = 0; i < (k || 18); i++) {
+      var s = document.createElement('div');
+      s.className = 'spark' + (i % 3 === 0 ? ' star' : '');
+      var a = Math.random() * Math.PI * 2, dd = 50 + Math.random() * 100;
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      s.style.setProperty('--dx', Math.cos(a) * dd + 'px'); s.style.setProperty('--dy', (Math.sin(a) * dd - 30) + 'px');
+      s.style.background = KidsGame.pick(colors);
+      s.style.animationDuration = (.6 + Math.random() * .5) + 's';
+      game.appendChild(s);
+      (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
+    }
+  }
+  function win() {
+    if (!running) return;
+    lock = true; running = false;
+    KidsGame.sound.ok(); KidsGame.addStar(1); KidsGame.vibrate(50);
+    for (var d = 1; d <= n; d++) { var el = discEls[d]; el.classList.add('win'); el.style.animationDelay = ((n - d) * 90) + 'ms'; }
+    var cx = target * geo.zone + geo.zone / 2;
+    sparkleAt(cx, geo.H - geo.bh - n * geo.h, 30);
+    var stars = moves <= opt + 2 ? 3 : (moves <= opt * 1.5 + 2 ? 2 : 1);
+    if (hintsUsed > 2 && stars === 3) stars = 2;
+    var lv = nivel;
+    setTimeout(function () {
+      KidsGame.levelDone(lv);
+      KidsGame.celebrate({
+        sub: moves + ' movimientos (mínimo ' + opt + ')', stars: stars,
+        onNext: function () { start(Math.min(4, lv + 1)); },
+        onAgain: function () { start(lv); }
+      });
+    }, 1300);
+  }
+
+  // ganchos para pruebas automáticas
+  window.__hanoi = { get: function () { return { pegs: pegs, n: n, target: target, moves: moves, opt: opt, nivel: nivel, hintsLeft: hintsLeft, lifted: lifted, geo: geo }; }, nextMove: function () { return nextMove(n, target); }, zones: function () { return zones; }, discs: function () { return discEls; } };
+
+  window.addEventListener('resize', layout);
+  showPicker();
+})();
+</script>
+</body>
+</html>

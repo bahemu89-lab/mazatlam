@@ -74,6 +74,50 @@
   .numcard:active { transform: scale(.94) translateY(5px); box-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(20,40,90,.25), inset 0 3px 0 rgba(255,255,255,.6); animation: none; }
   .numcard.ok { --a: #c6ffd9; --b: #2fd27a; --d: #148a4d; animation: bounce .6s; box-shadow: 0 9px 0 var(--d), 0 16px 22px rgba(20,120,60,.3), 0 0 0 6px rgba(120,255,170,.55), 0 0 30px rgba(120,255,170,.8), inset 0 3px 0 rgba(255,255,255,.7); }
   .numcard.bad { animation: shake .35s; }
+  /* ---- Modos nuevos (niveles 2-4) ---- */
+  .scene { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: min(3vw, 22px); padding: 10px; align-content: center; }
+  .die { width: min(22vw, 24vh, 150px); height: min(22vw, 24vh, 150px); filter: drop-shadow(0 8px 6px rgba(60,30,0,.3)); animation: pop .4s ease-out backwards; }
+  .tframe { width: min(42vw, 360px); max-width: 100%; filter: drop-shadow(0 8px 6px rgba(60,30,0,.3)); animation: pop .4s ease-out backwards; }
+  .cluster { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 2px; padding: 8px; border-radius: 20px; width: var(--cw); min-height: var(--cw);
+    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.55)); border: 3px solid #fff; box-shadow: 0 5px 0 #c9b48a, 0 10px 16px rgba(60,30,0,.2), inset 0 2px 0 #fff; animation: pop .4s ease-out backwards; }
+  .cluster .emoji { font-size: var(--ce); filter: drop-shadow(0 3px 2px rgba(60,30,0,.3)); }
+  .cluster .lbl { width: 100%; text-align: center; font-size: 18px; color: #7a4b00; font-weight: 900; }
+  .nline { position: absolute; left: 4%; right: 4%; top: 50%; height: 120px; margin-top: -60px; display: flex; align-items: stretch; }
+  .nline::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 10px; margin-top: -5px; border-radius: 6px; background: linear-gradient(180deg, #ffe9a8, #d9a520 60%, #a86f00); box-shadow: 0 3px 4px rgba(0,0,0,.25); }
+  .nline::after { content: ""; position: absolute; right: -14px; top: 50%; margin-top: -14px; border: 14px solid transparent; border-left: 18px solid #d9a520; border-right: 0; }
+  .tick { position: relative; flex: 1 1 0; min-width: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .tick::before { content: ""; width: 6px; height: 34px; border-radius: 3px; background: #a86f00; box-shadow: 0 2px 2px rgba(0,0,0,.2); }
+  .tick.five::before { height: 48px; background: #7a4b00; }
+  .tick .tl { position: absolute; top: calc(50% + 28px); font-size: min(5vw, 30px); font-weight: 900; color: #1f2f6b; text-shadow: 0 2px 0 #fff; }
+  .tick.ok::before { background: #2fd27a; box-shadow: 0 0 0 4px #fff, 0 0 18px rgba(47,210,122,.9); }
+  .tick.ok::after { content: attr(data-n); position: absolute; top: calc(50% - 86px); font-size: 40px; font-weight: 900; color: #fff; padding: 2px 18px; border-radius: 20px; background: linear-gradient(180deg, #8ef0b0, #24b36c); box-shadow: 0 5px 0 #14784a, 0 10px 16px rgba(0,0,0,.25); text-shadow: 0 2px 0 #14784a; animation: pop .35s ease-out; }
+  .tick.bad::before { background: #ff4d4d; animation: shake .35s; }
+  .seq { display: flex; align-items: center; justify-content: center; gap: min(2vw, 16px); flex-wrap: wrap; }
+  .stile {
+    position: relative; width: var(--st); height: var(--st); border-radius: 22%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--st) * .5); font-weight: 900; color: #fff;
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, #7dd0ff, #2f95e8); border: 3px solid rgba(255,255,255,.85);
+    box-shadow: 0 7px 0 #1a63a8, 0 14px 20px rgba(20,40,90,.3), inset 0 2px 0 rgba(255,255,255,.7); text-shadow: 0 3px 0 #1a63a8, 0 6px 8px rgba(0,0,0,.3); animation: pop .4s ease-out backwards;
+  }
+  .stile.q { background: linear-gradient(180deg, #fff6d0, #ffd54a); border: 4px dashed #fff; box-shadow: 0 7px 0 #c47f00, 0 14px 20px rgba(20,40,90,.3), 0 0 0 5px rgba(255,255,255,.45); text-shadow: 0 3px 0 #c47f00, 0 6px 8px rgba(0,0,0,.3); animation: qpulse 1.3s ease-in-out infinite; }
+  .stile.done { background: linear-gradient(180deg, #c2ffd2, #2fc56d); box-shadow: 0 7px 0 #14784a, 0 14px 20px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 30px 6px rgba(255,233,138,.9); text-shadow: 0 3px 0 #14784a; animation: land .7s cubic-bezier(.3,1.6,.5,1); }
+  .stile.big { --st: min(30vw, 28vh, 190px); }
+  .stile.pink { background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, #ff9ccb, #f0569a); box-shadow: 0 7px 0 #b8306f, 0 14px 20px rgba(20,40,90,.3), inset 0 2px 0 rgba(255,255,255,.7); text-shadow: 0 3px 0 #b8306f, 0 6px 8px rgba(0,0,0,.3); }
+  .stile.purple { background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: 0 7px 0 #5232b3, 0 14px 20px rgba(20,40,90,.3), inset 0 2px 0 rgba(255,255,255,.7); text-shadow: 0 3px 0 #5232b3, 0 6px 8px rgba(0,0,0,.3); }
+  .stile.slot { background: rgba(255,255,255,.45); border: 4px dashed #c9b48a; box-shadow: inset 0 4px 10px rgba(60,30,0,.12); color: #c9b48a; text-shadow: none; animation: none; }
+  .stile.slot.hot { border-color: #ffb703; background: rgba(255,233,138,.7); transform: scale(1.08); }
+  .stile.slot > .numcard { width: 94%; height: 94%; font-size: calc(var(--st) * .5); animation: land .6s cubic-bezier(.3,1.6,.5,1); }
+  .arrow { font-size: min(8vw, 60px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #b8500a, 0 6px 10px rgba(0,0,0,.3); }
+  .seqlbl { width: 100%; text-align: center; font-size: min(5vw, 26px); font-weight: 900; color: #7a4b00; text-shadow: 0 1px 0 #fff; margin-top: 6px; }
+  @keyframes qpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes land { 0% { transform: scale(1.4); } 40% { transform: scale(.85, 1.15); } 70% { transform: scale(1.1, .92); } 100% { transform: scale(1); } }
+  .croc { display: flex; align-items: center; justify-content: center; }
+  .croc svg { width: 82%; height: 82%; filter: drop-shadow(0 4px 3px rgba(0,0,0,.3)); }
+  .cmid { width: min(24vw, 22vh, 150px); height: min(24vw, 22vh, 150px); display: flex; align-items: center; justify-content: center; font-size: min(14vw, 11vh, 80px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #b8500a, 0 6px 10px rgba(0,0,0,.3); }
+  .cmid svg { width: 100%; height: 100%; filter: drop-shadow(0 8px 6px rgba(0,0,0,.3)); animation: land .6s cubic-bezier(.3,1.6,.5,1); }
+  .numcard.drag { position: fixed; z-index: 50; pointer-events: none; animation: none; transform: scale(1.1); margin: 0; }
+  .numcard.ghost { opacity: .25; animation: none; }
+  .numcard.sm { width: min(20vw, 16vh, 110px); height: min(20vw, 16vh, 110px); font-size: min(11vw, 9vh, 64px); }
+  .cards.four .numcard { width: min(21vw, 18vh, 130px); height: min(21vw, 18vh, 130px); font-size: min(12vw, 10vh, 72px); }
   @media (max-width: 600px) { .hud { gap: 8px; font-size: 20px; } .hud .q { padding: 6px 12px; } .counter { width: 64px; height: 64px; font-size: 36px; } }
 </style>
 </head>
@@ -86,11 +130,20 @@
   var PAL = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
     ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
   var ROUNDS = 8;
-  var level = 1, round = 0, N = 0, lock = false, marked = 0, objs = [], targets = [], emoji = '';
+  var LABELS = { 1: 'cuenta 1 a 10', 2: 'hasta 20 · dados', 3: 'de 2 en 2 · recta', 4: 'ordena · antes/después' };
+  // Modos por nivel (se barajan cada partida)
+  var MODES = {
+    1: ['count','count','count','count','count','count','count','count'],
+    2: ['count','dice','frame','count','dice','frame','count','frame'],
+    3: ['groups','line','groups','line','groups','count','line','groups'],
+    4: ['order','before','missing','compare','order','after','missing','compare']
+  };
+  var level = 1, round = 0, N = 0, lock = false, marked = 0, objs = [], targets = [], emoji = '', mode = 'count', plan = [], cur = null;
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
   function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function range(a, b) { var r = []; for (var i = a; i <= b; i++) r.push(i); return r; }
   // Estela de chispas que sube desde un elemento (máx. 8)
   function sparks(node, n) {
     var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -115,52 +168,80 @@
   var box = el('div', 'box'), cards = el('div', 'cards');
   game.appendChild(hud); game.appendChild(box); game.appendChild(cards);
   onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
+  onTap(q, function () { KidsGame.sound.tap(); if (cur && cur.say) KidsGame.say(cur.say); });
 
-  function maxN() { return level === 1 ? 5 : level === 2 ? 10 : 15; }
-  function setBadge() { badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level)); }
+  function maxN() { return level === 1 ? 10 : level === 2 ? 20 : 30; }
+  function nOpts() { return level === 1 ? 3 : 4; }
+  function setBadge() { badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level)); rnd.textContent = (round + 1) + '/' + ROUNDS; }
 
   function pickLevel() {
-    lock = true; box.innerHTML = ''; cards.innerHTML = ''; objs = []; targets = [];
-    KidsGame.levelPicker({ onPick: function (n) { level = n; round = 0; startRound(); } });
+    lock = true; box.innerHTML = ''; cards.innerHTML = ''; objs = []; targets = []; cur = null;
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; round = 0; plan = KidsGame.shuffle(MODES[n]); startRound(); } });
   }
 
+  // ---- Fichas de respuesta (números) ----
+  function numCards(opts, onPick, small) {
+    var pal = KidsGame.shuffle(PAL);
+    cards.innerHTML = ''; cards.className = 'cards' + (opts.length >= 4 ? ' four' : '');
+    opts.forEach(function (n, i) {
+      var c = el('div', 'numcard' + (small ? ' sm' : '')); c.textContent = n; c.dataset.n = n; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
+      c.style.setProperty('--a', pal[i][0]); c.style.setProperty('--b', pal[i][1]); c.style.setProperty('--d', pal[i][2]);
+      onTap(c, function () { onPick(c, n); });
+      cards.appendChild(c);
+    });
+  }
+  function optionsAround(ans, lo, hi, k) {
+    var pool = [];
+    for (var v = Math.max(lo, ans - 3); v <= Math.min(hi, ans + 3); v++) if (v !== ans) pool.push(v);
+    while (pool.length < k - 1) { var r = lo + KidsGame.rand(hi - lo + 1); if (r !== ans && pool.indexOf(r) < 0) pool.push(r); }
+    return KidsGame.shuffle([ans].concat(KidsGame.shuffle(pool).slice(0, k - 1)));
+  }
+  // Acierto genérico: ficha verde, chispas, estrella y siguiente ronda
+  function win(c, sayTxt) {
+    lock = true;
+    if (c) { c.classList.add('ok'); sparks(c, 10); }
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
+    if (sayTxt) setTimeout(function () { KidsGame.say(sayTxt); }, 250);
+    round++;
+    setTimeout(function () { if (round >= ROUNDS) finish(); else startRound(); }, 1300);
+  }
+  function fail(c) { KidsGame.sound.wrong(); KidsGame.vibrate(20); if (c) replay(c, 'bad'); }
+
   function startRound() {
-    lock = false; marked = 0; objs = []; targets = [];
-    N = 1 + KidsGame.rand(maxN());
+    lock = false; marked = 0; objs = []; targets = []; cur = null;
+    box.innerHTML = ''; cards.innerHTML = ''; cards.className = 'cards'; counter.textContent = '?';
+    mode = plan[round % plan.length];
+    setBadge();
+    ({ count: countRound, dice: diceRound, frame: frameRound, groups: groupsRound, line: lineRound,
+       order: orderRound, before: beforeRound, after: beforeRound, missing: missingRound, compare: compareRound })[mode]();
+  }
+
+  /* ---------- Contar objetos (nivel 1-3) ---------- */
+  function countRound() {
+    N = 1 + KidsGame.rand(level === 1 ? 10 : level === 2 ? 20 : 15);
+    if (level === 2 && N < 6) N += 5;
     emoji = KidsGame.pick(EMOJIS);
     // Nivel 3: objetos distractores de otro emoji mezclados (solo se cuenta el pedido)
-    var D = level === 3 ? 2 + KidsGame.rand(4) : 0;
+    var D = level >= 3 ? 3 + KidsGame.rand(5) : 0;
     var other = D ? KidsGame.pick(EMOJIS.filter(function (e) { return e !== emoji; })) : '';
     var total = N + D;
-    var perm = KidsGame.shuffle(Array.apply(null, Array(total)).map(function (_, i) { return i; }));
-    box.innerHTML = ''; counter.textContent = '?';
+    var perm = KidsGame.shuffle(range(0, total - 1));
     q.innerHTML = '¿Cuántos <span class="emoji">' + emoji + '</span> hay?';
-    setBadge(); rnd.textContent = (round + 1) + '/' + ROUNDS;
+    cur = { say: level >= 3 ? '¿Cuántos hay de estos? No cuentes los otros' : '¿Cuántos hay?' };
     for (var i = 0; i < total; i++) {
       var isT = i < N;
       var o = el('div', 'obj pop');
       o.innerHTML = '<span class="emoji">' + (isT ? emoji : other) + '</span><span class="chk"></span>';
-      o.style.animationDelay = (i * 70) + 'ms';
+      o.style.animationDelay = (i * 60) + 'ms';
       o.querySelector('.emoji').style.animationDelay = (-Math.random() * 3) + 's';
       o._k = perm[i]; o._jx = Math.random() * 2 - 1; o._jy = Math.random() * 2 - 1; o._target = isT;
       (function (o) { onTap(o, function () { markObj(o); }); })(o);
       box.appendChild(o); objs.push(o); if (isT) targets.push(o);
     }
-    var lo = Math.max(1, N - 2), hi = Math.min(maxN(), N + 2), pool = [];
-    for (var k = lo; k <= hi; k++) if (k !== N) pool.push(k);
-    var opts = KidsGame.shuffle([N].concat(KidsGame.shuffle(pool).slice(0, 2)));
-    var pal = KidsGame.shuffle(PAL);
-    cards.innerHTML = '';
-    opts.forEach(function (n, i) {
-      var c = el('div', 'numcard'); c.textContent = n; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
-      c.style.setProperty('--a', pal[i][0]); c.style.setProperty('--b', pal[i][1]); c.style.setProperty('--d', pal[i][2]);
-      onTap(c, function () { choose(c, n); });
-      cards.appendChild(c);
-    });
+    numCards(optionsAround(N, 1, maxN(), nOpts()), choose);
     layout();
-    KidsGame.say(level === 3 ? '¿Cuántos hay de estos?' : '¿Cuántos hay?');
+    KidsGame.say(cur.say);
   }
-
   function layout() {
     var W = box.clientWidth, H = box.clientHeight, n = objs.length;
     if (!W || !H || !n) return;
@@ -182,7 +263,6 @@
       o.style.fontSize = Math.round(size * 0.78) + 'px';
     });
   }
-
   // Ayuda para contar: tocar un objeto lo marca y muestra la cuenta
   function markObj(o) {
     if (lock || o.classList.contains('marked')) return;
@@ -193,17 +273,11 @@
     counter.textContent = marked; replay(counter, 'pop');
     KidsGame.sound.tap(); KidsGame.say(String(marked));
   }
-
   function choose(c, n) {
     if (lock) return;
-    if (n === N) {
-      lock = true; c.classList.add('ok'); sparks(c, 10);
-      countAll();
-    } else {
-      KidsGame.sound.wrong(); replay(c, 'bad');
-    }
+    if (n === N) { lock = true; c.classList.add('ok'); sparks(c, 10); countAll(); }
+    else fail(c);
   }
-
   function countAll() {
     var i = 0;
     counter.textContent = '';
@@ -213,32 +287,282 @@
         o.classList.remove('marked'); replay(o, 'jump'); sparks(o, 6);
         counter.textContent = i; replay(counter, 'pop');
         KidsGame.sound.tap(); KidsGame.say(String(i));
-        setTimeout(step, 450);
+        setTimeout(step, N > 12 ? 280 : 450);
       } else {
         setTimeout(function () {
           KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
           targets.forEach(function (o) { replay(o, 'bounce'); });
           round++;
-          setTimeout(function () {
-            if (round >= ROUNDS) finish(); else startRound();
-          }, 900);
+          setTimeout(function () { if (round >= ROUNDS) finish(); else startRound(); }, 900);
         }, 350);
       }
     }
     step();
   }
 
+  /* ---------- Dados (subitizar, nivel 2) ---------- */
+  var DOTS = { 1: [[50,50]], 2: [[28,28],[72,72]], 3: [[28,28],[50,50],[72,72]], 4: [[28,28],[72,28],[28,72],[72,72]], 5: [[28,28],[72,28],[50,50],[28,72],[72,72]], 6: [[28,26],[72,26],[28,50],[72,50],[28,74],[72,74]] };
+  function dieSVG(n, pal) {
+    var s = '<svg class="die" viewBox="0 0 100 100"><defs><linearGradient id="dg' + n + pal[2].slice(1) + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + pal[0] + '"/><stop offset=".55" stop-color="' + pal[1] + '"/><stop offset="1" stop-color="' + pal[2] + '"/></linearGradient></defs>' +
+      '<rect x="4" y="10" width="92" height="88" rx="18" fill="' + pal[2] + '" opacity=".7"/><rect x="4" y="4" width="92" height="88" rx="18" fill="url(#dg' + n + pal[2].slice(1) + ')" stroke="#fff" stroke-width="3"/>' +
+      '<rect x="12" y="9" width="76" height="30" rx="14" fill="#fff" opacity=".35"/>';
+    DOTS[n].forEach(function (d) { s += '<circle cx="' + d[0] + '" cy="' + (d[1] - 2) + '" r="8.5" fill="#1f2f6b"/><circle cx="' + (d[0] - 2.5) + '" cy="' + (d[1] - 5) + '" r="2.6" fill="#fff" opacity=".7"/>'; });
+    return s + '</svg>';
+  }
+  function diceRound() {
+    var two = Math.random() < 0.7, a = 1 + KidsGame.rand(6), b = two ? 1 + KidsGame.rand(6) : 0;
+    N = a + b;
+    q.innerHTML = '¿Cuántos puntos? <span class="emoji">🎲</span>';
+    cur = { say: '¿Cuántos puntos hay en total? Míralos rápido' };
+    var sc = el('div', 'scene');
+    var pal = KidsGame.shuffle(PAL);
+    sc.innerHTML = dieSVG(a, pal[0]) + (b ? dieSVG(b, pal[1]) : '');
+    box.appendChild(sc);
+    numCards(optionsAround(N, 1, 12, 4), function (c, n) { if (lock) return; if (n === N) { counter.textContent = N; replay(counter, 'pop'); win(c, (b ? a + ' y ' + b + ' son ' : '') + N); } else fail(c); });
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Marcos de diez (nivel 2) ---------- */
+  function frameSVG(n, pal) {
+    var s = '<svg class="tframe" viewBox="0 0 250 104"><rect x="2" y="2" width="246" height="100" rx="12" fill="#fff" stroke="#c9b48a" stroke-width="3"/>';
+    for (var i = 0; i < 10; i++) {
+      var cx = 27 + (i % 5) * 49, cy = 27 + Math.floor(i / 5) * 50;
+      s += '<rect x="' + (cx - 24) + '" y="' + (cy - 24) + '" width="48" height="48" fill="none" stroke="#e0d2b0" stroke-width="2"/>';
+      if (i < n) s += '<circle cx="' + cx + '" cy="' + (cy + 1) + '" r="17" fill="' + pal[2] + '" opacity=".5"/><circle cx="' + cx + '" cy="' + (cy - 1) + '" r="17" fill="' + pal[1] + '"/><circle cx="' + (cx - 5) + '" cy="' + (cy - 7) + '" r="5" fill="#fff" opacity=".7"/>';
+    }
+    return s + '</svg>';
+  }
+  function frameRound() {
+    N = 1 + KidsGame.rand(20);
+    q.innerHTML = '¿Cuántos hay? <span class="emoji">🔟</span>';
+    cur = { say: N > 10 ? 'Un marco lleno son diez. ¿Cuántos hay en total?' : '¿Cuántos puntos hay en el marco de diez?' };
+    var sc = el('div', 'scene'); var pal = KidsGame.pick(PAL);
+    sc.innerHTML = frameSVG(Math.min(10, N), pal) + (N > 10 ? frameSVG(N - 10, pal) : '');
+    box.appendChild(sc);
+    numCards(optionsAround(N, 1, 20, 4), function (c, n) { if (lock) return; if (n === N) { counter.textContent = N; replay(counter, 'pop'); win(c, String(N)); } else fail(c); });
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Contar en grupos de 2, 5 y 10 (nivel 3) ---------- */
+  function groupsRound() {
+    var k = KidsGame.pick([2, 2, 5, 5, 10]);
+    var g = k === 2 ? 3 + KidsGame.rand(8) : k === 5 ? 2 + KidsGame.rand(5) : 2 + KidsGame.rand(2);
+    N = k * g; emoji = KidsGame.pick(EMOJIS);
+    q.innerHTML = 'Cuenta de ' + k + ' en ' + k + ' <span class="emoji">' + emoji + '</span>';
+    cur = { say: 'Cuenta de ' + k + ' en ' + k + '. ¿Cuántos hay en total?' };
+    var sc = el('div', 'scene');
+    var cw = k === 10 ? 'min(30vw, 26vh, 190px)' : k === 5 ? 'min(22vw, 22vh, 150px)' : 'min(17vw, 18vh, 110px)';
+    sc.style.setProperty('--cw', cw);
+    sc.style.setProperty('--ce', k === 10 ? 'min(5vw, 5vh, 36px)' : k === 5 ? 'min(6vw, 6vh, 44px)' : 'min(7vw, 7vh, 48px)');
+    var seq = [];
+    for (var i = 0; i < g; i++) {
+      var c = el('div', 'cluster'); c.style.animationDelay = (i * 90) + 'ms';
+      for (var j = 0; j < k; j++) c.innerHTML += '<span class="emoji">' + emoji + '</span>';
+      sc.appendChild(c); seq.push(k * (i + 1));
+    }
+    box.appendChild(sc);
+    // Ayuda: tocar un grupo dice la cuenta acumulada (2, 4, 6...)
+    Array.prototype.forEach.call(sc.children, function (c, i) {
+      onTap(c, function () { if (lock || c.querySelector('.lbl')) return; var l = el('span', 'lbl', String(seq[i])); c.appendChild(l); counter.textContent = seq[i]; replay(counter, 'pop'); KidsGame.sound.tap(); KidsGame.say(String(seq[i])); });
+    });
+    numCards(optionsAround(N, k, 30, 4).map(function (v) { return v; }), function (c, n) { if (lock) return; if (n === N) { counter.textContent = N; replay(counter, 'pop'); win(c, String(N)); } else fail(c); });
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Recta numérica (nivel 3) ---------- */
+  function lineRound() {
+    var base = KidsGame.pick(round < 3 ? [0, 10] : [10, 20]);
+    N = base + 1 + KidsGame.rand(9);
+    if (N % 5 === 0) N += 1;
+    q.innerHTML = '¿Dónde va el <b>' + N + '</b>? <span class="emoji">📍</span>';
+    counter.textContent = N;
+    cur = { say: '¿Dónde va el ' + N + ' en la recta? Toca su lugar' };
+    var ln = el('div', 'nline');
+    for (var v = base; v <= base + 10; v++) {
+      var t = el('div', 'tick' + (v % 5 === 0 ? ' five' : '')); t.dataset.n = v;
+      if (v % 5 === 0) t.innerHTML = '<span class="tl">' + v + '</span>';
+      (function (t, v) { onTap(t, function () {
+        if (lock) return;
+        if (v === N) { t.classList.add('ok'); sparks(t, 10); win(null, '¡' + N + '! Después del ' + (N - 1) + ' y antes del ' + (N + 1)); }
+        else { fail(t); KidsGame.say(String(v)); }
+      }); })(t, v);
+      ln.appendChild(t);
+    }
+    box.appendChild(ln);
+    cards.innerHTML = '';
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Experto: ordena de menor a mayor (arrastra) ---------- */
+  var drag = null, slots = [];
+  function orderRound() {
+    var lo = 1 + KidsGame.rand(20), nums = [];
+    while (nums.length < 4) { var v = lo + KidsGame.rand(11); if (v <= 30 && nums.indexOf(v) < 0) nums.push(v); }
+    cur = { nums: nums, sorted: nums.slice().sort(function (a, b) { return a - b; }), say: 'Ordena los números de menor a mayor. Arrastra cada ficha a su lugar' };
+    q.innerHTML = 'Ordena: menor ➡️ mayor';
+    var sc = el('div', 'scene'); var seq = el('div', 'seq'); slots = [];
+    seq.style.setProperty('--st', 'min(15vw, 18vh, 130px)');
+    seq.innerHTML = '<span class="arrow">🐣</span>';
+    for (var i = 0; i < 4; i++) { var s = el('div', 'stile slot', String(i + 1) + 'º'); s.dataset.i = i; seq.appendChild(s); slots.push(s); }
+    seq.innerHTML += '<span class="arrow">🐔</span><div class="seqlbl">pequeño ➡️ grande</div>';
+    slots = Array.prototype.slice.call(seq.querySelectorAll('.slot'));
+    sc.appendChild(seq); box.appendChild(sc);
+    numCards(KidsGame.shuffle(nums), function () {}, true);
+    Array.prototype.forEach.call(cards.children, function (c) {
+      c.addEventListener('pointerdown', function (ev) { ev.preventDefault(); startDrag(ev, c); });
+    });
+    KidsGame.say(cur.say);
+  }
+  function startDrag(ev, c) {
+    if (lock || drag) return;
+    if (c.parentNode !== cards) { // regresa la ficha a la bandeja
+      c.parentNode.classList.remove('filled'); cards.appendChild(c); KidsGame.sound.pop(); return;
+    }
+    var r = c.getBoundingClientRect();
+    var g = c.cloneNode(true); g.className = 'numcard sm drag'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g);
+    c.classList.add('ghost');
+    drag = { c: c, g: g, id: ev.pointerId, ox: ev.clientX - r.left, oy: ev.clientY - r.top, hot: null };
+    KidsGame.sound.tap();
+    document.addEventListener('pointermove', onMove); document.addEventListener('pointerup', onUp); document.addEventListener('pointercancel', onUp);
+  }
+  function slotAt(x, y) {
+    for (var i = 0; i < slots.length; i++) { var r = slots[i].getBoundingClientRect(); if (x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10) return slots[i]; }
+    return null;
+  }
+  function onMove(ev) {
+    if (!drag || ev.pointerId !== drag.id) return; ev.preventDefault();
+    drag.g.style.left = (ev.clientX - drag.ox) + 'px'; drag.g.style.top = (ev.clientY - drag.oy) + 'px';
+    var s = slotAt(ev.clientX, ev.clientY);
+    if (drag.hot && drag.hot !== s) drag.hot.classList.remove('hot');
+    if (s && !s.querySelector('.numcard')) s.classList.add('hot');
+    drag.hot = s;
+  }
+  function onUp(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onUp);
+    var d = drag; drag = null; d.g.remove(); d.c.classList.remove('ghost');
+    if (d.hot) d.hot.classList.remove('hot');
+    var s = slotAt(ev.clientX, ev.clientY);
+    if (s && !s.querySelector('.numcard')) placeTile(d.c, s); else KidsGame.sound.pop();
+  }
+  function placeTile(c, s) {
+    s.appendChild(c); s.classList.add('filled'); KidsGame.sound.pop();
+    var placed = slots.map(function (x) { var t = x.querySelector('.numcard'); return t ? parseInt(t.dataset.n, 10) : null; });
+    if (placed.some(function (v) { return v == null; })) return;
+    var ok = placed.every(function (v, i) { return v === cur.sorted[i]; });
+    if (ok) {
+      lock = true;
+      slots.forEach(function (x) { x.querySelector('.numcard').classList.add('ok'); sparks(x, 8); });
+      counter.textContent = '✓';
+      win(null, cur.sorted.join(', ') + '. ¡De menor a mayor!');
+    } else {
+      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      slots.forEach(function (x, i) {
+        var t = x.querySelector('.numcard');
+        if (placed[i] !== cur.sorted[i]) { replay(t, 'bad'); setTimeout(function () { x.classList.remove('filled'); cards.appendChild(t); }, 450); }
+      });
+      KidsGame.say('Casi. Fíjate cuál es más pequeño');
+    }
+  }
+
+  /* ---------- Experto: ¿qué va antes / después? ---------- */
+  function beforeRound() {
+    var after = mode === 'after';
+    N = after ? 3 + KidsGame.rand(27) : 2 + KidsGame.rand(28); // referencia
+    var ans = after ? N + 1 : N - 1;
+    q.innerHTML = '¿Qué va <b>' + (after ? 'después' : 'antes') + '</b> del ' + N + '?';
+    cur = { say: '¿Qué número va ' + (after ? 'después' : 'antes') + ' del ' + N + '?' };
+    var sc = el('div', 'scene'); var seq = el('div', 'seq'); seq.style.setProperty('--st', 'min(24vw, 22vh, 150px)');
+    seq.innerHTML = after ? '<div class="stile">' + N + '</div><span class="arrow">➡️</span><div class="stile q">?</div>' : '<div class="stile q">?</div><span class="arrow">➡️</span><div class="stile">' + N + '</div>';
+    sc.appendChild(seq); box.appendChild(sc);
+    var opts = KidsGame.shuffle([ans, after ? N - 1 : N + 1, ans + (after ? 1 : -1), KidsGame.pick([N + 2, N - 2, N + 10, N - 10].filter(function (v) { return v >= 0 && v <= 31 && v !== ans && v !== N - 1 && v !== N + 1 && v !== ans + (after ? 1 : -1); }))]).filter(function (v) { return v >= 0; });
+    numCards(opts, function (c, n) {
+      if (lock) return;
+      if (n === ans) { var qq = seq.querySelector('.q'); qq.textContent = ans; qq.classList.remove('q'); qq.classList.add('done'); counter.textContent = ans; win(c, after ? N + ', ' + ans : ans + ', ' + N); } else fail(c);
+    });
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Experto: número que falta en la serie ---------- */
+  function missingRound() {
+    var step = KidsGame.pick([1, 1, 1, 2, 5]), len = 5;
+    var start = step === 5 ? KidsGame.pick([0, 5]) : step === 2 ? 2 * KidsGame.rand(10) : 1 + KidsGame.rand(25);
+    var gap = 1 + KidsGame.rand(len - 2); // nunca el primero ni el último
+    var seqN = []; for (var i = 0; i < len; i++) seqN.push(start + i * step);
+    var ans = seqN[gap];
+    q.innerHTML = '¿Qué número falta?' + (step > 1 ? ' (de ' + step + ' en ' + step + ')' : '');
+    cur = { say: '¿Qué número falta en la serie? ' + seqN.map(function (v, i) { return i === gap ? 'hmm' : v; }).join(', ') };
+    var sc = el('div', 'scene'); var seq = el('div', 'seq'); seq.style.setProperty('--st', 'min(16vw, 17vh, 120px)');
+    seqN.forEach(function (v, i) { seq.innerHTML += '<div class="stile' + (i === gap ? ' q' : (i % 2 ? ' purple' : '')) + '" style="animation-delay:' + (i * 70) + 'ms">' + (i === gap ? '?' : v) + '</div>'; });
+    sc.appendChild(seq); box.appendChild(sc);
+    var opts = optionsAround(ans, 0, 40, 4);
+    if (step > 1) { opts = KidsGame.shuffle([ans, ans + 1, ans - 1, ans + step].filter(function (v, i, a) { return v >= 0 && a.indexOf(v) === i; })); }
+    numCards(opts, function (c, n) {
+      if (lock) return;
+      if (n === ans) { var qq = seq.querySelector('.q'); qq.textContent = ans; qq.classList.remove('q'); qq.classList.add('done'); counter.textContent = ans; win(c, seqN.join(', ')); } else fail(c);
+    });
+    KidsGame.say(cur.say);
+  }
+
+  /* ---------- Experto: mayor / menor con el cocodrilo ---------- */
+  function crocSVG(dir) { // dir: 'l' abre la boca a la izquierda, 'r' a la derecha
+    // El volteo va en un <g> interno (un transform CSS en el <svg> lo pisaría la animación "land")
+    var s = '<svg viewBox="0 0 100 100"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be15d"/><stop offset="1" stop-color="#2e8b3a"/></linearGradient></defs>' +
+      '<g' + (dir === 'r' ? ' transform="translate(100 0) scale(-1 1)"' : '') + '>' +
+      '<path d="M96 50 L10 12 Q0 18 6 30 L40 48 L6 68 Q0 82 10 88 Z" fill="url(#cg)" stroke="#1f6b2a" stroke-width="3" stroke-linejoin="round"/>' +
+      '<path d="M18 22 l6 8 l4 -10 l6 8 l4 -10 l6 8 M18 78 l6 -8 l4 10 l6 -8 l4 10 l6 -8" fill="#fff" stroke="#1f6b2a" stroke-width="1.5"/>' +
+      '<circle cx="76" cy="36" r="7" fill="#fff"/><circle cx="78" cy="37" r="3.5" fill="#1f2f6b"/><circle cx="90" cy="52" r="2.5" fill="#1f6b2a"/></g></svg>';
+    return s;
+  }
+  function compareRound() {
+    var a = 1 + KidsGame.rand(30), b = 1 + KidsGame.rand(30);
+    while (b === a || Math.abs(a - b) > 12) b = 1 + KidsGame.rand(30);
+    var big = a > b ? 'l' : 'r';
+    q.innerHTML = '¿Cuál es más grande? <span class="emoji">🐊</span>';
+    cur = { say: 'El cocodrilo se come al número más grande. ' + a + ' o ' + b + '. ¿Hacia dónde abre la boca?' };
+    var sc = el('div', 'scene'); var seq = el('div', 'seq');
+    seq.innerHTML = '<div class="stile big pink">' + a + '</div><div class="cmid">?</div><div class="stile big">' + b + '</div>';
+    sc.appendChild(seq); box.appendChild(sc);
+    cards.innerHTML = ''; cards.className = 'cards';
+    ['l', 'r'].forEach(function (d, i) {
+      var c = el('div', 'numcard croc'); c.innerHTML = crocSVG(d); c.dataset.n = d; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
+      c.style.setProperty('--a', '#c6ffd9'); c.style.setProperty('--b', '#2cb67d'); c.style.setProperty('--d', '#14784a');
+      onTap(c, function () {
+        if (lock) return;
+        if (d === big) { seq.querySelector('.cmid').innerHTML = crocSVG(d); counter.textContent = Math.max(a, b); win(c, Math.max(a, b) + ' es más grande que ' + Math.min(a, b) + '. ¡Ñam!'); } else fail(c);
+      });
+      cards.appendChild(c);
+    });
+    KidsGame.say(cur.say);
+  }
+
   function finish() {
+    KidsGame.levelDone(level);
     KidsGame.celebrate({
       sub: 'Nivel ' + level + ' completo',
-      onNext: function () { level = Math.min(level + 1, 3); round = 0; startRound(); },
-      onAgain: function () { round = 0; startRound(); }
+      onNext: function () { level = Math.min(level + 1, 4); round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); },
+      onAgain: function () { round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); }
     });
   }
 
   window.addEventListener('resize', layout);
-  // Expuesto para pruebas (set: índice 0..2 -> nivel 1..3)
-  window.__num = { set: function (l) { level = Math.min(3, Math.max(1, l + 1)); round = 0; startRound(); }, get n() { return N; }, get level() { return level; } };
+  // Expuesto para pruebas: set(nivel 1..4), mode, answer, solve()
+  window.__num = {
+    set: function (l) { level = Math.min(4, Math.max(1, l)); round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); },
+    get n() { return N; }, get level() { return level; }, get mode() { return mode; }, get round() { return round; }, get cur() { return cur; }, get lock() { return lock; },
+    solve: function () {
+      if (lock) return false;
+      var ev = function (e) { e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); };
+      if (mode === 'line') { ev(box.querySelector('.tick[data-n="' + N + '"]')); return 'line'; }
+      if (mode === 'order') { cur.sorted.forEach(function (v, i) { placeTile(cards.querySelector('.numcard[data-n="' + v + '"]'), slots[i]); }); return 'order'; }
+      if (mode === 'compare') { var sl = seqNums(); ev(cards.querySelector('.croc[data-n="' + (sl[0] > sl[1] ? 'l' : 'r') + '"]')); return 'compare'; }
+      var ans = mode === 'before' ? N - 1 : mode === 'after' ? N + 1 : mode === 'missing' ? missingAns() : N;
+      ev(cards.querySelector('.numcard[data-n="' + ans + '"]')); return mode + ':' + ans;
+      function seqNums() { return Array.prototype.map.call(box.querySelectorAll('.stile.big'), function (t) { return parseInt(t.textContent, 10); }); }
+      function missingAns() { var t = Array.prototype.map.call(box.querySelectorAll('.stile'), function (x) { return x.textContent; }); var i = t.indexOf('?'); var step = i >= 2 ? t[1] - t[0] : t[3] - t[2]; return i >= 1 ? parseInt(t[i - 1], 10) + step : parseInt(t[1], 10) - step; }
+    }
+  };
   pickLevel();
 })();
 </script>

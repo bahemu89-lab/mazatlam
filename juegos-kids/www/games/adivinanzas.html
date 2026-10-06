@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Adivinanzas</title>
+<style>
+  /* Escena: biblioteca con estantes de libros de colores y luz cálida */
+  .game { background:
+      radial-gradient(ellipse 60% 50% at 50% 30%, rgba(255,240,200,.55), rgba(255,240,200,0) 70%),
+      linear-gradient(180deg, #f3d9a8 0%, #e6bf82 60%, #c98b48 100%); }
+  .shelf { position: absolute; left: -2%; right: -2%; height: 78px; z-index: 0; pointer-events: none; }
+  .shelf .books { position: absolute; left: 0; right: 0; bottom: 14px; height: 64px; opacity: .85;
+    background: repeating-linear-gradient(90deg, #f582ae 0 26px, #ffd166 26px 44px, #3da9fc 44px 76px, #2cb67d 76px 98px, #7f5af0 98px 132px, #ff8906 132px 152px, #ff6f61 152px 170px, #62cdf0 170px 200px);
+    -webkit-mask: linear-gradient(180deg, rgba(0,0,0,.9), #000 25%); }
+  .shelf .books::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 3px, rgba(0,0,0,0) 3px 18px, rgba(0,0,0,.18) 18px 22px, rgba(0,0,0,0) 22px 26px), linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,0) 30%, rgba(0,0,0,.25)); }
+  .shelf .board { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: linear-gradient(180deg, #a3652e, #6b3d12); box-shadow: 0 6px 10px rgba(60,30,0,.4), inset 0 2px 0 rgba(255,235,200,.5); }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; gap: min(2vh, 16px); z-index: 1; }
+  .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 28px; }
+  .tools { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 8px; }
+  .tools .btn { font-size: 30px; }
+  .tools .btn .n { position: absolute; top: -6px; right: -6px; min-width: 26px; height: 26px; border-radius: 13px; font-size: 16px; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(180deg, #ff9c93, #ff6f61); box-shadow: 0 2px 0 #b8413a, 0 3px 6px rgba(0,0,0,.3); }
+  .tools .btn.off { opacity: .45; filter: saturate(.3); }
+  .prog { position: absolute; top: 80px; right: 12px; z-index: 3; display: flex; gap: 5px; flex-direction: column; align-items: flex-end; }
+  .dots { display: flex; gap: 5px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(180deg, #fff, #d9dff0); box-shadow: 0 2px 0 #b9c2d9, inset 0 1px 0 #fff; }
+  .dot.on { background: radial-gradient(circle at 35% 30%, #fff, #ffd166 40%, #f5a623); box-shadow: 0 2px 0 #c97d0b, 0 0 8px rgba(255,200,80,.8); }
+  .count { font-size: 18px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 3px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520, inset 0 1px 0 #fff; }
+  @media (max-width: 820px) { .prog { top: 8px; right: 50%; transform: translateX(50%); flex-direction: column-reverse; } }
+
+  /* Tarjeta de la adivinanza: pergamino de cristal con medallón ❓ */
+  .riddle { position: relative; display: flex; align-items: center; gap: min(2.4vw, 20px); width: min(96vw, 900px); padding: 14px 20px 14px 14px; border-radius: 30px; cursor: pointer; flex: 0 0 auto; margin-top: min(9vh, 74px);
+    background: linear-gradient(180deg, #fffdf7, #fff1cf); border: 3px solid #fff; box-shadow: 0 8px 0 #d9b85c, 0 16px 28px rgba(90,60,0,.28), inset 0 2px 0 #fff; animation: pop .4s ease-out; }
+  .riddle::after { content: ""; position: absolute; left: 3%; right: 3%; top: 3%; height: 40%; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0)); }
+  .medal { position: relative; flex: 0 0 auto; width: min(14vh, 20vw, 110px); height: min(14vh, 20vw, 110px); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe6f3 30%, #f582ae 70%, #b8306f 100%);
+    box-shadow: 0 8px 0 #8d1f52, 0 14px 22px rgba(90,0,50,.3), inset 0 3px 0 rgba(255,255,255,.9), inset 0 -6px 0 rgba(120,0,60,.25), 0 0 0 5px #fff, 0 0 0 9px rgba(245,130,174,.5); animation: float 3.4s ease-in-out infinite; }
+  .medal .emoji { font-size: min(8.5vh, 12vw, 66px); }
+  .medal.think .emoji { animation: bounce 1.2s infinite; }
+  .text { flex: 1 1 auto; font-size: min(4.4vh, 4.1vw, 31px); font-weight: 900; color: #3b2a1a; line-height: 1.25; text-shadow: 0 1px 0 #fff; position: relative; z-index: 1; }
+  .text b { color: #b8306f; }
+  .hintbox { font-size: min(3.4vh, 3.4vw, 23px); font-weight: 900; color: #6b3f00; margin-top: 6px; padding: 6px 14px; border-radius: 16px; background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, inset 0 1px 0 #fff; display: inline-block; animation: pop .3s; }
+  .scene { display: flex; gap: 10px; margin-top: 6px; }
+  .scene .emoji { font-size: min(5vh, 5vw, 36px); }
+
+  /* Respuestas: fichas con emoji y etiqueta opcional */
+  .opts { display: flex; flex-wrap: wrap; justify-content: center; gap: min(2vw, 16px); flex: 0 0 auto; max-width: 98vw; width: min(96vw, 900px); }
+  .opt { flex-direction: column; gap: 4px; width: min(28vw, 240px); min-height: min(22vh, 180px); padding: 8px; border-radius: 26px; animation: pop .35s ease-out backwards; }
+  .opts.n4 .opt { width: min(22.5vw, 220px); }
+  .opts.n6 .opt { width: min(30vw, 28vh, 230px); min-height: min(19vh, 150px); }
+  .opt .emoji { font-size: min(11vh, 13vw, 84px); }
+  .opts.n6 .opt .emoji { font-size: min(9.5vh, 11vw, 72px); }
+  .opt .lbl { font-size: min(3.6vh, 4vw, 26px); font-weight: 900; color: #1f2f6b; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
+  .opt .big { font-size: min(10vh, 12vw, 70px); font-weight: 900; color: #1f2f6b; text-shadow: 0 3px 0 #c9d2e6; line-height: 1; }
+  .opt.ok { animation: bounce .6s; }
+  .opt.dim { opacity: .35; filter: saturate(.2); pointer-events: none; }
+  .opt .mini { position: absolute; right: 4px; top: 4px; width: 64px; height: 64px; border-radius: 50%; font-size: 26px; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 3px 0 #1a63a8, inset 0 1px 0 rgba(255,255,255,.6); }
+  .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 31; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  @media (max-height: 700px) { .opt { min-height: 150px; } .opt .emoji { font-size: 62px; } .opts.n6 .opt { min-height: 120px; } .opts.n6 .opt .emoji { font-size: 54px; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Adivinanzas' });
+
+  // Nivel 1: adivinanzas descriptivas. [pregunta, respuesta, pistas]
+  var L1 = [
+    ['Es amarillo, está en el cielo y da calor.', '☀️', ['Sale por la mañana.', 'Brilla mucho.', 'Se esconde de noche.']],
+    ['Es blanca, flota en el cielo y a veces llueve de ella.', '☁️', ['Es suave como algodón.', 'Tapa el sol.', 'Está muy alto.']],
+    ['Es roja, redonda y crece en el árbol.', '🍎', ['Es una fruta.', 'Es dulce y crujiente.', 'Blancanieves comió una.']],
+    ['Tiene orejas largas, salta y come zanahorias.', '🐰', ['Es un animal.', 'Es suave y peludo.', 'Tiene una colita redonda.']],
+    ['Es grande, gris y tiene una trompa muy larga.', '🐘', ['Es un animal.', 'Tiene orejas enormes.', 'Vive en la selva.']],
+    ['Dice miau y le gusta la leche.', '🐱', ['Es un animal.', 'Tiene bigotes.', 'Ronronea.']],
+    ['Ladra y mueve la cola cuando está contento.', '🐶', ['Es un animal.', 'Es el mejor amigo de las personas.', 'Le gustan los huesos.']],
+    ['Es amarillo, largo y a los monos les encanta.', '🍌', ['Es una fruta.', 'Se pela.', 'Es blanco por dentro.']],
+    ['Tiene ruedas, lleva gente y va por la calle.', '🚗', ['Tiene cuatro ruedas.', 'Hace brum brum.', 'Lo maneja un chofer.']],
+    ['Es muy grande, vuela alto y lleva gente por el cielo.', '✈️', ['Tiene alas.', 'Sale del aeropuerto.', 'Va muy rápido.']],
+    ['Brilla de noche, es redonda y a veces parece una banana.', '🌙', ['Está en el cielo.', 'Sale cuando oscurece.', 'Está con las estrellas.']],
+    ['Es verde, salta y dice croac.', '🐸', ['Es un animal.', 'Vive en el estanque.', 'Come moscas.']],
+    ['Tiene rayas negras y blancas y parece un caballo.', '🦓', ['Es un animal.', 'Vive en África.', 'Corre mucho.']],
+    ['Es pequeñita, tiene ocho patas y teje una tela.', '🕷️', ['Es un animal.', 'Vive en las esquinas.', 'Atrapa moscas.']],
+    ['Es dulce, frío y se come en verano.', '🍦', ['Es un postre.', 'Se derrite con el sol.', 'Viene en cono.']],
+    ['Tiene alas de colores y antes era una oruga.', '🦋', ['Es un animal.', 'Vuela de flor en flor.', 'Es muy bonita.']],
+    ['Nada en el agua, tiene aletas y no habla.', '🐟', ['Es un animal.', 'Vive en el mar o en el río.', 'Tiene escamas.']],
+    ['Es muy alta, tiene el cuello largo y come hojas de los árboles.', '🦒', ['Es un animal.', 'Tiene manchas.', 'Vive en África.']],
+    ['Tiene cuatro patas, pero no camina, y te sientas en ella.', '🪑', ['Está en la cocina.', 'Es de madera.', 'Va con la mesa.']],
+    ['Lo abres cuando llueve para no mojarte.', '☂️', ['Lo llevas en la mano.', 'Es como un techito.', 'Se cierra cuando sale el sol.']],
+    ['Cae del cielo blandita y fría, y con ella haces muñecos.', '❄️', ['Es blanca.', 'Cae en invierno.', 'Se derrite.']],
+    ['Tiene muchos colores y sale cuando llueve y hay sol.', '🌈', ['Está en el cielo.', 'Tiene forma de puente.', 'Tiene siete colores.']],
+    ['Vive en el mar y tiene ocho brazos.', '🐙', ['Es un animal.', 'Es blandito.', 'Echa tinta.']],
+    ['Es naranja, larga y a los conejos les encanta.', '🥕', ['Es una verdura.', 'Crece bajo la tierra.', 'Tiene hojas verdes arriba.']]
+  ];
+  // Nivel 2: adivinanzas clásicas con rima
+  var L2 = [
+    ['Oro parece, plata no es; el que no lo adivine, bien tonto es.', '🍌', ['Es una fruta.', 'Es amarilla por fuera.', 'Es blanca por dentro.']],
+    ['Blanca por dentro, verde por fuera; si quieres que te lo diga, espera.', '🍐', ['Es una fruta.', 'Tiene forma de gota.', 'Es muy jugosa.']],
+    ['Tengo agujas y no sé coser, tengo números y no sé leer.', '⏰', ['Dice la hora.', 'Hace tic tac.', 'Suena por la mañana.']],
+    ['Redondo, redondo, barril sin fondo.', '💍', ['Se pone en el dedo.', 'Brilla.', 'Es una joya.']],
+    ['Tiene dientes y no come, tiene cabeza y no es hombre.', '🧄', ['Se usa en la cocina.', 'Es blanco.', 'Huele muy fuerte.']],
+    ['Verde por fuera, roja por dentro, con semillitas negras en el centro.', '🍉', ['Es una fruta.', 'Es muy grande.', 'Es de agua.']],
+    ['Salta y salta y la colita le falta.', '🐸', ['Es un animal.', 'Es verde.', 'Dice croac.']],
+    ['Mi casa llevo a cuestas, tras de mí dejo un sendero; soy lento de movimiento.', '🐌', ['Es un animal.', 'Tiene cuernitos.', 'Sale cuando llueve.']],
+    ['Agua pasa por mi casa, cate de mi corazón.', '🥑', ['Es verde.', 'Tiene un hueso grande.', 'Con él se hace guacamole.']],
+    ['Chiquita como un ratón, cuida la casa como un león.', '🔑', ['Es de metal.', 'Abre la puerta.', 'Está en el llavero.']],
+    ['Tengo corona y no soy rey, tengo escamas y no soy pez.', '🍍', ['Es una fruta.', 'Es amarilla por dentro.', 'Pica por fuera.']],
+    ['Blanco es, la gallina lo pone, con aceite se fríe y con pan se come.', '🥚', ['Se come en el desayuno.', 'Tiene cáscara.', 'Es amarillo por dentro.']],
+    ['Zumba que zumba, de flor en flor; hace la miel con gran primor.', '🐝', ['Es un animal.', 'Es amarilla y negra.', 'Pica.']],
+    ['Tiene famosa memoria, gran tamaño y dura piel, y la nariz más grandota que en el mundo pueda haber.', '🐘', ['Es un animal.', 'Es gris.', 'Tiene trompa.']],
+    ['Tengo hojas sin ser árbol, te hablo sin tener voz.', '📖', ['Tiene cuentos.', 'Se lee.', 'Está en la biblioteca.']],
+    ['En el campo me crié, atada con verdes lazos; aquel que llora por mí, me está partiendo en pedazos.', '🧅', ['Es una verdura.', 'Tiene capas.', 'Hace llorar al cortarla.']],
+    ['Vuela sin alas, silba sin boca; no lo ves ni lo tocas.', '💨', ['Mueve las hojas.', 'Mueve el papalote.', 'Sopla.']],
+    ['Dos hermanos gemelos van siempre juntos; uno va a la izquierda y otro a la derecha.', '👟', ['Se ponen en los pies.', 'Tienen agujetas.', 'Sirven para correr.']],
+    ['Tiene ojos y no ve, tiene agua y no la bebe.', '🥥', ['Es una fruta.', 'Es muy duro.', 'Crece en la palmera.']],
+    ['Del cielo caigo blanda y fría; cubro los montes y los tejados.', '❄️', ['Es blanca.', 'Cae en invierno.', 'Hace muñecos.']],
+    ['Soy blanca como la leche, redonda como un plato, y de noche salgo a pasear.', '🌙', ['Está en el cielo.', 'Sale de noche.', 'Cambia de forma.']],
+    ['Soy redondo como una pelota, rojo y jugoso; en ensalada, muy sabroso.', '🍅', ['Crece en la planta.', 'Se hace salsa con él.', 'Es rojo.']],
+    ['Tengo cola y no soy pez, tengo alas y no soy ave; vuelo alto con el viento.', '🪁', ['Es un juguete.', 'Tiene un hilo.', 'Se vuela en el parque.']],
+    ['Con mis patas largas y mi cuello estirado, como las hojas del árbol más alto.', '🦒', ['Es un animal.', 'Tiene manchas.', 'Es muy alta.']]
+  ];
+  // Nivel 3: dos pistas (la primera encaja con varias opciones) y ¿qué sobra? [pregunta, respuesta, otras 5, pistas]
+  var L3 = [
+    ['Tiene cuatro patas y maúlla.', '🐱', ['🐶','🐴','🐮','🐦','🐟'], ['Tiene bigotes.', 'Le gusta la leche.']],
+    ['Vuela y es amarillo.', '🐤', ['🐦','🦇','✈️','🍋','🌻'], ['Es un animal pequeño.', 'Dice pío pío.']],
+    ['Es una fruta y es roja.', '🍓', ['🍌','🍐','🍇','🚗','🔴'], ['Tiene semillitas por fuera.', 'Es pequeña.']],
+    ['Vive en el agua y tiene ocho brazos.', '🐙', ['🐟','🐬','🦈','🕷️','🐛'], ['Es blandito.', 'Echa tinta.']],
+    ['Es un vehículo y va por el agua.', '⛵', ['🚗','🚂','✈️','🐟','🐬'], ['Tiene vela.', 'Flota.']],
+    ['Es redondo y se come.', '🍊', ['⚽','🎈','🌕','🍌','🍟'], ['Es una fruta.', 'Es de color naranja.']],
+    ['Tiene rayas y parece un caballo.', '🦓', ['🐯','🐝','🐴','🫏','🐱'], ['Es blanco y negro.', 'Vive en África.']],
+    ['Es un juguete y rebota.', '⚽', ['🧸','🪁','🎲','🦘','🥁'], ['Es redondo.', 'Se patea.']],
+    ['Lo usas cuando llueve y se abre.', '☂️', ['🧥','👢','📖','🚪','🎒'], ['Se lleva en la mano.', 'Te tapa de la lluvia.']],
+    ['Brilla de noche y es redonda.', '🌕', ['⭐','🔦','🕯️','⚽','🍊'], ['Está en el cielo.', 'A veces es como una banana.']],
+    ['Es un animal de granja y da leche.', '🐮', ['🐔','🐷','🐴','🥛','🧀'], ['Dice muu.', 'Tiene manchas.']],
+    ['Es dulce y frío.', '🍦', ['🍬','🍫','🍯','🧊','❄️'], ['Se derrite.', 'Viene en cono.']],
+    ['Tiene alas y no es un animal.', '✈️', ['🐦','🦋','🐝','🚗','🚲'], ['Es muy grande.', 'Lleva gente.']],
+    ['Es verde y salta.', '🐸', ['🥬','🌵','🐢','🦘','🏀'], ['Es un animal.', 'Dice croac.']],
+    ['Es un instrumento y tiene cuerdas.', '🎸', ['🥁','🎺','🎹','🪢','🧶'], ['Se toca con los dedos.', 'Los rockeros la usan.']],
+    ['Vive donde hace frío y es todo blanco.', '🐻‍❄️', ['🐧','🐻','🥛','🐑','❄️'], ['Es un animal grande.', 'Es un oso.']],
+    ['Es de madera y da sombra.', '🌳', ['🪑','🪵','🎸','☂️','🏠'], ['Tiene hojas.', 'Los pájaros hacen nidos ahí.']],
+    ['Tiene plumas y no vuela.', '🐧', ['🐦','🦅','🦆','🐱','🐢'], ['Vive en el hielo.', 'Es blanco y negro.']],
+    ['Es rojo y es un vehículo.', '🚒', ['🍎','🌹','🚕','🚌','🚲'], ['Tiene sirena.', 'Apaga fuegos.']],
+    ['Tiene cuello largo y manchas.', '🦒', ['🦢','🐆','🐄','🐴','🦩'], ['Es muy alta.', 'Come hojas de los árboles.']],
+    ['¿Cuál sobra? Todas son frutas.', '🚗', ['🍎','🍌','🍇','🍐','🍓'], ['Las frutas se comen.', 'Uno no se come.']],
+    ['¿Cuál sobra? Todos son animales.', '🚌', ['🐱','🐶','🐭','🐰','🐮'], ['Los animales están vivos.', 'Uno tiene ruedas.']],
+    ['¿Cuál sobra? Todos vuelan.', '🐟', ['🐦','🦋','✈️','🐝','🎈'], ['Volar es ir por el aire.', 'Uno nada.']],
+    ['¿Cuál sobra? Todos viven en el mar.', '🐔', ['🐟','🐙','🦀','🐬','🦈'], ['En el mar hay agua.', 'Uno vive en la granja.']],
+    ['¿Cuál sobra? Todo es ropa.', '🍌', ['👕','👖','🧦','👗','🧢'], ['La ropa se pone.', 'Uno se come.']],
+    ['¿Cuál sobra? Todos son rojos.', '🍋', ['🍎','🍓','🚒','🌹','🍅'], ['Mira los colores.', 'Uno es amarillo.']],
+    ['¿Cuál sobra? Todos son vehículos.', '🐘', ['🚗','🚂','✈️','🚲','⛵'], ['Los vehículos te llevan.', 'Uno es un animal.']],
+    ['¿Cuál sobra? Todos sirven para comer.', '🎸', ['🥄','🍴','🍽️','🥢','🔪'], ['Están en la cocina.', 'Uno hace música.']],
+    ['¿Cuál sobra? Todos son juguetes.', '🥦', ['🧸','⚽','🪁','🎲','🪀'], ['Con los juguetes se juega.', 'Uno es una verdura.']],
+    ['¿Cuál sobra? Todos tienen cuatro patas.', '🐦', ['🐱','🐶','🐴','🐮','🐘'], ['Cuenta las patas.', 'Uno tiene dos.']],
+    ['¿Cuál sobra? Todos son dulces.', '🥕', ['🍬','🍫','🍭','🍰','🍩'], ['Los dulces son de postre.', 'Uno es una verdura.']],
+    ['¿Cuál sobra? Todos son instrumentos.', '🧹', ['🎸','🥁','🎺','🎹','🎻'], ['Los instrumentos hacen música.', 'Uno sirve para limpiar.']]
+  ];
+  // Nivel 4: adivinanzas con "no" (además de los retos generados)
+  var L4 = [
+    ['No es rojo, no vuela y tiene cuatro patas.', '🐘', ['🍓','🐦','🦋','🐞','🐓'], ['Es gris.']],
+    ['Es un animal, no tiene patas y no vive en el agua.', '🐍', ['🐟','🐙','🐱','🐦','🐢'], ['Se arrastra.']],
+    ['Tiene ruedas, no es un coche y lo mueves con los pies.', '🚲', ['🚗','🚌','👟','⛵','🚂'], ['Tiene pedales.']],
+    ['Es una fruta, no es roja y no es redonda.', '🍌', ['🍎','🍓','🍊','🍅','🥕'], ['Es amarilla.']],
+    ['Vive en el agua, no es un pez y tiene caparazón.', '🐢', ['🐸','🐙','🐌','🐟','🦈'], ['Es muy lenta.']],
+    ['Es blanco, no se come y cae del cielo.', '❄️', ['🥛','🍚','🐑','🥚','🍦'], ['Es frío.']],
+    ['Es un animal grande, no es gris y tiene melena.', '🦁', ['🐘','🦏','🐯','🦓','🐻'], ['Es el rey de la selva.']],
+    ['Tiene alas, no vuela y vive donde hace frío.', '🐧', ['🐦','🦅','🐔','🐻‍❄️','✈️'], ['Es blanco y negro.']]
+  ];
+  var KIDS = [['Ana','👧','f'],['Luis','👦','m'],['Pepe','🧒','m'],['Sofía','👧🏽','f'],['Mateo','👦🏽','m'],['Lola','👧🏼','f'],['Nico','🧒🏽','m'],['Mía','👧🏻','f']];
+  var CMP = [['alto','alta','bajito','bajita'], ['rápido','rápida','lento','lenta'], ['grande','grande','pequeño','pequeña'], ['fuerte','fuerte','débil','débil']];
+  var DAYS = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+  var THINGS = [['globos','🎈'],['dulces','🍬'],['manzanas','🍎'],['flores','🌸'],['carritos','🚗'],['galletas','🍪'],['estrellas','⭐'],['peces','🐟']];
+  var ANIM = [['el gato','🐱'],['el perro','🐶'],['el pato','🦆'],['el oso','🐻'],['el conejo','🐰'],['la vaca','🐮'],['el cerdo','🐷'],['el león','🦁'],['el mono','🐒']];
+  var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
+  var ROUNDS = 8, HINTS = { 1: 3, 2: 3, 3: 2, 4: 1 };
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); fn(ev); }); }
+  function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function sparks(node, color) {
+    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 14; i++) {
+      var d = document.createElement('div'); d.className = 'spark';
+      var ang = (i / 14) * Math.PI * 2, dist = 60 + Math.random() * 70;
+      d.style.left = (cx - 7) + 'px'; d.style.top = (cy - 7) + 'px';
+      d.style.setProperty('--c', color || COLORS[i % COLORS.length]);
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px'); d.style.setProperty('--dy', Math.sin(ang) * dist - 30 + 'px');
+      d.style.animationDelay = (Math.random() * 90) + 'ms';
+      document.body.appendChild(d);
+      (function (n) { setTimeout(function () { n.remove(); }, 900); })(d);
+    }
+  }
+  function pickN(arr, n, exclude) { var out = []; KidsGame.shuffle(arr).forEach(function (x) { if (out.length < n && (exclude || []).indexOf(x) < 0 && out.indexOf(x) < 0) out.push(x); }); return out; }
+
+  /* ---------- Construcción de retos ---------- */
+  // Un reto: { q: texto, say: texto hablado, a: clave de la respuesta, opts: [{k, e, t, big}], h: [pistas], scene: [emojis] }
+  function emojiPool() { var p = []; L1.concat(L2).forEach(function (r) { if (p.indexOf(r[1]) < 0) p.push(r[1]); }); return p; }
+  function fromBank(r, n) {
+    // Bancos L1/L2: [q, a, pistas] (distractores al azar). Bancos L3/L4: [q, a, otras5, pistas]
+    var others = r.length === 4 ? r[2] : pickN(emojiPool(), n - 1, [r[1]]);
+    var hints = r.length === 4 ? r[3] : r[2];
+    var opts = KidsGame.shuffle([r[1]].concat(others)).map(function (e) { return { k: e, e: e }; });
+    return { q: r[0], a: r[1], opts: opts, h: hints.slice() };
+  }
+  function genOrder() {
+    var kids = pickN(KIDS, 6), three = kids.slice(0, 3), cmp = KidsGame.pick(CMP);
+    var A = three[0], B = three[1], C = three[2];
+    function adj(k, i) { return k[2] === 'f' ? cmp[i * 2 + 1] : cmp[i * 2]; }
+    var s1 = A[0] + ' es más ' + adj(A, 0) + ' que ' + B[0] + '.', s2 = B[0] + ' es más ' + adj(B, 0) + ' que ' + C[0] + '.';
+    var sentences = Math.random() < 0.5 ? s1 + ' ' + s2 : s2 + ' ' + s1;
+    var askTop = Math.random() < 0.5, ans = askTop ? A : C;
+    var q = sentences + ' ¿Quién es el más ' + cmp[askTop ? 0 : 2] + ' de todos?';
+    var opts = KidsGame.shuffle(kids).map(function (k) { return { k: k[0], e: k[1], t: k[0] }; });
+    return { q: q, a: ans[0], opts: opts, h: ['Solo cuentan ' + A[0] + ', ' + B[0] + ' y ' + C[0] + '.'], dim: kids.slice(3).map(function (k) { return k[0]; }) };
+  }
+  function genDay() {
+    var i = KidsGame.rand(7), shifts = [[-1, 'fue ayer'], [1, 'será mañana'], [2, 'será pasado mañana'], [-2, 'fue anteayer']];
+    var sh = KidsGame.pick(shifts), ans = DAYS[(i + sh[0] + 14) % 7];
+    var q = 'Si hoy es ' + DAYS[i] + ', ¿qué día ' + sh[1] + '?';
+    var days = pickN(DAYS, 6, [ans, DAYS[i]]).slice(0, 4).concat([ans, DAYS[i]]);
+    var opts = KidsGame.shuffle(days).map(function (d) { return { k: d, e: '📅', t: cap(d) }; });
+    return { q: q, a: ans, opts: opts, h: ['La semana: ' + DAYS.join(', ') + '.'] };
+  }
+  function genMath() {
+    var th = KidsGame.pick(THINGS), a = 3 + KidsGame.rand(5), sub = Math.random() < 0.5, b, ans, q;
+    if (sub) { b = 1 + KidsGame.rand(a - 1); ans = a - b; q = 'Tengo ' + a + ' ' + th[0] + ' y se me van ' + b + '. ¿Cuántos quedan?'; }
+    else { b = 1 + KidsGame.rand(Math.min(5, 10 - a)); ans = a + b; q = 'Tengo ' + a + ' ' + th[0] + ' y me dan ' + b + ' más. ¿Cuántos tengo?'; }
+    var nums = [ans]; while (nums.length < 6) { var n = KidsGame.rand(11); if (nums.indexOf(n) < 0) nums.push(n); }
+    var opts = KidsGame.shuffle(nums).map(function (n) { return { k: String(n), big: String(n), e: th[1] }; });
+    var row = ''; for (var i = 0; i < a; i++) row += th[1];
+    return { q: q, a: String(ans), opts: opts, h: [row + (sub ? ' … y se van ' + b : ' … y llegan ' + b)], scene: null };
+  }
+  function genPosition() {
+    var an = pickN(ANIM, 6), A = an[0], B = an[1], C = an[2];
+    function de(x) { return x.replace(/^el /, 'del ').replace(/^la /, 'de la '); }
+    var q = cap(A[0]) + ' está a la izquierda ' + de(B[0]) + '. ' + cap(C[0]) + ' está a la derecha ' + de(B[0]) + '.';
+    var which = KidsGame.rand(3), ans = [A, B, C][which];
+    q += ' ¿Quién está ' + ['a la izquierda', 'en medio', 'a la derecha'][which] + '?';
+    var opts = KidsGame.shuffle(an).map(function (x) { return { k: x[1], e: x[1], t: cap(x[0].replace(/^(el|la) /, '')) }; });
+    return { q: q, a: ans[1], opts: opts, h: ['Solo están ' + A[0] + ', ' + B[0] + ' y ' + C[0] + '.'], dim: an.slice(3).map(function (x) { return x[1]; }) };
+  }
+  var usedBank = [];
+  function fromLevelBank(bank, n) {
+    var cands = bank.filter(function (r) { return usedBank.indexOf(r) < 0; }); if (!cands.length) { usedBank = []; cands = bank; }
+    var r = KidsGame.pick(cands); usedBank.push(r); return fromBank(r, n);
+  }
+  function buildChallenge() {
+    if (level === 1) return fromLevelBank(L1, 3);
+    if (level === 2) return fromLevelBank(L2, 4);
+    if (level === 3) return fromLevelBank(L3, 6);
+    var kind = plan[round];
+    if (kind === 'order') return genOrder();
+    if (kind === 'day') return genDay();
+    if (kind === 'math') return genMath();
+    if (kind === 'pos') return genPosition();
+    return fromLevelBank(L4, 6);
+  }
+
+  /* ---------- Estado y pantalla ---------- */
+  var level = 1, round = 0, lock = false, timers = [], plan = [], cur = null, hintsLeft = 0;
+  var body = null, dotsEl = null, countEl = null, hintBtn = null, hintN = null, medal = null;
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function pickLevel() {
+    clearTimers(); lock = true; game.innerHTML = '';
+    KidsGame.levelPicker({ labels: { 1: 'Descríbeme', 2: 'Con rima', 3: 'Dos pistas y ¿qué sobra?', 4: 'Lógica de 3 pasos' }, onPick: function (n) { startLevel(n); } });
+  }
+  function startLevel(n) {
+    level = n; round = 0; usedBank = [];
+    plan = KidsGame.shuffle(['order', 'day', 'math', 'pos', 'neg', 'order', 'math', 'neg']);
+    buildScreen(); nextRound();
+  }
+  function hud() {
+    var h = el('div', 'hud');
+    var b = el('button', 'btn round yellow', '🎚️'); b.setAttribute('aria-label', 'Nivel');
+    onTap(b, function () { KidsGame.sound.tap(); pickLevel(); });
+    h.appendChild(b); h.appendChild(KidsGame.levelBadge(level));
+    return h;
+  }
+  function buildScreen() {
+    clearTimers(); game.innerHTML = '';
+    var s = el('div', 'screen');
+    [16, 44, 72, 96].forEach(function (top, i) {
+      var sh = el('div', 'shelf', '<div class="books"></div><div class="board"></div>'); sh.style.top = top + '%';
+      sh.querySelector('.books').style.backgroundPositionX = (i * 57) + 'px'; s.appendChild(sh);
+    });
+    s.appendChild(hud());
+    var tools = el('div', 'tools');
+    var sayB = el('button', 'btn round blue', '🔊'); sayB.setAttribute('aria-label', 'Repetir');
+    onTap(sayB, function () { KidsGame.sound.tap(); if (cur) { KidsGame.say(cur.say || cur.q); replay(medal, 'pop'); } });
+    hintBtn = el('button', 'btn round purple', '💡'); hintBtn.setAttribute('aria-label', 'Pista');
+    hintN = el('span', 'n', '0'); hintBtn.appendChild(hintN);
+    onTap(hintBtn, giveHint);
+    tools.appendChild(sayB); tools.appendChild(hintBtn); s.appendChild(tools);
+    var prog = el('div', 'prog'); countEl = el('div', 'count'); dotsEl = el('div', 'dots');
+    for (var i = 0; i < ROUNDS; i++) dotsEl.appendChild(el('div', 'dot'));
+    prog.appendChild(countEl); prog.appendChild(dotsEl); s.appendChild(prog);
+    body = el('div', 'screen'); body.style.position = 'relative'; body.style.flex = '1 1 auto'; body.style.width = '100%'; body.style.padding = '0';
+    s.appendChild(body); game.appendChild(s);
+  }
+  function updateProgress() {
+    countEl.textContent = round + ' / ' + ROUNDS;
+    Array.prototype.forEach.call(dotsEl.children, function (d, i) { d.classList.toggle('on', i < round); });
+    hintN.textContent = hintsLeft; hintBtn.classList.toggle('off', hintsLeft <= 0);
+  }
+
+  var textEl = null, hintBox = null, optsEl = null;
+  function nextRound() {
+    clearTimers(); lock = false; body.innerHTML = ''; hintsLeft = HINTS[level];
+    cur = buildChallenge(); cur.usedHints = 0; updateProgress();
+    var card = el('div', 'riddle');
+    medal = el('div', 'medal think', '<span class="emoji">❓</span>');
+    var txt = el('div', 'text'); textEl = el('div', null, cur.q.replace(/\bNO\b|\bno\b/g, '<b>$&</b>').replace('¿Cuál sobra?', '<b>¿Cuál sobra?</b>')); txt.appendChild(textEl);
+    hintBox = el('div'); txt.appendChild(hintBox);
+    card.appendChild(medal); card.appendChild(txt);
+    onTap(card, function () { KidsGame.sound.tap(); KidsGame.say(cur.say || cur.q); replay(medal, 'pop'); });
+    body.appendChild(card);
+    optsEl = el('div', 'opts n' + cur.opts.length);
+    cur.opts.forEach(function (o, i) {
+      var c = el('div', 'card opt'); c.dataset.k = o.k; c.style.animationDelay = (i * 70) + 'ms';
+      c.innerHTML = (o.big ? '<span class="big">' + o.big + '</span><span class="emoji" style="font-size:28px">' + o.e + '</span>' : '<span class="emoji">' + o.e + '</span>') + (o.t ? '<span class="lbl">' + o.t + '</span>' : '');
+      if (o.t) { var m = el('div', 'mini', '🔊'); c.appendChild(m); onTap(m, function () { KidsGame.sound.tap(); KidsGame.say(o.t); }); }
+      onTap(c, function () { answer(c, o); });
+      optsEl.appendChild(c);
+    });
+    body.appendChild(optsEl);
+    KidsGame.say(cur.say || cur.q);
+  }
+  function answer(c, o) {
+    if (lock) return;
+    if (o.k === cur.a) {
+      lock = true; c.classList.add('ok'); sparks(c, '#7dffb0'); medal.classList.remove('think'); medal.querySelector('.emoji').textContent = o.e;
+      KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); round++; updateProgress();
+      KidsGame.say('¡Sí! ' + (o.t || '') + ' ¡Muy bien!');
+      later(function () {
+        if (round >= ROUNDS) {
+          KidsGame.levelDone(level);
+          KidsGame.celebrate({ sub: '¡' + ROUNDS + ' adivinanzas!', onNext: function () { if (level < 4) startLevel(level + 1); else pickLevel(); }, onAgain: function () { startLevel(level); } });
+        } else nextRound();
+      }, 1600);
+    } else {
+      KidsGame.sound.wrong(); replay(c, 'bad'); replay(medal, 'shake');
+      KidsGame.say(KidsGame.pick(['Mmm, no. Escucha otra vez.', 'Esa no es. Piensa bien.', 'Casi. Inténtalo otra vez.']));
+    }
+  }
+  // 💡: una pista de texto; si ya no hay, atenúa dos opciones equivocadas
+  function giveHint() {
+    if (lock || hintsLeft <= 0) { KidsGame.sound.wrong(); return; }
+    hintsLeft--; updateProgress(); KidsGame.sound.pop();
+    var t = cur.h && cur.h[cur.usedHints];
+    if (t) {
+      cur.usedHints++;
+      var hb = el('div', 'hintbox', '💡 ' + t); hintBox.appendChild(hb); KidsGame.say(t);
+      if (cur.dim) { Array.prototype.forEach.call(optsEl.children, function (c) { if (cur.dim.indexOf(c.dataset.k) >= 0) c.classList.add('dim'); }); }
+    } else {
+      var wrong = Array.prototype.filter.call(optsEl.children, function (c) { return c.dataset.k !== cur.a && !c.classList.contains('dim'); });
+      KidsGame.shuffle(wrong).slice(0, 2).forEach(function (c) { c.classList.add('dim'); });
+      KidsGame.say('Quito dos que no son');
+    }
+  }
+
+  // Ganchos para pruebas
+  window.__adiv = { get level() { return level; }, get round() { return round; }, get cur() { return cur; }, get hintsLeft() { return hintsLeft; },
+    bank: { l1: L1.length, l2: L2.length, l3: L3.length, l4: L4.length }, start: startLevel, hint: giveHint, gen: { order: genOrder, day: genDay, math: genMath, pos: genPosition },
+    check: function () { var bad = []; [L1, L2].forEach(function (B) { B.forEach(function (r) { if (r.length !== 3 || r[2].length !== 3) bad.push(r[0]); }); }); [L3, L4].forEach(function (B) { B.forEach(function (r) { if (r.length !== 4 || r[2].length !== 5 || r[2].indexOf(r[1]) >= 0) bad.push(r[0]); }); }); return bad; } };
+  pickLevel();
+})();
+</script>
+</body>
+</html>

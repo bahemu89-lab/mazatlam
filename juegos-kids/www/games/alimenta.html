@@ -56,6 +56,23 @@
   .animal.two .want { top: -22px; right: -6px; font-size: calc(var(--as) * .17); height: calc(var(--as) * .3); }
   .animal.two .medal { margin-top: calc(var(--as) * .13); width: calc(var(--as) * .56); height: calc(var(--as) * .56); }
   .animal.two .face { font-size: calc(var(--as) * .36); }
+  /* Nivel Experto: menú de 3 comidas en orden, comida prohibida y menú que se esconde */
+  .animal.three .want { top: -24px; left: -6px; right: -6px; height: calc(var(--as) * .27); font-size: calc(var(--as) * .15); padding: 0 4px; gap: 2px; }
+  .animal.three .want .sep { font-size: 55%; }
+  .animal.three .medal { margin-top: calc(var(--as) * .12); width: calc(var(--as) * .54); height: calc(var(--as) * .54); }
+  .animal.three .face { font-size: calc(var(--as) * .34); }
+  .animal .want .cnt { font-size: 70%; color: #b48200; font-weight: 900; }
+  .animal .nope { position: absolute; left: -8px; bottom: -8px; z-index: 3; display: none; align-items: center; font-size: calc(var(--as) * .15); padding: 2px 8px; border-radius: 30px;
+    background: #fff; border: 3px solid #e63946; box-shadow: 0 4px 0 #8f1a24, 0 8px 12px rgba(0,0,0,.2); }
+  .animal.three .nope { display: inline-flex; }
+  .animal.three.fed .nope { display: none; }
+  .animal .nope.shake { animation: shake .4s; }
+  .hud .hintbtn { display: none; }
+  .hud .hintbtn.show { display: inline-flex; }
+  .hud .hintbtn.off { opacity: .5; filter: grayscale(.6); }
+  .hud .budget { display: none; align-items: center; gap: 4px; font-size: 22px; font-weight: 900; color: #7a4b00; padding: 4px 12px; border-radius: 20px;
+    background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
+  .hud .budget.show { display: inline-flex; }
   .animal.over { transform: scale(1.1); background: linear-gradient(160deg, #fffdf1, #fff2bd); box-shadow: 0 6px 0 #d9a520, 0 14px 24px rgba(0,0,0,.25), 0 0 0 6px rgba(255,209,102,.6), inset 0 2px 0 #fff; }
   .animal.fed { background: linear-gradient(160deg, #eefff0, #b9f0c4); border-color: #6fdc8c; box-shadow: 0 6px 0 #3fa864, 0 12px 20px rgba(20,120,60,.28), 0 0 0 5px rgba(111,220,140,.5), inset 0 2px 0 #fff; }
   .animal.fed .medal { background: radial-gradient(circle at 35% 28%, #ffffff 0, #dfffe6 40%, #8ee6a5 78%, #2cb67d 100%); box-shadow: 0 6px 0 #1c8a53, 0 12px 16px rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.9), 0 0 0 4px #fff; }
@@ -112,32 +129,42 @@
 <script>
 var game = KidsGame.init({ title: 'Alimenta' });
 (function () {
-  // [animal, comida favorita, segunda comida]
+  // [animal, comida favorita, segunda comida, tercera comida (menú Experto)]
   var PAIRS = [
-    ['🐰', '🥕', '🥬'], ['🐵', '🍌', '🍑'], ['🐱', '🐟', '🥛'], ['🐶', '🦴', '🍖'], ['🐼', '🎋', '🍃'], ['🐨', '🌿', '🍀'],
-    ['🐘', '🥜', '🍉'], ['🐿️', '🌰', '🍇'], ['🐝', '🌸', '🌻'], ['🐮', '🌾', '🍎'], ['🐧', '🐠', '🦐'], ['🦒', '🌳', '🍋'],
-    ['🐷', '🌽', '🍅'], ['🐭', '🧀', '🍪'], ['🐻', '🍯', '🫐'], ['🦁', '🥩', '🍗'], ['🐢', '🥦', '🍓'], ['🦜', '🍊', '🍒']
+    ['🐰', '🥕', '🥬', '🍎'], ['🐵', '🍌', '🍑', '🥭'], ['🐱', '🐟', '🥛', '🍗'], ['🐶', '🦴', '🍖', '🥩'], ['🐼', '🎋', '🍃', '🥦'], ['🐨', '🌿', '🍀', '🌱'],
+    ['🐘', '🥜', '🍉', '🌾'], ['🐿️', '🌰', '🍇', '🍐'], ['🐝', '🌸', '🌻', '🌷'], ['🐮', '🌾', '🍎', '🥬'], ['🐧', '🐠', '🦐', '🦑'], ['🦒', '🌳', '🍋', '🌴'],
+    ['🐷', '🌽', '🍅', '🥔'], ['🐭', '🧀', '🍪', '🥖'], ['🐻', '🍯', '🫐', '🥧'], ['🦁', '🥩', '🍗', '🥓'], ['🐢', '🥦', '🍓', '🥒'], ['🦜', '🍊', '🍒', '🥝']
   ];
+  var LABELS = { 1: '2 animales', 2: '4 animales, 3 señuelos', 3: '2 comidas en orden', 4: 'Menú de 3 y memoria' };
+  var MEMO_MS = 5000;
   // Comidas parecidas (distractores del nivel 3)
   var SIMILAR = { '🍊': '🍋', '🍋': '🍊', '🥕': '🌶️', '🍎': '🍅', '🍅': '🍎', '🍇': '🫐', '🫐': '🍇', '🍓': '🍒', '🍒': '🍓', '🥜': '🌰', '🌰': '🥜',
     '🐟': '🐠', '🐠': '🐟', '🌿': '🍀', '🍀': '🌿', '🍃': '🌿', '🍌': '🌽', '🌽': '🍌', '🦴': '🍖', '🍖': '🥩', '🥩': '🍖', '🍗': '🍖', '🧀': '🍕', '🍯': '🥞',
     '🥬': '🥦', '🥦': '🥬', '🌸': '🌼', '🌻': '🌼', '🎋': '🎍', '🌾': '🌱', '🌳': '🌲', '🥛': '🍶', '🍑': '🍊', '🍉': '🍈', '🦐': '🦀', '🍪': '🍩', '🥕': '🌶️' };
-  var nivel = 1, round = 0, animals = [], foods = [], fedCount = 0;
-  var hud, lvlEl, animalsEl, tray, badgeEl;
+  var nivel = 1, round = 0, animals = [], foods = [], fedCount = 0, menuHidden = false, hintLeft = 0, memoTimer = null, budget = 0;
+  var hud, lvlEl, animalsEl, tray, badgeEl, hintBtn, budgetEl;
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
-  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="dish emoji">🍽️</span><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
-  lvlEl = hud.querySelector('b');
+  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="dish emoji">🍽️</span><span class="budget"><span class="emoji">🍽️</span><b>0</b></span><button class="btn purple lvbtn hintbtn" aria-label="Pista">💡</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
+  lvlEl = hud.querySelector('b'); hintBtn = hud.querySelector('.hintbtn'); budgetEl = hud.querySelector('.budget');
+  // Pista única del nivel Experto: vuelve a mostrar los menús 3 segundos
+  hintBtn.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault();
+    if (hintLeft <= 0 || !menuHidden) { KidsGame.sound.wrong(); return; }
+    hintLeft--; hintBtn.classList.add('off'); KidsGame.sound.pop(); KidsGame.say('Mira bien');
+    setHidden(false); clearTimeout(memoTimer); memoTimer = setTimeout(function () { setHidden(true); }, 3000);
+  });
   badgeEl = KidsGame.levelBadge(nivel); hud.insertBefore(badgeEl, hud.firstChild);
   animalsEl = document.createElement('div'); animalsEl.className = 'animals';
   tray = document.createElement('div'); tray.className = 'tray';
   game.appendChild(hud); game.appendChild(animalsEl); game.appendChild(tray);
-  hud.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+  hud.querySelector('.lvbtn:not(.hintbtn)').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
 
   function showPicker() {
     animalsEl.innerHTML = ''; tray.innerHTML = ''; animals = []; foods = [];
-    KidsGame.levelPicker({ key: 'alimenta', onPick: function (n) {
+    clearTimeout(memoTimer);
+    KidsGame.levelPicker({ key: 'alimenta', labels: LABELS, onPick: function (n) {
       nivel = n; round = 0;
       var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
       newRound();
@@ -145,35 +172,46 @@ var game = KidsGame.init({ title: 'Alimenta' });
   }
 
   function newRound() {
-    // Nivel 1: 2 animales, 1 distractor. Nivel 2: 3-4 animales, 2 distractores.
-    // Nivel 3: 4-5 animales, cada uno quiere DOS comidas en orden, 3 distractores parecidos.
-    var n = nivel === 1 ? 2 : nivel === 2 ? Math.min(3 + Math.floor(round / 2), 4) : Math.min(4 + Math.floor(round / 2), 5);
-    var nd = nivel, two = nivel === 3;
-    var pool = KidsGame.shuffle(PAIRS), chosen = [], usedFood = {}, i;
+    // Nivel 1: 2 animales, 1 distractor. Nivel 2: 3-4 animales, 3 distractores (1 parecido).
+    // Nivel 3: 4-5 animales, cada uno quiere DOS comidas en orden, 4 distractores parecidos.
+    // Nivel 4 (Experto): 3-4 animales con menú de TRES comidas en orden, una comida PROHIBIDA (que otro animal sí quiere),
+    //   la bandeja trae exactamente lo necesario, y el menú se esconde a los 5 segundos (1 pista).
+    var expert = nivel === 4;
+    var n = nivel === 1 ? 2 : nivel === 2 ? (round === 0 ? 3 : 4) : nivel === 3 ? Math.min(4 + Math.floor(round / 2), 5) : (round === 0 ? 3 : 4);
+    var nd = nivel === 1 ? 1 : nivel === 2 ? 3 : nivel === 3 ? 4 : 0, two = nivel === 3, per = expert ? 3 : two ? 2 : 1;
+    var pool = KidsGame.shuffle(PAIRS), chosen = [], usedFood = {}, i, j;
     for (i = 0; i < pool.length && chosen.length < n; i++) {
-      var p = pool[i];
-      if (usedFood[p[1]] || (two && usedFood[p[2]])) continue;
-      usedFood[p[1]] = true; if (two) usedFood[p[2]] = true; chosen.push(p);
+      var p = pool[i], clash = false;
+      for (j = 1; j <= per; j++) if (usedFood[p[j]]) clash = true;
+      if (clash) continue;
+      for (j = 1; j <= per; j++) usedFood[p[j]] = true;
+      chosen.push(p);
     }
     var distract = [];
-    if (two) {
-      var wanted = KidsGame.shuffle([].concat.apply([], chosen.map(function (p) { return [p[1], p[2]]; })));
-      for (i = 0; i < wanted.length && distract.length < nd; i++) { var sm = SIMILAR[wanted[i]]; if (sm && !usedFood[sm]) { usedFood[sm] = true; distract.push(sm); } }
+    if (nivel >= 2 && !expert) {
+      var wanted = KidsGame.shuffle([].concat.apply([], chosen.map(function (p) { return p.slice(1, per + 1); })));
+      var nsim = nivel === 2 ? 1 : nd;
+      for (i = 0; i < wanted.length && distract.length < nsim; i++) { var sm = SIMILAR[wanted[i]]; if (sm && !usedFood[sm]) { usedFood[sm] = true; distract.push(sm); } }
     }
     for (i = 0; i < pool.length && distract.length < nd; i++) {
       if (usedFood[pool[i][1]]) continue;
       usedFood[pool[i][1]] = true; distract.push(pool[i][1]);
     }
-    animals = chosen; fedCount = 0;
-    foods = KidsGame.shuffle([].concat.apply([], chosen.map(function (p) { return two ? [p[1], p[2]] : [p[1]]; })).concat(distract));
+    animals = chosen; fedCount = 0; menuHidden = false; hintLeft = expert ? 1 : 0; clearTimeout(memoTimer);
+    foods = KidsGame.shuffle([].concat.apply([], chosen.map(function (p) { return p.slice(1, per + 1); })).concat(distract));
+    budget = foods.length;
     lvlEl.textContent = String(round + 1);
+    hintBtn.classList.toggle('show', expert); hintBtn.classList.remove('off'); budgetEl.classList.toggle('show', expert); renderBudget();
     animalsEl.innerHTML = ''; tray.innerHTML = '';
     chosen.forEach(function (p, idx) {
       var a = document.createElement('div');
-      a.className = 'animal card pop' + (two ? ' two' : ''); a.dataset.food = p[1];
-      a._wants = two ? [p[1], p[2]] : [p[1]]; a._idx = 0;
+      a.className = 'animal card pop' + (two ? ' two' : expert ? ' three' : ''); a.dataset.food = p[1];
+      a._wants = p.slice(1, per + 1); a._idx = 0; a._miss = 0;
+      // Prohibida: una comida del menú de OTRO animal de esta ronda
+      a._no = expert ? KidsGame.pick(chosen[(idx + 1) % chosen.length].slice(1, per + 1)) : null;
       a.style.animationDelay = (idx * 0.08) + 's';
-      a.innerHTML = '<i class="gs"></i><span class="medal"><span class="face emoji">' + p[0] + '</span></span><span class="hint emoji">😋</span><span class="want"></span><span class="ok">✔</span>';
+      a.innerHTML = '<i class="gs"></i><span class="medal"><span class="face emoji">' + p[0] + '</span></span><span class="hint emoji">😋</span><span class="want"></span><span class="ok">✔</span>' +
+        (expert ? '<span class="nope"><span class="emoji">🚫' + a._no + '</span></span>' : '');
       renderWant(a);
       animalsEl.appendChild(a);
     });
@@ -185,11 +223,18 @@ var game = KidsGame.init({ title: 'Alimenta' });
       tray.appendChild(d);
     });
     layout();
-    KidsGame.say(two ? 'Cada animalito quiere dos comidas, en orden' : '¿Qué quiere comer cada animalito?');
+    if (expert) {
+      KidsGame.say('Mira bien el menú de cada animalito: tres comidas en orden y una prohibida. En cinco segundos se esconde');
+      memoTimer = setTimeout(function () { setHidden(true); KidsGame.sound.pop(); KidsGame.toast('¿Quién come qué? 🤔', 1400); }, MEMO_MS);
+    } else KidsGame.say(two ? 'Cada animalito quiere dos comidas, en orden' : '¿Qué quiere comer cada animalito?');
   }
-  function renderWant(a) {
+  function renderBudget() { budgetEl.querySelector('b').textContent = String(budget); }
+  function setHidden(on) { menuHidden = on; animals.forEach(function (p, i) { var a = animalsEl.children[i]; if (a) renderWant(a); }); }
+  function renderWant(a, reveal) {
     var w = a.querySelector('.want'), html = '';
-    a._wants.forEach(function (f, i) {
+    if (menuHidden && !reveal && !a.classList.contains('fed')) {
+      html = '<span class="w emoji">❓</span><span class="cnt">' + (a._wants.length - a._idx) + '</span>';
+    } else a._wants.forEach(function (f, i) {
       if (i) html += '<span class="sep">➜</span>';
       html += '<span class="w emoji' + (i < a._idx ? ' done' : i === a._idx ? ' now' : '') + '">' + f + '</span>';
     });
@@ -253,21 +298,31 @@ var game = KidsGame.init({ title: 'Alimenta' });
     if (!drag || ev.pointerId !== drag.id) return;
     var d = drag; drag = null;
     if (d.over) d.over.classList.remove('over');
-    var t = d.over;
-    if (t && t._wants && t._wants[t._idx] === d.src.dataset.food) {
+    var t = d.over, food = d.src.dataset.food;
+    if (t && t._wants && t._wants[t._idx] === food) {
       // ¡Ñam ñam!
       d.el.remove(); d.src.classList.remove('ghost'); d.src.classList.add('gone');
-      t._idx++;
+      t._idx++; t._miss = 0; budget--; renderBudget();
       t.classList.remove('nam'); void t.offsetWidth; t.classList.add('nam');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
       hearts(t); sparkles(t);
       if (t._idx >= t._wants.length) {
         t.classList.add('fed'); t.querySelector('.hint').textContent = '😊'; fedCount++;
+        renderWant(t);
         KidsGame.say('¡Ñam ñam!');
         if (fedCount === animals.length) setTimeout(finish, 900);
       } else { renderWant(t); KidsGame.say('¡Ñam! ¿Y ahora?'); }
     } else {
-      if (t) { t.classList.remove('no'); void t.offsetWidth; t.classList.add('no'); KidsGame.sound.wrong(); }
+      if (t && t._no === food) {
+        // Comida prohibida para este animalito
+        var np = t.querySelector('.nope'); if (np) { np.classList.remove('shake'); void np.offsetWidth; np.classList.add('shake'); }
+        t.classList.remove('no'); void t.offsetWidth; t.classList.add('no');
+        KidsGame.sound.wrong(); KidsGame.say('¡No! Eso no lo come'); KidsGame.toast('🚫 ¡Eso no lo come!', 1200);
+      } else if (t) {
+        t.classList.remove('no'); void t.offsetWidth; t.classList.add('no'); KidsGame.sound.wrong();
+        // Experto con menú escondido: al segundo error seguido se asoma el menú de ese animalito un momento
+        if (menuHidden) { t._miss++; if (t._miss >= 2) { t._miss = 0; renderWant(t, true); (function (a) { setTimeout(function () { renderWant(a); }, 1200); })(t); } }
+      }
       // La comida regresa a la bandeja
       d.el.classList.add('back');
       d.el.style.transform = 'translate(' + d.home.x + 'px,' + d.home.y + 'px) translate(-50%,-50%) scale(1)';
@@ -300,6 +355,8 @@ var game = KidsGame.init({ title: 'Alimenta' });
     }
   }
   function finish() {
+    clearTimeout(memoTimer);
+    KidsGame.levelDone(nivel);
     KidsGame.celebrate({
       sub: '¡Todos comieron! ' + animals.map(function (p) { return p[0]; }).join(' '),
       onNext: function () { round++; newRound(); },
@@ -308,6 +365,10 @@ var game = KidsGame.init({ title: 'Alimenta' });
   }
 
   window.addEventListener('resize', layout);
+  // Estado para pruebas
+  window.__alimenta = function () { return { nivel: nivel, round: round, hidden: menuHidden, budget: budget, hints: hintLeft,
+    animals: Array.prototype.map.call(animalsEl.children, function (a) { return { face: a.querySelector('.face').textContent, wants: a._wants, idx: a._idx, no: a._no, fed: a.classList.contains('fed') }; }),
+    tray: Array.prototype.map.call(tray.children, function (f) { return { food: f.dataset.food, gone: f.classList.contains('gone') }; }) }; };
   showPicker();
 })();
 </script>

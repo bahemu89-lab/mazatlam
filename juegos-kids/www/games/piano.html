@@ -97,6 +97,29 @@
   /* Notas musicales que flotan al tocar */
   .np { position: absolute; pointer-events: none; z-index: 4; font-size: 30px; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 8px var(--g), 0 2px 4px rgba(0,0,0,.4); animation: npfly 1s ease-out forwards; }
   @keyframes npfly { 0%{ transform: translate(-50%,0) scale(.5) rotate(0deg); opacity: 0 } 15%{ opacity: 1 } 100%{ transform: translate(calc(-50% + var(--dx)), -150px) scale(1.25) rotate(var(--r)); opacity: 0 } }
+  /* Nivel Experto: tira de notas (lectura), compositor y oído */
+  .staff { flex: 0 0 auto; height: 100px; margin: 4px 10px 0; position: relative; overflow: hidden; border-radius: 14px; display: none; z-index: 2;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 16px, rgba(120,90,40,.35) 16px 18px), linear-gradient(180deg, #fff9e6, #ffeec4);
+    box-shadow: inset 0 2px 0 #fff, 0 6px 12px rgba(0,0,0,.35); }
+  .staff.show { display: block; }
+  .staff .playline { position: absolute; left: 110px; top: 0; bottom: 0; width: 6px; background: linear-gradient(180deg, #ff3d7f, #b8306f); border-radius: 3px; box-shadow: 0 0 12px rgba(255,61,127,.9); z-index: 2; }
+  .staff .playline::after { content: '👆'; position: absolute; left: -14px; bottom: -2px; font-size: 26px; }
+  .note { position: absolute; height: 26px; border-radius: 13px; display: flex; align-items: center; gap: 4px; padding: 0 8px; font-size: 17px; font-weight: 900; color: #fff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.4); box-shadow: 0 3px 0 rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.5); white-space: nowrap; will-change: left; box-sizing: border-box; }
+  .note .emoji { font-size: 17px; }
+  .note.hit { background: linear-gradient(180deg, #8ef0b0, #24b36c) !important; }
+  .note.wrong { background: linear-gradient(180deg, #ff9a8b, #e63946) !important; }
+  .note.miss { opacity: .3; }
+  .status b { color: #ffe14d; }
+  .status .crow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  .status .crow .btn { font-size: 20px; min-height: 56px; padding: 4px 14px; }
+  .status .opt { --c: #ff6b6b; background: linear-gradient(180deg, #fff, #f0f3fa); color: #1f2f6b; min-width: 96px; min-height: 64px; font-size: 22px; border-radius: 20px;
+    display: inline-flex; flex-direction: column; gap: 0; align-items: center; justify-content: center; box-shadow: 0 5px 0 var(--c), 0 10px 14px rgba(0,0,0,.35); border: 0; font-family: inherit; font-weight: 900; cursor: pointer; text-shadow: none; }
+  .status .opt .emoji { font-size: 30px; }
+  .status .opt.bad { animation: shake .4s; }
+  .recdots { display: inline-flex; gap: 8px; margin-left: 8px; vertical-align: middle; }
+  .recdots .dot { --c: #ffc21a; width: 22px; height: 22px; }
+  .recdots .dot.on { background: radial-gradient(circle at 35% 30%, #fff, var(--c) 55%, var(--c)); box-shadow: 0 0 10px var(--c), 0 2px 3px rgba(0,0,0,.5); }
   @media (orientation: portrait) {
     .top .btn { font-size: 20px; padding: 6px 12px; }
   }
@@ -106,6 +129,7 @@
 <div class="game">
   <div class="top" id="top"></div>
   <div class="status" id="status"></div>
+  <div class="staff" id="staff"><div class="playline"></div></div>
   <div class="bars" id="bars"></div>
 </div>
 <script src="../common.js"></script>
@@ -128,12 +152,17 @@ var SONGS = {
   estrellita: { name: 'Estrellita', notes: [0, 0, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0], dur: [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2], chunks: [[0, 4], [4, 7], [7, 11], [11, 14]] },
   // Martinillo (Fray Santiago): C D E C, C D E C, E F G, E F G, G A G F E C, G A G F E C, C G C, C G C
   martinillo: { name: 'Martinillo', notes: [0, 1, 2, 0, 0, 1, 2, 0, 2, 3, 4, 2, 3, 4, 4, 5, 4, 3, 2, 0, 4, 5, 4, 3, 2, 0, 0, 4, 0, 0, 4, 0],
-    dur: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, .5, .5, .5, .5, 1, 1, .5, .5, .5, .5, 1, 1, 1, 1, 2, 1, 1, 2] }
+    dur: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, .5, .5, .5, .5, 1, 1, .5, .5, .5, .5, 1, 1, 1, 1, 2, 1, 1, 2],
+    chunks: [[0, 4], [4, 8], [8, 11], [11, 14], [14, 20], [20, 26], [26, 29], [29, 32]] },
+  // Cascabel: E E E, E E E, E G C D E
+  cascabel: { name: 'Cascabel', notes: [2, 2, 2, 2, 2, 2, 2, 4, 0, 1, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 2, 1, 4],
+    dur: [1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, .5, .5, 1, 1, 1, 1, 2], chunks: [[0, 3], [3, 6], [6, 11], [11, 16], [16, 20], [20, 25]] }
 };
-var nivel = 1, SONG = SONGS.estrellita.notes, SONG_DUR = SONGS.estrellita.dur, SONG_NAME = 'Estrellita', CHUNKS = null, chunk = 0;
+var nivel = 1, SONG = SONGS.estrellita.notes, SONG_DUR = SONGS.estrellita.dur, SONG_NAME = 'Estrellita', CHUNKS = null, chunk = 0, songN = 0;
+var ORDER = ['estrellita', 'martinillo', 'cascabel'];
 function setSong(n) {
-  var s = n === 2 ? SONGS.martinillo : SONGS.estrellita;
-  SONG = s.notes; SONG_DUR = s.dur; SONG_NAME = s.name; CHUNKS = n === 3 ? s.chunks : null; chunk = 0;
+  var s = n === 1 ? SONGS.estrellita : n === 2 ? SONGS.martinillo : SONGS[ORDER[songN % ORDER.length]];
+  SONG = s.notes; SONG_DUR = s.dur; SONG_NAME = s.name; CHUNKS = n >= 3 ? s.chunks : null; chunk = 0;
 }
 
 // ---------- Audio propio (instrumentos) ----------
@@ -187,6 +216,7 @@ function rgba(hex, a) {
 
 // ---------- UI ----------
 var topEl = document.getElementById("top"), statusEl = document.getElementById("status"), barsEl = document.getElementById('bars');
+var staffEl = document.getElementById('staff');
 var bars = [], litTimers = {};
 NOTES.forEach(function (n, i) {
   var b = document.createElement('div');
@@ -232,6 +262,11 @@ var sp = document.createElement('div'); sp.className = 'spacer'; topEl.appendChi
 var followBtn = document.createElement('button'); followBtn.className = 'btn purple'; followBtn.id = 'follow'; followBtn.textContent = '🎵 Sigue la canción';
 var listenBtn = document.createElement('button'); listenBtn.className = 'btn blue'; listenBtn.id = 'listen'; listenBtn.textContent = '🎼 Escuchar';
 topEl.appendChild(followBtn); topEl.appendChild(listenBtn);
+// Nivel Experto: tres retos
+var readBtn = document.createElement('button'); readBtn.className = 'btn purple xp'; readBtn.id = 'read'; readBtn.textContent = '🎼 Leer notas';
+var compBtn = document.createElement('button'); compBtn.className = 'btn blue xp'; compBtn.id = 'compose'; compBtn.textContent = '🎤 Compón';
+var earBtn = document.createElement('button'); earBtn.className = 'btn green xp'; earBtn.id = 'ear'; earBtn.textContent = '👂 ¿Qué nota?';
+topEl.appendChild(readBtn); topEl.appendChild(compBtn); topEl.appendChild(earBtn);
 var hud = document.createElement('div'); hud.className = 'hud'; topEl.appendChild(hud);
 function buildHud() {
   hud.innerHTML = '';
@@ -239,7 +274,10 @@ function buildHud() {
   var b = document.createElement('button'); b.className = 'btn round yellow lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
   b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
   hud.appendChild(b);
+  followBtn.style.display = listenBtn.style.display = nivel === 4 ? 'none' : '';
+  readBtn.style.display = compBtn.style.display = earBtn.style.display = nivel === 4 ? '' : 'none';
 }
+function selTop(btn) { [followBtn, listenBtn, readBtn, compBtn, earBtn].forEach(function (b) { b.classList.toggle('sel', b === btn); }); }
 
 // ---------- Modos ----------
 var mode = 'free', step = 0, listenTimers = [];
@@ -251,14 +289,15 @@ function dotsHtml() {
 }
 function clearHints() { for (var i = 0; i < bars.length; i++) bars[i].classList.remove('hint'); }
 function stopListen() { listenTimers.forEach(clearTimeout); listenTimers = []; }
+function stopAll() { stopListen(); clearHints(); stopRead(); }
 function freeMode() {
-  stopListen(); clearHints(); mode = 'free'; step = 0; chunk = 0;
-  followBtn.classList.remove('sel'); listenBtn.classList.remove('sel');
+  stopAll(); mode = 'free'; step = 0; chunk = 0;
+  selTop(null);
   setStatus('<span class="emoji">🎹</span> ¡Toca!');
 }
 function startFollow() {
-  stopListen(); clearHints(); mode = 'follow'; step = 0; chunk = 0;
-  followBtn.classList.add('sel'); listenBtn.classList.remove('sel');
+  stopAll(); mode = 'follow'; step = 0; chunk = 0;
+  selTop(followBtn);
   if (CHUNKS) { playChunk(); KidsGame.say('Escucha y repite'); }
   else { showHint(); KidsGame.say('Toca la barra que brilla'); }
 }
@@ -267,7 +306,7 @@ function showHint() {
   if (!CHUNKS && step < SONG.length) bars[SONG[step]].classList.add('hint');
   setStatus('<span class="emoji">👆</span> ' + dotsHtml());
 }
-// Nivel 3 (eco): suena una frase de 3-4 notas y ella la repite sin ayuda
+// Nivel 3 (eco): suena una frase de 3-6 notas y ella la repite sin ayuda
 function playChunk() {
   stopListen(); clearHints();
   var c = CHUNKS[chunk]; step = c[0]; mode = 'echo';
@@ -283,13 +322,15 @@ function finishFollow() {
   clearHints(); mode = 'free'; followBtn.classList.remove('sel');
   setStatus('<span class="emoji">🌟</span> ' + dotsHtml());
   KidsGame.addStar(nivel === 3 ? 3 : 2);
+  KidsGame.levelDone(nivel);
   setTimeout(function () {
-    KidsGame.celebrate({ msg: '¡' + SONG_NAME + '!', sub: 'Tocaste la canción', stars: nivel === 1 ? 2 : 3, onAgain: startFollow, onNext: freeMode });
+    KidsGame.celebrate({ msg: '¡' + SONG_NAME + '!', sub: 'Tocaste la canción', stars: nivel === 1 ? 2 : 3, onAgain: startFollow,
+      onNext: function () { if (nivel === 3) { songN++; setSong(3); KidsGame.toast('🎵 ' + SONG_NAME); } freeMode(); } });
   }, 500);
 }
 function listen() {
-  stopListen(); clearHints(); mode = 'listen'; step = 0;
-  listenBtn.classList.add('sel'); followBtn.classList.remove('sel');
+  stopAll(); mode = 'listen'; step = 0;
+  selTop(listenBtn);
   var t = 0, beat = 420;
   SONG.forEach(function (idx, k) {
     listenTimers.push(setTimeout(function () {
@@ -304,6 +345,179 @@ function listen() {
 // Nivel 3: "Sigue la canción" primero toca toda la canción y luego pide repetir por frases
 followBtn.onclick = function () { KidsGame.sound.tap(); if (mode !== 'free') freeMode(); else if (CHUNKS) listen(); else startFollow(); };
 listenBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'listen') freeMode(); else listen(); };
+
+// ---------- Experto 1: leer notas en la tira (ritmo largo/corto, ventana ±300 ms) ----------
+var BEAT = 600, PXMS = 0.12, LINE_X = 110, WINDOW = 300;
+var read = null, readRaf = 0, readSong = 0;
+function stopRead() {
+  if (readRaf) cancelAnimationFrame(readRaf); readRaf = 0; read = null;
+  staffEl.classList.remove('show'); staffEl.innerHTML = '<div class="playline"></div>';
+}
+function startRead() {
+  stopAll(); mode = 'read'; selTop(readBtn);
+  var s = SONGS[ORDER[readSong % ORDER.length]];
+  staffEl.classList.add('show');
+  var t = 0, items = [];
+  s.notes.forEach(function (idx, k) {
+    var el = document.createElement('div'); el.className = 'note';
+    el.style.background = 'linear-gradient(180deg, ' + shade(NOTES[idx].c, .35) + ', ' + NOTES[idx].c + ')';
+    el.style.width = Math.max(40, s.dur[k] * BEAT * PXMS - 8) + 'px';
+    el.style.top = (5 + (7 - idx) * 9) + 'px';
+    el.innerHTML = '<span class="emoji">' + NOTES[idx].a + '</span>' + NOTES[idx].n;
+    staffEl.appendChild(el);
+    items.push({ idx: idx, t: t, dur: s.dur[k], el: el, state: 'pending' });
+    t += s.dur[k] * BEAT;
+  });
+  read = { items: items, t0: performance.now() + 3000, score: 0, name: s.name, total: items.length, end: t + 900, done: false };
+  setStatus('<span class="emoji">🎼</span> ' + s.name + ' · toca cada nota cuando llegue a la línea <b class="score">0/' + items.length + '</b>');
+  KidsGame.say('Lee las notas. Toca cada animal cuando llegue a la línea');
+  var cnt = 3; KidsGame.toast('3', 800);
+  listenTimers.push(setTimeout(function () { KidsGame.toast('2', 800); KidsGame.sound.tap(); }, 1000));
+  listenTimers.push(setTimeout(function () { KidsGame.toast('1', 800); KidsGame.sound.tap(); }, 2000));
+  listenTimers.push(setTimeout(function () { KidsGame.toast('¡Ya!', 600); KidsGame.sound.pop(); }, 2900));
+  readRaf = requestAnimationFrame(readFrame);
+}
+function readFrame(now) {
+  if (!read) return;
+  var rel = now - read.t0;
+  read.items.forEach(function (n) {
+    n.el.style.left = (LINE_X + (n.t - rel) * PXMS) + 'px';
+    if (n.state === 'pending' && rel - n.t > WINDOW) { n.state = 'miss'; n.el.classList.add('miss'); }
+  });
+  if (rel > read.end && !read.done) { read.done = true; endRead(); return; }
+  readRaf = requestAnimationFrame(readFrame);
+}
+function readHit(i) {
+  if (!read) return;
+  var rel = performance.now() - read.t0, best = null, bd = 1e9;
+  read.items.forEach(function (n) { if (n.state !== 'pending') return; var d = Math.abs(n.t - rel); if (d <= WINDOW && d < bd) { bd = d; best = n; } });
+  if (!best) return;
+  if (best.idx === i) {
+    best.state = 'hit'; best.el.classList.add('hit'); best.el.innerHTML = '✔ ' + NOTES[i].n; read.score++;
+    KidsGame.addStar(); var sc = statusEl.querySelector('.score'); if (sc) sc.textContent = read.score + '/' + read.total;
+  } else { best.state = 'wrong'; best.el.classList.add('wrong'); best.el.innerHTML = '✖ ' + NOTES[best.idx].n; KidsGame.sound.wrong(); }
+}
+function endRead() {
+  var sc = read.score, tot = read.total, ok = sc >= Math.ceil(tot * 0.7);
+  stopRead(); mode = 'free'; selTop(null);
+  setStatus('<span class="emoji">🎼</span> ' + sc + ' de ' + tot + ' notas');
+  if (ok) { KidsGame.levelDone(4); readSong++; }
+  setTimeout(function () {
+    KidsGame.celebrate({ msg: ok ? '¡Leíste la música!' : '¡Casi! Otra vez', sub: '🎼 ' + sc + ' de ' + tot + ' notas a tiempo', stars: ok ? 3 : 1, say: ok,
+      onAgain: startRead, onNext: function () { if (!ok) readSong++; startRead(); } });
+    if (!ok) KidsGame.say('Casi. Inténtalo otra vez');
+  }, 400);
+}
+
+// ---------- Experto 2: compón 8 notas, escúchalas y guárdalas ----------
+var rec = [], melodies = [];
+try { melodies = JSON.parse(localStorage.getItem('kg-piano-melodias') || '[]'); if (!melodies.length) melodies = []; } catch (e) { melodies = []; }
+function recDots() {
+  var s = '<span class="recdots">';
+  for (var i = 0; i < 8; i++) s += '<span class="dot' + (i < rec.length ? ' on' : '') + '"' + (i < rec.length ? ' style="--c:' + NOTES[rec[i]].c + '"' : '') + '></span>';
+  return s + '</span>';
+}
+function slotsHtml() {
+  var s = '';
+  for (var i = 0; i < 3; i++) s += '<button class="btn ' + (melodies[i] ? 'yellow' : 'blue') + ' slot" data-s="' + i + '">' + (melodies[i] ? '🎵 ' + (i + 1) : '· ' + (i + 1)) + '</button>';
+  return s;
+}
+function bindSlots() {
+  var sl = statusEl.querySelectorAll('.slot');
+  for (var i = 0; i < sl.length; i++) (function (b) {
+    b.onclick = function () { var m = melodies[+b.getAttribute('data-s')]; KidsGame.sound.tap(); if (m) playMelody(m); else KidsGame.toast('Vacío · graba y guarda 💾'); };
+  })(sl[i]);
+}
+function startCompose() {
+  stopAll(); mode = 'compose'; selTop(compBtn); rec = [];
+  setStatus('<span class="emoji">🎤</span> Toca 8 notas ' + recDots() + '<div class="crow">' + slotsHtml() + '</div>');
+  bindSlots();
+  KidsGame.say('Inventa una melodía de ocho notas');
+}
+function composeHit(i) {
+  if (rec.length >= 8) return;
+  rec.push(i);
+  setStatus('<span class="emoji">🎤</span> Toca 8 notas ' + recDots() + '<div class="crow">' + slotsHtml() + '</div>'); bindSlots();
+  if (rec.length === 8) {
+    mode = 'playback'; KidsGame.sound.ok();
+    listenTimers.push(setTimeout(function () { playMelody(rec, function () { composeDone(); }); }, 600));
+  }
+}
+function playMelody(m, cb) {
+  stopListen(); var beat = 450;
+  m.forEach(function (idx, k) { listenTimers.push(setTimeout(function () { play(NOTES[idx].f); light(idx, beat - 80); }, k * beat)); });
+  listenTimers.push(setTimeout(function () { cb && cb(); }, m.length * beat + 200));
+}
+function composeDone() {
+  mode = 'compose';
+  setStatus('<span class="emoji">🎶</span> ¡Tu melodía! ' + recDots() + '<div class="crow"><button class="btn purple" id="hear">▶ Oír</button><button class="btn green" id="save">💾 Guardar</button><button class="btn blue" id="redo">🔁 Otra</button>' + slotsHtml() + '</div>');
+  bindSlots();
+  statusEl.querySelector('#hear').onclick = function () { KidsGame.sound.tap(); playMelody(rec); };
+  statusEl.querySelector('#redo').onclick = function () { KidsGame.sound.tap(); startCompose(); };
+  statusEl.querySelector('#save').onclick = function () {
+    var slot = 0; while (slot < 3 && melodies[slot]) slot++; if (slot >= 3) slot = (melodies.length) % 3;
+    melodies[slot] = rec.slice(); try { localStorage.setItem('kg-piano-melodias', JSON.stringify(melodies)); } catch (e) {}
+    KidsGame.sound.ok(); KidsGame.addStar(3); KidsGame.levelDone(4);
+    KidsGame.celebrate({ msg: '¡Eres compositora!', sub: '💾 Melodía guardada en el lugar ' + (slot + 1), onAgain: startCompose, onNext: startEar });
+  };
+  KidsGame.say('¡Qué bonita! Puedes guardarla');
+}
+
+// ---------- Experto 3: ¿qué nota fue? (oído, 3 opciones) ----------
+var ear = null;
+function startEar() {
+  stopAll(); mode = 'ear'; selTop(earBtn);
+  ear = { q: 0, score: 0, total: 8, cur: null, tries: 0 };
+  KidsGame.say('Escucha y dime qué nota fue');
+  askEar();
+}
+function askEar() {
+  var ans = KidsGame.rand(8), opts = [ans], far = ear.q < 4;
+  var guard = 0;
+  while (opts.length < 3 && guard++ < 200) {
+    var c = KidsGame.rand(8);
+    if (opts.indexOf(c) >= 0) continue;
+    if (far && Math.abs(c - ans) < 3) continue;
+    opts.push(c);
+  }
+  while (opts.length < 3) { for (var k = 0; k < 8 && opts.length < 3; k++) if (opts.indexOf(k) < 0) opts.push(k); }
+  opts = KidsGame.shuffle(opts);
+  ear.cur = ans; ear.tries = 0;
+  setStatus('<span class="emoji">👂</span> ¿Qué nota fue? <b>' + (ear.q + 1) + '/' + ear.total + '</b><div class="crow"><button class="btn purple" id="again">🔁 Oír</button>' +
+    opts.map(function (o) { return '<button class="opt" data-n="' + o + '" style="--c:' + NOTES[o].c + '"><span class="emoji">' + NOTES[o].a + '</span>' + NOTES[o].n + '</button>'; }).join('') + '</div>');
+  statusEl.querySelector('#again').onclick = function () { KidsGame.sound.tap(); play(NOTES[ear.cur].f); };
+  var ob = statusEl.querySelectorAll('.opt');
+  for (var i = 0; i < ob.length; i++) (function (b) {
+    b.onclick = function () {
+      var n = +b.getAttribute('data-n');
+      if (n === ear.cur) {
+        if (ear.tries === 0) ear.score++;
+        KidsGame.sound.ok(); KidsGame.addStar(); light(n); ear.q++;
+        if (ear.q >= ear.total) endEar(); else listenTimers.push(setTimeout(askEar, 700));
+      } else {
+        ear.tries++; b.classList.add('bad'); KidsGame.sound.wrong();
+        // enseña: suena la que tocó y luego la correcta
+        listenTimers.push(setTimeout(function () { play(NOTES[n].f); light(n); }, 300));
+        listenTimers.push(setTimeout(function () { play(NOTES[ear.cur].f); }, 1000));
+        KidsGame.toast('Esa es ' + NOTES[n].n + '… escucha otra vez 👂', 1500);
+      }
+    };
+  })(ob[i]);
+  listenTimers.push(setTimeout(function () { play(NOTES[ans].f); }, 500));
+}
+function endEar() {
+  var ok = ear.score >= 6, sc = ear.score, tot = ear.total;
+  mode = 'free'; selTop(null);
+  setStatus('<span class="emoji">👂</span> ' + sc + ' de ' + tot);
+  if (ok) KidsGame.levelDone(4);
+  setTimeout(function () {
+    KidsGame.celebrate({ msg: ok ? '¡Qué buen oído!' : '¡Casi! Otra vez', sub: '👂 ' + sc + ' de ' + tot + ' notas a la primera', stars: ok ? 3 : sc >= 4 ? 2 : 1, say: ok, onAgain: startEar, onNext: startRead });
+    if (!ok) KidsGame.say('Casi. Inténtalo otra vez');
+  }, 400);
+}
+readBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'read') freeMode(); else startRead(); };
+compBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'compose' || mode === 'playback') freeMode(); else startCompose(); };
+earBtn.onclick = function () { KidsGame.sound.tap(); if (mode === 'ear') freeMode(); else startEar(); };
 
 // ---------- Toques (con deslizamiento entre barras) ----------
 var active = {};
@@ -323,7 +537,8 @@ function hit(i) {
       mode = 'echo'; KidsGame.sound.wrong(); KidsGame.toast('Escucha otra vez 👂');
       listenTimers.push(setTimeout(playChunk, 900));
     }
-  }
+  } else if (mode === 'read') readHit(i);
+  else if (mode === 'compose') composeHit(i);
 }
 function barAt(e) {
   var el = document.elementFromPoint(e.clientX, e.clientY);
@@ -349,8 +564,14 @@ barsEl.addEventListener('pointercancel', end);
 document.addEventListener('pointerup', end);
 
 // ---------- Niveles ----------
-function start(n) { nivel = n; setSong(n); buildHud(); freeMode(); }
-function pickLevel() { stopListen(); clearHints(); mode = 'free'; KidsGame.levelPicker({ onPick: start }); }
+function start(n) {
+  nivel = n; setSong(n); buildHud(); freeMode();
+  if (n === 3) KidsGame.toast('🎵 ' + SONG_NAME + ' · escucha y repite', 1800);
+  if (n === 4) { setStatus('<span class="emoji">🏆</span> Elige: 🎼 Leer · 🎤 Compón · 👂 ¿Qué nota?'); KidsGame.say('Elige un reto: leer notas, componer o adivinar la nota'); }
+}
+function pickLevel() { stopAll(); mode = 'free'; KidsGame.levelPicker({
+  labels: { 1: 'Sigue la luz', 2: 'Martinillo, más notas', 3: 'Eco: escucha y repite frases', 4: 'Lee notas a tiempo, compón y oído' },
+  onPick: start }); }
 
 setStatus('<span class="emoji">🎹</span> ¡Toca!');
 pickLevel();

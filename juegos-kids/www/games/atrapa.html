@@ -73,6 +73,30 @@
     pointer-events: none;
   }
   .hole .critter .emoji { display: inline-block; filter: brightness(.45) drop-shadow(0 4px 4px rgba(0,0,0,.35)); transition: filter .2s; }
+  /* Nivel Experto: sombrero, collar de color y regla que cambia */
+  .hole .critter { display: flex; flex-direction: column; align-items: center; }
+  .hole .critter .hat { display: none; font-size: 55%; margin-bottom: -22%; z-index: 2; position: relative; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  .hole.hat .critter .hat { display: block; }
+  .hole .critter .collar { display: none; position: absolute; left: 50%; bottom: calc(var(--fs) * .2); width: calc(var(--fs) * .8); height: calc(var(--fs) * .18); margin-left: calc(var(--fs) * -.4);
+    border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.35), inset 0 -3px 4px rgba(0,0,0,.2); z-index: 3; }
+  .hole.c-azul .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #9fe0ff, #2f95e8 60%, #155f9e); }
+  .hole.c-rojo .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #ff9c9c, #e63946 60%, #8f1a24); }
+  .hole.c-verde .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #9ff0c0, #2cb67d 60%, #146b48); }
+  .hole.c-amarillo .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #fff0a0, #ffb703 60%, #b06f00); }
+  .hole.nope .critter .emoji { animation: shake .35s !important; }
+  .rule {
+    position: relative; z-index: 1; flex: 0 0 auto; display: none; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 20px; border-radius: 30px;
+    font-size: 24px; font-weight: 900; color: #fff; border: 3px solid #fff; white-space: nowrap; max-width: 96vw;
+    background: linear-gradient(180deg, #b39cff, #7f5af0); text-shadow: 0 2px 0 #5232b3, 0 4px 8px rgba(0,0,0,.3);
+    box-shadow: 0 6px 0 #5232b3, 0 12px 20px rgba(0,50,0,.3), inset 0 2px 0 rgba(255,255,255,.6); animation: pop .4s ease-out;
+  }
+  .rule.show { display: flex; }
+  .rule .emoji { font-size: 30px; }
+  .rule .sw { display: inline-block; width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; background: radial-gradient(circle at 40% 30%, #9fe0ff, #2f95e8 60%, #155f9e); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+  .rule .sq { display: inline-flex; align-items: center; gap: 2px; }
+  .rule .sq b { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #fff; color: #5232b3; font-size: 16px; text-shadow: none; margin-right: 2px; }
+  .rule .sq .emoji.done { opacity: .35; filter: grayscale(1); }
+  .rule .sq .emoji.now { transform: scale(1.25); }
   .hole.up .critter { transform: translateY(0); }
   .hole.up .critter .emoji { filter: brightness(1) drop-shadow(0 6px 5px rgba(0,0,0,.35)); animation: popup .28s ease-out, wiggle .5s .28s infinite; }
   @keyframes popup { 0%{transform:scale(.7,1.25)} 55%{transform:scale(1.15,.88)} 100%{transform:scale(1,1)} }
@@ -103,14 +127,27 @@
 var game = KidsGame.init({ title: 'Atrapa al topo' });
 (function () {
   var ANIMALS = ['🐹','🐭','🐰','🐿️','🦔','🐸','🐥','🐻','🦊','🐱'];
+  var BIRDS = ['🐥','🐦','🦉','🦜'], NOBIRDS = ['🐹','🐭','🐰','🐿️','🦔','🐸','🐻','🦊','🐱'];
+  var COLS = ['azul', 'rojo', 'verde', 'amarillo'];
   // Dificultad: tiempo que el animal asoma (up), pausa entre apariciones (gap) y cantidad de hoyos
+  // Nivel 4 (Experto): 5x4 hoyos, 0.5 s, y una REGLA que cambia cada 8 atrapadas (sombrero, color, no pájaros, en orden)
   var DIFF = {
     1: [{ cols: 3, rows: 3, up: 1400, gap: 1100 }, { cols: 3, rows: 3, up: 1300, gap: 950 }],
-    2: [{ cols: 3, rows: 3, up: 1000, gap: 800 }, { cols: 4, rows: 3, up: 900, gap: 700 }],
-    3: [{ cols: 4, rows: 3, up: 600, gap: 500 }, { cols: 4, rows: 4, up: 550, gap: 420 }]
+    2: [{ cols: 3, rows: 3, up: 950, gap: 750 }, { cols: 4, rows: 3, up: 800, gap: 620 }],
+    3: [{ cols: 4, rows: 3, up: 600, gap: 480 }, { cols: 4, rows: 4, up: 600, gap: 420 }, { cols: 5, rows: 4, up: 550, gap: 400 }],
+    4: [{ cols: 5, rows: 4, up: 500, gap: 380, expert: true }, { cols: 5, rows: 4, up: 480, gap: 340, expert: true }]
   };
+  var LABELS = { 1: '9 hoyos, lentos', 2: '12 hoyos, 0.8 s', 3: '20 hoyos, 0.6 s', 4: 'Reglas y orden, 0.5 s' };
+  var RULES = [
+    { id: 'hat',    html: 'Solo con <span class="emoji">🎩</span>',            say: 'Solo atrapa a los que tienen sombrero' },
+    { id: 'azul',   html: 'Solo los <span class="sw"></span> azules',           say: 'Solo atrapa a los del collar azul' },
+    { id: 'nobird', html: 'NO pájaros <span class="emoji">🚫🐦</span>',          say: 'Atrapa a los que no son pájaros' },
+    { id: 'seq',    html: 'En orden',                                             say: 'Atrápalos en este orden' }
+  ];
+  var PER_RULE = 8, NEED = 10;
   var nivel = 1, LEVELS = DIFF[1];
   var level = 0, cfg, holes = [], caught = 0, running = false, timer = null;
+  var rules = [], ruleIdx = 0, rule = null, seq = [], seqPos = 0, need = NEED;
   game.innerHTML =
     '<span class="deco sway" style="left:2%;bottom:4%;font-size:48px">🌷</span>' +
     '<span class="deco sway" style="left:9%;bottom:2%;font-size:40px;animation-delay:-1s">🌼</span>' +
@@ -122,12 +159,13 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
   var hud = document.createElement('div'); hud.className = 'hud';
   var lvlEl = document.createElement('div'); lvlEl.className = 'lvl';
   var prog = document.createElement('div'); prog.className = 'prog';
+  var ruleEl = document.createElement('div'); ruleEl.className = 'rule';
   var board = document.createElement('div'); board.className = 'board';
-  game.appendChild(hud); game.appendChild(lvlEl); game.appendChild(prog); game.appendChild(board);
+  game.appendChild(hud); game.appendChild(lvlEl); game.appendChild(ruleEl); game.appendChild(prog); game.appendChild(board);
 
   function layout() {
     var cols = cfg.cols, rows = cfg.rows;
-    var W = game.clientWidth - 16, H = game.clientHeight - prog.offsetHeight - 26;
+    var W = game.clientWidth - 16, H = game.clientHeight - prog.offsetHeight - ruleEl.offsetHeight - (ruleEl.offsetHeight ? 10 : 0) - 26;
     if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
     var gap = 8;
     var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));
@@ -142,15 +180,41 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
 
   function renderProg() {
     prog.innerHTML = '';
-    for (var i = 0; i < 10; i++) { var d = document.createElement('i'); if (i < caught) d.className = 'on'; prog.appendChild(d); }
+    var expert = cfg && cfg.expert, total = expert ? PER_RULE : need;
+    var shown = expert ? (caught >= need ? PER_RULE : caught % PER_RULE) : caught;
+    for (var i = 0; i < total; i++) { var d = document.createElement('i'); if (i < shown) d.className = 'on'; prog.appendChild(d); }
+  }
+  // Regla del nivel Experto (cambia cada 8 atrapadas)
+  function newSeq() { seq = KidsGame.shuffle(ANIMALS).slice(0, 3); seqPos = 0; }
+  function renderRule() {
+    if (!cfg.expert || !rule) { ruleEl.classList.remove('show'); ruleEl.innerHTML = ''; return; }
+    var html = rule.html;
+    if (rule.id === 'seq') {
+      html += ' <span class="sq">' + seq.map(function (a, i) { return '<b>' + (i + 1) + '</b><span class="emoji' + (i < seqPos ? ' done' : i === seqPos ? ' now' : '') + '">' + a + '</span>'; }).join('') + '</span>';
+    }
+    ruleEl.innerHTML = html; ruleEl.classList.add('show');
+  }
+  function setRule(idx) {
+    rule = rules[idx % rules.length];
+    if (rule.id === 'seq') newSeq();
+    ruleEl.classList.remove('show'); void ruleEl.offsetWidth; renderRule(); layout();
+    KidsGame.say(rule.say + (rule.id === 'seq' ? ': ' + seq.join(', ') : ''));
+  }
+  // ¿Este animalito cuenta con la regla actual?
+  function isTarget(h) {
+    if (!cfg.expert) return true;
+    if (rule.id === 'hat') return h.hat;
+    if (rule.id === 'azul') return h.col === 'azul';
+    if (rule.id === 'nobird') return BIRDS.indexOf(h.animal) < 0;
+    return h.animal === seq[seqPos];
   }
 
   function pickLevel() {
     running = false; clearTimeout(timer);
     holes.forEach(function (h) { clearTimeout(h.t); });
-    board.innerHTML = ''; prog.innerHTML = ''; hud.innerHTML = ''; lvlEl.textContent = '';
+    board.innerHTML = ''; prog.innerHTML = ''; hud.innerHTML = ''; lvlEl.textContent = ''; ruleEl.classList.remove('show');
     prog.style.visibility = 'hidden';
-    KidsGame.levelPicker({ onPick: function (n) { nivel = n; LEVELS = DIFF[n]; level = 0; prog.style.visibility = ''; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { nivel = n; LEVELS = DIFF[n]; level = 0; prog.style.visibility = ''; start(); } });
   }
   function buildHud() {
     hud.innerHTML = '';
@@ -176,19 +240,25 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
   function start() {
     cfg = LEVELS[Math.min(level, LEVELS.length - 1)];
     caught = 0; holes = []; running = true;
+    need = cfg.expert ? PER_RULE * 3 : NEED;
     lvlEl.textContent = 'Ronda ' + (level + 1);
     buildHud();
     board.innerHTML = '';
     for (var i = 0; i < cfg.cols * cfg.rows; i++) {
       var h = document.createElement('div');
       h.className = 'hole';
-      h.innerHTML = '<div class="mound"></div><div class="pit"></div><div class="critter"><span class="emoji"></span></div><div class="rim"></div><i class="tuft l"></i><i class="tuft r"></i>';
-      var obj = { el: h, em: h.querySelector('.emoji'), busy: false, value: 0, t: null };
+      h.innerHTML = '<div class="mound"></div><div class="pit"></div><div class="critter"><span class="hat emoji">🎩</span><span class="emoji"></span><i class="collar"></i></div><div class="rim"></div><i class="tuft l"></i><i class="tuft r"></i>';
+      var obj = { el: h, em: h.querySelector('.critter > .emoji:not(.hat)'), busy: false, value: 0, t: null, hat: false, col: '', animal: '' };
       (function (o) { o.el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(o); }); })(obj);
       board.appendChild(h); holes.push(obj);
     }
+    if (cfg.expert) {
+      // 3 reglas por ronda, siempre con "en orden"; las otras dos al azar
+      rules = KidsGame.shuffle(RULES.slice(0, 3)).slice(0, 2).concat([RULES[3]]); rules = KidsGame.shuffle(rules);
+      ruleIdx = 0; setRule(0);
+    } else { rule = null; renderRule(); }
     renderProg(); layout();
-    KidsGame.say('¡Atrapa a los animalitos!');
+    if (!cfg.expert) KidsGame.say('¡Atrapa a los animalitos!');
     clearTimeout(timer);
     timer = setTimeout(popOne, 600);
   }
@@ -198,9 +268,20 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     var free = holes.filter(function (h) { return !h.busy; });
     if (free.length) {
       var h = KidsGame.pick(free);
-      var flower = Math.random() < 0.2;
+      var flower = !cfg.expert && Math.random() < 0.2;
       h.busy = true; h.value = flower ? 2 : 1;
-      h.em.textContent = flower ? '🌼' : KidsGame.pick(ANIMALS);
+      h.el.classList.remove('hat', 'nope', 'c-azul', 'c-rojo', 'c-verde', 'c-amarillo');
+      if (cfg.expert) {
+        // ~45% son objetivo de la regla actual; el resto son señuelos que NO hay que tocar
+        var want = Math.random() < 0.45;
+        if (rule.id === 'seq') h.animal = want ? seq[seqPos] : KidsGame.pick(ANIMALS.filter(function (a) { return a !== seq[seqPos]; }));
+        else if (rule.id === 'nobird') h.animal = want ? KidsGame.pick(NOBIRDS) : KidsGame.pick(BIRDS);
+        else h.animal = KidsGame.pick(Math.random() < 0.3 ? BIRDS : NOBIRDS);
+        h.hat = rule.id === 'hat' ? want : Math.random() < 0.35;
+        h.col = rule.id === 'azul' ? (want ? 'azul' : KidsGame.pick(COLS.slice(1))) : KidsGame.pick(COLS);
+        h.el.classList.toggle('hat', h.hat); h.el.classList.add('c-' + h.col);
+      } else { h.animal = flower ? '🌼' : KidsGame.pick(ANIMALS); h.hat = false; h.col = ''; }
+      h.em.textContent = h.animal;
       h.el.classList.remove('caught'); h.el.classList.add('up');
       h.t = setTimeout(function () { hide(h); }, cfg.up);
     }
@@ -214,6 +295,12 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
 
   function tap(h) {
     if (!running || !h.busy || !h.el.classList.contains('up') || h.el.classList.contains('caught')) return;
+    if (!isTarget(h)) {
+      // Señuelo: solo se sacude, sin castigo y sin avanzar
+      h.el.classList.remove('nope'); void h.el.offsetWidth; h.el.classList.add('nope');
+      KidsGame.sound.wrong();
+      return;
+    }
     clearTimeout(h.t);
     h.el.classList.add('caught');
     KidsGame.sound.pop(); KidsGame.vibrate(20);
@@ -223,20 +310,27 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     h.el.appendChild(p); setTimeout(function () { p.remove(); }, 850);
     sparkle(h.el);
     setTimeout(function () { h.el.classList.remove('up', 'caught'); h.busy = false; }, 300);
-    caught = Math.min(caught + 1, 10); renderProg();
-    if (caught >= 10) { running = false; clearTimeout(timer); setTimeout(finish, 500); }
+    caught = Math.min(caught + 1, need);
+    if (cfg.expert && rule.id === 'seq') { seqPos++; if (seqPos >= seq.length) newSeq(); renderRule(); }
+    renderProg();
+    if (caught >= need) { running = false; clearTimeout(timer); setTimeout(finish, 500); }
+    else if (cfg.expert && caught % PER_RULE === 0) { ruleIdx++; KidsGame.sound.ok(); setRule(ruleIdx); }
   }
 
   function finish() {
     holes.forEach(function (h) { clearTimeout(h.t); h.el.classList.remove('up'); h.busy = false; });
+    KidsGame.levelDone(nivel);
     KidsGame.celebrate({
-      sub: 'Ronda ' + (level + 1),
+      sub: 'Ronda ' + (level + 1) + (cfg.expert ? ' · ¡3 reglas!' : ''),
       onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
       onAgain: function () { start(); }
     });
   }
 
   window.addEventListener('resize', function () { if (cfg && running) layout(); });
+  // Estado para pruebas
+  window.__atrapa = function () { return { nivel: nivel, caught: caught, need: need, rule: rule && rule.id, seq: seq.slice(), seqPos: seqPos,
+    holes: holes.map(function (h, i) { return { i: i, up: h.busy && h.el.classList.contains('up') && !h.el.classList.contains('caught'), animal: h.animal, hat: h.hat, col: h.col, target: h.busy ? isTarget(h) : false }; }) }; };
   pickLevel();
 })();
 </script>

@@ -79,6 +79,23 @@
   .cand.pop { animation: pop .4s ease-out backwards; }
   .flyer { position: absolute; z-index: 40; pointer-events: none; transition: transform .55s cubic-bezier(.3,1.3,.4,1); }
 
+  /* ---- Niveles 3-4: tamaños, ¿cuál está mal?, dos huecos, crea tu patrón ---- */
+  .tile .sm { width: 46%; height: 46%; display: flex; }
+  .tile .sm svg { width: 100%; height: 100%; }
+  .slot.tap .tile { cursor: pointer; }
+  .slot.tap .tile:active { transform: scale(.94); }
+  .slot.q2 .tile { animation-delay: .4s; }
+  .slot.q .tile .qm.two { font-size: calc(var(--s) * .42); }
+  .slot.wrong .tile { background: linear-gradient(180deg, #ffe3e3, #ff8a8a); border-color: #fff; box-shadow: 0 7px 0 #b30000, 0 14px 22px rgba(0,40,90,.3), 0 0 0 5px rgba(255,255,255,.5), 0 0 26px rgba(255,80,80,.9); animation: shake .5s; }
+  .slot.wrong .tile::after { content: "✖"; position: absolute; right: -8px; top: -10px; font-size: calc(var(--s) * .34); color: #fff; background: #e53170; border-radius: 50%; width: 1.3em; height: 1.3em; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 #a11f4e, 0 4px 8px rgba(0,0,0,.3); z-index: 3; }
+  .slot.empty .tile { background: rgba(255,255,255,.5); border: 4px dashed #c9d2e6; box-shadow: inset 0 4px 10px rgba(0,40,90,.12); }
+  .slot.empty .tile .idx { font-size: calc(var(--s) * .34); color: #9aa7c7; font-weight: 900; }
+  .slot.next .tile { border-color: #ffb703; box-shadow: 0 0 0 5px rgba(255,183,3,.45), inset 0 4px 10px rgba(0,40,90,.12); animation: qpulse 1.3s ease-in-out infinite; }
+  .row.shake { animation: shake .5s; }
+  .tray .btn.round { width: var(--c); height: var(--c); min-width: 64px; min-height: 64px; font-size: calc(var(--c) * .45); flex: 0 0 auto; }
+  .cand.sel { transform: translateY(-8px) scale(1.08); animation: none; }
+  .cand.sel .tile { box-shadow: 0 7px 0 #c47f00, 0 14px 22px rgba(0,40,90,.3), 0 0 0 5px #ffb703, 0 0 26px rgba(255,183,3,.8), inset 0 2px 0 #fff; }
+  .instr .txt.long { font-size: clamp(16px, 2.4vw, 24px); white-space: normal; text-align: center; }
   .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
            box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
   .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
@@ -132,15 +149,15 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
     return '<svg viewBox="0 0 100 100"><g filter="url(#sh)" fill="url(#g-' + color + ')" stroke="' + c[2] + '" stroke-width="3">' + SHAPES[shape] + '</g>' +
       '<g fill="#fff" opacity=".55">' + HILITE[shape] + '</g></svg>';
   }
-  // Un "elemento" del patrón: { t:'shape', shape, color } | { t:'emoji', e } | { t:'count', n, shape, color }
+  // Un "elemento" del patrón: { t:'shape', shape, color, size? } | { t:'emoji', e } | { t:'count', n, shape, color }
   function render(el) {
-    if (el.t === 'shape') return shapeSVG(el.shape, el.color);
+    if (el.t === 'shape') return el.size === 's' ? '<div class="sm">' + shapeSVG(el.shape, el.color) + '</div>' : shapeSVG(el.shape, el.color);
     if (el.t === 'emoji') return '<span class="emoji">' + el.e + '</span>';
     var s = '<div class="grp' + (el.n === 1 ? ' one' : '') + '">';
     for (var i = 0; i < el.n; i++) s += shapeSVG(el.shape, el.color);
     return s + '</div>';
   }
-  function same(a, b) { return a.t === b.t && a.shape === b.shape && a.color === b.color && a.e === b.e && a.n === b.n; }
+  function same(a, b) { return !!a && !!b && a.t === b.t && a.shape === b.shape && a.color === b.color && a.e === b.e && a.n === b.n && (a.size || 'b') === (b.size || 'b'); }
 
   var EMOJI_SETS = [
     ['🐶','🐱','🐭','🐰','🦊','🐻'], ['🍎','🍌','🍇','🍓','🍒','🍊'], ['🌸','🌻','🌷','🌹','🌼','🍀'],
@@ -148,13 +165,21 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
     ['🍩','🍪','🍭','🍬','🎂','🍦'], ['🦋','🐝','🐞','🐌','🐛','🐸']
   ];
   var RULES = {
-    1: [['A','B'], ['A','B'], ['A','B']],
-    2: [['A','B','B'], ['A','B','C'], ['A','A','B'], ['A','B']],
-    3: [['A','A','B','B'], ['A','B','C','D'], ['A','B','C'], ['A','B','B','C'], 'GROW']
+    1: [['A','B'], ['A','B'], ['A','B','B']],
+    2: [['A','B','C'], ['A','A','B','B'], ['A','B','B'], ['A','A','B'], ['A','B','C']],
+    3: [['A','A','B','B'], ['A','B','C','D'], ['A','B','B','C'], ['A','B','C','C']],
+    4: [['A','B','C','D'], ['A','A','B','C'], ['A','B','B','C']]
   };
-  var LEN = { 1: 5, 2: 7, 3: 8 };
-  var NCAND = { 1: 3, 2: 3, 3: 4 };
+  var LEN = { 1: 5, 2: 7, 3: 8, 4: 9 };
+  var NCAND = { 1: 3, 2: 4, 3: 4, 4: 4 };
   var ROUNDS = 8;
+  var LABELS = { 1: 'AB · 3 fichas', 2: 'ABC · AABB', 3: 'crece · 2 atributos · ¿cuál está mal?', 4: '2 huecos · 3 atributos · crea el tuyo' };
+  var MODES = {
+    1: ['next','next','next','next','next','next','next','next'],
+    2: ['next','next','next','next','next','next','next','next'],
+    3: ['next','grow','attr2','broken','attr2','broken','grow','next'],
+    4: ['two','attr3','two','create','attr3','two','attr3','create']
+  };
 
   function makeElements(kind, k) {
     // devuelve k elementos distintos del tipo kind
@@ -171,11 +196,36 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
     }
     return out;
   }
-
-  function makeRound(lv) {
+  function ruleSeq(lv, len) {
     var rule = KidsGame.pick(RULES[lv]);
-    var len = LEN[lv], seq = [], answer, cands = [];
-    if (rule === 'GROW') {
+    var kinds = lv === 1 ? ['color', 'shape'] : (lv === 2 ? ['emoji', 'emoji', 'shape'] : ['emoji', 'shape', 'color']);
+    var kind = KidsGame.pick(kinds);
+    var letters = {}; rule.forEach(function (ch) { letters[ch] = true; });
+    var nLetters = Object.keys(letters).length;
+    var els = makeElements(kind, Math.min(6, nLetters + NCAND[lv]));
+    var map = {}; Object.keys(letters).forEach(function (ch, idx) { map[ch] = els[idx]; });
+    var seq = []; for (var p = 0; p < len; p++) seq.push(map[rule[p % rule.length]]);
+    return { seq: seq, els: els, rule: rule, map: map };
+  }
+  // patrón con 2 ó 3 atributos que cambian con periodos distintos (forma AB, color ABC, tamaño AABB)
+  function attrSeq(len, three) {
+    var shp = KidsGame.shuffle(SHAPE_KEYS).slice(0, three ? 3 : 2), col = KidsGame.shuffle(COLOR_KEYS).slice(0, three ? 2 : 3);
+    var sizes = ['b', 'b', 's', 's'];
+    var seq = [];
+    for (var i = 0; i < len; i++) seq.push({ t: 'shape', shape: shp[i % shp.length], color: col[i % col.length], size: three ? sizes[i % 4] : undefined });
+    var ans = seq[len - 1];
+    // distractores: cambian exactamente un atributo
+    var ds = [
+      { t: 'shape', shape: shp[(shp.indexOf(ans.shape) + 1) % shp.length], color: ans.color, size: ans.size },
+      { t: 'shape', shape: ans.shape, color: col[(col.indexOf(ans.color) + 1) % col.length], size: ans.size },
+      three ? { t: 'shape', shape: ans.shape, color: ans.color, size: ans.size === 's' ? 'b' : 's' } : { t: 'shape', shape: shp[(shp.indexOf(ans.shape) + 1) % shp.length], color: col[(col.indexOf(ans.color) + 1) % col.length] }
+    ];
+    return { seq: seq, ds: ds };
+  }
+
+  function makeRound(lv, mode) {
+    var len = LEN[lv], seq = [], answer, cands = [], r = { mode: mode };
+    if (mode === 'grow') {
       var shp = KidsGame.pick(SHAPE_KEYS), col = KidsGame.pick(COLOR_KEYS);
       var startN = 1 + KidsGame.rand(2), L = 4;
       for (var i = 0; i < L - 1; i++) seq.push({ t: 'count', n: startN + i, shape: shp, color: col });
@@ -183,26 +233,43 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
       var pool = [];
       for (var q = 1; q <= 6; q++) if (q !== answer.n) pool.push({ t: 'count', n: q, shape: shp, color: col });
       cands = KidsGame.shuffle(pool).slice(0, NCAND[lv] - 1);
+    } else if (mode === 'attr2' || mode === 'attr3') {
+      var A = attrSeq(len, mode === 'attr3');
+      seq = A.seq.slice(0, len - 1); answer = A.seq[len - 1]; cands = A.ds;
+    } else if (mode === 'broken') {
+      var B = ruleSeq(lv, len);
+      var bi = 1 + KidsGame.rand(len - 2); // nunca el primero ni el último
+      var good = B.seq[bi], others = B.els.filter(function (e) { return !same(e, good); });
+      r.full = B.seq.slice(); r.broken = bi; r.good = good; r.bad = KidsGame.pick(others);
+      seq = B.seq.slice(); seq[bi] = r.bad;
+      r.seq = seq; r.cands = []; r.answers = []; return r;
+    } else if (mode === 'two') {
+      var T = ruleSeq(lv, len);
+      var g1 = 2 + KidsGame.rand(2), g2 = g1 + 2 + KidsGame.rand(2); // huecos en medio, no juntos
+      if (g2 >= len - 1) g2 = len - 2;
+      r.gaps = [g1, g2]; r.answers = [T.seq[g1], T.seq[g2]];
+      seq = T.seq;
+      var uniq = []; T.els.forEach(function (e) { if (!uniq.some(function (u) { return same(u, e); })) uniq.push(e); });
+      var need = r.answers.filter(function (a, i) { return i === 0 || !same(a, r.answers[0]); });
+      var rest = uniq.filter(function (e) { return !need.some(function (n) { return same(n, e); }); });
+      cands = KidsGame.shuffle(need.concat(KidsGame.shuffle(rest).slice(0, NCAND[lv] - need.length)));
+      r.seq = seq; r.cands = cands; return r;
+    } else if (mode === 'create') {
+      var kind = KidsGame.pick(['emoji', 'shape', 'color']);
+      r.seq = []; r.len = 8; r.cands = makeElements(kind, 4); r.answers = []; return r;
     } else {
-      var kinds = lv === 1 ? ['color', 'shape'] : (lv === 2 ? ['emoji', 'emoji', 'shape'] : ['emoji', 'shape', 'color']);
-      var kind = KidsGame.pick(kinds);
-      var letters = {}; rule.forEach(function (ch) { letters[ch] = true; });
-      var nLetters = Object.keys(letters).length;
-      var els = makeElements(kind, Math.min(6, nLetters + NCAND[lv]));
-      var map = {}; Object.keys(letters).forEach(function (ch, idx) { map[ch] = els[idx]; });
-      for (var p = 0; p < len - 1; p++) seq.push(map[rule[p % rule.length]]);
-      answer = map[rule[(len - 1) % rule.length]];
-      // distractores: otras letras del patrón + elementos nuevos
-      var others = els.filter(function (e) { return !same(e, answer); });
-      cands = KidsGame.shuffle(others).slice(0, NCAND[lv] - 1);
+      var S = ruleSeq(lv, len);
+      seq = S.seq.slice(0, len - 1); answer = S.seq[len - 1];
+      var others2 = S.els.filter(function (e) { return !same(e, answer); });
+      cands = KidsGame.shuffle(others2).slice(0, NCAND[lv] - 1);
     }
-    var all = KidsGame.shuffle(cands.concat([answer]));
-    return { seq: seq, answer: answer, cands: all, rule: rule };
+    r.seq = seq; r.answers = [answer]; r.cands = KidsGame.shuffle(cands.concat([answer]));
+    return r;
   }
 
   // ---------- UI ----------
-  var nivel = 0, round = 0, lock = false, running = false, cur = null;
-  var hud, dots, stage, rowwrap, row, tray;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, plan = [], step = 0, sel = null;
+  var hud, dots, stage, rowwrap, row, tray, instrTxt;
 
   function build() {
     game.innerHTML = '';
@@ -218,8 +285,9 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
 
     var instr = document.createElement('div'); instr.className = 'instr panel';
     instr.innerHTML = '<span class="ico emoji">🧩</span><span class="txt">¿Qué sigue?</span>';
+    instrTxt = instr.querySelector('.txt');
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
-    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say('¿Qué sigue? Toca la ficha que falta.'); });
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); sayRound(); });
     instr.appendChild(sp);
     game.appendChild(instr);
 
@@ -231,46 +299,82 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
     stage.appendChild(rowwrap); stage.appendChild(tray);
     game.appendChild(stage);
   }
+  var TXT = {
+    next: ['¿Qué sigue?', '¿Qué sigue? Toca la ficha que falta.'], grow: ['¿Qué sigue?', 'Cada vez hay más. ¿Qué sigue?'],
+    attr2: ['¿Qué sigue? Mira forma y color', 'Fíjate en la forma y en el color. ¿Qué sigue?'],
+    attr3: ['Forma, color y tamaño', 'Fíjate en la forma, el color y el tamaño. ¿Qué sigue?'],
+    broken: ['¿Cuál está mal?', 'Una ficha no sigue el patrón. ¿Cuál está mal? Tócala.'],
+    two: ['Faltan dos', 'Faltan dos fichas. Primero la primera, luego la segunda.'],
+    create: ['Crea tu patrón y toca ✅', 'Crea tu propio patrón con ocho fichas. Tiene que repetirse siempre igual. Cuando termines toca la palomita.']
+  };
+  function sayRound() { if (cur) KidsGame.say(TXT[cur.mode][1]); }
 
   function showPicker() {
     running = false; lock = true;
     if (row) { row.innerHTML = ''; tray.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'patrones', onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'patrones', labels: LABELS, onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; plan = KidsGame.shuffle(MODES[lv]); build(); newRound(); }
 
+  function slotEl(el, i, cls) {
+    var s = document.createElement('div'); s.className = 'slot' + (cls ? ' ' + cls : '');
+    s.innerHTML = el ? '<div class="tile pop" style="animation-delay:' + (i * 70) + 'ms">' + render(el) + '</div>' : '<div class="tile"><span class="qm">?</span></div>';
+    s.dataset.i = i;
+    return s;
+  }
   function newRound() {
     if (!running) return;
-    cur = makeRound(nivel); lock = false;
-    row.innerHTML = ''; tray.innerHTML = '';
-    cur.seq.forEach(function (el, i) {
-      var s = document.createElement('div'); s.className = 'slot';
-      s.innerHTML = '<div class="tile pop" style="animation-delay:' + (i * 70) + 'ms">' + render(el) + '</div>';
-      row.appendChild(s);
-    });
-    var q = document.createElement('div'); q.className = 'slot q';
-    q.innerHTML = '<div class="tile"><span class="qm">?</span></div>';
-    row.appendChild(q);
+    var mode = plan[round % plan.length];
+    cur = makeRound(nivel, mode); lock = false; step = 0; sel = null;
+    row.innerHTML = ''; tray.innerHTML = ''; tray.style.display = '';
+    instrTxt.textContent = TXT[mode][0]; instrTxt.classList.toggle('long', mode === 'create' || mode === 'attr3');
+    if (mode === 'broken') {
+      cur.seq.forEach(function (el, i) {
+        var s = slotEl(el, i, 'tap');
+        s.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tapSlot(s, i); });
+        row.appendChild(s);
+      });
+      tray.style.display = 'none';
+    } else if (mode === 'two') {
+      cur.seq.forEach(function (el, i) {
+        var gi = cur.gaps.indexOf(i);
+        var s = gi < 0 ? slotEl(el, i) : slotEl(null, i, 'q' + (gi ? ' q2' : ''));
+        if (gi >= 0) s.querySelector('.qm').textContent = gi ? '?' : '?';
+        row.appendChild(s);
+      });
+    } else if (mode === 'create') {
+      for (var i = 0; i < cur.len; i++) { var e = slotEl(null, i, 'empty' + (i === 0 ? ' next' : '')); e.querySelector('.tile').innerHTML = '<span class="idx">' + (i + 1) + '</span>'; row.appendChild(e); }
+    } else {
+      cur.seq.forEach(function (el, i) { row.appendChild(slotEl(el, i)); });
+      row.appendChild(slotEl(null, cur.seq.length, 'q'));
+    }
     cur.cands.forEach(function (el, i) {
       var c = document.createElement('div'); c.className = 'cand pop';
       c.style.animationDelay = (400 + i * 90) + 'ms';
       c.innerHTML = '<div class="tile">' + render(el) + '</div>';
       c.addEventListener('animationend', function () { if (c.classList.contains('pop')) { c.classList.remove('pop'); c.style.animationDelay = (Math.random() * 2) + 's'; } });
-      c.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(c, el); });
+      c.addEventListener('pointerdown', function (ev) { ev.preventDefault(); if (mode === 'create') placeCreate(c, el); else tap(c, el); });
       tray.appendChild(c);
     });
+    if (mode === 'create') {
+      var undo = document.createElement('button'); undo.className = 'btn round blue'; undo.textContent = '↩'; undo.setAttribute('aria-label', 'Borrar');
+      undo.addEventListener('pointerdown', function (ev) { ev.preventDefault(); undoCreate(); });
+      var ok = document.createElement('button'); ok.className = 'btn round green'; ok.textContent = '✅'; ok.setAttribute('aria-label', 'Revisar');
+      ok.addEventListener('pointerdown', function (ev) { ev.preventDefault(); checkCreate(); });
+      tray.appendChild(undo); tray.appendChild(ok);
+    }
     layout();
-    KidsGame.say('¿Qué sigue?');
+    KidsGame.say(TXT[mode][1]);
   }
 
   function layout() {
     if (!cur || !stage) return;
-    var n = cur.seq.length + 1, W = stage.clientWidth - 60, H = stage.clientHeight;
-    var gap = n > 6 ? 10 : 16;
+    var n = row.children.length, W = stage.clientWidth - 60, H = stage.clientHeight;
+    var gap = n > 6 ? 8 : 16;
     var s = Math.floor(Math.min((W - (n - 1) * gap) / n, H * 0.32, 130));
     s = Math.max(64, s);
     row.style.setProperty('--gap', gap + 'px'); row.style.setProperty('--s', s + 'px');
-    var k = cur.cands.length, tgap = 18;
+    var k = tray.children.length || 1, tgap = 14;
     var c = Math.floor(Math.min((W - 44 - (k - 1) * tgap) / k, H * 0.36, 150));
     c = Math.max(72, c);
     tray.style.setProperty('--tgap', tgap + 'px'); tray.style.setProperty('--c', c + 'px');
@@ -290,52 +394,140 @@ var game = KidsGame.init({ title: '¿Qué sigue?' });
       (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
     }
   }
+  function shakeBad(c) {
+    KidsGame.sound.wrong(); KidsGame.vibrate(20);
+    c.classList.remove('bad'); void c.offsetWidth; c.classList.add('bad');
+    c.addEventListener('animationend', function h() { c.classList.remove('bad'); c.removeEventListener('animationend', h); });
+  }
+  function success() {
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    dots.children[round].classList.add('on');
+    round++;
+    setTimeout(function () { if (round >= ROUNDS) finish(); else newRound(); }, 1300);
+  }
+  // ficha voladora: del candidato al hueco q; luego fn()
+  function flyTo(c, el, q, hide, fn) {
+    var g = game.getBoundingClientRect(), r0 = c.getBoundingClientRect(), r1 = q.getBoundingClientRect();
+    var fly = document.createElement('div'); fly.className = 'flyer';
+    fly.style.left = (r0.left - g.left) + 'px'; fly.style.top = (r0.top - g.top) + 'px';
+    fly.style.width = r0.width + 'px'; fly.style.height = r0.height + 'px';
+    fly.innerHTML = '<div class="tile" style="--s:' + r0.width + 'px">' + render(el) + '</div>';
+    game.appendChild(fly);
+    if (hide) c.classList.add('used');
+    var sc = r1.width / r0.width;
+    requestAnimationFrame(function () { fly.style.transform = 'translate(' + (r1.left - r0.left) + 'px,' + (r1.top - r0.top) + 'px) scale(' + sc + ')'; });
+    setTimeout(function () {
+      fly.remove();
+      q.classList.remove('q', 'q2', 'empty', 'next'); q.classList.add('filled');
+      q.innerHTML = '<div class="tile">' + render(el) + '</div>';
+      sparkle(r1.left + r1.width / 2 - g.left, r1.top + r1.height / 2 - g.top, 22);
+      fn && fn();
+    }, 560);
+  }
 
   function tap(c, el) {
     if (lock || !running) return;
-    if (same(el, cur.answer)) {
+    var target = cur.answers[step];
+    if (same(el, target)) {
       lock = true;
       KidsGame.sound.pop();
       var q = row.querySelector('.slot.q');
-      var g = game.getBoundingClientRect(), r0 = c.getBoundingClientRect(), r1 = q.getBoundingClientRect();
-      // ficha voladora: del candidato al hueco
-      var fly = document.createElement('div'); fly.className = 'flyer';
-      fly.style.left = (r0.left - g.left) + 'px'; fly.style.top = (r0.top - g.top) + 'px';
-      fly.style.width = r0.width + 'px'; fly.style.height = r0.height + 'px';
-      fly.innerHTML = '<div class="tile" style="--s:' + r0.width + 'px">' + render(el) + '</div>';
-      game.appendChild(fly);
-      c.classList.add('used');
-      var sc = r1.width / r0.width;
-      requestAnimationFrame(function () {
-        fly.style.transform = 'translate(' + (r1.left - r0.left) + 'px,' + (r1.top - r0.top) + 'px) scale(' + sc + ')';
+      var last = step >= cur.answers.length - 1;
+      flyTo(c, el, q, cur.mode !== 'two', function () {
+        step++;
+        if (last) success(); else { lock = false; KidsGame.sound.tap(); KidsGame.say('¡Bien! Ahora la otra'); }
       });
+    } else shakeBad(c);
+  }
+  // ¿Cuál está mal? (nivel 3)
+  function tapSlot(s, i) {
+    if (lock || !running) return;
+    if (i === cur.broken) {
+      lock = true; s.classList.add('wrong'); KidsGame.sound.pop();
+      KidsGame.say('¡Esa! Debía ser así');
       setTimeout(function () {
-        fly.remove();
-        q.classList.remove('q'); q.classList.add('filled');
-        q.innerHTML = '<div class="tile">' + render(el) + '</div>';
-        KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+        s.classList.remove('wrong'); s.classList.add('filled'); s.innerHTML = '<div class="tile">' + render(cur.good) + '</div>';
+        var g = game.getBoundingClientRect(), r1 = s.getBoundingClientRect();
         sparkle(r1.left + r1.width / 2 - g.left, r1.top + r1.height / 2 - g.top, 22);
-        dots.children[round].classList.add('on');
-        round++;
-        setTimeout(function () { if (round >= ROUNDS) finish(); else newRound(); }, 1300);
-      }, 560);
+        success();
+      }, 900);
+    } else shakeBad(s.querySelector('.tile'));
+  }
+  // Crea tu patrón (Experto): toca fichas para llenar 8 huecos en orden, ↩ borra, ✅ revisa
+  function placeCreate(c, el) {
+    if (lock || !running || cur.seq.length >= cur.len) return;
+    var i = cur.seq.length, q = row.children[i];
+    cur.seq.push(el); lock = true;
+    flyTo(c, el, q, false, function () {
+      lock = false;
+      if (row.children[i + 1]) row.children[i + 1].classList.add('next');
+      else { KidsGame.toast('✅ ¿Listo? Toca la palomita', 1600); }
+    });
+    KidsGame.sound.pop();
+  }
+  function undoCreate() {
+    if (lock || !running || !cur.seq.length) return;
+    var i = cur.seq.length - 1; cur.seq.pop();
+    row.querySelectorAll('.slot.next').forEach(function (s) { s.classList.remove('next'); });
+    var s = row.children[i]; s.className = 'slot empty next'; s.innerHTML = '<div class="tile"><span class="idx">' + (i + 1) + '</span></div>';
+    KidsGame.sound.tap();
+  }
+  function patternPeriod(seq) {
+    for (var p = 2; p <= 4; p++) {
+      var ok = true;
+      for (var i = p; i < seq.length && ok; i++) if (!same(seq[i], seq[i - p])) ok = false;
+      if (!ok) continue;
+      var distinct = seq.slice(0, p).filter(function (e, i, a) { return !a.slice(0, i).some(function (x) { return same(x, e); }); }).length;
+      if (distinct >= 2) return p;
+    }
+    return 0;
+  }
+  function checkCreate() {
+    if (lock || !running) return;
+    if (cur.seq.length < cur.len) { KidsGame.toast('Faltan fichas: ' + cur.seq.length + ' de ' + cur.len); KidsGame.sound.wrong(); KidsGame.say('Todavía faltan fichas'); return; }
+    var p = patternPeriod(cur.seq);
+    if (p) {
+      lock = true;
+      var g = game.getBoundingClientRect();
+      Array.prototype.forEach.call(row.children, function (s, i) { setTimeout(function () { s.classList.add('filled'); var r = s.getBoundingClientRect(); sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 8); KidsGame.sound.note(440 + i * 60); }, i * 110); });
+      var names = ['', '', 'A B', 'A B C', 'A B C D'];
+      KidsGame.say('¡Tu patrón se repite cada ' + p + '! ' + (p === 2 ? 'Como A, B, A, B' : p === 3 ? 'Como A, B, C' : 'Como A, B, C, D'));
+      KidsGame.toast('🎉 Patrón ' + names[p] + ' · se repite cada ' + p, 2000);
+      setTimeout(success, 1100);
     } else {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      c.classList.remove('bad'); void c.offsetWidth; c.classList.add('bad');
-      c.addEventListener('animationend', function h() { c.classList.remove('bad'); c.removeEventListener('animationend', h); });
+      KidsGame.sound.wrong(); KidsGame.vibrate(30);
+      row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+      KidsGame.say('Hmm, no se repite igual. Un patrón va como A, B, A, B o A, A, B, A, A, B. Borra y prueba otra vez');
+      KidsGame.toast('🤔 No se repite igual. Prueba A B A B…', 2200);
     }
   }
 
   function finish() {
     running = false;
+    KidsGame.levelDone(nivel);
     KidsGame.celebrate({
       sub: '¡Completaste ' + ROUNDS + ' patrones!',
-      onNext: function () { start(Math.min(3, nivel + 1)); },
+      onNext: function () { start(Math.min(4, nivel + 1)); },
       onAgain: function () { start(nivel); }
     });
   }
 
   window.addEventListener('resize', layout);
+  // Expuesto para pruebas
+  window.__pat = {
+    get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get step() { return step; },
+    solve: function () {
+      if (lock || !cur) return false;
+      var m = cur.mode, cs = Array.prototype.slice.call(tray.querySelectorAll('.cand'));
+      function tapCand(el) { var i = cur.cands.findIndex(function (x) { return same(x, el); }); cs[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }
+      if (m === 'broken') { row.children[cur.broken].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return 'broken:' + cur.broken; }
+      if (m === 'create') {
+        if (cur.seq.length < cur.len) { tapCand(cur.cands[cur.seq.length % 2]); return 'create:' + cur.seq.length; }
+        tray.querySelector('.btn.green').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return 'create:check';
+      }
+      tapCand(cur.answers[step]); return m + ':' + step;
+    }
+  };
   showPicker();
 })();
 </script>

@@ -101,6 +101,21 @@
   .num.ok { --a: #8ef0b0; --b: #24b36c; --d: #14784a; transform: scale(1.12); box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9), inset 0 2px 0 rgba(255,255,255,.7); animation: none; }
   .num.dim { opacity: .4; transform: scale(.9); animation: none; }
 
+  /* ---- Niveles 3-4: hueco para arrastrar, marco de diez, cuentos de dos pasos ---- */
+  .instr.story .txt { white-space: normal; text-align: center; font-size: clamp(16px, 2.4vw, 24px); line-height: 1.15; max-width: 70vw; }
+  .tray.hole { border: 4px dashed #fff; background: linear-gradient(180deg, #fff6d0, #ffd54a); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(0,60,40,.35), 0 0 0 5px rgba(255,255,255,.4), inset 0 2px 0 #fff; min-height: 120px; }
+  .tray.hole .qm { font-size: clamp(54px, 7vw, 80px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #c47f00, 0 6px 10px rgba(0,0,0,.3); animation: qpulse 1.3s ease-in-out infinite; }
+  .tray.hole.hot { transform: scale(1.06); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(0,60,40,.35), 0 0 0 8px #ffe98a, 0 0 40px 10px rgba(255,233,138,.9), inset 0 2px 0 #fff; }
+  .tray.hole .num { animation: land .6s cubic-bezier(.3,1.6,.5,1); }
+  .tray .tf { width: min(100%, 300px); filter: drop-shadow(0 6px 5px rgba(60,30,0,.3)); }
+  .tray.cnt3 { max-width: 300px; min-height: 120px; }
+  .tray.hidden, .op.hidden, .eq .hidden { display: none; }
+  .op.txt { font-size: 26px; width: 64px; height: 64px; }
+  .num.drag { position: fixed; z-index: 50; pointer-events: none; animation: none; transform: scale(1.1); margin: 0; }
+  .num.ghost { opacity: .25; animation: none; }
+  .obj.off .emoji { filter: grayscale(1) opacity(.35); }
+  .obj.off::after { content: "✖"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--o) * .6); color: #e53170; text-shadow: 0 2px 0 #fff; }
+  .obj.add .emoji { filter: drop-shadow(0 0 8px #ffe066) drop-shadow(0 5px 4px rgba(0,0,0,.3)); }
   .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
            box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
   .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
@@ -115,10 +130,26 @@ var game = KidsGame.init({ title: 'Sumas' });
   var OBJS = ['🍎', '🍓', '🍪', '🍭', '🐥', '🌸', '⭐', '🎈', '🐟', '🦋', '🍩', '🐞', '🍬', '🐸', '🌟'];
   var ROUNDS = 8;
   var NUMCOLS = ['c1', 'c2', 'c3', 'c4'];
-  var NUMS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis'];
+  var NUMS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro'];
+  var LABELS = { 1: 'sumas hasta 10', 2: 'hasta 20 · restas', 3: '3 + ? = 8 · arrastra', 4: 'cuentos · doble y mitad' };
+  var MODES = {
+    1: ['add', 'add', 'add', 'add', 'add', 'add', 'add', 'add'],
+    2: ['add', 'add', 'add', 'sub', 'add', 'add', 'sub', 'add'],
+    3: ['missing', 'sub', 'missing', 'add', 'missing', 'sub', 'missing', 'add'],
+    4: ['story', 'double', 'story', 'half', 'story', 'double', 'story', 'half']
+  };
+  // Cuentos de dos pasos (Experto): a, luego −b o +b, luego −c o +c
+  var STORIES = [
+    { who: 'Tenía {a} dulces', s1: ['me comí {b}', 'regalé {b}'], a1: ['me dio {c} mi mamá', 'encontré {c} más'], q: '¿cuántos tengo?', e: '🍬' },
+    { who: 'Había {a} pajaritos en el árbol', s1: ['se fueron volando {b}', 'se asustaron {b}'], a1: ['llegaron {c} más', 'volvieron {c}'], q: '¿cuántos hay ahora?', e: '🐦' },
+    { who: 'Tenía {a} globos', s1: ['se reventaron {b}', 'se me escaparon {b}'], a1: ['me compraron {c} más', 'mi abuela me dio {c}'], q: '¿cuántos tengo?', e: '🎈' },
+    { who: 'Había {a} galletas en el plato', s1: ['mi papá se comió {b}', 'se cayeron {b}'], a1: ['mamá horneó {c} más', 'pusieron {c} más'], q: '¿cuántas quedan?', e: '🍪' },
+    { who: 'En el estanque había {a} peces', s1: ['se escondieron {b}', 'se fueron {b}'], a1: ['llegaron {c} nuevos', 'salieron {c} más'], q: '¿cuántos se ven?', e: '🐟' },
+    { who: 'Tenía {a} flores', s1: ['se marchitaron {b}', 'regalé {b}'], a1: ['corté {c} más', 'me regalaron {c}'], q: '¿cuántas tengo?', e: '🌸' }
+  ];
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, counted = 0;
-  var hud, dots, instrTxt, stage, eq, trayA, trayB, opEl, resEl, nums;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, counted = 0, plan = [];
+  var hud, dots, instr, instrTxt, stage, eq, trayA, trayB, trayC, opEl, op2El, resEl, nums;
 
   function build() {
     game.innerHTML = '';
@@ -132,7 +163,7 @@ var game = KidsGame.init({ title: 'Sumas' });
     hud.appendChild(lb);
     game.appendChild(hud);
 
-    var instr = document.createElement('div'); instr.className = 'instr panel';
+    instr = document.createElement('div'); instr.className = 'instr panel';
     instr.innerHTML = '<span class="ico emoji">🧮</span><span class="txt"></span>';
     instrTxt = instr.querySelector('.txt');
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
@@ -144,10 +175,12 @@ var game = KidsGame.init({ title: 'Sumas' });
     eq = document.createElement('div'); eq.className = 'eq';
     trayA = document.createElement('div'); trayA.className = 'tray';
     trayB = document.createElement('div'); trayB.className = 'tray';
+    trayC = document.createElement('div'); trayC.className = 'tray hidden';
     opEl = document.createElement('div'); opEl.className = 'op';
+    op2El = document.createElement('div'); op2El.className = 'op hidden';
     var eqSign = document.createElement('div'); eqSign.className = 'op eq'; eqSign.textContent = '=';
     resEl = document.createElement('div'); resEl.className = 'res';
-    eq.appendChild(trayA); eq.appendChild(opEl); eq.appendChild(trayB); eq.appendChild(eqSign); eq.appendChild(resEl);
+    eq.appendChild(trayA); eq.appendChild(opEl); eq.appendChild(trayB); eq.appendChild(op2El); eq.appendChild(trayC); eq.appendChild(eqSign); eq.appendChild(resEl);
     nums = document.createElement('div'); nums.className = 'nums panel';
     stage.appendChild(eq); stage.appendChild(nums);
     game.appendChild(stage);
@@ -155,24 +188,40 @@ var game = KidsGame.init({ title: 'Sumas' });
 
   function showPicker() {
     running = false; lock = true;
-    if (stage) { trayA.innerHTML = ''; trayB.innerHTML = ''; nums.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'sumas', onPick: function (lv) { start(lv); } });
+    if (stage) { trayA.innerHTML = ''; trayB.innerHTML = ''; trayC.innerHTML = ''; nums.innerHTML = ''; }
+    KidsGame.levelPicker({ key: 'sumas', labels: LABELS, onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; plan = KidsGame.shuffle(MODES[lv]); build(); newRound(); }
 
+  function fill(t, v) { return t.replace('{a}', v.a).replace('{b}', v.b).replace('{c}', v.c); }
   function makeRound() {
-    var a, b, sub = false, max;
-    if (nivel === 1) { max = 5; a = 1 + KidsGame.rand(4); b = 1 + KidsGame.rand(Math.min(4, max - a)); }
-    else if (nivel === 2) { max = 10; a = 1 + KidsGame.rand(8); b = 1 + KidsGame.rand(Math.min(9, max - a)); if (a + b < 4) b += 2; }
-    else {
-      max = 15; sub = Math.random() < 0.45;
-      if (sub) { a = 4 + KidsGame.rand(12); b = 1 + KidsGame.rand(a - 2); }
-      else { a = 2 + KidsGame.rand(10); b = 2 + KidsGame.rand(Math.min(10, max - a - 1)); }
+    var mode = plan[round % plan.length], a, b, c, ans, max, r = { mode: mode, e: KidsGame.pick(OBJS) };
+    if (mode === 'add') {
+      max = nivel === 1 ? 10 : 20;
+      if (nivel === 1) { a = 1 + KidsGame.rand(8); b = 1 + KidsGame.rand(Math.min(8, max - a)); if (a + b < 3) b += 1; }
+      else { a = 3 + KidsGame.rand(12); b = 3 + KidsGame.rand(Math.min(12, max - a - 2)); }
+      ans = a + b;
+    } else if (mode === 'sub') {
+      max = nivel === 2 ? 10 : 20;
+      a = (nivel === 2 ? 4 : 8) + KidsGame.rand(max - (nivel === 2 ? 3 : 7)); b = 1 + KidsGame.rand(a - 1); ans = a - b;
+    } else if (mode === 'missing') {
+      max = 15; c = 5 + KidsGame.rand(11); a = 1 + KidsGame.rand(c - 2); ans = c - a; b = ans;
+    } else if (mode === 'double') {
+      max = 20; a = 2 + KidsGame.rand(9); b = a; ans = a * 2;
+    } else if (mode === 'half') {
+      max = 12; ans = 1 + KidsGame.rand(6); a = ans * 2; b = 0;
+    } else { // story
+      max = 20;
+      var st = KidsGame.pick(STORIES);
+      a = 5 + KidsGame.rand(8); b = 1 + KidsGame.rand(Math.min(4, a - 2)); c = 1 + KidsGame.rand(5);
+      ans = a - b + c;
+      r.story = st; r.text = fill(st.who, { a: a, b: b, c: c }) + ', ' + fill(KidsGame.pick(st.s1), { a: a, b: b, c: c }) + ' y ' + fill(KidsGame.pick(st.a1), { a: a, b: b, c: c }) + '. ' + st.q;
+      r.e = st.e;
     }
-    var ans = sub ? a - b : a + b;
-    var pool = [ans - 1, ans + 1, ans - 2, ans + 2, ans + 3, ans - 3].filter(function (v) { return v >= 0 && v <= max && v !== ans; });
-    var ds = KidsGame.shuffle(pool).slice(0, 2);
-    return { a: a, b: b, sub: sub, ans: ans, e: KidsGame.pick(OBJS), opts: KidsGame.shuffle(ds.concat([ans])) };
+    var pool = [ans - 1, ans + 1, ans - 2, ans + 2, ans + 3, ans - 3, ans + 10, ans - 10].filter(function (v) { return v >= 0 && v <= Math.max(max, ans + 3) && v !== ans; });
+    var ds = KidsGame.shuffle(pool).slice(0, nivel === 1 ? 2 : 3);
+    r.a = a; r.b = b; r.c = c; r.ans = ans; r.sub = mode === 'sub'; r.opts = KidsGame.shuffle(ds.concat([ans]));
+    return r;
   }
 
   function makeObj(e, ghost) {
@@ -184,23 +233,71 @@ var game = KidsGame.init({ title: 'Sumas' });
   }
   function sayRound() {
     if (!cur) return;
-    KidsGame.say(cur.sub ? ('Hay ' + NUMS[cur.a] + ' y se van ' + NUMS[cur.b] + '. ¿Cuántos quedan?') : (NUMS[cur.a] + ' más ' + NUMS[cur.b] + '. ¿Cuántos hay en total?'));
+    var m = cur.mode;
+    if (m === 'story') KidsGame.say(cur.text);
+    else if (m === 'missing') KidsGame.say(NUMS[cur.a] + ' más cuántos son ' + NUMS[cur.c] + '. Arrastra el número que falta');
+    else if (m === 'double') KidsGame.say('El doble de ' + NUMS[cur.a] + '. ' + NUMS[cur.a] + ' y otros ' + NUMS[cur.a] + '. ¿Cuántos son?');
+    else if (m === 'half') KidsGame.say('La mitad de ' + NUMS[cur.a] + '. Repártelos en dos partes iguales. ¿Cuántos hay en cada parte?');
+    else if (cur.sub) KidsGame.say('Hay ' + NUMS[cur.a] + ' y se van ' + NUMS[cur.b] + '. ¿Cuántos quedan?');
+    else KidsGame.say(NUMS[cur.a] + ' más ' + NUMS[cur.b] + '. ¿Cuántos hay en total?');
+  }
+  // Marco de diez: a puntos llenos, (c - a) huecos punteados
+  function tenFrame(a, c) {
+    var frames = c > 10 ? 2 : 1, s = '';
+    for (var f = 0; f < frames; f++) {
+      s += '<svg class="tf" viewBox="0 0 250 104"><rect x="2" y="2" width="246" height="100" rx="12" fill="#fff" stroke="#c9b48a" stroke-width="3"/>';
+      for (var i = 0; i < 10; i++) {
+        var idx = f * 10 + i, cx = 27 + (i % 5) * 49, cy = 27 + Math.floor(i / 5) * 50;
+        s += '<rect x="' + (cx - 24) + '" y="' + (cy - 24) + '" width="48" height="48" fill="none" stroke="#e0d2b0" stroke-width="2"/>';
+        if (idx < a) s += '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="#2f95e8"/><circle cx="' + (cx - 5) + '" cy="' + (cy - 7) + '" r="5" fill="#fff" opacity=".7"/>';
+        else if (idx < c) s += '<circle cx="' + cx + '" cy="' + cy + '" r="16" fill="#fff6d0" stroke="#ffb703" stroke-width="3" stroke-dasharray="6 4"/><text x="' + cx + '" y="' + (cy + 8) + '" text-anchor="middle" font-size="24" font-weight="900" fill="#c47f00">?</text>';
+      }
+      s += '</svg>';
+    }
+    return s;
   }
 
   function newRound() {
     if (!running) return;
     cur = makeRound(); lock = false; counted = 0;
-    trayA.innerHTML = ''; trayB.innerHTML = ''; nums.innerHTML = '';
+    var m = cur.mode;
+    trayA.innerHTML = ''; trayB.innerHTML = ''; trayC.innerHTML = ''; nums.innerHTML = '';
     trayA.className = 'tray pop'; trayB.className = 'tray pop'; trayB.style.animationDelay = '.1s';
-    for (var i = 0; i < cur.a; i++) trayA.appendChild(makeObj(cur.e, false));
-    for (var j = 0; j < cur.b; j++) trayB.appendChild(makeObj(cur.e, cur.sub));
-    opEl.textContent = cur.sub ? '−' : '+';
+    trayC.className = 'tray hidden'; op2El.className = 'op hidden'; opEl.className = 'op';
+    instr.classList.toggle('story', m === 'story');
     resEl.className = 'res'; resEl.textContent = '?';
-    instrTxt.textContent = cur.sub ? '¿Cuántos quedan?' : '¿Cuántos hay en total?';
+    if (m === 'add' || m === 'sub') {
+      for (var i = 0; i < cur.a; i++) trayA.appendChild(makeObj(cur.e, false));
+      for (var j = 0; j < cur.b; j++) trayB.appendChild(makeObj(cur.e, cur.sub));
+      opEl.textContent = cur.sub ? '−' : '+';
+      instrTxt.textContent = cur.sub ? '¿Cuántos quedan?' : '¿Cuántos hay en total?';
+    } else if (m === 'missing') {
+      for (var k = 0; k < cur.a; k++) trayA.appendChild(makeObj(cur.e, false));
+      trayB.className = 'tray pop hole'; trayB.innerHTML = '<span class="qm">?</span>';
+      opEl.textContent = '+';
+      resEl.textContent = cur.c; resEl.classList.add('done');
+      trayC.className = 'tray pop cnt3'; trayC.innerHTML = tenFrame(cur.a, cur.c);
+      instrTxt.textContent = cur.a + ' + ? = ' + cur.c;
+    } else if (m === 'double') {
+      for (var d = 0; d < cur.a; d++) { trayA.appendChild(makeObj(cur.e, false)); trayB.appendChild(makeObj(cur.e, true)); }
+      opEl.textContent = '+'; instrTxt.textContent = 'El doble de ' + cur.a;
+    } else if (m === 'half') {
+      for (var h = 0; h < cur.a; h++) trayA.appendChild(makeObj(cur.e, false));
+      trayB.className = 'tray hidden'; opEl.className = 'op txt'; opEl.textContent = '½';
+      instrTxt.textContent = 'La mitad de ' + cur.a;
+    } else { // story: a − b + c
+      for (var p = 0; p < cur.a; p++) trayA.appendChild(makeObj(cur.e, false));
+      for (var q = 0; q < cur.b; q++) trayB.appendChild(makeObj(cur.e, true));
+      opEl.textContent = '−';
+      trayC.className = 'tray pop cnt3'; op2El.className = 'op'; op2El.textContent = '+';
+      for (var w = 0; w < cur.c; w++) trayC.appendChild(makeObj(cur.e, false));
+      instrTxt.textContent = cur.text;
+    }
     cur.opts.forEach(function (v, i) {
       var n = document.createElement('div'); n.className = 'num ' + NUMCOLS[i % NUMCOLS.length];
-      n.textContent = v; n.style.animationDelay = (300 + i * 90) + 'ms';
-      n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); pickNum(n, v); });
+      n.textContent = v; n.dataset.n = v; n.style.animationDelay = (300 + i * 90) + 'ms';
+      if (m === 'missing') n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); startDrag(ev, n, v); });
+      else n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); pickNum(n, v); });
       nums.appendChild(n);
     });
     layout();
@@ -213,10 +310,12 @@ var game = KidsGame.init({ title: 'Sumas' });
     var numSize = Math.max(72, Math.min(120, Math.floor((W - 120) / 4), Math.floor(H * 0.22)));
     nums.style.setProperty('--n', numSize + 'px');
     // tamaño de objetos: caben en la bandeja sin desbordar la altura disponible
-    var trayW = trayA.clientWidth - 20, maxN = cur.sub ? cur.a : cur.a + cur.b;
+    // cuántos objetos acabará teniendo la bandeja A (tras volar los de B y C)
+    var trayW = trayA.clientWidth - 20, m = cur.mode;
+    var maxN = m === 'add' ? cur.a + cur.b : m === 'double' ? cur.a * 2 : m === 'story' ? cur.a + cur.c : Math.max(cur.a, cur.b || 0, cur.c || 0);
     var availH = H - numSize - 90;
     var o = 84;
-    while (o > 64) {
+    while (o > 56) {
       var cols = Math.max(1, Math.floor((trayW + 4) / (o + 4)));
       var rows = Math.ceil(maxN / cols);
       if (rows * (o + 4) + 36 <= availH) break;
@@ -247,37 +346,77 @@ var game = KidsGame.init({ title: 'Sumas' });
     }
   }
 
+  function wrongNum(n) {
+    KidsGame.sound.wrong(); KidsGame.vibrate(20);
+    n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad');
+    n.addEventListener('animationend', function h() { n.classList.remove('bad'); n.removeEventListener('animationend', h); });
+  }
   function pickNum(n, v) {
     if (lock || !running) return;
-    if (v !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad');
-      n.addEventListener('animationend', function h() { n.classList.remove('bad'); n.removeEventListener('animationend', h); });
-      return;
-    }
+    if (v !== cur.ans) { wrongNum(n); return; }
     lock = true;
     n.classList.add('ok');
     var all = nums.querySelectorAll('.num'); for (var i = 0; i < all.length; i++) if (all[i] !== n) all[i].classList.add('dim');
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-    if (cur.sub) subtractAnim(); else joinAnim();
+    var m = cur.mode;
+    if (m === 'sub') subtractAnim(); else if (m === 'add' || m === 'double') joinAnim(); else if (m === 'story') storyAnim(); else halfAnim();
+    done();
+  }
+  function done() {
     setTimeout(function () {
       resEl.textContent = cur.ans; resEl.classList.add('done');
       var r = resEl.getBoundingClientRect(), g = game.getBoundingClientRect();
       sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 24);
-      KidsGame.say('¡' + NUMS[cur.ans] + '!');
+      KidsGame.say('¡' + (NUMS[cur.ans] || cur.ans) + '!');
       dots.children[round].classList.add('on');
       round++;
       setTimeout(function () { if (round >= ROUNDS) finish(); else newRound(); }, 1500);
     }, 750);
   }
 
-  // los objetos de la bandeja B saltan a la bandeja A (FLIP)
+  // ---- Arrastrar la ficha al hueco "?" (nivel 3) ----
+  var drag = null;
+  function startDrag(ev, n, v) {
+    if (lock || !running || drag) return;
+    var r = n.getBoundingClientRect();
+    var g = n.cloneNode(true); g.className = n.className + ' drag'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g); n.classList.add('ghost');
+    drag = { n: n, v: v, g: g, id: ev.pointerId, ox: ev.clientX - r.left, oy: ev.clientY - r.top, moved: false, sx: ev.clientX, sy: ev.clientY };
+    KidsGame.sound.tap();
+    document.addEventListener('pointermove', onMove); document.addEventListener('pointerup', onUp); document.addEventListener('pointercancel', onUp);
+  }
+  function overHole(x, y) { var r = trayB.getBoundingClientRect(); return x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10; }
+  function onMove(ev) {
+    if (!drag || ev.pointerId !== drag.id) return; ev.preventDefault();
+    if (Math.abs(ev.clientX - drag.sx) + Math.abs(ev.clientY - drag.sy) > 8) drag.moved = true;
+    drag.g.style.left = (ev.clientX - drag.ox) + 'px'; drag.g.style.top = (ev.clientY - drag.oy) + 'px';
+    trayB.classList.toggle('hot', overHole(ev.clientX, ev.clientY));
+  }
+  function onUp(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onUp);
+    var d = drag; drag = null; d.g.remove(); d.n.classList.remove('ghost'); trayB.classList.remove('hot');
+    if (!running || lock) return;
+    if (overHole(ev.clientX, ev.clientY)) dropNum(d.n, d.v);
+    else if (!d.moved) { KidsGame.toast('👆 Arrastra la ficha al ?'); trayB.classList.remove('pop'); void trayB.offsetWidth; trayB.classList.add('pop'); KidsGame.say('Arrastra la ficha al signo de pregunta'); }
+  }
+  function dropNum(n, v) {
+    if (v !== cur.ans) { wrongNum(n); KidsGame.say('Casi. Cuenta los huecos del marco'); return; }
+    lock = true;
+    trayB.innerHTML = ''; trayB.appendChild(n); n.classList.add('ok');
+    var all = nums.querySelectorAll('.num'); for (var i = 0; i < all.length; i++) all[i].classList.add('dim');
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    trayA.classList.add('win'); trayB.classList.add('win');
+    done();
+  }
+
+  // los objetos de la bandeja B (y C) saltan a la bandeja A (FLIP)
   function joinAnim() {
-    var objs = Array.prototype.slice.call(trayB.querySelectorAll('.obj'));
+    var objs = Array.prototype.slice.call(trayB.querySelectorAll('.obj')).concat(Array.prototype.slice.call(trayC.querySelectorAll('.obj')));
     var before = objs.map(function (o) { return o.getBoundingClientRect(); });
-    objs.forEach(function (o) { o.classList.add('flying'); o.querySelector('.cnt') && o.querySelector('.cnt').remove(); trayA.appendChild(o); });
+    objs.forEach(function (o) { o.classList.add('flying'); o.classList.remove('ghost'); o.querySelector('.cnt') && o.querySelector('.cnt').remove(); trayA.appendChild(o); });
     trayA.querySelectorAll('.cnt').forEach(function (c) { c.remove(); });
-    trayB.classList.add('gone');
+    trayB.classList.add('gone'); trayC.classList.add('gone');
     objs.forEach(function (o, i) {
       var after = o.getBoundingClientRect();
       o.style.transition = 'none';
@@ -291,26 +430,57 @@ var game = KidsGame.init({ title: 'Sumas' });
     trayA.classList.add('win');
   }
   // en la resta, los objetos que se van se desvanecen
-  function subtractAnim() {
+  function subtractAnim(n) {
     var objs = Array.prototype.slice.call(trayA.querySelectorAll('.obj'));
     trayA.querySelectorAll('.cnt').forEach(function (c) { c.remove(); });
-    for (var i = objs.length - 1, k = 0; k < cur.b && i >= 0; i--, k++) {
+    for (var i = objs.length - 1, k = 0; k < (n || cur.b) && i >= 0; i--, k++) {
       (function (o, d) { setTimeout(function () { o.classList.add('vanish'); KidsGame.sound.pop(); }, d); })(objs[i], k * 90);
     }
     trayB.classList.add('gone');
     trayA.classList.add('win');
   }
+  // cuento de dos pasos: primero se van b, luego llegan c
+  function storyAnim() {
+    subtractAnim(cur.b);
+    setTimeout(function () {
+      var objs = Array.prototype.slice.call(trayC.querySelectorAll('.obj'));
+      var before = objs.map(function (o) { return o.getBoundingClientRect(); });
+      objs.forEach(function (o) { o.classList.add('flying', 'add'); o.querySelector('.cnt') && o.querySelector('.cnt').remove(); trayA.appendChild(o); });
+      trayC.classList.add('gone');
+      objs.forEach(function (o, i) { var after = o.getBoundingClientRect(); o.style.transition = 'none'; o.style.transform = 'translate(' + (before[i].left - after.left) + 'px,' + (before[i].top - after.top) + 'px) scale(1.2)'; });
+      void trayA.offsetWidth;
+      objs.forEach(function (o, i) { o.style.transition = 'transform .6s cubic-bezier(.3,1.4,.4,1) ' + (i * 40) + 'ms'; o.style.transform = 'translate(0,0)'; });
+    }, cur.b * 90 + 250);
+  }
+  // mitad: la segunda mitad se tacha
+  function halfAnim() {
+    var objs = Array.prototype.slice.call(trayA.querySelectorAll('.obj'));
+    trayA.querySelectorAll('.cnt').forEach(function (c) { c.remove(); });
+    objs.forEach(function (o, i) { if (i >= cur.ans) setTimeout(function () { o.classList.add('off'); KidsGame.sound.pop(); }, (i - cur.ans) * 90); });
+    trayA.classList.add('win');
+  }
 
   function finish() {
     running = false;
+    KidsGame.levelDone(nivel);
     KidsGame.celebrate({
       sub: '¡' + ROUNDS + ' cuentas correctas!',
-      onNext: function () { start(Math.min(3, nivel + 1)); },
+      onNext: function () { start(Math.min(4, nivel + 1)); },
       onAgain: function () { start(nivel); }
     });
   }
 
   window.addEventListener('resize', layout);
+  // Expuesto para pruebas
+  window.__sum = {
+    get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get nivel() { return nivel; },
+    solve: function () {
+      if (lock || !cur) return false;
+      var n = nums.querySelector('.num[data-n="' + cur.ans + '"]');
+      if (cur.mode === 'missing') dropNum(n, cur.ans); else pickNum(n, cur.ans);
+      return cur.mode + ':' + cur.ans;
+    }
+  };
   showPicker();
 })();
 </script>

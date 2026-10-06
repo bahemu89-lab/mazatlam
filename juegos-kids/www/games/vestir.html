@@ -63,6 +63,28 @@
   .snap { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 15; }
   .snap.on { animation: flash .5s ease-out; }
   @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+  /* Nivel Experto: pistas lógicas y ordenar la ropa */
+  .clues { display: flex; align-items: flex-start; gap: 10px; padding: 6px 14px 6px 8px; border-radius: 22px; animation: pop .4s ease-out; text-align: left; }
+  .clues .ch { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 15px; font-weight: 900; color: #ff3d7f; white-space: nowrap; }
+  .clues .spk { width: 52px; height: 52px; min-width: 52px; min-height: 52px; font-size: 24px; }
+  .clues ul { list-style: none; margin: 0; padding: 0; }
+  .clues li { display: flex; align-items: center; gap: 8px; font-size: 17px; line-height: 1.1; padding: 3px 0; color: #1f2f6b; border-bottom: 2px dashed #eee3f4; }
+  .clues li:last-child { border-bottom: 0; }
+  .clues .ic { font-size: 20px; min-width: 44px; text-align: center; }
+  .clues .tx.neg { color: #c62828; }
+  .clues .st { font-size: 20px; width: 24px; text-align: center; }
+  .clues.shake { animation: shake .4s; }
+  .stage.ordering .skins { display: none; }
+  .order { display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 8px; }
+  .order .slots, .order .tray { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .order .arrow { font-size: 16px; font-weight: 900; color: #7a2d6b; background: rgba(255,255,255,.7); padding: 4px 14px; border-radius: 20px; }
+  .slot { width: 74px; height: 86px; border-radius: 16px; border: 3px dashed #c48ac2; background: rgba(255,255,255,.45); display: flex; align-items: center; justify-content: center; position: relative; }
+  .slot::before { content: attr(data-n); position: absolute; top: -12px; left: -8px; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(180deg, #ff6fa3, #ff3d7f); color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 #b8306f; z-index: 1; }
+  .ocard { width: 68px; height: 80px; border-radius: 16px; background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: 0 5px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: grab; touch-action: none; user-select: none; }
+  .ocard .emoji { font-size: 36px; line-height: 1; }
+  .ocard small { font-size: 11px; font-weight: 900; color: #1f2f6b; line-height: 1; margin-top: 4px; }
+  .ocard.bad { animation: shake .4s; outline: 4px solid #e63946; }
+  .ocard.ghost { position: absolute; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) scale(1.15); opacity: .95; }
   @media (orientation: portrait) {
     .main { flex-direction: column; }
     .stage { flex: 1 1 auto; }
@@ -284,7 +306,8 @@ var game = KidsGame.init({ title: 'Vestir' });
     KidsGame.toast('Falta algo… 🤔'); KidsGame.say('Falta algo');
   }
   function done() {
-    if (nivel === 2) {
+    if (nivel === 4) { if (xmode === 'clues' ? !checkClues() : !checkOrder()) return; }
+    else if (nivel === 2) {
       var okCount = 0, icons = mid.querySelectorAll('.icons svg');
       mission.groups.forEach(function (g, i) { var ok = g.slice(1).indexOf(outfit[g[0]]) >= 0; if (ok) okCount++; if (icons[i]) icons[i].classList.toggle('miss', !ok); });
       if (okCount < Math.max(1, mission.groups.length - 1)) { fail(); return; }
@@ -295,11 +318,160 @@ var game = KidsGame.init({ title: 'Vestir' });
     snap.classList.remove('on'); void snap.offsetWidth; snap.classList.add('on');
     KidsGame.sound.pop(); KidsGame.addStar(); dollSparkles(); KidsGame.vibrate(30);
     running = false;
+    KidsGame.levelDone(nivel);
     setTimeout(function () {
-      if (nivel === 1) KidsGame.celebrate({ msg: '¡Qué linda!', sub: '¡Ya está lista!', onAgain: function () { running = true; }, onNext: function () { running = true; randomOutfit(); } });
+      if (nivel === 4) finishExpert();
+      else if (nivel === 1) KidsGame.celebrate({ msg: '¡Qué linda!', sub: '¡Ya está lista!', onAgain: function () { running = true; }, onNext: function () { running = true; randomOutfit(); } });
       else if (nivel === 2) KidsGame.celebrate({ msg: '¡Perfecta!', sub: mission.em + ' Lista para ' + mission.txt, onAgain: function () { newMission(mission); }, onNext: function () { newMission(); } });
       else KidsGame.celebrate({ msg: '¡Igualita!', sub: '👀 ¡Buena memoria!', onAgain: function () { newTarget(target); }, onNext: function () { newTarget(); } });
     }, 700);
+  }
+
+  // ---------- Nivel Experto: pistas lógicas y "ordena para vestirse" ----------
+  var TAG = {
+    top: { camiseta: ['azul'], vestido: ['rojo'], sueter: ['verde'], princesa: ['rosa'], heroe: ['azul', 'rojo'], impermeable: ['amarillo'] },
+    bottom: { pantalon: ['azul'], falda: ['morado'], short: ['verde'], tutu: ['rosa'], nada: [] },
+    shoes: { tenis: ['blanco', 'azul'], botas: ['amarillo'], ballet: ['rosa'], sandalias: ['café'], rojos: ['rojo'] },
+    hair: { corto: ['café'], coletas: ['café', 'rojo'], largo: ['café'], chongo: ['café', 'rosa'], corona: ['dorado'], gorra: ['rojo'], mono: ['rosa'], mago: ['morado'] },
+    acc: { lentes: ['negro'], varita: ['morado'], mochila: ['rosa'], paraguas: ['rojo'], globo: ['rojo'], collar: ['dorado'] }
+  };
+  var COLOR_E = { azul: '🔵', rojo: '🔴', verde: '🟢', rosa: '🩷', amarillo: '🟡', morado: '🟣', café: '🟤', dorado: '⭐', blanco: '⚪', negro: '⚫' };
+  function tags(o, c) { var id = o[c]; return (id && TAG[c][id]) || []; }
+  function allTags(o) { var t = []; ['top', 'bottom', 'shoes', 'hair', 'acc'].forEach(function (c) { if (c === 'bottom' && isDress(o)) return; t = t.concat(tags(o, c)); }); return t; }
+  function isDress(o) { var it = o.top && find('top', o.top); return !!(it && it.dress); }
+  function shares(a, b) { for (var i = 0; i < a.length; i++) if (b.indexOf(a[i]) >= 0) return true; return false; }
+  var CLUES = [
+    { k: 'dress', ic: '👗', txt: 'Lleva vestido', test: function (o) { return isDress(o); } },
+    { k: 'dress', ic: '👗', neg: true, txt: 'NO lleva vestido', test: function (o) { return !isDress(o); } },
+    { k: 'rain', ic: '🌧️', txt: 'Lleva algo para la lluvia', test: function (o) { return o.top === 'impermeable' || o.shoes === 'botas' || o.acc === 'paraguas'; } },
+    { k: 'rain', ic: '🌧️', neg: true, txt: 'NO lleva nada para la lluvia', test: function (o) { return !(o.top === 'impermeable' || o.shoes === 'botas' || o.acc === 'paraguas'); } },
+    { k: 'same', ic: '👟=👕', rel: true, txt: 'Sus zapatos son del mismo color que su ropa de arriba', test: function (o) { return shares(tags(o, 'shoes'), tags(o, 'top')); } },
+    { k: 'same', ic: '👟=🎩', rel: true, txt: 'Sus zapatos son del mismo color que lo que lleva en la cabeza', test: function (o) { return shares(tags(o, 'shoes'), tags(o, 'hair')); } },
+    { k: 'same', ic: '👖=👟', rel: true, txt: 'Su falda o pantalón es del mismo color que sus zapatos', test: function (o) { return !isDress(o) && shares(tags(o, 'bottom'), tags(o, 'shoes')); } },
+    { k: 'magic', ic: '✨', txt: 'Lleva algo mágico', test: function (o) { return o.acc === 'varita' || o.hair === 'mago'; } },
+    { k: 'crown', ic: '👑', txt: 'Lleva algo que brilla en la cabeza', test: function (o) { return o.hair === 'corona'; } },
+    { k: 'legs', ic: '👖', txt: 'Lleva pantalón o short', test: function (o) { return !isDress(o) && (o.bottom === 'pantalon' || o.bottom === 'short'); } },
+    { k: 'legs', ic: '🩰', txt: 'Lleva falda o tutú', test: function (o) { return !isDress(o) && (o.bottom === 'falda' || o.bottom === 'tutu'); } },
+    { k: 'glasses', ic: '🕶️', txt: 'Lleva lentes', test: function (o) { return o.acc === 'lentes'; } },
+    { k: 'hands', ic: '🙌', neg: true, txt: 'NO lleva nada en las manos', test: function (o) { return !(o.acc === 'varita' || o.acc === 'paraguas' || o.acc === 'globo'); } }
+  ];
+  ['rojo', 'azul', 'rosa', 'amarillo', 'verde', 'morado'].forEach(function (c) {
+    CLUES.push({ k: 'col-' + c, ic: COLOR_E[c], txt: 'Lleva algo ' + c, test: function (o) { return allTags(o).indexOf(c) >= 0; } });
+    CLUES.push({ k: 'col-' + c, ic: COLOR_E[c], neg: true, txt: 'NO lleva nada ' + c, test: function (o) { return allTags(o).indexOf(c) < 0; } });
+  });
+  var REL_PAIRS = [['shoes', 'rojos', 'top', 'vestido'], ['shoes', 'rojos', 'top', 'heroe'], ['shoes', 'tenis', 'top', 'camiseta'], ['shoes', 'botas', 'top', 'impermeable'], ['shoes', 'ballet', 'top', 'princesa'],
+    ['shoes', 'rojos', 'hair', 'gorra'], ['shoes', 'ballet', 'hair', 'mono'], ['shoes', 'ballet', 'hair', 'chongo'], ['shoes', 'sandalias', 'hair', 'largo'], ['shoes', 'rojos', 'hair', 'coletas'],
+    ['bottom', 'tutu', 'shoes', 'ballet'], ['bottom', 'pantalon', 'shoes', 'tenis']];
+  var xround = 0, xmode = null, clues = null, order = null;
+  function genClues() {
+    var n = xround < 2 ? 3 : 4, tries = 0, best = null;
+    while (tries++ < 40) {
+      var t = randomOutfit(true);
+      if (Math.random() < 0.7) { var pr = KidsGame.pick(REL_PAIRS); t[pr[0]] = pr[1]; t[pr[2]] = pr[3]; if (isDress(t)) t.bottom = 'nada'; else if (t.bottom === 'nada') t.bottom = 'pantalon'; }
+      var cand = KidsGame.shuffle(CLUES.filter(function (c) { return c.test(t); }));
+      var rel = cand.filter(function (c) { return c.rel; }), neg = cand.filter(function (c) { return c.neg; }), pos = cand.filter(function (c) { return !c.rel && !c.neg; });
+      var list = [], kinds = {};
+      function add(c) { if (!c || kinds[c.k]) return; kinds[c.k] = 1; list.push(c); }
+      add(rel[0]); add(neg[0]);
+      var i = 0; while (list.length < n && i < pos.length) add(pos[i++]);
+      i = 0; while (list.length < n && i < cand.length) add(cand[i++]);
+      if (list.length < n) continue;
+      var broken = list.filter(function (c) { return !c.test(outfit); }).length;
+      if (broken >= 2) return { list: KidsGame.shuffle(list), target: t };
+      best = best || { list: list, target: t };
+    }
+    return best;
+  }
+  function renderClues() {
+    mid.innerHTML = '<div class="clues panel"><div class="ch"><button class="btn round yellow spk" aria-label="Oír">🔊</button><span>🕵️ Pistas</span></div><ul>' +
+      clues.list.map(function (c, i) { return '<li><span class="ic emoji">' + c.ic + '</span><span class="tx' + (c.neg ? ' neg' : '') + '">' + c.txt + '</span><b class="st">' + (c.st || '') + '</b></li>'; }).join('') + '</ul></div>';
+    mid.querySelector('.spk').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); sayClues(); });
+  }
+  function sayClues() { KidsGame.say('Pistas: ' + clues.list.map(function (c) { return c.txt; }).join('. ')); }
+  function startClues() {
+    running = true; xmode = 'clues'; order = null; clues = genClues();
+    stage.classList.remove('ordering');
+    outfit = { top: 'camiseta', bottom: 'pantalon', shoes: 'tenis', hair: 'corto', acc: null }; cat = 'top'; renderTabs(); renderOpts(); renderDoll(true);
+    renderClues(); doneBtn.innerHTML = '✅ ¡Listo!';
+    sayClues();
+  }
+  function checkClues() {
+    var bad = 0;
+    clues.list.forEach(function (c) { var ok = c.test(outfit); c.st = ok ? '✔' : '✖'; if (!ok) bad++; });
+    renderClues();
+    if (bad) { fail(); KidsGame.toast('Casi… ' + bad + ' ✖', 1500); return false; }
+    return true;
+  }
+  // Ordena para vestirse
+  var ORDER_ITEMS = [{ id: 'interior', e: '🩲', n: 'interior' }, { id: 'calcetines', e: '🧦', n: 'calcetines' }, { id: 'camiseta', e: '👕', n: 'camiseta' }, { id: 'pantalon', e: '👖', n: 'pantalón' }, { id: 'zapatos', e: '👟', n: 'zapatos' }, { id: 'abrigo', e: '🧥', n: 'abrigo' }];
+  var ORDER_RULES = [['calcetines', 'zapatos', 'Los calcetines van antes que los zapatos'], ['pantalon', 'zapatos', 'El pantalón va antes que los zapatos'], ['interior', 'pantalon', 'La ropa interior va antes que el pantalón'],
+    ['camiseta', 'abrigo', 'La camiseta va antes que el abrigo'], ['pantalon', 'abrigo', 'El abrigo va al final, sobre todo lo demás']];
+  function startOrder() {
+    running = true; xmode = 'order'; clues = null;
+    var items = xround < 2 ? ORDER_ITEMS.filter(function (it) { return it.id !== 'interior'; }) : ORDER_ITEMS.slice();
+    order = { items: items, slots: items.map(function () { return null; }) };
+    stage.classList.add('ordering');
+    mid.innerHTML = '<div class="ttl">🧦👟 ¿En qué orden se viste?</div>';
+    doneBtn.innerHTML = '✅ ¡Listo!';
+    renderOrder(KidsGame.shuffle(items));
+    KidsGame.say('¿En qué orden se viste? Arrastra la ropa a los números, del primero al último');
+  }
+  function cardHtml(it) { return '<span class="emoji">' + it.e + '</span><small>' + it.n + '</small>'; }
+  function renderOrder(trayItems) {
+    var o = order;
+    dollWrap.innerHTML = '<div class="order"><div class="slots">' + o.slots.map(function (id, i) { var it = id && ORDER_ITEMS.filter(function (x) { return x.id === id; })[0]; return '<div class="slot" data-n="' + (i + 1) + '" data-i="' + i + '">' + (it ? '<div class="ocard" data-id="' + it.id + '">' + cardHtml(it) + '</div>' : '') + '</div>'; }).join('') +
+      '</div><div class="arrow">primero ⬅ ➡ último</div><div class="tray">' + (trayItems || o.items.filter(function (it) { return o.slots.indexOf(it.id) < 0; })).map(function (it) { return '<div class="ocard" data-id="' + it.id + '">' + cardHtml(it) + '</div>'; }).join('') + '</div></div>';
+    o.trayOrder = (trayItems || o.items.filter(function (it) { return o.slots.indexOf(it.id) < 0; }));
+    var cards = dollWrap.querySelectorAll('.ocard');
+    for (var i = 0; i < cards.length; i++) bindCard(cards[i]);
+  }
+  function bindCard(card) {
+    var ghost = null, sx = 0, sy = 0, moved = false;
+    card.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation(); if (!running) return;
+      try { card.setPointerCapture(ev.pointerId); } catch (e) {}
+      sx = ev.clientX; sy = ev.clientY; moved = false; KidsGame.sound.tap();
+      ghost = card.cloneNode(true); ghost.classList.add('ghost'); stage.appendChild(ghost); moveGhost(ev);
+    });
+    function moveGhost(ev) { var r = stage.getBoundingClientRect(); ghost.style.left = (ev.clientX - r.left) + 'px'; ghost.style.top = (ev.clientY - r.top) + 'px'; }
+    card.addEventListener('pointermove', function (ev) { if (!ghost) return; if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 8) moved = true; moveGhost(ev); });
+    function up(ev) {
+      if (!ghost) return; ghost.remove(); ghost = null;
+      var id = card.getAttribute('data-id'), o = order, from = o.slots.indexOf(id);
+      var el = document.elementFromPoint(ev.clientX, ev.clientY), slot = el && el.closest ? el.closest('.slot') : null;
+      if (moved && slot) {
+        var to = +slot.getAttribute('data-i');
+        if (from >= 0) o.slots[from] = o.slots[to]; else if (o.slots[to]) { /* ocupado: la tarjeta de ahí vuelve a la bandeja */ }
+        o.slots[to] = id; KidsGame.sound.pop();
+      } else if (!moved) {
+        if (from >= 0) { o.slots[from] = null; KidsGame.sound.tap(); }
+        else { var free = o.slots.indexOf(null); if (free >= 0) { o.slots[free] = id; KidsGame.sound.pop(); } }
+      } else if (from >= 0) { o.slots[from] = null; KidsGame.sound.tap(); }
+      renderOrder();
+    }
+    card.addEventListener('pointerup', up); card.addEventListener('pointercancel', up);
+  }
+  function checkOrder() {
+    var o = order;
+    if (o.slots.indexOf(null) >= 0) { fail(); KidsGame.toast('Faltan prendas en los números 🔢', 1500); KidsGame.say('Pon todas las prendas en los números'); return false; }
+    var pos = {}; o.slots.forEach(function (id, i) { pos[id] = i; });
+    for (var i = 0; i < ORDER_RULES.length; i++) {
+      var r = ORDER_RULES[i];
+      if (pos[r[0]] == null || pos[r[1]] == null) continue;
+      if (pos[r[0]] > pos[r[1]]) {
+        KidsGame.sound.wrong(); KidsGame.toast(r[2], 2200); KidsGame.say(r[2]);
+        [r[0], r[1]].forEach(function (id) { var c = dollWrap.querySelector('.slot .ocard[data-id="' + id + '"]'); if (c) { c.classList.add('bad'); setTimeout(function () { c.classList.remove('bad'); }, 1200); } });
+        return false;
+      }
+    }
+    return true;
+  }
+  function startExpert() { if (xround % 2 === 0) startClues(); else startOrder(); }
+  function finishExpert() {
+    var wasClues = xmode === 'clues';
+    KidsGame.addStar(2); xround++;
+    KidsGame.celebrate({ msg: wasClues ? '¡Resolviste las pistas!' : '¡Orden perfecto!', sub: wasClues ? '🕵️ ' + clues.list.length + ' pistas ✔' : '🧦➡👟 ¡Así se viste!',
+      onAgain: function () { xround--; if (wasClues) startClues(); else startOrder(); }, onNext: function () { startExpert(); } });
   }
 
   // ---------- niveles ----------
@@ -325,13 +497,15 @@ var game = KidsGame.init({ title: 'Vestir' });
     KidsGame.say('Vístela igual que la tarjeta');
   }
   function startLevel() {
-    running = true; mission = null; target = null; clearTimeout(peekTimer);
+    running = true; mission = null; target = null; clearTimeout(peekTimer); stage.classList.remove('ordering'); xmode = null;
+    if (nivel === 4) { renderSkins(); startExpert(); return; }
     if (nivel === 1) { mid.innerHTML = '<div class="ttl">¡Vístela como quieras!</div>'; doneBtn.innerHTML = '📷 ¡Listo!'; renderTabs(); renderOpts(); renderDoll(true); KidsGame.say('Vístela como quieras'); }
     else if (nivel === 2) newMission();
     else newTarget();
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
-  function pickLevel() { KidsGame.levelPicker({ onPick: function (n) { nivel = n; setBadge(); startLevel(); } }); }
+  function pickLevel() { KidsGame.levelPicker({ labels: { 1: 'Viste libre', 2: 'Misión: lluvia, playa, fiesta…', 3: 'Copia el atuendo de memoria', 4: 'Pistas lógicas y orden para vestirse' }, onPick: function (n) { nivel = n; setBadge(); startLevel(); } }); }
+  window.__kgTest = function () { return { outfit: outfit, clues: clues, order: order, target: target, setOutfit: function (o) { outfit = o; renderOpts(); renderDoll(true); }, setSlots: function (sl) { order.slots = sl; renderOrder(); } }; };
   renderSkins(); renderTabs(); renderOpts(); renderDoll(false); setBadge(); pickLevel();
 })();
 </script>

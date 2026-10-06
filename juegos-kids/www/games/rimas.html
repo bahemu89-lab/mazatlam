@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Rimas</title>
+<style>
+  /* Escena: escenario de poesía al atardecer, con notas musicales flotando */
+  .game { background:
+      radial-gradient(ellipse 60% 45% at 50% 100%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%),
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.35), rgba(255,255,255,0) 30%),
+      linear-gradient(180deg, #ffd6f0 0%, #e2c4ff 45%, #b9a6ff 100%); }
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; pointer-events: none;
+    background: linear-gradient(180deg, rgba(90,60,160,0) 0%, rgba(90,60,160,.18) 100%); }
+  .note { position: absolute; z-index: 0; pointer-events: none; font-size: 56px; font-weight: 900; color: rgba(255,255,255,.85); text-shadow: 0 4px 0 rgba(120,80,200,.35), 0 8px 14px rgba(0,0,0,.15); animation: float 4.5s ease-in-out infinite; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; gap: min(2vh, 16px); z-index: 1; }
+  .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 28px; }
+  .tools { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 8px; }
+  .tools .btn { font-size: 30px; }
+  .prog { position: absolute; top: 80px; right: 12px; z-index: 3; display: flex; gap: 5px; flex-direction: column; align-items: flex-end; }
+  .dots { display: flex; gap: 5px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(180deg, #fff, #d9dff0); box-shadow: 0 2px 0 #b9c2d9, inset 0 1px 0 #fff; }
+  .dot.on { background: radial-gradient(circle at 35% 30%, #fff, #ffd166 40%, #f5a623); box-shadow: 0 2px 0 #c97d0b, 0 0 8px rgba(255,200,80,.8); }
+  .count { font-size: 18px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 3px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520, inset 0 1px 0 #fff; }
+  @media (max-width: 820px) { .prog { top: 8px; right: 50%; transform: translateX(50%); flex-direction: column-reverse; } }
+
+  .q { font-size: min(4.6vh, 5vw, 34px); font-weight: 900; color: #fff; text-align: center; padding: 8px 26px; border-radius: 30px; flex: 0 0 auto; margin-top: min(9vh, 70px);
+    background: linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: 0 6px 0 #5232b3, 0 12px 18px rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.6); text-shadow: 0 2px 0 rgba(0,0,0,.25); max-width: 94vw; }
+  .q b { color: #ffe066; }
+  .target { display: flex; align-items: center; gap: min(3vw, 24px); flex: 0 0 auto; cursor: pointer; }
+  .medal { position: relative; width: min(20vh, 28vw, 160px); height: min(20vh, 28vw, 160px); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #fff6d0 32%, #ffd166 70%, #f5a623 100%);
+    box-shadow: 0 10px 0 #c97d0b, 0 18px 28px rgba(90,50,0,.3), inset 0 4px 0 rgba(255,255,255,.9), inset 0 -8px 0 rgba(180,110,0,.25), 0 0 0 7px #fff, 0 0 0 11px rgba(255,209,102,.6);
+    animation: float 3.6s ease-in-out infinite; }
+  .medal::before { content: ""; position: absolute; left: 12%; right: 12%; top: 6%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); pointer-events: none; }
+  .medal .emoji { font-size: min(12.5vh, 17vw, 100px); filter: drop-shadow(0 8px 6px rgba(90,50,0,.35)); }
+  .word { font-size: min(8vh, 9vw, 58px); font-weight: 900; letter-spacing: 2px; white-space: nowrap; color: #fff; text-shadow: 0 3px 0 #7f5af0, 0 6px 10px rgba(0,0,0,.3), -2px -2px 0 #7f5af0, 2px -2px 0 #7f5af0, -2px 2px 0 #7f5af0, 2px 2px 0 #7f5af0; }
+  .word small { display: block; font-size: .5em; letter-spacing: 1px; opacity: .9; }
+
+  /* Opciones: tarjetas con emoji, palabra y altavoz */
+  .opts { display: flex; flex-wrap: wrap; justify-content: center; gap: min(2.4vw, 20px); flex: 0 0 auto; max-width: 98vw; }
+  .opt { flex-direction: column; gap: 2px; width: min(28vw, 240px); min-height: min(26vh, 200px); padding: 8px 8px 6px; border-radius: 26px; animation: pop .35s ease-out backwards; }
+  .opts.four .opt { width: min(22.5vw, 30vh, 220px); }
+  .opt .emoji { font-size: min(11vh, 12vw, 84px); }
+  .opt .lbl { font-size: min(3.6vh, 4vw, 26px); font-weight: 900; color: #1f2f6b; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
+  .opt .spk { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-top: 2px;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 4px 0 #1a63a8, 0 6px 10px rgba(0,0,0,.2), inset 0 2px 0 rgba(255,255,255,.6); }
+  .opt .spk:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a63a8, inset 0 2px 0 rgba(255,255,255,.6); }
+  .opt.ok { animation: bounce .6s; } .opt.dim { opacity: .4; filter: saturate(.3); pointer-events: none; }
+
+  /* Parejas: dos columnas unidas por líneas */
+  .board { position: relative; display: flex; justify-content: space-between; width: min(96vw, 820px); flex: 0 0 auto; gap: 10vw; }
+  .col { display: flex; flex-direction: column; gap: min(1.6vh, 12px); flex: 1 1 0; }
+  .pair { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: min(13vh, 104px); padding: 4px 12px; border-radius: 22px; touch-action: none; animation: pop .35s ease-out backwards; }
+  .pair .emoji { font-size: min(8vh, 9vw, 64px); }
+  .pair .lbl { font-size: min(3.4vh, 3.6vw, 24px); font-weight: 900; color: #1f2f6b; text-shadow: 0 1px 0 #fff; }
+  .pair .knob { position: absolute; top: 50%; width: 26px; height: 26px; border-radius: 50%; margin-top: -13px; background: radial-gradient(circle at 35% 30%, #fff, #ffd166 45%, #f5a623); box-shadow: 0 3px 0 #c97d0b, 0 4px 8px rgba(0,0,0,.25); }
+  .col.l .pair { flex-direction: row-reverse; justify-content: flex-start; } .col.l .pair .knob { right: -13px; } .col.r .pair .knob { left: -13px; }
+  .col.l .pair { justify-content: flex-start; }
+  .pair.done { pointer-events: none; }
+  .board svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
+  .board .pair { z-index: 1; }
+  .board line { stroke-width: 12; stroke-linecap: round; stroke: #ffb703; filter: drop-shadow(0 3px 2px rgba(0,0,0,.3)); }
+  .board line.done { stroke: #2fd27a; }
+
+  /* Verso */
+  .verse { font-size: min(4.8vh, 4.6vw, 36px); font-weight: 900; color: #3b2a7a; text-align: center; padding: 14px 28px; border-radius: 28px; line-height: 1.3; max-width: 94vw; flex: 0 0 auto; margin-top: min(9vh, 70px);
+    background: linear-gradient(180deg, #fffdf5, #fff2c7); border: 3px solid #fff; box-shadow: 0 8px 0 #d9b85c, 0 16px 26px rgba(90,60,0,.25), inset 0 2px 0 #fff; }
+  .verse .gap { display: inline-block; min-width: 2.6em; border-bottom: 5px dashed #7f5af0; color: #7f5af0; padding: 0 6px; }
+  .verse .gap.full { border-bottom-style: solid; color: #148a4d; border-color: #2fd27a; }
+  .rows { display: flex; flex-direction: column; gap: min(1.4vh, 10px); flex: 0 0 auto; align-items: center; }
+  .row { display: flex; flex-wrap: wrap; justify-content: center; gap: min(1.6vw, 12px); align-items: center; max-width: 96vw; }
+  .row .tag { font-size: 30px; width: 54px; text-align: center; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
+  .chip { flex: 0 0 auto; white-space: nowrap; flex-direction: row; gap: 8px; min-height: 68px; padding: 4px 14px; border-radius: 20px; font-size: min(3.2vh, 3.2vw, 22px); font-weight: 900; color: #1f2f6b; animation: pop .3s backwards; }
+  .chip .emoji { font-size: min(6vh, 6vw, 42px); }
+  .chip.sel { background: linear-gradient(180deg, #fff4c2, #ffd166); border-color: #ffb703; box-shadow: 0 6px 0 #c97d0b, 0 10px 16px rgba(90,50,0,.3), 0 0 0 4px rgba(255,209,102,.5), inset 0 2px 0 #fff; }
+  .actions { display: flex; gap: 18px; align-items: center; justify-content: center; flex: 0 0 auto; min-height: 76px; }
+  .actions .btn { font-size: 40px; min-width: 130px; min-height: 76px; }
+  .actions .btn.off { opacity: .45; filter: saturate(.4); }
+  .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 31; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  @media (max-height: 700px) { .opt { min-height: 160px; } .opt .emoji { font-size: 64px; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Rimas' });
+
+  // Banco de rimas: grupos de [palabra, emoji]
+  var GROUPS = [
+    [['gato','🐱'],['pato','🦆'],['zapato','👟'],['plato','🍽️']],
+    [['sol','☀️'],['caracol','🐌'],['girasol','🌻'],['farol','🏮']],
+    [['luna','🌙'],['cuna','🛏️'],['tuna','🌵'],['laguna','🏞️']],
+    [['ratón','🐭'],['botón','🔘'],['melón','🍈'],['balón','🏀'],['limón','🍋'],['jamón','🍖'],['avión','✈️'],['camión','🚚'],['león','🦁'],['corazón','❤️']],
+    [['oso','🐻'],['goloso','😋'],['mimoso','🤗']],
+    [['flor','🌸'],['color','🎨'],['tambor','🥁'],['doctor','👨‍⚕️'],['tractor','🚜']],
+    [['pez','🐟'],['nuez','🌰'],['diez','🔟'],['juez','👨‍⚖️']],
+    [['casa','🏠'],['taza','☕'],['masa','🫓'],['pasa','🍇']],
+    [['conejo','🐰'],['espejo','🪞'],['cangrejo','🦀'],['viejo','👴']],
+    [['estrella','⭐'],['botella','🍾'],['paella','🥘'],['huella','🐾']],
+    [['pelota','⚽'],['gota','💧'],['bota','👢']],
+    [['nube','☁️'],['sube','🧗']],
+    [['perro','🐶'],['cerro','⛰️'],['hierro','🔩'],['becerro','🐂']],
+    [['vaca','🐮'],['alpaca','🦙'],['matraca','🪇'],['hamaca','🛋️']],
+    [['rana','🐸'],['manzana','🍎'],['banana','🍌'],['ventana','🪟'],['campana','🔔'],['mañana','🌅']],
+    [['mono','🐒'],['cono','🍦'],['trono','👑']],
+    [['tren','🚂'],['sartén','🍳'],['cien','💯']],
+    [['pan','🍞'],['flan','🍮'],['volcán','🌋'],['capitán','👨‍✈️']],
+    [['silla','🪑'],['ardilla','🐿️'],['tortilla','🫓'],['semilla','🌱'],['sombrilla','⛱️'],['rodilla','🦵']],
+    [['gallina','🐔'],['cocina','🍳'],['piscina','🏊'],['bailarina','💃'],['medicina','💊']],
+    [['fresa','🍓'],['princesa','👸'],['cereza','🍒'],['sorpresa','🎁']],
+    [['camisa','👕'],['sonrisa','😊'],['prisa','🏃']],
+    [['tortuga','🐢'],['lechuga','🥬'],['oruga','🐛']],
+    [['elefante','🐘'],['guante','🧤'],['diamante','💎'],['gigante','🧍']],
+    [['coche','🚗'],['noche','🌃'],['broche','🖇️']],
+    [['abeja','🐝'],['oveja','🐑'],['oreja','👂'],['reja','🚧'],['bandeja','🍱']],
+    [['pollo','🐥'],['bollo','🥐'],['rollo','🧻']],
+    [['cabra','🐐'],['palabra','💬'],['abracadabra','🪄']],
+    [['araña','🕷️'],['montaña','🏔️'],['caña','🎣'],['piraña','🐟']],
+    [['queso','🧀'],['hueso','🦴'],['beso','💋'],['peso','⚖️']],
+    [['pino','🌲'],['camino','🛤️'],['pingüino','🐧'],['cochino','🐷']],
+    [['sapo','🐸'],['trapo','🧹'],['guapo','😎']],
+    [['gusano','🐛'],['mano','✋'],['piano','🎹'],['verano','🏖️'],['hermano','👦']],
+    [['cuchara','🥄'],['cara','🙂'],['jara','🌼']],
+    [['zanahoria','🥕'],['historia','📖'],['memoria','🧠'],['victoria','🏆']],
+    [['pastel','🎂'],['papel','📄'],['pincel','🖌️'],['miel','🍯'],['cascabel','🔔']],
+    [['foca','🦭'],['boca','👄'],['roca','🪨'],['loca','🤪']],
+    [['nido','🪺'],['vestido','👗'],['sonido','🔊'],['dormido','😴']],
+    [['mariposa','🦋'],['rosa','🌹'],['cosa','📦'],['hermosa','🥰']],
+    [['mar','🌊'],['collar','📿'],['jaguar','🐆'],['hogar','🏡']],
+    [['ojo','👁️'],['rojo','🔴'],['piojo','🪳'],['flojo','😴']],
+    [['cielo','🌌'],['pelo','💇'],['caramelo','🍬'],['abuelo','👴'],['hielo','🧊']],
+    [['gorro','🧢'],['zorro','🦊'],['chorro','🚿']],
+    [['tomate','🍅'],['chocolate','🍫'],['aguacate','🥑'],['cacahuate','🥜']],
+    [['globo','🎈'],['lobo','🐺']],
+    [['helado','🍦'],['pescado','🐟'],['soldado','💂'],['mercado','🏪'],['candado','🔒']],
+    [['muñeca','🪆'],['biblioteca','📚']],
+    [['calcetín','🧦'],['delfín','🐬'],['jardín','🌷'],['patín','⛸️'],['violín','🎻']],
+    [['cama','🛏️'],['rama','🌿'],['llama','🦙'],['dama','👸']],
+    [['bebé','👶'],['café','☕'],['puré','🍲']],
+    [['pera','🍐'],['bandera','🚩'],['escalera','🪜'],['madera','🪵'],['primavera','🌷'],['carretera','🛣️']],
+    [['barco','⛵'],['charco','💧'],['marco','🖼️'],['arco','🏹']],
+    [['cepillo','🪥'],['cuchillo','🔪'],['castillo','🏰'],['anillo','💍'],['martillo','🔨'],['grillo','🦗'],['amarillo','🟡']],
+    [['corona','👑'],['persona','🧑']],
+    [['vela','🕯️'],['abuela','👵'],['escuela','🏫'],['ciruela','🫐'],['tela','🧵'],['muela','🦷']]
+  ];
+  // Versos para completar (nivel 4): texto con ___, respuesta y dos opciones que no riman
+  var VERSES = [
+    ['Mi gato Renato se puso un ___', ['zapato','👟'], [['sombrero','🎩'],['perro','🐶']]],
+    ['El ratón Simón se comió un ___', ['melón','🍈'], [['queso','🧀'],['pan','🍞']]],
+    ['En la luna hay una ___', ['cuna','🛏️'], [['casa','🏠'],['estrella','⭐']]],
+    ['La rana Juana come una ___', ['manzana','🍎'], [['pera','🍐'],['uva','🍇']]],
+    ['El conejo Alejo se mira en el ___', ['espejo','🪞'], [['agua','💧'],['libro','📖']]],
+    ['Una estrella brilla dentro de una ___', ['botella','🍾'], [['caja','📦'],['nube','☁️']]],
+    ['El perro de Pedro subió al ___', ['cerro','⛰️'], [['árbol','🌳'],['coche','🚗']]],
+    ['El pez Andrés contó hasta ___', ['diez','🔟'], [['cinco','5️⃣'],['tres','3️⃣']]],
+    ['El tambor y la flor son del mismo ___', ['color','🎨'], [['peso','⚖️'],['lugar','📍']]],
+    ['La abeja vieja vive con la ___', ['oveja','🐑'], [['vaca','🐮'],['gallina','🐔']]],
+    ['Doña gallina cocina en la ___', ['cocina','🍳'], [['cama','🛏️'],['escuela','🏫']]],
+    ['La ardilla Lila se sienta en la ___', ['silla','🪑'], [['piedra','🪨'],['cama','🛏️']]],
+    ['El sapo guapo limpia con un ___', ['trapo','🧹'], [['jabón','🧼'],['cubo','🪣']]],
+    ['Pepe el elefante perdió su ___', ['guante','🧤'], [['sombrero','🎩'],['zapato','👟']]],
+    ['El zorro Socorro usa un ___', ['gorro','🧢'], [['sombrero','🎩'],['vestido','👗']]],
+    ['La foca Paca abre la ___', ['boca','👄'], [['puerta','🚪'],['caja','📦']]],
+    ['Mi abuela Manuela va a la ___', ['escuela','🏫'], [['playa','🏖️'],['tienda','🏪']]],
+    ['El tomate Vicente come ___', ['chocolate','🍫'], [['sopa','🍲'],['pan','🍞']]],
+    ['La tortuga Lola come ___', ['lechuga','🥬'], [['sopa','🍲'],['arroz','🍚']]],
+    ['El delfín Martín patina con su ___', ['patín','⛸️'], [['bici','🚲'],['pelota','⚽']]]
+  ];
+  // Inventa un poema: animales (con su rima), adjetivos invariables y objetos
+  var ANIMALS = [['El gato','gato','🐱'],['El pato','pato','🦆'],['El ratón','ratón','🐭'],['El conejo','conejo','🐰'],['La rana','rana','🐸'],['La foca','foca','🦭'],['El elefante','elefante','🐘'],['El sapo','sapo','🐸'],['El zorro','zorro','🦊'],['El delfín','delfín','🐬'],['La tortuga','tortuga','🐢'],['La ardilla','ardilla','🐿️']];
+  var ADJS = [['feliz','😊'],['veloz','🏃'],['gigante','🧍'],['elegante','🎩'],['valiente','💪'],['sonriente','😁'],['brillante','✨'],['genial','🤩']];
+  var OBJS = [['un zapato','👟','gato'],['un plato','🍽️','pato'],['un botón','🔘','ratón'],['un melón','🍈','ratón'],['un espejo','🪞','conejo'],['una manzana','🍎','rana'],['una campana','🔔','rana'],['una roca','🪨','foca'],['un guante','🧤','elefante'],['un diamante','💎','elefante'],['un trapo','🧹','sapo'],['un gorro','🧢','zorro'],['un patín','⛸️','delfín'],['un calcetín','🧦','delfín'],['una lechuga','🥬','tortuga'],['una sombrilla','⛱️','ardilla'],['una tortilla','🫓','ardilla'],['un helado','🍦',''],['una pelota','⚽',''],['un libro','📖',''],['una flor','🌸',''],['un tren','🚂',''],['un pastel','🎂','']];
+  var TEMPL = ['{A} {J} se puso {O}.', '{A} {J} baila con {O}.', '{A} {J} sueña con {O}.'];
+  var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
+  var ROUNDS = 8;
+
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); fn(ev); }); }
+  function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function sparks(node, color) {
+    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 14; i++) {
+      var d = document.createElement('div'); d.className = 'spark';
+      var ang = (i / 14) * Math.PI * 2, dist = 60 + Math.random() * 70;
+      d.style.left = (cx - 7) + 'px'; d.style.top = (cy - 7) + 'px';
+      d.style.setProperty('--c', color || COLORS[i % COLORS.length]);
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px'); d.style.setProperty('--dy', Math.sin(ang) * dist - 30 + 'px');
+      d.style.animationDelay = (Math.random() * 90) + 'ms';
+      document.body.appendChild(d);
+      (function (n) { setTimeout(function () { n.remove(); }, 900); })(d);
+    }
+  }
+  function groupOf(w) { for (var i = 0; i < GROUPS.length; i++) for (var j = 0; j < GROUPS[i].length; j++) if (GROUPS[i][j][0] === w) return i; return -1; }
+  function rhymes(a, b) { return groupOf(a) === groupOf(b); }
+  // Palabras de otros grupos (no riman con la palabra dada). firstLetter: letra inicial exigida (trampa),
+  // false = distinta inicial que la palabra; avoid = emojis que ya están en pantalla.
+  function others(w, n, firstLetter, avoid) {
+    var g = groupOf(w), pool = [], seen = (avoid || []).slice();
+    GROUPS.forEach(function (G, i) { if (i !== g) G.forEach(function (x) { pool.push(x); }); });
+    if (typeof firstLetter === 'string') pool = pool.filter(function (x) { return x[0].charAt(0) === firstLetter; });
+    else if (firstLetter === false) pool = pool.filter(function (x) { return x[0].charAt(0) !== w.charAt(0); });
+    var out = [];
+    KidsGame.shuffle(pool).forEach(function (x) { if (out.length < n && seen.indexOf(x[1]) < 0) { out.push(x); seen.push(x[1]); } });
+    return out;
+  }
+
+  /* ---------- Estado ---------- */
+  var level = 1, round = 0, lock = false, timers = [], usedG = [], screen = null, body = null, dotsEl = null, countEl = null, lastQ = '';
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function pickLevel() {
+    clearTimers(); lock = true; game.innerHTML = '';
+    KidsGame.levelPicker({ labels: { 1: '¿Cuál rima?', 2: 'Con trampa', 3: 'Parejas y ¿cuál no?', 4: 'Versos e inventar' }, onPick: function (n) { startLevel(n); } });
+  }
+  function startLevel(n) { level = n; round = 0; usedG = []; buildScreen(); nextRound(); }
+  function hud() {
+    var h = el('div', 'hud');
+    var b = el('button', 'btn round yellow', '🎚️'); b.setAttribute('aria-label', 'Nivel');
+    onTap(b, function () { KidsGame.sound.tap(); pickLevel(); });
+    h.appendChild(b); h.appendChild(KidsGame.levelBadge(level));
+    return h;
+  }
+  function buildScreen() {
+    clearTimers(); game.innerHTML = '';
+    screen = el('div', 'screen');
+    ['♪', '♫', '♩', '♬', '♪', '♫', '♩'].forEach(function (n, i) {
+      var d = el('div', 'note', n); d.style.left = [4, 90, 10, 86, 48, 28, 70][i] + '%'; d.style.top = [22, 28, 78, 80, 92, 92, 92][i] + '%';
+      d.style.animationDelay = (-i * 0.9) + 's'; d.style.fontSize = (40 + (i * 13) % 30) + 'px'; screen.appendChild(d);
+    });
+    screen.appendChild(hud());
+    var tools = el('div', 'tools');
+    var sayB = el('button', 'btn round blue', '🔊'); sayB.setAttribute('aria-label', 'Repetir');
+    onTap(sayB, function () { KidsGame.sound.tap(); if (lastQ) KidsGame.say(lastQ); });
+    tools.appendChild(sayB); screen.appendChild(tools);
+    var prog = el('div', 'prog'); countEl = el('div', 'count'); dotsEl = el('div', 'dots');
+    for (var i = 0; i < ROUNDS; i++) dotsEl.appendChild(el('div', 'dot'));
+    prog.appendChild(countEl); prog.appendChild(dotsEl); screen.appendChild(prog);
+    body = el('div', 'screen'); body.style.position = 'relative'; body.style.flex = '1 1 auto'; body.style.width = '100%'; body.style.padding = '0';
+    screen.appendChild(body); game.appendChild(screen);
+  }
+  function updateProgress() {
+    countEl.textContent = round + ' / ' + ROUNDS;
+    Array.prototype.forEach.call(dotsEl.children, function (d, i) { d.classList.toggle('on', i < round); });
+  }
+  function speak(t) { lastQ = t; KidsGame.say(t); }
+  function pickGroup(min) {
+    var cands = []; GROUPS.forEach(function (G, i) { if (G.length >= min && usedG.indexOf(i) < 0) cands.push(i); });
+    if (!cands.length) { usedG = []; GROUPS.forEach(function (G, i) { if (G.length >= min) cands.push(i); }); }
+    var g = KidsGame.pick(cands); usedG.push(g); return g;
+  }
+  function optCard(w, extra) {
+    var c = el('div', 'card opt' + (extra || ''));
+    c.innerHTML = '<span class="emoji">' + w[1] + '</span><span class="lbl">' + cap(w[0]) + '</span><div class="spk">🔊</div>';
+    c.dataset.w = w[0];
+    onTap(c.querySelector('.spk'), function () { KidsGame.sound.tap(); KidsGame.say(w[0]); replay(c.querySelector('.emoji'), 'pop'); });
+    return c;
+  }
+
+  function nextRound() {
+    clearTimers(); lock = false; body.innerHTML = ''; updateProgress();
+    if (level === 1 || level === 2) roundChoose();
+    else if (level === 3) { if (round % 2 === 0) roundOdd(); else roundPairs(); }
+    else { if (round < 5) roundVerse(); else roundInvent(); }
+  }
+  function win(extraSay) {
+    lock = true; round++; updateProgress();
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    later(function () {
+      if (round >= ROUNDS) {
+        KidsGame.levelDone(level);
+        KidsGame.celebrate({ sub: '¡' + ROUNDS + ' rimas!', onNext: function () { if (level < 4) startLevel(level + 1); else pickLevel(); }, onAgain: function () { startLevel(level); } });
+      } else nextRound();
+    }, 1700);
+  }
+
+  /* ---------- Niveles 1 y 2: ¿cuál rima? ---------- */
+  var current = null;
+  function roundChoose() {
+    var g = pickGroup(2), G = KidsGame.shuffle(GROUPS[g]);
+    var target = G[0], answer = G[1];
+    var opts = [answer], seen = [target[1], answer[1]];
+    if (level === 2) {
+      var trap = others(target[0], 1, target[0].charAt(0), seen);
+      if (trap.length) { opts.push(trap[0]); seen.push(trap[0][1]); }
+    }
+    opts = opts.concat(others(target[0], (level === 1 ? 3 : 4) - opts.length, false, seen));
+    opts = KidsGame.shuffle(opts);
+    current = { target: target, answer: answer, opts: opts };
+    body.appendChild(el('div', 'q', '¿Cuál rima con <b>' + target[0].toUpperCase() + '</b>?'));
+    var t = el('div', 'target'); t.innerHTML = '<div class="medal"><span class="emoji">' + target[1] + '</span></div><div class="word">' + target[0].toUpperCase() + '</div>';
+    onTap(t, function () { KidsGame.sound.tap(); KidsGame.say(target[0]); replay(t.querySelector('.emoji'), 'pop'); });
+    body.appendChild(t);
+    var o = el('div', 'opts' + (opts.length === 4 ? ' four' : ''));
+    opts.forEach(function (w, i) {
+      var c = optCard(w); c.style.animationDelay = (i * 80) + 'ms';
+      onTap(c, function () { chooseRhyme(c, w, target); });
+      o.appendChild(c);
+    });
+    body.appendChild(o);
+    speak('¿Cuál rima con ' + target[0] + '?');
+  }
+  function chooseRhyme(c, w, target) {
+    if (lock) return;
+    if (rhymes(w[0], target[0])) {
+      c.classList.add('ok'); sparks(c, '#7dffb0');
+      speak(target[0] + '... ' + w[0] + '. ¡Riman!'); win();
+    } else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' no rima con ' + target[0]); }
+  }
+
+  /* ---------- Nivel 3a: ¿cuál NO rima? ---------- */
+  function roundOdd() {
+    var g = pickGroup(3), G = KidsGame.shuffle(GROUPS[g]).slice(0, 3);
+    var odd = others(G[0][0], 1, false, G.map(function (w) { return w[1]; }))[0];
+    var opts = KidsGame.shuffle(G.concat([odd]));
+    current = { odd: odd, opts: opts };
+    body.appendChild(el('div', 'q', '¿Cuál <b>NO</b> rima?'));
+    var o = el('div', 'opts four');
+    opts.forEach(function (w, i) {
+      var c = optCard(w); c.style.animationDelay = (i * 80) + 'ms';
+      onTap(c, function () {
+        if (lock) return;
+        if (w === odd) { c.classList.add('ok'); sparks(c, '#7dffb0'); speak(w[0] + ' no rima. ¡Muy bien!'); win(); }
+        else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' sí rima'); }
+      });
+      o.appendChild(c);
+    });
+    body.appendChild(o);
+    speak('¿Cuál no rima? ' + opts.map(function (w) { return w[0]; }).join(', '));
+  }
+
+  /* ---------- Nivel 3b: parejas con línea ---------- */
+  var pairState = null;
+  function roundPairs() {
+    var pairs = [];
+    var seen = [];
+    for (var k = 0; k < 4; k++) {
+      var G = KidsGame.shuffle(GROUPS[pickGroup(2)]).filter(function (w) { return seen.indexOf(w[1]) < 0; });
+      if (G.length < 2) { k--; continue; }
+      pairs.push([G[0], G[1]]); seen.push(G[0][1], G[1][1]);
+    }
+    var left = pairs.map(function (p) { return p[0]; }), right = KidsGame.shuffle(pairs.map(function (p) { return p[1]; }));
+    current = { pairs: pairs, left: left, right: right, matched: 0 };
+    body.appendChild(el('div', 'q', 'Une las que <b>riman</b>'));
+    var board = el('div', 'board'), cl = el('div', 'col l'), cr = el('div', 'col r');
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    function card(w, side, i) {
+      var c = el('div', 'card pair'); c.dataset.w = w[0]; c.style.animationDelay = (i * 70) + 'ms';
+      c.innerHTML = '<span class="emoji">' + w[1] + '</span><span class="lbl">' + cap(w[0]) + '</span><span class="knob"></span>';
+      return c;
+    }
+    left.forEach(function (w, i) { var c = card(w, 'l', i); cl.appendChild(c); attachDrag(c, w, board, svg, cr); });
+    right.forEach(function (w, i) { var c = card(w, 'r', i); cr.appendChild(c); onTap(c, function () { KidsGame.sound.tap(); KidsGame.say(w[0]); replay(c.querySelector('.emoji'), 'pop'); }); });
+    board.appendChild(cl); board.appendChild(cr); board.appendChild(svg);
+    body.appendChild(board);
+    speak('Une las que riman');
+  }
+  function attachDrag(c, w, board, svg, cr) {
+    var line = null, pid = null;
+    function pt(e) { var r = board.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+    function knob() { var k = c.querySelector('.knob').getBoundingClientRect(), r = board.getBoundingClientRect(); return [k.left + k.width / 2 - r.left, k.top + k.height / 2 - r.top]; }
+    c.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); if (lock || line || c.classList.contains('done')) return;
+      pid = e.pointerId; try { c.setPointerCapture(pid); } catch (x) {}
+      KidsGame.sound.tap(); KidsGame.say(w[0]);
+      line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      var k = knob(), p = pt(e);
+      line.setAttribute('x1', k[0]); line.setAttribute('y1', k[1]); line.setAttribute('x2', p[0]); line.setAttribute('y2', p[1]);
+      svg.appendChild(line);
+    });
+    c.addEventListener('pointermove', function (e) { if (!line || e.pointerId !== pid) return; e.preventDefault(); var p = pt(e); line.setAttribute('x2', p[0]); line.setAttribute('y2', p[1]); });
+    function end(e) {
+      if (!line || e.pointerId !== pid) return; var L = line; line = null; pid = null;
+      var hit = null;
+      Array.prototype.forEach.call(cr.children, function (rc) { var r = rc.getBoundingClientRect(); if (!hit && !rc.classList.contains('done') && e.clientX >= r.left - 10 && e.clientX <= r.right + 10 && e.clientY >= r.top - 10 && e.clientY <= r.bottom + 10) hit = rc; });
+      if (!hit) { L.remove(); KidsGame.sound.pop(); return; }
+      if (rhymes(hit.dataset.w, w[0])) {
+        var k = hit.querySelector('.knob').getBoundingClientRect(), r = board.getBoundingClientRect();
+        L.setAttribute('x2', k.left + k.width / 2 - r.left); L.setAttribute('y2', k.top + k.height / 2 - r.top); L.classList.add('done');
+        c.classList.add('ok', 'done'); hit.classList.add('ok', 'done'); sparks(hit, '#7dffb0'); KidsGame.sound.pop();
+        speak(w[0] + '... ' + hit.dataset.w);
+        current.matched++;
+        if (current.matched === 4) win(); else KidsGame.addStar();
+      } else { L.remove(); KidsGame.sound.wrong(); replay(c, 'bad'); replay(hit, 'bad'); speak(w[0] + ' no rima con ' + hit.dataset.w); }
+    }
+    c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+  }
+
+  /* ---------- Nivel 4a: completa el verso ---------- */
+  var usedV = [];
+  function roundVerse() {
+    var cands = VERSES.filter(function (v) { return usedV.indexOf(v) < 0; }); if (!cands.length) { usedV = []; cands = VERSES; }
+    var v = KidsGame.pick(cands); usedV.push(v);
+    var opts = KidsGame.shuffle([v[1]].concat(v[2]));
+    current = { verse: v, opts: opts };
+    var ve = el('div', 'verse'); ve.innerHTML = v[0].replace('___', '<span class="gap">?</span>');
+    onTap(ve, function () { KidsGame.sound.tap(); speak(v[0].replace('___', '...')); });
+    body.appendChild(ve);
+    var o = el('div', 'opts');
+    opts.forEach(function (w, i) {
+      var c = optCard(w); c.style.animationDelay = (i * 80) + 'ms';
+      onTap(c, function () {
+        if (lock) return;
+        if (w === v[1]) {
+          c.classList.add('ok'); sparks(c, '#7dffb0');
+          var gap = ve.querySelector('.gap'); gap.textContent = w[0]; gap.classList.add('full');
+          speak(v[0].replace('___', w[0]) + '. ¡Rima!'); win();
+        } else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' no rima'); }
+      });
+      o.appendChild(c);
+    });
+    body.appendChild(o);
+    speak(v[0].replace('___', '... ¿qué?'));
+  }
+
+  /* ---------- Nivel 4b: inventa un poema ---------- */
+  function roundInvent() {
+    var tpl = TEMPL[round % TEMPL.length];
+    var sel = { A: null, J: null, O: null }, read = false;
+    var animals = KidsGame.shuffle(ANIMALS).slice(0, 4), adjs = KidsGame.shuffle(ADJS).slice(0, 4), objs = [];
+    current = { tpl: tpl, sel: sel };
+    var ve = el('div', 'verse');
+    function render() {
+      ve.innerHTML = tpl.replace('{A}', part('A', 'A')).replace('{J}', part('J', 'J')).replace('{O}', part('O', 'O'));
+      function part(k) { return sel[k] ? '<span class="gap full">' + sel[k][0] + '</span>' : '<span class="gap">?</span>'; }
+      var ready = sel.A && sel.J && sel.O;
+      playB.classList.toggle('off', !ready); okB.classList.toggle('off', !read);
+    }
+    function text() { return tpl.replace('{A}', sel.A[0]).replace('{J}', sel.J[0]).replace('{O}', sel.O[0]); }
+    body.appendChild(el('div', 'q', '¡Inventa tu <b>poema</b>!'));
+    body.appendChild(ve);
+    var rows = el('div', 'rows');
+    function row(key, icon, items) {
+      var r = el('div', 'row'); r.appendChild(el('div', 'tag emoji', icon));
+      items.forEach(function (it, i) {
+        var c = el('div', 'card chip', '<span class="emoji">' + it[it.length === 3 && key !== 'O' ? 2 : 1] + '</span>' + cap(it[0]));
+        c.style.animationDelay = (i * 60) + 'ms';
+        onTap(c, function () {
+          if (lock) return; KidsGame.sound.tap(); sel[key] = it; read = false;
+          Array.prototype.forEach.call(r.querySelectorAll('.chip'), function (x) { x.classList.toggle('sel', x === c); });
+          KidsGame.say(it[0]);
+          if (key === 'A') fillObjs();
+          render();
+        });
+        r.appendChild(c);
+      });
+      return r;
+    }
+    var rA = row('A', '🐾', animals), rJ = row('J', '✨', adjs), rO = el('div', 'row');
+    function fillObjs() {
+      var rhyme = sel.A ? KidsGame.shuffle(OBJS.filter(function (o) { return o[2] === sel.A[1]; }))[0] : null;
+      var rest = KidsGame.shuffle(OBJS.filter(function (o) { return !rhyme || o !== rhyme; })).slice(0, rhyme ? 3 : 4);
+      objs = KidsGame.shuffle(rhyme ? [rhyme].concat(rest) : rest);
+      var nr = row('O', '🎁', objs); rows.replaceChild(nr, rO); rO = nr; sel.O = null;
+    }
+    rows.appendChild(rA); rows.appendChild(rJ); rows.appendChild(rO); fillObjs();
+    body.appendChild(rows);
+    var acts = el('div', 'actions');
+    var playB = el('button', 'btn blue off', '▶'), okB = el('button', 'btn green off', '✔');
+    onTap(playB, function () {
+      if (lock || !(sel.A && sel.J && sel.O)) { KidsGame.sound.wrong(); return; }
+      KidsGame.sound.pop(); read = true; render();
+      var bonus = sel.O[2] === sel.A[1];
+      speak(text() + (bonus ? '. ¡' + sel.A[1] + ' rima con ' + sel.O[0].split(' ').pop() + '!' : ''));
+      if (bonus) { sparks(ve, '#ffe066'); KidsGame.confetti(20); ve.classList.add('ok'); } else { replay(ve, 'pop'); }
+    });
+    onTap(okB, function () { if (lock || !read) { KidsGame.sound.wrong(); return; } if (sel.O[2] === sel.A[1]) KidsGame.addStar(); win(); });
+    acts.appendChild(playB); acts.appendChild(okB); body.appendChild(acts);
+    render();
+    speak('Inventa tu poema. Elige un animal, cómo es, y qué tiene');
+  }
+
+  // Ganchos para pruebas
+  window.__rimas = { get level() { return level; }, get round() { return round; }, get current() { return current; }, start: startLevel, next: nextRound, groups: GROUPS.length, verses: VERSES.length,
+    check: function () { var bad = []; GROUPS.forEach(function (G) { G.forEach(function (w) { if (!w[1]) bad.push(w[0]); }); }); return bad; } };
+  pickLevel();
+})();
+</script>
+</body>
+</html>

@@ -86,6 +86,17 @@
   .pad.g { --c: #2cb67d; --d: #135e3f; --g: rgba(70,220,150,.9); }
   .pad.b { --c: #3da9fc; --d: #1a5a9c; --g: rgba(90,180,255,.9); }
   .pad.y { --c: #ffd23f; --d: #9c7300; --g: rgba(255,220,90,.9); }
+  .pad.p { --c: #8f6cff; --d: #3f2696; --g: rgba(170,140,255,.9); }
+  /* Nivel Experto: 5 gemas en 3x2; el medallón ocupa el hueco libre */
+  .grid.five { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .grid.five .medal { position: static; transform: none; grid-column: 3; grid-row: 2; align-self: center; justify-self: center; animation: medal5 3s ease-in-out infinite; }
+  @keyframes medal5 { 0%,100% { transform: scale(1) } 50% { transform: scale(1.06) } }
+  .grid.five .pad .emoji { font-size: min(14vw, 96px, 14vh); }
+  .status .ind.rev { background: linear-gradient(180deg, #ffd9ef, #ff7eb6); color: #7a1b4a; box-shadow: 0 5px 0 #b8306f, 0 10px 18px rgba(0,0,0,.45), 0 0 22px rgba(255,126,182,.6), inset 0 2px 0 #fff; }
+  .status .ind.ear { background: linear-gradient(180deg, #e2d9ff, #b39cff); color: #3a2380; box-shadow: 0 5px 0 #5232b3, 0 10px 18px rgba(0,0,0,.45), 0 0 22px rgba(179,156,255,.6), inset 0 2px 0 #fff; }
+  /* Ronda "solo escucha": las gemas no se encienden al mostrar la secuencia */
+  .ear .pads-off .pad.lit { filter: brightness(.82) saturate(.92); transform: none; box-shadow: 0 9px 0 var(--d), 0 18px 26px rgba(0,0,0,.6), inset 0 3px 0 rgba(255,255,255,.5), inset 0 -10px 16px rgba(0,0,0,.3); }
+  .dots.rev { flex-direction: row-reverse; }
   /* Nivel 3: mientras ella juega, las gemas se apagan (solo cuenta la posición) */
   .blind .pad:not(.lit) { --c: #6b7594; --d: #353c52; }
   .blind .pad:not(.lit) .emoji { opacity: 0; }
@@ -110,16 +121,20 @@ var PADS = [
   { cls: 'r', emoji: '🐞', freq: 329.63, name: 'rojo' },
   { cls: 'g', emoji: '🐸', freq: 261.63, name: 'verde' },
   { cls: 'b', emoji: '🐟', freq: 220.00, name: 'azul' },
-  { cls: 'y', emoji: '🐥', freq: 164.81, name: 'amarillo' }
+  { cls: 'y', emoji: '🐥', freq: 164.81, name: 'amarillo' },
+  { cls: 'p', emoji: '🦋', freq: 392.00, name: 'morado' }
 ];
-// Niveles: largo inicial, meta intermedia, máximo, velocidad base y si se ocultan los colores al jugar
+// Niveles: largo inicial, meta intermedia, máximo, velocidad base, si se ocultan los colores al jugar y cuántas gemas
+// Nivel 4 (Experto): 5 gemas, hasta 14, rondas "al revés" alternadas y rondas de solo sonido desde 6
 var DIFF = {
-  1: { start: 1, goal: 3, max: 5,  base: 700, min: 420, blind: false },
-  2: { start: 2, goal: 5, max: 8,  base: 600, min: 360, blind: false },
-  3: { start: 3, goal: 6, max: 12, base: 520, min: 300, blind: true }
+  1: { start: 1, goal: 3, max: 5,  base: 700, min: 420, blind: false, pads: 4 },
+  2: { start: 2, goal: 6, max: 9,  base: 560, min: 340, blind: false, pads: 4 },
+  3: { start: 3, goal: 6, max: 10, base: 480, min: 280, blind: true,  pads: 4 },
+  4: { start: 3, goal: 7, max: 14, base: 460, min: 260, blind: true,  pads: 5, expert: true }
 };
+var LABELS = { 1: 'Hasta 5 colores', 2: 'Hasta 9, más rápido', 3: 'Hasta 10, a ciegas', 4: '5 gemas, al revés, oído' };
 var nivel = 1, cfg = DIFF[1];
-var MAX = cfg.max, GOAL = cfg.goal;
+var MAX = cfg.max, GOAL = cfg.goal, NPADS = 4, roundType = 'normal', expected = [];
 var grid = document.getElementById('grid'), ind = document.getElementById('ind'), dots = document.getElementById('dots'), stage = document.getElementById('stage'), hud = document.getElementById('hud');
 var medal = grid.querySelector('.medal');
 var pads = [];
@@ -128,13 +143,20 @@ PADS.forEach(function (p, i) {
   d.className = 'pad ' + p.cls; d.innerHTML = '<span class="emoji">' + p.emoji + '</span>';
   d.setAttribute('data-i', i);
   d.addEventListener('pointerdown', function (e) { e.preventDefault(); onPad(i); });
+  if (i >= 4) d.style.display = 'none'; // la quinta gema solo aparece en Experto
   grid.insertBefore(d, medal); pads.push(d);
 });
 
 function fit() {
   var side = Math.max(200, Math.min(stage.clientWidth - 16, stage.clientHeight - 16, 640));
   side = Math.round(side * 0.88); // deja sitio a la placa con aro dorado
-  grid.style.width = side + 'px'; grid.style.height = side + 'px';
+  if (NPADS === 5) {
+    // 3 columnas x 2 filas: cabe en el ancho y en el alto disponibles
+    var w = Math.min(stage.clientWidth - 40, 760), h = Math.min(stage.clientHeight - 40, 520);
+    var cell = Math.max(64, Math.min((w - 36) / 3, (h - 18) / 2));
+    grid.style.width = Math.round(cell * 3 + 36) + 'px'; grid.style.height = Math.round(cell * 2 + 18) + 'px';
+    medal.style.width = medal.style.height = Math.round(cell * 0.55) + 'px';
+  } else { grid.style.width = side + 'px'; grid.style.height = side + 'px'; medal.style.width = medal.style.height = ''; }
 }
 window.addEventListener('resize', function () { setTimeout(fit, 50); });
 fit();
@@ -163,46 +185,57 @@ function light(i, ms) {
   var p = pads[i];
   clearTimeout(litTimer[i]); p.classList.remove('lit'); void p.offsetWidth; p.classList.add('lit');
   KidsGame.sound.note(PADS[i].freq);
+  // Experto: cada animalito tiene su llamado (segunda nota distinta) para reconocerlo solo con el oído
+  if (cfg.expert) later(function () { KidsGame.sound.note(PADS[i].freq * (i % 2 ? 1.25 : 1.5)); }, 140);
   litTimer[i] = setTimeout(function () { p.classList.remove('lit'); }, ms || 350);
 }
 function setInd(state) {
   ind.className = 'ind ' + state;
-  ind.textContent = state === 'watch' ? '👀 Mira' : (state === 'you' ? '👆 Tu turno' : '🌟');
+  ind.textContent = state === 'watch' ? (roundType === 'ear' ? '🎧 Solo escucha' : '👀 Mira') :
+    (state === 'you' ? (roundType === 'rev' ? '🔁 ¡Al revés!' : '👆 Tu turno') : '🌟');
 }
-function setBlind(on) { grid.classList.toggle('blind', !!(cfg.blind && on)); }
+function setBlind(on) { grid.classList.toggle('blind', !!(cfg.blind && on && roundType === 'normal')); }
 function drawDots() {
-  dots.innerHTML = '';
+  dots.innerHTML = ''; dots.classList.toggle('rev', roundType === 'rev');
   for (var i = 0; i < seq.length; i++) {
     var d = document.createElement('div'); d.className = 'dot' + (i < pos ? ' on' : '');
     dots.appendChild(d);
   }
 }
+// Tipo de ronda en Experto: desde 6 las pares son de solo oído; desde 4 las impares son al revés
+function pickRoundType() {
+  if (!cfg.expert) return 'normal';
+  if (seq.length >= 6 && seq.length % 2 === 0) return 'ear';
+  if (seq.length >= 4 && seq.length % 2 === 1) return 'rev';
+  return 'normal';
+}
 function speed() { return Math.max(cfg.min, cfg.base - seq.length * 40); }
 
 function showSequence() {
   clearTimers();
+  roundType = pickRoundType(); expected = roundType === 'rev' ? seq.slice().reverse() : seq.slice();
   turn = 'show'; pos = 0; drawDots(); setBlind(false);
-  grid.classList.add('pads-off');
-  setInd('watch'); KidsGame.say('Mira');
+  grid.classList.add('pads-off'); stage.classList.toggle('ear', roundType === 'ear');
+  setInd('watch'); KidsGame.say(roundType === 'ear' ? 'Solo escucha' : 'Mira');
   var gap = speed();
   seq.forEach(function (idx, k) {
     later(function () { light(idx, gap * 0.7); }, 600 + k * gap);
   });
   later(function () {
-    turn = 'player'; grid.classList.remove('pads-off'); setBlind(true);
-    setInd('you'); KidsGame.say('Tu turno');
+    turn = 'player'; grid.classList.remove('pads-off'); stage.classList.remove('ear'); setBlind(true);
+    setInd('you'); KidsGame.say(roundType === 'rev' ? '¡Al revés! Repítela de atrás para adelante' : 'Tu turno');
   }, 600 + seq.length * gap + 150);
 }
 function nextRound() {
-  seq.push(KidsGame.rand(4)); mistakes = 0;
+  seq.push(KidsGame.rand(NPADS)); mistakes = 0;
   showSequence();
 }
-function restart() { seq = []; for (var k = 1; k < cfg.start; k++) seq.push(KidsGame.rand(4)); nextRound(); }
+function restart() { seq = []; for (var k = 1; k < cfg.start; k++) seq.push(KidsGame.rand(NPADS)); nextRound(); }
 
 function onPad(i) {
   if (turn !== 'player') { return; }
   light(i, 300);
-  if (i === seq[pos]) {
+  if (i === expected[pos]) {
     pos++; drawDots(); burst(pads[i], 6);
     if (pos >= seq.length) {
       turn = 'wait'; KidsGame.addStar(); setInd('star'); setBlind(false); burst(medal, 14);
@@ -210,6 +243,7 @@ function onPad(i) {
       if (seq.length === GOAL || seq.length >= MAX) {
         later(function () {
           var done = seq.length >= MAX;
+          KidsGame.levelDone(nivel);
           KidsGame.celebrate({
             msg: done ? '¡Campeona!' : '¡Muy bien!',
             sub: done ? '¡Recordaste ' + MAX + ' colores!' : 'Recordaste ' + seq.length + ' colores',
@@ -236,7 +270,7 @@ function onPad(i) {
   }
 }
 // estado para pruebas
-window.__simon = function () { return { seq: seq.slice(), turn: turn, pos: pos, mistakes: mistakes, nivel: nivel }; };
+window.__simon = function () { return { seq: seq.slice(), expected: expected.slice(), roundType: roundType, turn: turn, pos: pos, mistakes: mistakes, nivel: nivel, pads: NPADS, max: MAX, goal: GOAL }; };
 
 // ---------- Niveles ----------
 function buildHud() {
@@ -247,14 +281,16 @@ function buildHud() {
   hud.appendChild(b);
 }
 function start(n) {
-  nivel = n; cfg = DIFF[n]; MAX = cfg.max; GOAL = cfg.goal;
+  nivel = n; cfg = DIFF[n]; MAX = cfg.max; GOAL = cfg.goal; NPADS = cfg.pads;
+  grid.classList.toggle('five', NPADS === 5);
+  pads.forEach(function (p, i) { p.style.display = i < NPADS ? '' : 'none'; });
   buildHud(); fit();
   later(restart, 400);
 }
 function pickLevel() {
-  clearTimers(); turn = 'idle'; seq = []; pos = 0; drawDots(); setBlind(false);
-  grid.classList.add('pads-off'); setInd('watch');
-  KidsGame.levelPicker({ onPick: start });
+  clearTimers(); turn = 'idle'; seq = []; pos = 0; roundType = 'normal'; drawDots(); setBlind(false);
+  grid.classList.add('pads-off'); stage.classList.remove('ear'); setInd('watch');
+  KidsGame.levelPicker({ labels: LABELS, onPick: start });
 }
 
 pickLevel();

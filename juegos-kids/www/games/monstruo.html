@@ -71,6 +71,25 @@
   .acts { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .acts .btn { font-size: 22px; min-height: 64px; padding: 6px 16px; }
   .acts .btn.off { display: none; }
+  /* Nivel Experto: tarjeta de reglas y preguntas con fichas */
+  .target.rules { width: 236px; }
+  .target.rules .tm { height: auto; display: block; }
+  .rl { list-style: none; margin: 4px 0 2px; padding: 0; text-align: left; }
+  .rl li { display: flex; align-items: center; gap: 6px; font-size: 17px; line-height: 1.1; padding: 5px 4px; border-bottom: 2px dashed #e4e9f5; color: #1f2f6b; }
+  .rl li:last-child { border-bottom: 0; }
+  .rl .ic { font-size: 24px; width: 30px; text-align: center; flex: 0 0 auto; }
+  .rl .sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); flex: 0 0 auto; }
+  .rl .tx { flex: 1 1 auto; }
+  .rl .tx.neg { color: #c62828; }
+  .rl .st { font-size: 22px; width: 26px; text-align: center; flex: 0 0 auto; }
+  .tabs.off { display: none; }
+  .opts .q { width: 100%; text-align: center; font-size: 24px; font-weight: 900; color: #1f2f6b; }
+  .opts .q b { color: #ff3d7f; }
+  .opt.qa { flex-direction: column; gap: 2px; font-family: inherit; font-weight: 900; color: #1f2f6b; }
+  .opt.qa .big { font-size: 40px; line-height: 1; }
+  .opt.qa .emoji { font-size: 34px; line-height: 1; }
+  .opt.qa small { font-size: 13px; line-height: 1; }
+  .opt.qa.bad { animation: shake .4s; }
   .spark { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; font-size: 28px; animation: sparkfly 1s ease-out forwards; }
   @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4) rotate(200deg);opacity:0} }
   @media (orientation: landscape) {
@@ -258,7 +277,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   var tabs = document.createElement('div'); tabs.className = 'tabs';
   var opts = document.createElement('div'); opts.className = 'opts';
   var acts = document.createElement('div'); acts.className = 'acts';
-  acts.innerHTML = '<button class="btn purple" data-a="random">🎲 Sorpresa</button><button class="btn yellow" data-a="dance">💃 Baila</button><button class="btn green" data-a="done">⭐ Listo</button><button class="btn green off" data-a="check">✅ ¿Igual?</button><button class="btn blue off" data-a="peek">👀 Ver</button>';
+  acts.innerHTML = '<button class="btn purple" data-a="random">🎲 Sorpresa</button><button class="btn yellow" data-a="dance">💃 Baila</button><button class="btn green" data-a="done">⭐ Listo</button><button class="btn green off" data-a="check">✅ ¿Igual?</button><button class="btn blue off" data-a="peek">👀 Ver</button><button class="btn yellow off" data-a="say">🔊</button>';
   panel.appendChild(tabs); panel.appendChild(opts); panel.appendChild(acts);
   game.appendChild(stage); game.appendChild(panel);
   TABS.forEach(function (t) {
@@ -271,13 +290,19 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
       b.classList.toggle('on', b.dataset.tab === tab);
       b.classList.toggle('off', nivel === 2 && (b.dataset.tab === 'hat' || b.dataset.tab === 'legs'));
     });
+    var describing = nivel === 4 && xmode === 'describe';
+    tabs.classList.toggle('off', describing);
     acts.querySelector('[data-a="done"]').classList.toggle('off', nivel !== 1);
-    acts.querySelector('[data-a="check"]').classList.toggle('off', nivel === 1);
+    acts.querySelector('[data-a="check"]').classList.toggle('off', nivel === 1 || describing);
+    acts.querySelector('[data-a="check"]').textContent = nivel === 4 ? '✅ Revisar' : '✅ ¿Igual?';
     acts.querySelector('[data-a="peek"]').classList.toggle('off', nivel !== 3);
+    acts.querySelector('[data-a="say"]').classList.toggle('off', nivel !== 4);
+    acts.querySelector('[data-a="random"]').classList.toggle('off', describing);
+    acts.querySelector('[data-a="dance"]').classList.toggle('off', describing);
   }
 
   function renderMonster(pop) {
-    mwrap.innerHTML = monsterSvg(state);
+    mwrap.innerHTML = monsterSvg(view || state);
     if (pop) mwrap.querySelector('.mon').classList.add('popin');
     renderTarget();
   }
@@ -290,6 +315,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     return b;
   }
   function renderOpts() {
+    if (nivel === 4 && xmode === 'describe') return;
     opts.innerHTML = '';
     var s2 = function (k, v) { var c = {}; for (var q in state) c[q] = state[q]; c[k] = v; return c; };
     if (tab === 'color') {
@@ -310,7 +336,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   }
 
   // ---------- Reto "copia el monstruo" (niveles 2 y 3) ----------
-  var FIELDS2 = ['body', 'eyes', 'mouth'], FIELDS3 = ['color', 'body', 'eyes', 'mouth', 'hat', 'legs'];
+  var FIELDS2 = ['body', 'eyes', 'mouth'], FIELDS3 = ['color', 'body', 'eyes', 'mouth', 'hat'];
   function fields() { return nivel === 3 ? FIELDS3 : FIELDS2; }
   function randomState() {
     return { color: KidsGame.rand(COLORS.length), body: KidsGame.rand(BODIES.length), eyes: KidsGame.rand(EYES.length),
@@ -318,18 +344,20 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   }
   function newTarget() {
     if (nivel === 1) { target = null; renderTarget(); return; }
+    if (nivel === 4) { startExpert(); return; }
     var tries = 0;
     do { target = randomState(); tries++; } while (tries < 20 && fields().filter(function (f) { return target[f] !== state[f]; }).length < Math.min(2, fields().length));
-    targetEl.classList.remove('hide'); targetEl.classList.toggle('timed', nivel === 3);
+    targetEl.classList.remove('hide', 'rules'); targetEl.classList.toggle('timed', nivel === 3);
     renderTarget();
     if (nivel === 3) peek();
   }
   function targetView() {
     // Nivel 2: el modelo comparte color, sombrero y patas con el monstruo actual (solo se copian cuerpo, ojos y boca)
-    if (nivel === 3) return target;
+    if (nivel === 3) return { color: target.color, body: target.body, eyes: target.eyes, mouth: target.mouth, hat: target.hat, legs: state.legs };
     return { color: state.color, body: target.body, eyes: target.eyes, mouth: target.mouth, hat: state.hat, legs: state.legs };
   }
   function renderTarget() {
+    if (nivel === 4) { renderRules(); return; }
     if (!target) { targetEl.classList.remove('show'); return; }
     targetEl.classList.add('show');
     targetEl.querySelector('.tm').innerHTML = monsterSvg(targetView());
@@ -342,10 +370,12 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     peekTimer = setTimeout(function () { targetEl.classList.add('hide'); }, 5000);
   }
   function check() {
+    if (nivel === 4) { checkRules(); return; }
     var diff = fields().filter(function (f) { return target[f] !== state[f]; });
     if (!diff.length) {
       KidsGame.addStar(); KidsGame.sound.ok(); burst();
       var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+      KidsGame.levelDone(nivel);
       setTimeout(function () {
         KidsGame.celebrate({ msg: '¡Igualito!', sub: 'Copiaste el monstruo 🎯',
           onNext: function () { newTarget(); }, onAgain: function () { newTarget(); } });
@@ -371,6 +401,133 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     }
   }
 
+  // ---------- Nivel Experto: "monstruo con reglas" y "describe el monstruo" ----------
+  var COLOR_N = ['rosa', 'azul', 'verde', 'amarillo', 'morado', 'naranja', 'celeste', 'rojo'];
+  var EYE_N = { one: 1, two: 2, three: 3, sleepy: 2, wide: 2, glasses: 2 };
+  var LEG_N = { none: 0, stubby: 2, long: 2, many: 3 };
+  var HAT_T = { none: ['Nada', '🚫'], party: ['Gorro de fiesta', '🎉'], crown: ['Corona', '👑'], cap: ['Gorra', '🧢'], bow: ['Moño', '🎀'], antenna: ['Antenas', '📡'] };
+  var MOUTH_T = { smile: ['Sonrisa', '🙂'], teeth: ['Dientes', '🦷'], tongue: ['Lengua', '👅'], oh: ['Sorprendida', '😮'], mustache: ['Bigote', '🥸'], fangs: ['Colmillos', '🧛'] };
+  var BODY_T = { round: 'redondo', tall: 'alto', square: 'cuadrado', blob: 'de gota', star: 'de estrella' };
+  var LEG_T = { none: ['Sin patas', '🚫'], stubby: ['Patas cortas', '🦶'], long: ['Patas largas', '🦵'], many: ['Muchas patas', '🐙'] };
+  var xround = 0, xmode = null, rules = null, quiz = null, view = null;
+  function eyeCount(s) { return EYE_N[EYES[s.eyes]]; }
+  // Cada regla: texto, icono y una prueba sobre el estado del monstruo
+  function makeRule(field, t, negative) {
+    switch (field) {
+      case 'eyes': { var n = eyeCount(t); return { ic: '👁️', txt: n + ' ' + (n === 1 ? 'ojo' : 'ojos'), test: function (s) { return eyeCount(s) === n; } }; }
+      case 'color': { var ci = negative ? (t.color + 1 + KidsGame.rand(COLORS.length - 1)) % COLORS.length : t.color;
+        return { ic: '🎨', sw: COLORS[ci], txt: (negative ? 'NO ' : 'color ') + COLOR_N[ci], neg: negative, test: function (s) { return negative ? s.color !== ci : s.color === ci; } }; }
+      case 'hat': { var hi = negative ? (t.hat + 1 + KidsGame.rand(HATS.length - 1)) % HATS.length : t.hat; var hk = HATS[hi];
+        var txt = hk === 'none' ? (negative ? 'con algo en la cabeza' : 'SIN sombrero') : (negative ? 'NO ' + HAT_T[hk][0].toLowerCase() : 'con ' + HAT_T[hk][0].toLowerCase());
+        return { ic: hk === 'none' ? '🎩' : HAT_T[hk][1], txt: txt, neg: negative || hk === 'none', test: function (s) { return negative ? s.hat !== hi : s.hat === hi; } }; }
+      case 'legs': { var li = negative ? (t.legs + 1 + KidsGame.rand(LEGS.length - 1)) % LEGS.length : t.legs; var lk = LEGS[li];
+        return { ic: LEG_T[lk][1], txt: (negative ? 'NO ' : '') + LEG_T[lk][0].toLowerCase(), neg: negative, test: function (s) { return negative ? s.legs !== li : s.legs === li; } }; }
+      case 'mouth': { var mi = negative ? (t.mouth + 1 + KidsGame.rand(MOUTHS.length - 1)) % MOUTHS.length : t.mouth; var mk = MOUTHS[mi];
+        return { ic: MOUTH_T[mk][1], txt: (negative ? 'NO boca con ' : 'boca: ') + MOUTH_T[mk][0].toLowerCase(), neg: negative, test: function (s) { return negative ? s.mouth !== mi : s.mouth === mi; } }; }
+      case 'body': { var bi = negative ? (t.body + 1 + KidsGame.rand(BODIES.length - 1)) % BODIES.length : t.body;
+        return { ic: '🫧', txt: (negative ? 'cuerpo NO ' : 'cuerpo ') + BODY_T[BODIES[bi]], neg: negative, test: function (s) { return negative ? s.body !== bi : s.body === bi; } }; }
+    }
+  }
+  function genRules() {
+    var n = xround < 2 ? 3 : 4, tries = 0, best = null;
+    while (tries++ < 30) {
+      var t = randomState(), fs = KidsGame.shuffle(['eyes', 'color', 'hat', 'legs', 'mouth', 'body']).slice(0, n), list = [], hasNeg = false;
+      fs.forEach(function (f, i) {
+        var neg = f !== 'eyes' && (Math.random() < 0.3 || (i === fs.length - 1 && !hasNeg));
+        var r = makeRule(f, t, neg); if (r.neg) hasNeg = true; list.push(r);
+      });
+      var broken = list.filter(function (r) { return !r.test(state); }).length;
+      if (broken >= 2) return list;
+      best = best || list;
+    }
+    return best;
+  }
+  function renderRules() {
+    if (nivel !== 4 || xmode !== 'rules' || !rules) { if (nivel === 4) targetEl.classList.remove('show'); return; }
+    targetEl.classList.add('show', 'rules'); targetEl.classList.remove('hide', 'timed');
+    targetEl.querySelector('.tm').innerHTML = '<ul class="rl">' + rules.map(function (r, i) {
+      return '<li data-i="' + i + '"><span class="ic emoji">' + r.ic + '</span>' + (r.sw ? '<i class="sw" style="background:' + r.sw + '"></i>' : '') + '<span class="tx' + (r.neg ? ' neg' : '') + '">' + r.txt + '</span><b class="st">' + (r.st || '') + '</b></li>';
+    }).join('') + '</ul>';
+  }
+  function sayRules() { if (rules) KidsGame.say('Haz un monstruo con ' + rules.map(function (r) { return r.txt; }).join(', ')); }
+  function startRules() {
+    xmode = 'rules'; view = null; rules = genRules();
+    targetEl.querySelector('.ttl').textContent = '📋 Reglas';
+    tabs.classList.remove('off'); renderTabs(); renderOpts(); renderMonster(true);
+    sayRules();
+  }
+  function checkRules() {
+    var bad = 0;
+    rules.forEach(function (r) { var ok = r.test(state); r.st = ok ? '✔' : '✖'; if (!ok) bad++; });
+    renderRules();
+    if (!bad) {
+      KidsGame.addStar(3); KidsGame.sound.ok(); burst();
+      var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+      KidsGame.levelDone(4); xround++;
+      setTimeout(function () {
+        KidsGame.celebrate({ msg: '¡Cumple las reglas!', sub: '📋 ' + rules.length + ' reglas ✔', onNext: function () { startExpert(); }, onAgain: function () { startRules(); } });
+      }, 800);
+    } else {
+      KidsGame.sound.wrong();
+      targetEl.classList.remove('bad'); void targetEl.offsetWidth; targetEl.classList.add('bad');
+      KidsGame.toast('Casi… ' + bad + ' ✖', 1500); KidsGame.say(bad === 1 ? 'Falta una regla' : 'Faltan ' + bad + ' reglas');
+    }
+  }
+  // Describe: la app muestra un monstruo y pregunta
+  var QS = ['eyes', 'color', 'hat', 'legs', 'body', 'mouth'];
+  function startDescribe() {
+    xmode = 'describe'; rules = null; targetEl.classList.remove('show');
+    quiz = { n: 0, score: 0, total: 6, tries: 0 };
+    nextMonster();
+  }
+  function nextMonster() {
+    view = randomState(); quiz.qs = KidsGame.shuffle(QS).slice(0, 3); quiz.qi = 0;
+    renderMonster(true); renderTabs(); askQ();
+    KidsGame.say('Mira el monstruo y contesta');
+  }
+  function optTile(label, html, correct) {
+    var b = document.createElement('button'); b.className = 'opt qa'; b.innerHTML = html; b.setAttribute('data-ok', correct ? '1' : '0');
+    b.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault();
+      if (correct) {
+        if (!quiz.tries) quiz.score++;
+        b.classList.add('on'); KidsGame.sound.ok(); KidsGame.addStar(); quiz.n++; quiz.qi++; quiz.tries = 0;
+        setTimeout(function () {
+          if (quiz.n >= quiz.total) endDescribe();
+          else if (quiz.qi >= quiz.qs.length) nextMonster();
+          else askQ();
+        }, 700);
+      } else {
+        quiz.tries++; KidsGame.sound.wrong(); b.classList.add('bad'); setTimeout(function () { b.classList.remove('bad'); }, 500);
+        KidsGame.say('Mira bien el monstruo');
+      }
+    });
+    return b;
+  }
+  function askQ() {
+    var q = quiz.qs[quiz.qi], s = view, q1 = '', tiles = [];
+    function others(arr, ans, n) { var o = KidsGame.shuffle(arr.filter(function (x) { return x !== ans; })).slice(0, n); return KidsGame.shuffle(o.concat([ans])); }
+    if (q === 'eyes') { q1 = '¿Cuántos ojos tiene?'; [1, 2, 3].forEach(function (n) { tiles.push(optTile(n, '<span class="big">' + n + '</span>', n === eyeCount(s))); }); }
+    else if (q === 'legs') { q1 = '¿Cuántas patas tiene?'; [0, 2, 3].forEach(function (n) { tiles.push(optTile(n, '<span class="big">' + n + '</span>', n === LEG_N[LEGS[s.legs]])); }); }
+    else if (q === 'color') { q1 = '¿De qué color es?'; others(COLORS.map(function (c, i) { return i; }), s.color, 3).forEach(function (i) { var b = optTile(i, '', i === s.color); b.classList.add('sw'); b.style.setProperty('--c', COLORS[i]); tiles.push(b); }); }
+    else if (q === 'hat') { q1 = '¿Qué tiene en la cabeza?'; others(HATS, HATS[s.hat], 3).forEach(function (k) { tiles.push(optTile(k, '<span class="emoji">' + HAT_T[k][1] + '</span><small>' + HAT_T[k][0] + '</small>', k === HATS[s.hat])); }); }
+    else if (q === 'mouth') { q1 = '¿Cómo es su boca?'; others(MOUTHS, MOUTHS[s.mouth], 3).forEach(function (k) { tiles.push(optTile(k, '<span class="emoji">' + MOUTH_T[k][1] + '</span><small>' + MOUTH_T[k][0] + '</small>', k === MOUTHS[s.mouth])); }); }
+    else { q1 = '¿Qué forma tiene su cuerpo?'; others(BODIES, BODIES[s.body], 3).forEach(function (k) { tiles.push(optTile(k, bodySvg(k, COLORS[s.color]), k === BODIES[s.body])); }); }
+    opts.innerHTML = '<div class="q"><b>' + (quiz.n + 1) + '/' + quiz.total + '</b> ' + q1 + '</div>';
+    var row = document.createElement('div'); row.className = 'row'; tiles.forEach(function (t) { row.appendChild(t); }); opts.appendChild(row);
+    quiz.q1 = q1; KidsGame.say(q1);
+  }
+  function endDescribe() {
+    var ok = quiz.score >= 5;
+    if (ok) { KidsGame.levelDone(4); xround++; }
+    burst();
+    setTimeout(function () {
+      KidsGame.celebrate({ msg: ok ? '¡Lo describiste!' : '¡Casi!', sub: '🗣️ ' + quiz.score + ' de ' + quiz.total + ' a la primera', stars: ok ? 3 : 1,
+        onNext: function () { if (!ok) xround++; startExpert(); }, onAgain: function () { startDescribe(); } });
+    }, 600);
+  }
+  function startExpert() { if (xround % 2 === 0) startRules(); else startDescribe(); renderTabs(); if (xmode === 'rules') renderOpts(); }
+
   function randomize() {
     state = randomState();
     save(); renderMonster(true); renderOpts(); KidsGame.sound.pop();
@@ -385,6 +542,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
   function done() {
     KidsGame.addStar(); burst();
     var m = mwrap.querySelector('.mon'); m.classList.remove('popin'); m.classList.add('dance');
+    KidsGame.levelDone(1);
     setTimeout(function () {
       KidsGame.celebrate({ msg: '¡Qué monstruo!', sub: 'Tu monstruo está listo 🎉', onAgain: function () { randomize(); tab = 'color'; renderTabs(); renderOpts(); } });
     }, 700);
@@ -395,25 +553,30 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
       var a = b.dataset.a;
       if (a === 'random') randomize(); else if (a === 'dance') dance(); else if (a === 'done') done();
       else if (a === 'check') check(); else if (a === 'peek') peek();
+      else if (a === 'say') { if (xmode === 'rules') sayRules(); else if (quiz && quiz.q1) KidsGame.say(quiz.q1); }
     });
   });
   mwrap.addEventListener('pointerdown', function () { dance(); });
-  targetEl.addEventListener('pointerdown', function (ev) { ev.preventDefault(); if (nivel === 3) { KidsGame.sound.tap(); peek(); } });
+  targetEl.addEventListener('pointerdown', function (ev) { ev.preventDefault(); if (nivel === 3) { KidsGame.sound.tap(); peek(); } else if (nivel === 4) { KidsGame.sound.tap(); sayRules(); } });
 
   function showPicker() {
     clearTimeout(peekTimer);
-    KidsGame.levelPicker({ key: 'monstruo', onPick: function (n) {
-      nivel = n;
+    KidsGame.levelPicker({ key: 'monstruo', labels: { 1: 'Crea libre', 2: 'Copia 3 rasgos', 3: 'Copia 5, modelo oculto 5 s', 4: 'Reglas y describe' }, onPick: function (n) {
+      nivel = n; view = null; xmode = null; rules = null; quiz = null;
       var nb = KidsGame.levelBadge(nivel); shud.replaceChild(nb, badgeEl); badgeEl = nb;
       if (nivel === 2 && (tab === 'hat' || tab === 'legs')) tab = 'color';
+      targetEl.classList.remove('rules');
       renderTabs(); renderOpts(); renderMonster(true); newTarget();
-      KidsGame.say(nivel === 1 ? 'Crea tu monstruo' : nivel === 2 ? 'Haz un monstruo igual al de la tarjeta' : 'Mira bien el monstruo y hazlo igual');
+      KidsGame.say(nivel === 1 ? 'Crea tu monstruo' : nivel === 2 ? 'Haz un monstruo igual al de la tarjeta' : nivel === 3 ? 'Mira bien el monstruo y hazlo igual' : '');
     } });
   }
   lvbtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
 
   renderTabs(); renderOpts(); renderMonster(false);
   showPicker();
+  // gancho de pruebas automáticas (no afecta al juego)
+  window.__kgTest = function () { return { state: state, target: target, rules: rules, fields: fields, randomState: randomState,
+    setState: function (st) { state = st; renderMonster(true); renderOpts(); } }; };
 })();
 </script>
 </body>

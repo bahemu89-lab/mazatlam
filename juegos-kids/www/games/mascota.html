@@ -111,6 +111,45 @@
   .pet-btn .med { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 58px; animation: float 3s ease-in-out infinite;
     background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 35%, #ffb703 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #ffd166, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12); }
   .pet-btn:nth-child(2) .med { animation-delay: -.7s; } .pet-btn:nth-child(3) .med { animation-delay: -1.4s; } .pet-btn:nth-child(4) .med { animation-delay: -2.1s; }
+  /* Nivel Experto: horario con reloj, tienda con monedas y pedidos de la mascota */
+  .day { flex: 0 0 auto; margin: 0 10px 6px; padding: 6px 12px; display: none; align-items: center; justify-content: center; gap: 8px 14px; flex-wrap: wrap; z-index: 5; }
+  .day.show { display: flex; }
+  .day .clock { font-size: 24px; font-weight: 900; color: #1f2f6b; background: #fff; padding: 4px 14px; border-radius: 20px; box-shadow: inset 0 0 0 3px #ffd166, 0 2px 0 #c9d2e6; white-space: nowrap; }
+  .day .sched { display: flex; gap: 6px; }
+  .day .tk { display: inline-flex; flex-direction: column; align-items: center; min-width: 56px; padding: 4px 8px; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #c9d2e6; font-size: 14px; font-weight: 900; color: #6b7a99; line-height: 1.05; }
+  .day .tk .ic { font-size: 24px; }
+  .day .tk.now { background: linear-gradient(180deg, #fff4b0, #ffd166); color: #7a4b00; box-shadow: 0 3px 0 #d9a520, 0 0 0 3px #fff, 0 0 14px rgba(255,200,0,.8); animation: bounce .8s infinite; }
+  .day .tk.ok { background: linear-gradient(180deg, #e9ffe9, #b9f0c4); color: #14784a; box-shadow: 0 3px 0 #3fa864; }
+  .day .tk.ok .ic::after { content: '✔'; font-size: 14px; margin-left: 2px; }
+  .day .coins { font-size: 22px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 4px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520; white-space: nowrap; }
+  .day .shopbtn { min-height: 56px; font-size: 26px; padding: 4px 14px; }
+  .ask { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 9; width: min(96%, 560px); padding: 8px 12px 10px; text-align: center; animation: pop .35s ease-out; }
+  .ask .say { font-size: 20px; font-weight: 900; color: #1f2f6b; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .ask .say .btn { width: 52px; height: 52px; min-width: 52px; min-height: 52px; font-size: 22px; }
+  .ask .tiles { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .ask .tile { width: 80px; height: 80px; border-radius: 20px; border: 0; background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: 0 5px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2); display: flex; flex-direction: column; align-items: center; justify-content: center; font: inherit; font-weight: 900; font-size: 13px; color: #1f2f6b; cursor: pointer; }
+  .ask .tile .emoji { font-size: 36px; line-height: 1; }
+  .ask .tile.bad { animation: shake .4s; }
+  .shop { position: absolute; inset: 0; z-index: 31; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.3), rgba(60,10,40,.55) 75%); }
+  .shop .box { padding: 14px 18px; text-align: center; max-width: 96%; }
+  .shop .ttl { font-size: 26px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff; margin-bottom: 8px; }
+  .shop .items { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .shop .item { width: 92px; height: 100px; border-radius: 20px; border: 0; background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: 0 5px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; font-weight: 900; font-size: 18px; color: #7a4b00; cursor: pointer; }
+  .shop .item .emoji { font-size: 40px; line-height: 1; }
+  .shop .item.sel { box-shadow: 0 5px 0 #3fa864, 0 0 0 4px #6fdc8c, 0 8px 12px rgba(0,0,0,.2); background: linear-gradient(180deg, #e9ffe9, #b9f0c4); }
+  .shop .pay { margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .shop .price { font-size: 22px; font-weight: 900; color: #1f2f6b; }
+  .shop .price b { color: #ff3d7f; font-size: 28px; }
+  .shop .coinrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .shop .coin { width: 68px; height: 68px; border-radius: 50%; border: 0; font: inherit; font-weight: 900; font-size: 22px; color: #7a4b00; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #fff7c2, #ffd23f 55%, #d9a520); box-shadow: 0 5px 0 #a0761a, 0 8px 12px rgba(0,0,0,.25), inset 0 2px 0 #fff; }
+  .shop .coin:active { transform: translateY(4px); }
+  .shop .paid { min-width: 110px; font-size: 24px; font-weight: 900; color: #1f2f6b; background: #fff; border-radius: 20px; padding: 6px 14px; box-shadow: inset 0 0 0 3px #ffd166; }
+  .shop .paid.over { color: #c62828; animation: shake .4s; }
+  .shop .row { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+  .shop .row .btn { font-size: 22px; min-height: 60px; }
+  .food .cnt { position: absolute; right: -6px; top: -6px; width: 26px; height: 26px; border-radius: 50%; background: #ff3d7f; color: #fff; font-size: 14px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 #b8306f; }
+  .food { position: relative; }
   @media (max-height: 700px) { .window { width: 100px; height: 90px; } .curtain { height: 116px; } .curtain.r { left: calc(6% + 100px - 28px); } .bed { width: 160px; height: 90px; } .meter .bar { width: 90px; } }
 </style>
 </head>
@@ -127,7 +166,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     { k: 'sueno',     ic: '💤', mul: 0.9 },
     { k: 'salud',     ic: '🩹', mul: 0 }
   ];
-  var RATE = [0, 0.17, 0.34, 0.5];
+  var RATE = [0, 0.17, 0.34, 0.5, 0.42];
   var nivel = 1, pet = PETS[0], needs = {}, running = false, mode = null, happyShown = false;
   var lastT = 0, eating = 0, sneezeT = 0, saveT = 0, ball = null, taps = 0, spots = [], sleepZ = 0;
   var saved = null; try { saved = JSON.parse(localStorage.getItem('kg-mascota') || 'null'); } catch (e) { saved = null; }
@@ -145,7 +184,8 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     '<button id="lamp" class="btn" aria-label="Lámpara">💡</button>' +
     '<div class="petshadow"></div><div id="pet"><span class="face emoji"></span></div><div class="mood"><span class="emoji">😊</span></div><div class="night"></div>';
   var actions = document.createElement('div'); actions.className = 'actions';
-  game.appendChild(hud); game.appendChild(meters); game.appendChild(room); game.appendChild(actions);
+  var dayBar = document.createElement('div'); dayBar.className = 'day panel';
+  game.appendChild(hud); game.appendChild(meters); game.appendChild(dayBar); game.appendChild(room); game.appendChild(actions);
   var petEl = room.querySelector('#pet'), faceEl = petEl.querySelector('.face'), moodEl = room.querySelector('.mood'), night = room.querySelector('.night'), lamp = room.querySelector('#lamp');
   for (var si = 0; si < 14; si++) { var st = document.createElement('i'); st.style.left = (Math.random() * 100) + '%'; st.style.top = (Math.random() * 60) + '%'; st.style.animationDelay = (-Math.random() * 2) + 's'; night.appendChild(st); }
   lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; setMode(null); save(); pickLevel(); });
@@ -177,9 +217,9 @@ var game = KidsGame.init({ title: 'Mi mascota' });
       var m = document.createElement('div'); m.className = 'meter'; m.innerHTML = '<span class="ic emoji">' + n.ic + '</span><div class="bar"><i></i></div>';
       meters.appendChild(m); meterEls[n.k] = m;
     });
-    bHeal.style.display = nivel === 3 ? '' : 'none';
+    bHeal.style.display = nivel >= 3 ? '' : 'none';
   }
-  function activeNeeds() { return NEEDS.filter(function (n) { return n.k !== 'salud' || nivel === 3; }); }
+  function activeNeeds() { return NEEDS.filter(function (n) { return n.k !== 'salud' || nivel >= 3; }); }
   function renderMeters() {
     activeNeeds().forEach(function (n) {
       var v = needs[n.k], i = meterEls[n.k].querySelector('i');
@@ -196,12 +236,14 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     needs[k] = 100; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
     meterEls[k].classList.remove('flash'); void meterEls[k].offsetWidth; meterEls[k].classList.add('flash');
     floatText(txt); sparks(); save();
+    if (nivel === 4) taskDone(k);
   }
   function celebrateHappy() {
     running = false; setMode(null);
     petEl.classList.add('happy');
     setTimeout(function () {
       petEl.classList.remove('happy');
+      if (nivel < 4) KidsGame.levelDone(nivel);
       KidsGame.celebrate({ msg: '¡Está feliz!', sub: pet[0] + ' ' + pet[1] + ' 💕', stars: 3,
         onAgain: function () { activeNeeds().forEach(function (n) { needs[n.k] = 35 + Math.random() * 25; }); happyShown = false; running = true; renderMeters(); save(); KidsGame.say('¡Cuídalo otra vez!'); } });
     }, 900);
@@ -237,17 +279,22 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     [bFeed, bBath, bPlay, bSleep, bHeal].forEach(function (b) { b.classList.remove('on'); });
     if (mode === 'sleep') { night.classList.remove('on'); lamp.classList.remove('on'); petEl.classList.remove('sleeping'); }
     mode = m;
-    if (m === 'feed') { bFeed.classList.add('on'); tray(['🍎', '🥕', '🍌', '🍪'], 'food', eat); KidsGame.say('Dale de comer'); }
+    if (m === 'feed') {
+      bFeed.classList.add('on');
+      if (nivel === 4) { var pk = Object.keys(day.pantry); if (!pk.length) { mode = null; bFeed.classList.remove('on'); KidsGame.toast('Despensa vacía 🛒 compra comida', 1800); KidsGame.say('No hay comida. Compra en la tienda'); openShop(); return; } tray(pk, 'food', eat, day.pantry); }
+      else tray(['🍎', '🥕', '🍌', '🍪'], 'food', eat);
+      KidsGame.say('Dale de comer');
+    }
     if (m === 'heal') { bHeal.classList.add('on'); bHeal.classList.remove('alert'); tray(['🩹', '💊', '🍵'], 'pill', heal); KidsGame.say('Cúralo'); }
     if (m === 'bath') { bBath.classList.add('on'); startBath(); KidsGame.say('Frota con la esponja'); }
     if (m === 'play') { bPlay.classList.add('on'); startPlay(); KidsGame.say('Toca la pelota'); }
     if (m === 'sleep') { bSleep.classList.add('on'); night.classList.add('on'); lamp.classList.add('on'); petEl.classList.add('sleeping'); KidsGame.say('Shhh, a dormir'); }
     renderMeters();
   }
-  function tray(items, cls, onDrop) {
+  function tray(items, cls, onDrop, counts) {
     var t = document.createElement('div'); t.className = 'tray panel';
     items.forEach(function (em) {
-      var f = document.createElement('div'); f.className = cls; f.innerHTML = '<span class="emoji">' + em + '</span>';
+      var f = document.createElement('div'); f.className = cls; f.innerHTML = '<span class="emoji">' + em + '</span>' + (counts ? '<i class="cnt">' + counts[em] + '</i>' : '');
       var ghost = null;
       f.addEventListener('pointerdown', function (ev) {
         ev.preventDefault(); f.setPointerCapture(ev.pointerId);
@@ -265,6 +312,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     room.appendChild(t); modeEls.push(t);
   }
   function eat(em) {
+    if (nivel === 4) { day.pantry[em] = (day.pantry[em] || 1) - 1; if (day.pantry[em] <= 0) delete day.pantry[em]; var old = room.querySelector('.tray'); if (old) { old.remove(); modeEls = modeEls.filter(function (e) { return e !== old; }); } if (Object.keys(day.pantry).length) tray(Object.keys(day.pantry), 'food', eat, day.pantry); }
     var before = needs.hambre; needs.hambre = Math.min(100, needs.hambre + 30); eating = 1.8;
     petEl.classList.remove('munch'); void petEl.offsetWidth; petEl.classList.add('munch');
     KidsGame.sound.pop(); hearts(5);
@@ -309,6 +357,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     b.addEventListener('pointerdown', function (ev) {
       ev.preventDefault(); if (!ball) return;
       taps++; KidsGame.sound.pop(); KidsGame.vibrate(15);
+      if (nivel === 4) addCoins(1, b);
       ball.vy = -Math.max(420, Math.min(700, room.clientHeight * 1.1)); ball.vx = (Math.random() - 0.5) * 400;
       petEl.classList.remove('jump'); void petEl.offsetWidth; petEl.classList.add('jump');
       var dots = cnt.querySelectorAll('i'); for (var i = 0; i < dots.length; i++) dots[i].className = i < taps ? 'on' : '';
@@ -339,13 +388,131 @@ var game = KidsGame.init({ title: 'Mi mascota' });
       if (before < 100 && needs.sueno >= 100) { fulfilled('sueno', '¡Buenos días! ☀️'); setTimeout(function () { if (mode === 'sleep') setMode(null); }, 1200); }
     }
     if (eating > 0) eating -= dt;
-    if (nivel === 3 && mode !== 'sleep') {
+    if (nivel >= 3 && mode !== 'sleep') {
       sneezeT -= dt;
       if (sneezeT <= 0) { sneezeT = 28 + Math.random() * 18; if (needs.salud > 45) sneeze(); }
     }
     updateBall(dt);
+    if (nivel === 4) updateDay(dt);
     saveT += dt; if (saveT > 5) { saveT = 0; save(); }
     renderMeters();
+  }
+
+  // ---------- Nivel Experto ----------
+  var TASKS = [{ h: 8, k: 'feed', need: 'hambre', ic: '🍎', n: 'Comer' }, { h: 10, k: 'play', need: 'diversion', ic: '🎾', n: 'Jugar' }, { h: 12, k: 'bath', need: 'limpieza', ic: '🛁', n: 'Baño' }, { h: 20, k: 'sleep', need: 'sueno', ic: '💤', n: 'Dormir' }];
+  var REQS = [
+    { say: 'Tengo sed, ¿me das agua?', ic: '💧', ans: 'agua' }, { say: 'Tengo hambre, ¿me das de comer?', ic: '🍽️', ans: 'feed' },
+    { say: 'Estoy aburrido, ¿jugamos a la pelota?', ic: '🙄', ans: 'play' }, { say: 'Estoy sucio, ¿me bañas?', ic: '🦨', ans: 'bath' },
+    { say: 'Tengo sueño, ¿apagas la luz?', ic: '🥱', ans: 'sleep' }, { say: 'Estoy triste, ¿me das un abrazo?', ic: '😢', ans: 'hug' },
+    { say: 'Tengo frío, ¿me das una cobija?', ic: '🥶', ans: 'blanket' }
+  ];
+  var ANS = { agua: ['💧', 'Agua'], feed: ['🍎', 'Comer'], play: ['🎾', 'Jugar'], bath: ['🛁', 'Baño'], sleep: ['💤', 'Dormir'], hug: ['🤗', 'Abrazo'], blanket: ['🧣', 'Cobija'] };
+  var SHOP = [['🍎', 2], ['🥕', 3], ['🍌', 4], ['🍪', 5]];
+  var day = null, reqT = 0, askEl = null, shopEl = null;
+  function newDay() {
+    day = { hour: 7, t: 0, tasks: TASKS.map(function (t) { return { h: t.h, k: t.k, need: t.need, ic: t.ic, n: t.n, done: false }; }), pending: null, coins: (day && day.coins) || 6, pantry: (day && day.pantry) || { '🍎': 1 }, req: null, days: (day ? day.days + 1 : 0) };
+    reqT = 14; renderDay();
+    KidsGame.say('Mira el horario: a las ocho come, a las diez juega, a las doce baño y a las ocho de la noche a dormir');
+  }
+  function renderDay() {
+    if (!day) return;
+    dayBar.innerHTML = '<span class="clock">⏰ ' + day.hour + ':00</span><div class="sched">' +
+      day.tasks.map(function (t) { return '<span class="tk' + (t.done ? ' ok' : (day.pending === t ? ' now' : '')) + '"><span class="ic">' + t.ic + '</span>' + t.h + ':00</span>'; }).join('') +
+      '</div><span class="coins">🪙 ' + day.coins + '</span><button class="btn yellow shopbtn" id="shop">🛒</button>';
+    dayBar.querySelector('#shop').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); if (!running) return; KidsGame.sound.tap(); openShop(); });
+  }
+  function addCoins(n, at) { day.coins += n; renderDay(); var c = dayBar.querySelector('.coins'); if (c) { c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
+  function updateDay(dt) {
+    var next = null; for (var i = 0; i < day.tasks.length; i++) if (!day.tasks[i].done && day.tasks[i].h > day.hour) { next = day.tasks[i]; break; }
+    var speed = (!day.pending && !day.req && next && next.h - day.hour > 2) ? 3 : 1;
+    day.t += dt * speed;
+    if (day.t >= 10) {
+      day.t = 0; day.hour++; if (day.hour > 23) day.hour = 0;
+      var tk = null; for (var j = 0; j < day.tasks.length; j++) if (!day.tasks[j].done && day.tasks[j].h === day.hour) tk = day.tasks[j];
+      if (tk) { day.pending = tk; btnFor(tk.k).classList.add('alert'); floatText('⏰ ¡Hora de ' + tk.n.toLowerCase() + '!'); KidsGame.sound.pop(); KidsGame.say('Son las ' + hourTxt(day.hour) + '. ¡Hora de ' + tk.n.toLowerCase() + '!'); }
+      renderDay();
+    }
+    if (!day.pending && !day.req && !shopEl && mode === null) { reqT -= dt; if (reqT <= 0) askRequest(); }
+  }
+  function hourTxt(h) { return h <= 12 ? h + (h === 1 ? ' de la mañana' : ' de la mañana').replace('12 de la mañana', '12 del día') : (h - 12) + ' de la tarde'; }
+  function btnFor(k) { return { feed: bFeed, play: bPlay, bath: bBath, sleep: bSleep }[k]; }
+  function taskDone(need) {
+    var tk = day.pending;
+    if (tk && tk.need === need) {
+      tk.done = true; day.pending = null; btnFor(tk.k).classList.remove('alert');
+      addCoins(3); floatText('¡A tiempo! ⏰ +3 🪙'); KidsGame.addStar(2); renderDay();
+      if (day.tasks.every(function (t) { return t.done; })) {
+        running = false; setMode(null);
+        KidsGame.levelDone(4);
+        setTimeout(function () { KidsGame.celebrate({ msg: '¡Cumpliste el horario!', sub: '⏰ Comer, jugar, baño y dormir a su hora', stars: 3, onAgain: function () { newDay(); running = true; } }); }, 800);
+      }
+    } else {
+      var t2 = null; for (var i = 0; i < TASKS.length; i++) if (TASKS[i].need === need) t2 = TASKS[i];
+      if (t2 && !day.tasks[TASKS.indexOf(t2)].done) { KidsGame.toast('Todavía no es hora ⏰ (' + t2.h + ':00)', 1600); KidsGame.say('Todavía no es hora. Mira el reloj'); }
+    }
+  }
+  function askRequest() {
+    var r = KidsGame.pick(REQS.filter(function (q) { return !day.last || q !== day.last; })); day.req = r; day.last = r;
+    var opts = KidsGame.shuffle(Object.keys(ANS).filter(function (k) { return k !== r.ans; })).slice(0, 3).concat([r.ans]); opts = KidsGame.shuffle(opts);
+    askEl = document.createElement('div'); askEl.className = 'ask panel';
+    askEl.innerHTML = '<div class="say"><button class="btn round yellow" id="resay">🔊</button><span>' + pet[0] + ' «' + r.say + '»</span></div><div class="tiles">' +
+      opts.map(function (k) { return '<button class="tile" data-k="' + k + '"><span class="emoji">' + ANS[k][0] + '</span>' + ANS[k][1] + '</button>'; }).join('') + '</div>';
+    room.appendChild(askEl);
+    moodEl.innerHTML = '<span class="emoji">' + r.ic + '</span>';
+    KidsGame.say(r.say);
+    askEl.querySelector('#resay').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.say(r.say); });
+    var tiles = askEl.querySelectorAll('.tile');
+    for (var i = 0; i < tiles.length; i++) (function (b) {
+      b.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        if (b.getAttribute('data-k') === r.ans) {
+          KidsGame.sound.ok(); KidsGame.addStar(); hearts(8); addCoins(1); floatText('¡Sí! ' + ANS[r.ans][0]);
+          askEl.remove(); askEl = null; day.req = null; reqT = 22 + Math.random() * 10;
+          if (btnFor(r.ans)) setTimeout(function () { if (running && mode === null) setMode(r.ans); }, 500);
+          renderMeters();
+        } else { KidsGame.sound.wrong(); b.classList.add('bad'); setTimeout(function () { b.classList.remove('bad'); }, 500); KidsGame.say('Mmm, no. ' + r.say); }
+      });
+    })(tiles[i]);
+  }
+  function openShop() {
+    if (shopEl) return;
+    var sel = null, paid = 0;
+    shopEl = document.createElement('div'); shopEl.className = 'shop';
+    shopEl.innerHTML = '<div class="box panel"><div class="ttl">🛒 Tienda · tienes <span class="have">🪙 ' + day.coins + '</span></div><div class="items">' +
+      SHOP.map(function (it) { return '<button class="item" data-e="' + it[0] + '" data-p="' + it[1] + '"><span class="emoji">' + it[0] + '</span>🪙 ' + it[1] + '</button>'; }).join('') +
+      '</div><div class="pay"><div class="price">Elige algo para comprar</div><div class="coinrow"><button class="coin" data-v="1">🪙1</button><button class="coin" data-v="2">🪙2</button><span class="paid">= 0</span></div></div>' +
+      '<div class="row"><button class="btn green" id="pay">💰 Pagar</button><button class="btn blue" id="close">✖ Salir</button></div></div>';
+    room.appendChild(shopEl);
+    var priceEl = shopEl.querySelector('.price'), paidEl = shopEl.querySelector('.paid');
+    function showPaid() { paidEl.textContent = '= ' + paid; }
+    shopEl.querySelectorAll('.item').forEach(function (b) {
+      b.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
+        shopEl.querySelectorAll('.item').forEach(function (x) { x.classList.remove('sel'); }); b.classList.add('sel');
+        sel = { e: b.getAttribute('data-e'), p: +b.getAttribute('data-p') }; paid = 0; showPaid();
+        priceEl.innerHTML = sel.e + ' cuesta <b>' + sel.p + '</b> 🪙 · pon las monedas justas';
+        KidsGame.say(sel.p === 1 ? 'Cuesta una moneda' : 'Cuesta ' + sel.p + ' monedas. Pon las monedas justas');
+      });
+    });
+    shopEl.querySelectorAll('.coin').forEach(function (c) {
+      c.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        if (!sel) { KidsGame.toast('Primero elige qué comprar 👆'); return; }
+        paid += +c.getAttribute('data-v'); KidsGame.sound.pop(); showPaid();
+        if (paid > sel.p) { paidEl.classList.add('over'); KidsGame.sound.wrong(); KidsGame.toast('¡Te pasaste! 😅 Otra vez', 1400); KidsGame.say('Te pasaste. Cuenta otra vez'); setTimeout(function () { paid = 0; showPaid(); paidEl.classList.remove('over'); }, 900); }
+      });
+    });
+    shopEl.querySelector('#pay').addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
+      if (!sel) { KidsGame.toast('Elige algo 👆'); return; }
+      if (day.coins < sel.p) { KidsGame.sound.wrong(); KidsGame.toast('No te alcanza 🪙 juega para ganar monedas', 1800); KidsGame.say('No te alcanza. Juega a la pelota para ganar monedas'); return; }
+      if (paid < sel.p) { KidsGame.sound.wrong(); KidsGame.toast('Faltan ' + (sel.p - paid) + ' 🪙', 1400); KidsGame.say(sel.p - paid === 1 ? 'Falta una moneda' : 'Faltan ' + (sel.p - paid) + ' monedas'); return; }
+      day.coins -= sel.p; day.pantry[sel.e] = (day.pantry[sel.e] || 0) + 1; KidsGame.sound.ok(); KidsGame.addStar();
+      shopEl.querySelector('.have').textContent = '🪙 ' + day.coins; paid = 0; showPaid(); renderDay();
+      KidsGame.toast('¡Compraste ' + sel.e + '!', 1200); floatText('+1 ' + sel.e);
+      if (mode === 'feed') { setMode(null); }
+    });
+    shopEl.querySelector('#close').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); shopEl.remove(); shopEl = null; });
   }
   function sneeze() {
     needs.salud = 30; petEl.classList.remove('hit'); void petEl.offsetWidth; petEl.classList.add('hit');
@@ -366,7 +533,9 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     else activeNeeds().forEach(function (n) { needs[n.k] = 45 + Math.random() * 25; });
     if (typeof needs.salud !== 'number') needs.salud = 90;
     buildMeters(); layout(); happyShown = false; sneezeT = 20 + Math.random() * 15; setMode(null); running = true; renderMeters(); save();
-    KidsGame.say('Cuida a tu ' + pet[1].toLowerCase());
+    if (askEl) { askEl.remove(); askEl = null; } if (shopEl) { shopEl.remove(); shopEl = null; }
+    dayBar.classList.toggle('show', nivel === 4);
+    if (nivel === 4) { day = null; newDay(); } else KidsGame.say('Cuida a tu ' + pet[1].toLowerCase());
   }
   function pickPet() {
     var pk = document.createElement('div'); pk.className = 'picker';
@@ -381,7 +550,8 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     game.appendChild(pk);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
-  function pickLevel() { KidsGame.levelPicker({ onPick: function (n) { nivel = n; setBadge(); pickPet(); } }); }
+  function pickLevel() { KidsGame.levelPicker({ labels: { 1: 'Sin prisa', 2: 'Baja más rápido', 3: 'Rápido y se enferma 🩹', 4: 'Horario con reloj, tienda y pedidos' }, onPick: function (n) { nivel = n; setBadge(); pickPet(); } }); }
+  window.__kgTest = function () { return { day: day, needs: needs, mode: mode, setMode: setMode, fulfilled: fulfilled, askRequest: askRequest, updateDay: updateDay, renderDay: renderDay }; };
   setBadge(); buildMeters(); layout(); pickLevel(); requestAnimationFrame(frame);
 })();
 </script>
