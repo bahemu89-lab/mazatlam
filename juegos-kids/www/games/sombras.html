@@ -11,6 +11,8 @@
     background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,246,190,.55), rgba(255,255,255,0) 70%);
   }
   .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; flex-wrap: wrap; row-gap: var(--gap); }
+  /* ancho limitado a --n columnas para que las filas se repartan parejas (5 + 5 y no 8 + 2) */
+  .row.top, .row.objs { max-width: calc(var(--n) * var(--sz) + (var(--n) - 1) * var(--gap) + 2px); margin: 0 auto; }
   /* Franja de suelo soleado detrás de las sombras */
   .row.top::before {
     content: ""; position: absolute; left: 50%; top: -16px; bottom: -16px; z-index: -1; border-radius: 34px;
@@ -163,7 +165,7 @@ var game = KidsGame.init({ title: 'Sombras' });
   var round = 0, count = 3, items = [], slots = [], placed = 0;
   var hint = document.createElement('div'); hint.className = 'hint';
   var top = document.createElement('div'); top.className = 'row top';
-  var bottom = document.createElement('div'); bottom.className = 'row';
+  var bottom = document.createElement('div'); bottom.className = 'row objs';
   var mid = document.createElement('div'); mid.className = 'row mid';
   game.innerHTML = '';
   mid.appendChild(hint);
@@ -318,7 +320,7 @@ var game = KidsGame.init({ title: 'Sombras' });
   }
 
   function finish() {
-    if (count >= DIFF[nivel].max) KidsGame.levelDone(nivel);
+    if (round >= 1 || count >= DIFF[nivel].max) KidsGame.levelDone(nivel); // dos rondas (o la ronda máxima) = nivel completado
     KidsGame.celebrate({
       sub: 'Ronda ' + (round + 1) + ' · ' + count + ' sombras',
       onNext: function () { round++; start(); },
