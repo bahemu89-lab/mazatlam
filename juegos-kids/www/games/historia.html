@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Cuenta la historia</title>
+<style>
+  .game { background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 55%), linear-gradient(180deg, #ffd6e8 0%, #ffb6d9 40%, #c8a6ff 100%); }
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background: radial-gradient(circle at 10% 80%, #fff 0 6px, rgba(255,255,255,0) 7px), radial-gradient(circle at 90% 30%, #fff 0 5px, rgba(255,255,255,0) 6px), radial-gradient(circle at 70% 85%, #fff 0 4px, rgba(255,255,255,0) 5px), radial-gradient(circle at 30% 20%, #fff 0 4px, rgba(255,255,255,0) 5px); }
+  .hud { position: absolute; left: 8px; right: 8px; top: 8px; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 8px; z-index: 3; }
+  .hud .grp { display: flex; align-items: center; gap: 8px; }
+  .hud .btn { font-size: 24px; }
+  .hud .btn.on { outline: 4px solid #fff; outline-offset: 2px; }
+  .hud .btn.off { opacity: .45; filter: grayscale(.7); }
+  .hud .btn.wide { padding: 8px 18px; white-space: nowrap; }
+  .hud .cnt { font-size: 18px; padding: 4px 12px; border-radius: 20px; background: linear-gradient(180deg,#fff,#eef2ff); color: #1f2f6b; box-shadow: 0 3px 0 #c9d2e6, 0 6px 10px rgba(0,0,0,.2); white-space: nowrap; }
+  .ttl { font-size: 24px; color: #fff; font-weight: 900; text-shadow: 0 2px 0 #b03a7a, -1px -1px 0 #b03a7a, 1px -1px 0 #b03a7a, -1px 1px 0 #b03a7a, 1px 1px 0 #b03a7a; white-space: nowrap; }
+  .wrap { position: absolute; left: 8px; right: 8px; top: 78px; bottom: 8px; display: flex; flex-direction: column; gap: 8px; }
+  /* ---- Parte A: ordenar ---- */
+  .slots { flex: 0 0 auto; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 10px; border-radius: 24px; }
+  .slot { position: relative; border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.25)); border: 3px dashed rgba(255,255,255,.9); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 10px rgba(120,40,120,.15); }
+  .slot .num { position: absolute; left: -10px; top: -10px; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; font-weight: 900; z-index: 2;
+    background: linear-gradient(180deg, #ff9ccb, #e4458f); box-shadow: 0 3px 0 #a52a65, 0 5px 8px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.3); }
+  .slot.over { background: rgba(255,255,255,.7); transform: scale(1.04); }
+  .slot.bad { animation: shake .4s; border-color: #ff3b5c; box-shadow: 0 0 0 4px rgba(255,59,92,.6); }
+  .slot.play { outline: 5px solid #ffe066; outline-offset: 2px; transform: scale(1.06); z-index: 3; }
+  .tray { flex: 1 1 auto; min-height: 0; display: flex; gap: 10px; justify-content: center; align-content: center; align-items: center; flex-wrap: wrap; padding: 8px; }
+  .scard { position: relative; border-radius: 18px; overflow: hidden; background: #fff; cursor: grab; border: 3px solid #fff;
+    box-shadow: 0 6px 0 #c9b2d6, 0 12px 20px rgba(80,20,90,.3), inset 0 2px 0 #fff; transition: transform .12s; animation: pop .35s backwards; touch-action: none; }
+  .scard svg { width: 100%; height: 100%; display: block; }
+  .scard .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 6px; font-size: 13px; color: #fff; text-align: center; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.45)); text-shadow: 0 1px 2px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scard.drag { position: fixed; z-index: 30; transform: scale(1.08) rotate(-2deg); box-shadow: 0 20px 30px rgba(0,0,0,.4); pointer-events: none; animation: none; }
+  .scard.inslot { cursor: pointer; }
+  .scard.hl { outline: 6px solid #ffe066; }
+  /* ---- Parte B: inventar ---- */
+  .pick { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; }
+  .pick .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+  .opt { width: 110px; height: 110px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; font-size: 15px; color: #1f2f6b; transition: transform .12s; }
+  .opt .emoji { font-size: 54px; }
+  .opt.sel { outline: 6px solid #ffe066; outline-offset: 2px; transform: scale(1.06); background: linear-gradient(180deg, #fff9d6, #ffe9a8); }
+  .opt.scene { width: 150px; height: 130px; }
+  .opt.scene .emoji { font-size: 62px; }
+  .stagebox { flex: 1 1 auto; min-height: 0; position: relative; border-radius: 24px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 8px 0 #c9b2d6, 0 16px 28px rgba(80,20,90,.35); }
+  .stagebox svg.bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .actor { position: absolute; width: 96px; height: 96px; margin: -48px 0 0 -48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: grab; touch-action: none; z-index: 2;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(255,255,255,.55) 60%, rgba(255,255,255,.2)); box-shadow: 0 6px 12px rgba(0,0,0,.25), inset 0 0 0 4px rgba(255,255,255,.8); animation: float 3.5s ease-in-out infinite; }
+  .actor .emoji { font-size: 60px; }
+  .actor.prop { width: 76px; height: 76px; margin: -38px 0 0 -38px; } .actor.prop .emoji { font-size: 44px; }
+  .actor.hl { box-shadow: 0 0 0 8px #ffe066, 0 0 30px #fff27a, 0 8px 12px rgba(0,0,0,.3); animation: bounce .6s infinite; z-index: 4; }
+  .actor.twist { width: 110px; height: 110px; margin: -55px 0 0 -55px; } .actor.twist .emoji { font-size: 70px; }
+  .bar { flex: 0 0 auto; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-radius: 24px; }
+  .bar .btn { font-size: 22px; padding: 8px 16px; }
+  .story { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; padding: 10px 16px; border-radius: 18px; font-size: 20px; color: #1f2f6b; line-height: 1.25; max-height: 42%; overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.94)); box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: none; }
+  .story b { color: #e4458f; }
+  .seq { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .seq .sq { width: 150px; height: 70px; border-radius: 16px; border: 3px dashed #fff; background: rgba(255,255,255,.4); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #1f2f6b; text-align: center; padding: 4px; }
+  .seq .sq.on { background: linear-gradient(180deg, #fff, #ffe9a8); border-style: solid; }
+  .ev { min-width: 150px; height: 64px; border-radius: 16px; padding: 4px 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; color: #1f2f6b; cursor: pointer; text-align: center; }
+  .ev.used { opacity: .4; }
+  .shelf { display: flex; gap: 8px; align-items: center; }
+  .shelf .sv { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: linear-gradient(180deg,#fff,#e9eeff); box-shadow: 0 4px 0 #c9d2e6, 0 6px 10px rgba(0,0,0,.15); cursor: pointer; }
+  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 20;
+    background: radial-gradient(circle at 35% 35%, #fff, #ffd54a 60%, #ff9f1c); box-shadow: 0 0 10px #ffe680; animation: spk .7s ease-out forwards; }
+  @keyframes spk { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+  @media (max-width: 820px) { .opt { width: 96px; height: 96px; } .opt .emoji { font-size: 46px; } .opt.scene { width: 130px; height: 116px; } .hud .ttl { display: none; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+(function () {
+  var game = KidsGame.init({ title: 'Cuenta la historia' });
+  var LABELS = { 1: '3 escenas', 2: '4 escenas', 3: '5 escenas', 4: '6 · una sobra' };
+  var PER_LEVEL = 4;
+  // Fondos de las tarjetas: cielo, suelo y detalles con degradados
+  var BGS = {
+    dia:    { sky: ['#5fc4ff', '#dff4ff'], ground: ['#b6ef7a', '#4caf50'], sun: true },
+    tarde:  { sky: ['#ffb36b', '#ffe8c2'], ground: ['#cde38a', '#5f9e3a'], sun: true },
+    noche:  { sky: ['#1b2a6b', '#5f5fb5'], ground: ['#4f7d4a', '#24472a'], moon: true },
+    playa:  { sky: ['#4fc3ff', '#d9f5ff'], ground: ['#ffe9a8', '#e6c66b'], sun: true, sea: true },
+    cocina: { sky: ['#ffe4ec', '#fff7f0'], ground: ['#d7a86e', '#9a6a3a'], tiles: true },
+    cuarto: { sky: ['#e6dcff', '#fbf6ff'], ground: ['#e9b779', '#b7813f'], tiles: true },
+    nieve:  { sky: ['#bfe3ff', '#f2fbff'], ground: ['#ffffff', '#cfe3f2'], sun: true },
+    lluvia: { sky: ['#6b7fa8', '#b9c6dd'], ground: ['#8fcf6a', '#3f8f3a'], rain: true }
+  };
+  // Historias: 5 tarjetas en orden + 1 distractor. e = emoji, c = pie, t = narración, bg = fondo
+  var STORIES = [
+    { n: 'La semilla', bg: 'dia', cards: [
+      { e: '🌰', c: 'Semilla', t: 'Primero, plantamos una semilla en la tierra.' },
+      { e: '💧', c: 'Agua', t: 'Luego, le echamos agua.' },
+      { e: '🌱', c: 'Brote', t: 'Sale un brotecito verde.' },
+      { e: '🌿', c: 'Planta', t: 'La planta crece con muchas hojas.' },
+      { e: '🌻', c: 'Flor', t: '¡Y al final sale una flor grande y bonita!' }], x: { e: '🚗', c: 'Coche', bg: 'dia' } },
+    { n: 'El pollito', bg: 'tarde', cards: [
+      { e: '🥚', c: 'Huevo', t: 'La gallina puso un huevo en el nido.' },
+      { e: '🐣', c: 'Se rompe', t: 'El huevo se rompe. ¡Crac!' },
+      { e: '🐤', c: 'Pollito', t: 'Sale un pollito amarillo.' },
+      { e: '🐥', c: 'Crece', t: 'El pollito come y crece.' },
+      { e: '🐔', c: 'Gallina', t: '¡Ahora es una gallina grande!' }], x: { e: '🐟', c: 'Pez', bg: 'playa' } },
+    { n: 'A vestirse', bg: 'cuarto', cards: [
+      { e: '🛏️', c: 'Despertar', t: 'Me despierto en mi cama.' },
+      { e: '👕', c: 'Camiseta', t: 'Me pongo la camiseta.' },
+      { e: '👖', c: 'Pantalón', t: 'Me pongo el pantalón.' },
+      { e: '🧦', c: 'Calcetines', t: 'Me pongo los calcetines.' },
+      { e: '👟', c: 'Zapatos', t: '¡Zapatos puestos! Ya estoy lista para salir.' }], x: { e: '🍕', c: 'Pizza', bg: 'cocina' } },
+    { n: 'El sándwich', bg: 'cocina', cards: [
+      { e: '🍞', c: 'Pan', t: 'Saco dos rebanadas de pan.' },
+      { e: '🧈', c: 'Mantequilla', t: 'Les unto mantequilla.' },
+      { e: '🧀', c: 'Queso', t: 'Pongo una rebanada de queso.' },
+      { e: '🍅', c: 'Tomate', t: 'Le pongo tomate.' },
+      { e: '🥪', c: '¡A comer!', t: '¡Listo el sándwich! Ñam, ñam.' }], x: { e: '🎈', c: 'Globo', bg: 'dia' } },
+    { n: 'El castillo de arena', bg: 'playa', cards: [
+      { e: '🪣', c: 'Cubeta', t: 'Llevo mi cubeta a la playa.' },
+      { e: '⛱️', c: 'Arena', t: 'Lleno la cubeta de arena mojada.' },
+      { e: '🏰', c: 'Castillo', t: '¡Hago un castillo de arena muy alto!' },
+      { e: '🌊', c: 'Ola', t: 'Viene una ola grande...' },
+      { e: '😮', c: 'Se fue', t: '¡La ola se llevó el castillo! Haré otro.' }], x: { e: '⛄', c: 'Nieve', bg: 'nieve' } },
+    { n: 'La oruga', bg: 'dia', cards: [
+      { e: '🍃', c: 'Hoja', t: 'En una hoja hay un huevito.' },
+      { e: '🐛', c: 'Oruga', t: 'Sale una oruga chiquita y come hojas.' },
+      { e: '🐛', c: 'Oruga grande', t: 'La oruga come y come y se pone gorda.' },
+      { e: '🥚', c: 'Capullo', t: 'Se envuelve en un capullo y duerme.' },
+      { e: '🦋', c: 'Mariposa', t: '¡Del capullo sale una mariposa!' }], x: { e: '🚀', c: 'Cohete', bg: 'noche' } },
+    { n: 'La lluvia', bg: 'lluvia', cards: [
+      { e: '☁️', c: 'Nubes', t: 'Llegan nubes grises al cielo.' },
+      { e: '🌧️', c: 'Lluvia', t: 'Empieza a llover. ¡Plic, plac!' },
+      { e: '☔', c: 'Paraguas', t: 'Abro mi paraguas.' },
+      { e: '🐸', c: 'Charco', t: 'La lluvia hace charcos y las ranas saltan.' },
+      { e: '🌈', c: 'Arcoíris', t: '¡Sale el sol y aparece un arcoíris!' }], x: { e: '🎂', c: 'Pastel', bg: 'cocina' } },
+    { n: 'Mi dibujo', bg: 'cuarto', cards: [
+      { e: '📄', c: 'Papel', t: 'Tomo una hoja de papel en blanco.' },
+      { e: '✏️', c: 'Lápiz', t: 'Dibujo con el lápiz.' },
+      { e: '🖍️', c: 'Colores', t: 'Pinto con muchos colores.' },
+      { e: '🖼️', c: 'Terminado', t: '¡Mi dibujo quedó precioso!' },
+      { e: '🏠', c: 'En la pared', t: 'Lo pego en la pared para que todos lo vean.' }], x: { e: '🐘', c: 'Elefante', bg: 'dia' } },
+    { n: 'El pastel', bg: 'cocina', cards: [
+      { e: '🥚', c: 'Ingredientes', t: 'Junto huevos, harina y azúcar.' },
+      { e: '🥣', c: 'Mezclar', t: 'Lo mezclo todo en un tazón.' },
+      { e: '🔥', c: 'Horno', t: 'Lo meto al horno calientito.' },
+      { e: '🎂', c: 'Pastel', t: '¡El pastel está listo y huele rico!' },
+      { e: '😋', c: 'A comer', t: 'Lo comemos todos juntos. ¡Qué rico!' }], x: { e: '🚲', c: 'Bici', bg: 'dia' } },
+    { n: 'El muñeco de nieve', bg: 'nieve', cards: [
+      { e: '❄️', c: 'Nieva', t: 'Cae mucha nieve.' },
+      { e: '⛄', c: 'Muñeco', t: 'Hago un muñeco de nieve con tres bolas.' },
+      { e: '🧣', c: 'Bufanda', t: 'Le pongo bufanda y sombrero.' },
+      { e: '☀️', c: 'Sol', t: 'Sale el sol y hace calor.' },
+      { e: '💧', c: 'Se derrite', t: 'El muñeco se derrite. ¡Solo queda el sombrero!' }], x: { e: '🦁', c: 'León', bg: 'tarde' } },
+    { n: 'El globo', bg: 'dia', cards: [
+      { e: '🎈', c: 'Globo', t: 'Tengo un globo rojo.' },
+      { e: '💨', c: 'Viento', t: 'Sopla el viento muy fuerte.' },
+      { e: '🫧', c: 'Vuela', t: 'El globo se escapa y vuela alto.' },
+      { e: '🌳', c: 'Árbol', t: 'Se queda atorado en un árbol.' },
+      { e: '🐒', c: 'Chango', t: '¡Un chango me lo devuelve! Gracias.' }], x: { e: '🧀', c: 'Queso', bg: 'cocina' } }
+  ];
+  var PICKS = { 1: [0, 2, 4], 2: [0, 1, 3, 4], 3: [0, 1, 2, 3, 4], 4: [0, 1, 2, 3, 4] };
+  // Parte B
+  var SCENES = [
+    { id: 'castillo', e: '🏰', n: 'Castillo', bg: 'tarde', lugar: 'un castillo enorme con torres altas', intro: ['Había una vez, en {L},', 'Hace mucho, mucho tiempo, en {L},', 'Un día soleado, en {L},'] },
+    { id: 'selva', e: '🌴', n: 'Selva', bg: 'dia', lugar: 'una selva llena de árboles gigantes', intro: ['En {L},', 'Muy lejos, en {L},', 'Una mañana, en {L},'] },
+    { id: 'espacio', e: '🪐', n: 'Espacio', bg: 'noche', lugar: 'el espacio, entre estrellas y planetas', intro: ['Allá arriba, en {L},', 'Muy lejos de la Tierra, en {L},', 'En una nave que viajaba por {L},'] },
+    { id: 'mar', e: '🌊', n: 'Mar', bg: 'playa', lugar: 'el fondo del mar azul', intro: ['En {L},', 'Un día de olas grandes, en {L},', 'Entre peces de colores, en {L},'] },
+    { id: 'ciudad', e: '🏙️', n: 'Ciudad', bg: 'cuarto', lugar: 'una ciudad con edificios altos', intro: ['En {L},', 'Una tarde con mucho ruido, en {L},', 'Entre coches y semáforos, en {L},'] }
+  ];
+  var CHARS = [
+    { e: '👧', n: 'una niña' }, { e: '👦', n: 'un niño' }, { e: '🐱', n: 'un gato' }, { e: '🐶', n: 'un perro' }, { e: '🦄', n: 'un unicornio' }, { e: '🐉', n: 'un dragón' },
+    { e: '🤖', n: 'un robot' }, { e: '👸', n: 'una princesa' }, { e: '🧙', n: 'un mago' }, { e: '🐸', n: 'una rana' }, { e: '🦊', n: 'un zorro' }, { e: '🐧', n: 'un pingüino' }
+  ];
+  var PROPS = [
+    { e: '🎈', n: 'un globo' }, { e: '🍰', n: 'un pastel' }, { e: '🔑', n: 'una llave dorada' }, { e: '🎁', n: 'un regalo' },
+    { e: '🚀', n: 'un cohete' }, { e: '⚽', n: 'una pelota' }, { e: '🌟', n: 'una estrella brillante' }, { e: '🎸', n: 'una guitarra' }
+  ];
+  var TWISTS = [
+    { e: '🐲', t: '¡De repente apareció un dragón que echaba burbujas en vez de fuego!' },
+    { e: '🍬', t: '¡De pronto empezaron a llover dulces del cielo!' },
+    { e: '🌪️', t: '¡Llegó un viento tan fuerte que todos salieron volando!' },
+    { e: '💎', t: '¡Encontraron un tesoro escondido lleno de piedras brillantes!' },
+    { e: '🌙', t: '¡Se hizo de noche y salieron miles de estrellas!' },
+    { e: '🪄', t: '¡Un mago travieso los volvió chiquititos como hormigas!' },
+    { e: '🌈', t: '¡Apareció un arcoíris mágico que se podía caminar!' },
+    { e: '🦖', t: '¡Un dinosaurio bebé quería jugar con ellos!' }
+  ];
+  var EVENTS = [
+    { e: '🚶', t: 'salieron a pasear' }, { e: '🔍', t: 'buscaron {P}' }, { e: '🎉', t: 'hicieron una fiesta' }, { e: '😴', t: 'se durmieron bajo un árbol' },
+    { e: '🏃', t: 'corrieron una carrera' }, { e: '🏠', t: 'volvieron a casa felices' }, { e: '🎶', t: 'cantaron una canción' }, { e: '🤝', t: 'se hicieron amigos' }
+  ];
+  var ENDINGS = ['Y todos fueron felices. Fin.', 'Y se rieron mucho. Colorín colorado, este cuento se ha acabado.', 'Y al final, se fueron a dormir contentos. Fin.', 'Y desde ese día, siempre jugaron juntos. Fin.'];
+
+  // ---------- escenas SVG ----------
+  function sceneSvg(bgId, emoji, opts) {
+    opts = opts || {}; var B = BGS[bgId] || BGS.dia, W = 200, Hh = 150, s = '';
+    s += '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice"><defs>' +
+      '<linearGradient id="sky-' + bgId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + B.sky[0] + '"/><stop offset="1" stop-color="' + B.sky[1] + '"/></linearGradient>' +
+      '<linearGradient id="gr-' + bgId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + B.ground[0] + '"/><stop offset="1" stop-color="' + B.ground[1] + '"/></linearGradient>' +
+      '<radialGradient id="sun-g" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff8c4"/><stop offset=".6" stop-color="#ffd43b"/><stop offset="1" stop-color="#ff9f1c"/></radialGradient>' +
+      '<radialGradient id="glow-g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff2a0" stop-opacity=".8"/><stop offset="1" stop-color="#fff2a0" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="moon-g" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6ff"/></radialGradient>' +
+      '<radialGradient id="med-g" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#fdf1ff"/><stop offset="1" stop-color="#e2cdf5"/></radialGradient>' +
+      '<linearGradient id="sea-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ad1ff"/><stop offset="1" stop-color="#1b7fd6"/></linearGradient>' +
+      '<filter id="sh-g" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".3"/></filter></defs>' +
+      '<rect width="200" height="150" fill="url(#sky-' + bgId + ')"/>';
+    if (B.sun) s += '<circle cx="168" cy="28" r="34" fill="url(#glow-g)"/><circle cx="168" cy="28" r="15" fill="url(#sun-g)"/>';
+    if (B.moon) { s += '<circle cx="165" cy="30" r="13" fill="url(#moon-g)"/>'; for (var i = 0; i < 10; i++) s += '<circle cx="' + ((i * 53) % 190 + 5) + '" cy="' + ((i * 37) % 80 + 6) + '" r="' + (1 + (i % 3) * .6) + '" fill="#fff"/>'; }
+    if (!B.tiles) s += '<ellipse cx="45" cy="34" rx="26" ry="10" fill="#fff" opacity=".9"/><ellipse cx="58" cy="28" rx="16" ry="10" fill="#fff" opacity=".95"/><ellipse cx="120" cy="50" rx="20" ry="7" fill="#fff" opacity=".7"/>';
+    if (B.rain) for (var r = 0; r < 14; r++) s += '<line x1="' + (r * 15 + 4) + '" y1="' + (40 + (r % 4) * 14) + '" x2="' + (r * 15) + '" y2="' + (52 + (r % 4) * 14) + '" stroke="#e8f1ff" stroke-width="2" stroke-linecap="round" opacity=".8"/>';
+    if (B.sea) s += '<rect x="0" y="98" width="200" height="30" fill="url(#sea-g)"/><path d="M0 100 Q 20 92 40 100 T 80 100 T 120 100 T 160 100 T 200 100 V 110 H 0 Z" fill="#9fe6ff" opacity=".8"/>';
+    if (B.tiles) { s += '<rect x="0" y="105" width="200" height="45" fill="url(#gr-' + bgId + ')"/>'; for (var t = 0; t < 8; t++) s += '<rect x="' + (t * 26 - 6) + '" y="112" width="24" height="30" rx="3" fill="rgba(255,255,255,.12)" stroke="rgba(0,0,0,.12)"/>'; }
+    else s += '<path d="M0 118 Q 60 92 110 112 T 200 108 V 150 H 0 Z" fill="url(#gr-' + bgId + ')"/><ellipse cx="100" cy="128" rx="48" ry="8" fill="rgba(0,0,0,.18)"/>';
+    s += '<circle cx="100" cy="76" r="45" fill="url(#med-g)" stroke="#fff" stroke-width="4" filter="url(#sh-g)"/><circle cx="100" cy="76" r="40" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"/>' +
+      '<text x="100" y="98" text-anchor="middle" font-size="' + (opts.fs || 58) + '" font-family="Noto Color Emoji, Apple Color Emoji, Segoe UI Emoji, sans-serif" filter="url(#sh-g)">' + emoji + '</text></svg>';
+    return s;
+  }
+  // Fondo del escenario (parte B): escena grande sin medallón
+  function stageSvg(bgId) { var s = sceneSvg(bgId, ''); return s.replace(/<circle cx="100" cy="76"[\s\S]*?<\/text>/, ''); }
+
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); fn(ev); }); }
+  function sparkle(px, py, n) {
+    var r = game.getBoundingClientRect();
+    for (var i = 0; i < (n || 12); i++) {
+      var s = el('div', 'spark'), a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+      s.style.left = (px - r.left - 7) + 'px'; s.style.top = (py - r.top - 7) + 'px';
+      s.style.setProperty('--dx', (Math.cos(a) * d).toFixed(0) + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d).toFixed(0) + 'px');
+      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 800); })(s);
+    }
+  }
+  function sayDur(t) { return 500 + t.length * 72; }
+
+  // ---------- DOM ----------
+  game.innerHTML = '';
+  var hud = el('div', 'hud'), left = el('div', 'grp'), right = el('div', 'grp');
+  var lvlBtn = el('button', 'btn round yellow', '🎚️'); lvlBtn.setAttribute('aria-label', 'Nivel');
+  var badge = el('span'), cntEl = el('span', 'cnt'), ttlEl = el('span', 'ttl');
+  var modeBtn = el('button', 'btn purple wide', '✨ Inventa');
+  var playBtn = el('button', 'btn green wide', '▶ Ver');
+  left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(cntEl); left.appendChild(ttlEl);
+  right.appendChild(modeBtn); right.appendChild(playBtn);
+  hud.appendChild(left); hud.appendChild(right);
+  var wrap = el('div', 'wrap');
+  game.appendChild(hud); game.appendChild(wrap);
+
+  var level = 1, mode = 'A', round = 0, order = [], story = null, cards = [], slots = [], busy = false, dragging = null;
+  var slotsEl = null, trayEl = null;
+
+  function pickLevel() {
+    busy = true; wrap.innerHTML = '';
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; round = 0; order = KidsGame.shuffle(STORIES); mode = 'A'; startA(); } });
+  }
+  function setHud() {
+    badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level));
+    if (mode === 'A') { cntEl.textContent = (round + 1) + '/' + PER_LEVEL; ttlEl.textContent = story ? '📖 ' + story.n : ''; modeBtn.textContent = '✨ Inventa'; playBtn.style.display = ''; }
+    else { cntEl.textContent = '✨'; ttlEl.textContent = 'Inventa tu cuento'; modeBtn.textContent = '🔢 Ordena'; playBtn.style.display = 'none'; }
+  }
+  // ---------- Parte A: ordena la historia ----------
+  function startA() {
+    busy = false; dragging = null; mode = 'A'; wrap.innerHTML = '';
+    story = order[round % order.length];
+    var idx = PICKS[level], list = idx.map(function (i, k) { var c = story.cards[i]; return { i: k, e: c.e, c: c.c, t: c.t, bg: story.bg }; });
+    if (level === 4) list.push({ i: -1, e: story.x.e, c: story.x.c, t: '', bg: story.x.bg });
+    slotsEl = el('div', 'slots panel'); trayEl = el('div', 'tray');
+    slots = [];
+    for (var s = 0; s < idx.length; s++) { var sl = el('div', 'slot'); sl.dataset.s = s; var nm = el('div', 'num', s + 1); sl.appendChild(nm); slotsEl.appendChild(sl); slots.push({ el: sl, card: null }); }
+    cards = [];
+    KidsGame.shuffle(list).forEach(function (c, k) {
+      var d = el('div', 'scard'); d.innerHTML = sceneSvg(c.bg, c.e); var cap = el('div', 'cap', c.c); d.appendChild(cap); d.style.animationDelay = (k * 70) + 'ms';
+      var card = { d: c, el: d, slot: -1 }; cards.push(card); trayEl.appendChild(d);
+      d.addEventListener('pointerdown', function (e) { down(e, card); });
+    });
+    wrap.appendChild(slotsEl); wrap.appendChild(trayEl);
+    layoutA(); setHud();
+    KidsGame.say(level === 4 ? 'Ordena la historia. Una tarjeta no va.' : 'Ordena la historia');
+  }
+  function layoutA() {
+    if (!slotsEl) return;
+    var W = wrap.clientWidth - 24, n = slots.length, portrait = game.clientHeight > game.clientWidth;
+    var cw = Math.min(portrait ? 150 : 180, Math.floor((W - (n - 1) * 10) / n)), ch = Math.round(cw * 0.78);
+    var Hh = wrap.clientHeight;
+    if (ch * 2 + 80 > Hh) { ch = Math.floor((Hh - 90) / 2); cw = Math.round(ch / 0.78); }
+    slots.forEach(function (s) { s.el.style.width = cw + 'px'; s.el.style.height = ch + 'px'; });
+    cards.forEach(function (c) { if (!c.el.classList.contains('drag')) { c.el.style.width = cw + 'px'; c.el.style.height = ch + 'px'; } });
+    wrap.dataset.cw = cw; wrap.dataset.ch = ch;
+  }
+  function down(e, card) {
+    if (busy || dragging) return;
+    e.preventDefault();
+    if (card.slot >= 0) { toTray(card); KidsGame.sound.pop(); return; }
+    var r = card.el.getBoundingClientRect();
+    dragging = { card: card, id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height };
+    card.el.classList.add('drag'); document.body.appendChild(card.el);
+    card.el.style.width = r.width + 'px'; card.el.style.height = r.height + 'px';
+    moveTo(e.clientX, e.clientY); KidsGame.sound.tap();
+  }
+  function moveTo(x, y) { var d = dragging; d.card.el.style.left = (x - d.dx) + 'px'; d.card.el.style.top = (y - d.dy) + 'px'; }
+  function slotAt(x, y) { var t = document.elementFromPoint(x, y); var s = t && t.closest ? t.closest('.slot') : null; return s ? slots[+s.dataset.s] : null; }
+  document.addEventListener('pointermove', function (e) {
+    if (!dragging || e.pointerId !== dragging.id) return; e.preventDefault(); moveTo(e.clientX, e.clientY);
+    var over = slotAt(e.clientX, e.clientY); slots.forEach(function (s) { s.el.classList.toggle('over', s === over); });
+  });
+  function up(e) {
+    if (!dragging || e.pointerId !== dragging.id) return;
+    var d = dragging; dragging = null; slots.forEach(function (s) { s.el.classList.remove('over'); });
+    var cx = e.clientX - d.dx + d.w / 2, cy = e.clientY - d.dy + d.h / 2;
+    var sl = slotAt(cx, cy) || slotAt(e.clientX, e.clientY);
+    d.card.el.classList.remove('drag'); d.card.el.style.left = d.card.el.style.top = '';
+    if (sl) { if (sl.card) toTray(sl.card); place(d.card, sl); KidsGame.sound.ok(); }
+    else { toTray(d.card); KidsGame.sound.pop(); }
+  }
+  document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  function place(card, sl) { sl.card = card; card.slot = slots.indexOf(sl); card.el.classList.add('inslot'); card.el.style.width = '100%'; card.el.style.height = '100%'; sl.el.appendChild(card.el); }
+  function toTray(card) { if (card.slot >= 0) slots[card.slot].card = null; card.slot = -1; card.el.classList.remove('inslot'); card.el.style.width = wrap.dataset.cw + 'px'; card.el.style.height = wrap.dataset.ch + 'px'; trayEl.appendChild(card.el); }
+  function checkA() {
+    if (busy || mode !== 'A') return;
+    if (slots.some(function (s) { return !s.card; })) { KidsGame.toast('Llena todos los espacios', 1200); KidsGame.sound.wrong(); KidsGame.say('Pon una tarjeta en cada número'); return; }
+    var wrong = slots.filter(function (s, i) { return s.card.d.i !== i; });
+    if (!wrong.length) { playA(); return; }
+    KidsGame.sound.wrong(); KidsGame.vibrate(60);
+    if (level <= 2) { wrong.forEach(function (s) { s.el.classList.remove('bad'); void s.el.offsetWidth; s.el.classList.add('bad'); }); KidsGame.say('Casi. Mira las rojas.'); KidsGame.toast('Mira las rojas', 1200); }
+    else { KidsGame.toast('Ese no es el orden', 1200); KidsGame.say(level === 4 ? 'Ese no es el orden. Recuerda: una tarjeta sobra.' : 'Ese no es el orden'); }
+  }
+  function playA() {
+    busy = true; var i = 0;
+    (function step() {
+      slots.forEach(function (s) { s.el.classList.remove('play'); });
+      if (i >= slots.length) { finishA(); return; }
+      var s = slots[i]; s.el.classList.add('play'); var t = s.card.d.t; KidsGame.say(t);
+      var r = s.el.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 8);
+      i++; setTimeout(step, sayDur(t));
+    })();
+  }
+  function finishA() {
+    KidsGame.addStar(); KidsGame.sound.win();
+    var last = round + 1 >= PER_LEVEL; if (last) KidsGame.levelDone(level);
+    KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡Buena historia!', sub: last ? 'Cuatro historias ordenadas' : 'Historia ' + (round + 1) + ' de ' + PER_LEVEL,
+      onNext: function () { round = (round + 1) % PER_LEVEL; if (round === 0) order = KidsGame.shuffle(STORIES); startA(); }, onAgain: function () { startA(); } });
+  }
+
+  // ---------- Parte B: inventa tu cuento ----------
+  var B = { step: 0, scene: -1, chars: [], props: [], events: [], twist: -1, text: '', segs: [], actors: [], starred: false, timers: [] };
+  var stageBox = null, storyEl = null, starBtn = null;
+  function startB() {
+    busy = false; dragging = null; mode = 'B'; wrap.innerHTML = ''; slotsEl = null; trayEl = null;
+    B = { step: 0, scene: -1, chars: [], props: [], events: [], twist: -1, text: '', segs: [], actors: [], starred: false, timers: [] };
+    setHud(); renderStep();
+  }
+  function stepTitle(t) { var h = el('div', 'ttl', t); h.style.fontSize = '28px'; return h; }
+  function nextBtn(txt, fn) { var b = el('button', 'btn green wide', txt || 'Listo ▶'); onTap(b, fn); return b; }
+  function renderStep() {
+    wrap.innerHTML = ''; var box = el('div', 'pick');
+    if (B.step === 0) {
+      box.appendChild(stepTitle('¿Dónde pasa tu cuento?')); var row = el('div', 'row');
+      SCENES.forEach(function (s, i) { var o = el('div', 'opt scene card'); o.innerHTML = '<span class="emoji">' + s.e + '</span><span>' + s.n + '</span>'; onTap(o, function () { B.scene = i; KidsGame.sound.pop(); KidsGame.say(s.n); B.step = 1; renderStep(); }); row.appendChild(o); });
+      box.appendChild(row); KidsGame.say('¿Dónde pasa tu cuento? Elige un lugar.');
+    } else if (B.step === 1 || B.step === 2) {
+      var isC = B.step === 1, LIST = isC ? CHARS : PROPS, sel = isC ? B.chars : B.props, max = 3;
+      box.appendChild(stepTitle(isC ? '¿Quiénes salen? (1 a 3)' : '¿Qué llevan? (2 o 3 cosas)')); var row2 = el('div', 'row');
+      LIST.forEach(function (c, i) {
+        var o = el('div', 'opt card' + (sel.indexOf(i) >= 0 ? ' sel' : '')); o.innerHTML = '<span class="emoji">' + c.e + '</span><span>' + c.n.replace(/^(un|una) /, '') + '</span>';
+        onTap(o, function () { var k = sel.indexOf(i); if (k >= 0) { sel.splice(k, 1); o.classList.remove('sel'); KidsGame.sound.tap(); } else if (sel.length < max) { sel.push(i); o.classList.add('sel'); KidsGame.sound.pop(); KidsGame.say(c.n); } else { KidsGame.toast('Máximo 3', 900); KidsGame.sound.wrong(); } });
+        row2.appendChild(o);
+      });
+      box.appendChild(row2);
+      box.appendChild(nextBtn('Listo ▶', function () { if (!sel.length) { KidsGame.toast(isC ? 'Elige un personaje' : 'Elige una cosa', 1000); KidsGame.sound.wrong(); return; } KidsGame.sound.tap(); B.step = isC ? 2 : (level >= 3 ? 3 : 4); renderStep(); }));
+      KidsGame.say(isC ? '¿Quiénes salen en tu cuento?' : '¿Qué cosas llevan?');
+    } else if (B.step === 3) {
+      box.appendChild(stepTitle('¿Qué pasa primero, después y al final?'));
+      var seq = el('div', 'seq'), names = ['1 Inicio', '2 Medio', '3 Final'], sqs = [];
+      for (var q = 0; q < 3; q++) { var sq = el('div', 'sq', names[q]); sqs.push(sq); seq.appendChild(sq); }
+      box.appendChild(seq); var row3 = el('div', 'row'), evs = [];
+      function refresh() { for (var j = 0; j < 3; j++) { var e = B.events[j]; sqs[j].textContent = e != null ? EVENTS[e].e + ' ' + EVENTS[e].t.replace('{P}', 'algo') : names[j]; sqs[j].classList.toggle('on', e != null); } evs.forEach(function (o, i) { o.classList.toggle('used', B.events.indexOf(i) >= 0); }); }
+      EVENTS.forEach(function (ev, i) { var o = el('div', 'ev card'); o.innerHTML = '<span class="emoji">' + ev.e + '</span><span>' + ev.t.replace('{P}', 'algo') + '</span>';
+        onTap(o, function () { var k = B.events.indexOf(i); if (k >= 0) { B.events.splice(k, 1); KidsGame.sound.tap(); } else if (B.events.length < 3) { B.events.push(i); KidsGame.sound.pop(); KidsGame.say(ev.t.replace('{P}', 'algo')); } else { KidsGame.toast('Ya tienes 3', 900); KidsGame.sound.wrong(); } refresh(); });
+        evs.push(o); row3.appendChild(o); });
+      box.appendChild(row3); refresh();
+      box.appendChild(nextBtn('Listo ▶', function () { if (B.events.length < 3) { KidsGame.toast('Elige inicio, medio y final', 1200); KidsGame.sound.wrong(); return; } KidsGame.sound.tap(); B.step = 4; renderStep(); }));
+      KidsGame.say('Elige qué pasa primero, qué pasa después y qué pasa al final.');
+    } else { wrap.appendChild(buildStage()); return; }
+    wrap.appendChild(box);
+  }
+  function buildStage() {
+    var frag = document.createDocumentFragment();
+    stageBox = el('div', 'stagebox'); stageBox.innerHTML = stageSvg(SCENES[B.scene].bg); stageBox.firstChild.setAttribute('class', 'bg');
+    storyEl = el('div', 'story'); stageBox.appendChild(storyEl);
+    B.actors = [];
+    var all = B.chars.map(function (i) { return { kind: 'char', i: i, e: CHARS[i].e }; }).concat(B.props.map(function (i) { return { kind: 'prop', i: i, e: PROPS[i].e }; }));
+    all.forEach(function (a, k) { addActor(a, 18 + (k * 64 / Math.max(1, all.length - 1)) * (all.length > 1 ? 1 : 0) + (all.length === 1 ? 32 : 0), a.kind === 'char' ? 55 : 72); });
+    if (B.twist >= 0) addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 28);
+    frag.appendChild(stageBox);
+    var bar = el('div', 'bar panel');
+    var twBtn = el('button', 'btn purple', '🎲 Sorpresa'), tellBtn = el('button', 'btn green', '📖 Contar'), saveBtn = el('button', 'btn blue', '💾'), newBtn = el('button', 'btn yellow', '🔁 Otro');
+    starBtn = el('button', 'btn yellow', '⭐'); starBtn.classList.add('off');
+    onTap(twBtn, doTwist); onTap(tellBtn, tell); onTap(saveBtn, saveStory); onTap(starBtn, giveStar); onTap(newBtn, function () { KidsGame.sound.tap(); startB(); });
+    bar.appendChild(twBtn); bar.appendChild(tellBtn); bar.appendChild(starBtn); bar.appendChild(saveBtn); bar.appendChild(newBtn);
+    var shelf = el('div', 'shelf'); renderShelf(shelf); bar.appendChild(shelf);
+    frag.appendChild(bar);
+    KidsGame.say('Acomoda a los personajes. Luego toca Contar.');
+    return frag;
+  }
+  function addActor(a, px, py) {
+    var d = el('div', 'actor ' + a.kind); d.innerHTML = '<span class="emoji">' + a.e + '</span>'; d.style.left = px + '%'; d.style.top = py + '%'; d.style.animationDelay = (-Math.random() * 3) + 's';
+    var act = { a: a, el: d, x: px, y: py }; B.actors.push(act); stageBox.appendChild(d);
+    d.addEventListener('pointerdown', function (e) { if (busy) return; e.preventDefault(); e.stopPropagation(); dragging = { act: act, id: e.pointerId }; d.style.zIndex = 5; KidsGame.sound.tap(); });
+    return act;
+  }
+  document.addEventListener('pointermove', function (e) {
+    if (!dragging || !dragging.act || e.pointerId !== dragging.id) return; e.preventDefault();
+    var r = stageBox.getBoundingClientRect(), x = Math.max(4, Math.min(96, (e.clientX - r.left) / r.width * 100)), y = Math.max(8, Math.min(92, (e.clientY - r.top) / r.height * 100));
+    dragging.act.x = x; dragging.act.y = y; dragging.act.el.style.left = x + '%'; dragging.act.el.style.top = y + '%';
+  });
+  document.addEventListener('pointerup', function (e) { if (dragging && dragging.act && e.pointerId === dragging.id) { dragging.act.el.style.zIndex = ''; dragging = null; KidsGame.sound.pop(); } });
+  function doTwist() {
+    if (busy) return; var old = B.twist; while (B.twist === old) B.twist = KidsGame.rand(TWISTS.length);
+    B.actors = B.actors.filter(function (a) { if (a.a.kind === 'twist') { a.el.remove(); return false; } return true; });
+    var act = addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 28); act.el.classList.add('pop');
+    var r = act.el.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 16);
+    KidsGame.sound.win(); KidsGame.say(TWISTS[B.twist].t);
+  }
+  function listNames(arr, LIST) { var n = arr.map(function (i) { return LIST[i].n; }); return n.length > 1 ? n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1] : n[0]; }
+  function actorsOf(kind, idx) { return B.actors.filter(function (a) { return a.a.kind === kind && (idx == null || a.a.i === idx); }).map(function (a) { return a.el; }); }
+  function compose() {
+    var sc = SCENES[B.scene], segs = [];
+    segs.push({ t: KidsGame.pick(sc.intro).replace('{L}', sc.lugar) + ' ' + (B.chars.length > 1 ? 'vivían ' : 'vivía ') + listNames(B.chars, CHARS) + '.', el: actorsOf('char') });
+    segs.push({ t: (B.chars.length > 1 ? 'Tenían ' : 'Tenía ') + listNames(B.props, PROPS) + '.', el: actorsOf('prop') });
+    var evs = B.events.length ? B.events : KidsGame.shuffle(EVENTS.map(function (e, i) { return i; })).slice(0, 2);
+    var conn = ['Primero, ', 'Después, ', 'Al final, '];
+    evs.forEach(function (ei, k) { segs.push({ t: conn[k] + EVENTS[ei].t.replace('{P}', PROPS[B.props[0]].n) + '.', el: actorsOf('char') }); });
+    if (B.twist >= 0) { segs.push({ t: TWISTS[B.twist].t, el: actorsOf('twist') }); segs.push({ t: 'Pero con ' + PROPS[B.props[B.props.length - 1]].n + ' lo arreglaron todo.', el: actorsOf('prop', B.props[B.props.length - 1]) }); }
+    segs.push({ t: KidsGame.pick(ENDINGS), el: actorsOf('char') });
+    B.segs = segs; B.text = segs.map(function (s) { return s.t; }).join(' ');
+  }
+  function tell() {
+    if (busy) return; compose(); busy = true; var i = 0;
+    B.timers.forEach(clearTimeout); B.timers = [];
+    storyEl.style.display = 'block';
+    KidsGame.say(B.text);
+    (function step() {
+      B.actors.forEach(function (a) { a.el.classList.remove('hl'); });
+      if (i >= B.segs.length) { busy = false; storyEl.innerHTML = B.text; starBtn.classList.remove('off'); starBtn.classList.add('bounce'); return; }
+      var s = B.segs[i]; s.el.forEach(function (e) { e.classList.add('hl'); });
+      storyEl.innerHTML = B.segs.map(function (q, k) { return k === i ? '<b>' + q.t + '</b>' : q.t; }).join(' ');
+      i++; B.timers.push(setTimeout(step, sayDur(s.t)));
+    })();
+  }
+  function giveStar() {
+    if (B.starred || !B.text) { if (!B.text) { KidsGame.toast('Primero toca 📖 Contar', 1200); } KidsGame.sound.wrong(); return; }
+    B.starred = true; starBtn.classList.remove('bounce'); starBtn.classList.add('off'); KidsGame.addStar(); KidsGame.sound.win(); KidsGame.confetti(40);
+    var r = stageBox.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 30); KidsGame.say('¡Qué cuento tan bonito!');
+  }
+  function loadStories() { try { return JSON.parse(localStorage.getItem('kg-historia-cuentos') || '[]'); } catch (e) { return []; } }
+  function saveStory() {
+    if (!B.text) { KidsGame.toast('Primero toca 📖 Contar', 1200); KidsGame.sound.wrong(); return; }
+    var list = loadStories(); list.unshift({ scene: B.scene, chars: B.chars, props: B.props, events: B.events, twist: B.twist, text: B.text, pos: B.actors.map(function (a) { return [a.a.kind, a.a.i, Math.round(a.x), Math.round(a.y)]; }) });
+    if (list.length > 5) list.length = 5;
+    try { localStorage.setItem('kg-historia-cuentos', JSON.stringify(list)); } catch (e) {}
+    KidsGame.sound.ok(); KidsGame.toast('Cuento guardado 💾', 1200); KidsGame.say('Guardado');
+    var sh = wrap.querySelector('.shelf'); if (sh) renderShelf(sh);
+  }
+  function renderShelf(sh) {
+    sh.innerHTML = ''; var list = loadStories();
+    for (var i = 0; i < 5; i++) (function (i) { var d = el('div', 'sv', list[i] ? SCENES[list[i].scene].e : '·'); if (list[i]) onTap(d, function () { loadStory(list[i]); }); sh.appendChild(d); })(i);
+  }
+  function loadStory(s) {
+    B = { step: 4, scene: s.scene, chars: s.chars, props: s.props, events: s.events || [], twist: s.twist, text: '', segs: [], actors: [], starred: true, timers: [] };
+    wrap.innerHTML = ''; wrap.appendChild(buildStage());
+    if (s.pos) s.pos.forEach(function (p) { B.actors.forEach(function (a) { if (a.a.kind === p[0] && a.a.i === p[1]) { a.x = p[2]; a.y = p[3]; a.el.style.left = p[2] + '%'; a.el.style.top = p[3] + '%'; } }); });
+    KidsGame.sound.pop(); setTimeout(tell, 300);
+  }
+
+  onTap(lvlBtn, function () { KidsGame.sound.tap(); B.timers.forEach(clearTimeout); pickLevel(); });
+  onTap(playBtn, checkA);
+  onTap(modeBtn, function () { KidsGame.sound.tap(); B.timers.forEach(clearTimeout); if (mode === 'A') startB(); else startA(); });
+  window.addEventListener('resize', layoutA);
+
+  window.__hs = {
+    get mode() { return mode; }, get level() { return level; }, get story() { return story; }, get slots() { return slots; }, get cards() { return cards; }, get B() { return B; }, get busy() { return busy; },
+    cardRect: function (k) { var r = cards[k].el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; },
+    slotRect: function (k) { var r = slots[k].el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; },
+    solve: function (wrongOne) { cards.forEach(function (c) { if (c.slot >= 0) toTray(c); }); cards.forEach(function (c) { if (c.d.i >= 0) place(c, slots[c.d.i]); }); if (wrongOne && slots.length > 1) { var a = slots[0].card, b = slots[1].card; toTray(a); toTray(b); place(a, slots[1]); place(b, slots[0]); } },
+    check: checkA, startB: startB, startA: startA, tell: tell, save: saveStory, star: giveStar, twist: doTwist,
+    setB: function (sc, ch, pr, ev) { B.scene = sc; B.chars = ch; B.props = pr; B.events = ev || []; B.step = 4; renderStep(); },
+    set: function (l) { level = l; order = STORIES.slice(); round = 0; startA(); }
+  };
+  pickLevel();
+})();
+</script>
+</body>
+</html>

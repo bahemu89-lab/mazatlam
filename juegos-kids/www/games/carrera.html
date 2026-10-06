@@ -305,6 +305,7 @@ var game = KidsGame.init({ title: 'Carrera' });
   // ---------- dibujo ----------
   function emoji(em, x, y, size, alpha) {
     ctx.save(); if (alpha != null) ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#000';
     ctx.font = Math.round(size) + 'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(em, x, y); ctx.restore();
@@ -524,7 +525,7 @@ var game = KidsGame.init({ title: 'Carrera' });
   function pickLevel() {
     KidsGame.levelPicker({ labels: { 1: 'Lento, salta', 2: 'Más rápido, 2 obstáculos', 3: 'Rápido y agáchate 🐦', 4: 'Puertas de sumas y letras' }, onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); pickHero(); } });
   }
-  window.__kgTest = function () { return { ents: ents, P: P, setLane: setLane, stars: function () { return stars; }, correct: function () { return correct; }, gatesDone: function () { return gatesDone; } }; };
+  window.__kgTest = function () { return { alpha: function () { return ctx.globalAlpha; }, ents: ents, P: P, setLane: setLane, stars: function () { return stars; }, correct: function () { return correct; }, gatesDone: function () { return gatesDone; } }; };
   setBadge();
   pickLevel();
 })();
