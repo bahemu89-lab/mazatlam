@@ -52,7 +52,7 @@
   .actor.twist { width: 110px; height: 110px; margin: -55px 0 0 -55px; } .actor.twist .emoji { font-size: 70px; }
   .bar { flex: 0 0 auto; display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-radius: 24px; }
   .bar .btn { font-size: 22px; padding: 8px 16px; }
-  .story { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; padding: 10px 16px; border-radius: 18px; font-size: 20px; color: #1f2f6b; line-height: 1.25; max-height: 42%; overflow: hidden;
+  .story { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; padding: 8px 14px; border-radius: 18px; font-size: 18px; color: #1f2f6b; line-height: 1.22; max-height: 34%; overflow: hidden;
     background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.94)); box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: none; }
   .story b { color: #e4458f; }
   .seq { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
@@ -241,11 +241,11 @@
   var wrap = el('div', 'wrap');
   game.appendChild(hud); game.appendChild(wrap);
 
-  var level = 1, mode = 'A', round = 0, order = [], story = null, cards = [], slots = [], busy = false, dragging = null;
+  var level = 1, mode = 'A', round = 0, order = [], story = null, cards = [], slots = [], busy = false, dragging = null, playT = null;
   var slotsEl = null, trayEl = null;
 
   function pickLevel() {
-    busy = true; wrap.innerHTML = '';
+    busy = true; wrap.innerHTML = ''; clearTimeout(playT);
     KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; round = 0; order = KidsGame.shuffle(STORIES); mode = 'A'; startA(); } });
   }
   function setHud() {
@@ -255,7 +255,7 @@
   }
   // ---------- Parte A: ordena la historia ----------
   function startA() {
-    busy = false; dragging = null; mode = 'A'; wrap.innerHTML = '';
+    busy = false; dragging = null; mode = 'A'; wrap.innerHTML = ''; clearTimeout(playT);
     story = order[round % order.length];
     var idx = PICKS[level], list = idx.map(function (i, k) { var c = story.cards[i]; return { i: k, e: c.e, c: c.c, t: c.t, bg: story.bg }; });
     if (level === 4) list.push({ i: -1, e: story.x.e, c: story.x.c, t: '', bg: story.x.bg });
@@ -275,7 +275,7 @@
   function layoutA() {
     if (!slotsEl) return;
     var W = wrap.clientWidth - 24, n = slots.length, portrait = game.clientHeight > game.clientWidth;
-    var cw = Math.min(portrait ? 150 : 180, Math.floor((W - (n - 1) * 10) / n)), ch = Math.round(cw * 0.78);
+    var cw = Math.min(n <= 4 ? 230 : (portrait ? 150 : 190), Math.floor((W - (n - 1) * 10) / n)), ch = Math.round(cw * 0.78);
     var Hh = wrap.clientHeight;
     if (ch * 2 + 80 > Hh) { ch = Math.floor((Hh - 90) / 2); cw = Math.round(ch / 0.78); }
     slots.forEach(function (s) { s.el.style.width = cw + 'px'; s.el.style.height = ch + 'px'; });
@@ -326,7 +326,7 @@
       if (i >= slots.length) { finishA(); return; }
       var s = slots[i]; s.el.classList.add('play'); var t = s.card.d.t; KidsGame.say(t);
       var r = s.el.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 8);
-      i++; setTimeout(step, sayDur(t));
+      i++; playT = setTimeout(step, sayDur(t));
     })();
   }
   function finishA() {
@@ -340,7 +340,7 @@
   var B = { step: 0, scene: -1, chars: [], props: [], events: [], twist: -1, text: '', segs: [], actors: [], starred: false, timers: [] };
   var stageBox = null, storyEl = null, starBtn = null;
   function startB() {
-    busy = false; dragging = null; mode = 'B'; wrap.innerHTML = ''; slotsEl = null; trayEl = null;
+    busy = false; dragging = null; mode = 'B'; wrap.innerHTML = ''; slotsEl = null; trayEl = null; clearTimeout(playT);
     B = { step: 0, scene: -1, chars: [], props: [], events: [], twist: -1, text: '', segs: [], actors: [], starred: false, timers: [] };
     setHud(); renderStep();
   }
@@ -384,8 +384,8 @@
     storyEl = el('div', 'story'); stageBox.appendChild(storyEl);
     B.actors = [];
     var all = B.chars.map(function (i) { return { kind: 'char', i: i, e: CHARS[i].e }; }).concat(B.props.map(function (i) { return { kind: 'prop', i: i, e: PROPS[i].e }; }));
-    all.forEach(function (a, k) { addActor(a, 18 + (k * 64 / Math.max(1, all.length - 1)) * (all.length > 1 ? 1 : 0) + (all.length === 1 ? 32 : 0), a.kind === 'char' ? 55 : 72); });
-    if (B.twist >= 0) addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 28);
+    all.forEach(function (a, k) { addActor(a, 18 + (k * 64 / Math.max(1, all.length - 1)) * (all.length > 1 ? 1 : 0) + (all.length === 1 ? 32 : 0), a.kind === 'char' ? 36 : 58); });
+    if (B.twist >= 0) addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 16);
     frag.appendChild(stageBox);
     var bar = el('div', 'bar panel');
     var twBtn = el('button', 'btn purple', '🎲 Sorpresa'), tellBtn = el('button', 'btn green', '📖 Contar'), saveBtn = el('button', 'btn blue', '💾'), newBtn = el('button', 'btn yellow', '🔁 Otro');
@@ -412,7 +412,7 @@
   function doTwist() {
     if (busy) return; var old = B.twist; while (B.twist === old) B.twist = KidsGame.rand(TWISTS.length);
     B.actors = B.actors.filter(function (a) { if (a.a.kind === 'twist') { a.el.remove(); return false; } return true; });
-    var act = addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 28); act.el.classList.add('pop');
+    var act = addActor({ kind: 'twist', i: B.twist, e: TWISTS[B.twist].e }, 50, 16); act.el.classList.add('pop');
     var r = act.el.getBoundingClientRect(); sparkle(r.left + r.width / 2, r.top + r.height / 2, 16);
     KidsGame.sound.win(); KidsGame.say(TWISTS[B.twist].t);
   }
