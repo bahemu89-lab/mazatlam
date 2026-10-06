@@ -77,6 +77,17 @@
     box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: flex; align-items: center; gap: 12px; animation: pop .4s ease-out; white-space: nowrap; }
   .hint .emoji { font-size: 40px; animation: bounce .7s infinite; }
   .hint svg { width: 80px; height: 48px; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
+  /* Nivel Experto: peces con número, cubeta que se derrama, objetivo numérico */
+  .fish text { font-family: var(--font); font-weight: 900; font-size: 36px; fill: #fff; stroke: #1f2f6b; stroke-width: 3px; paint-order: stroke; text-anchor: middle; dominant-baseline: central; }
+  .prog .tgt.math { flex-direction: column; width: auto; min-width: 78px; height: auto; line-height: 1; }
+  .prog .tgt .num { font-size: 34px; font-weight: 900; color: #ff3d7f; text-shadow: 0 1px 0 #fff; }
+  .prog .tgt .lab { font-size: 13px; font-weight: 900; color: #6b7a99; white-space: nowrap; }
+  .prog .cnt .sets { font-size: 16px; margin-left: 6px; letter-spacing: 1px; }
+  .bucket.spill { animation: spill 1.2s ease-in-out; }
+  @keyframes spill { 0% { transform: rotate(0); } 25% { transform: rotate(-75deg) translateY(-8px); } 70% { transform: rotate(-75deg) translateY(-8px); } 100% { transform: rotate(0); } }
+  .drop { position: absolute; z-index: 9; pointer-events: none; font-size: 30px; animation: dropfall .9s ease-in forwards; }
+  @keyframes dropfall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), 160px) rotate(200deg); opacity: 0; } }
+  .hint .num { font-size: 40px; font-weight: 900; color: #ff3d7f; }
 </style>
 </head>
 <body>
@@ -95,8 +106,12 @@ var game = KidsGame.init({ title: 'Pesca' });
   var CFG = [null,
     { size: 1.35, vmin: 40,  vmax: 75,  count: 5, mode: 'any',    drop: 300, octo: false },
     { size: 1.0,  vmin: 65,  vmax: 115, count: 6, mode: 'color',  drop: 340, octo: false },
-    { size: 0.72, vmin: 115, vmax: 185, count: 7, mode: 'rotate', drop: 400, octo: true }
+    { size: 0.72, vmin: 115, vmax: 185, count: 7, mode: 'rotate', drop: 400, octo: true },
+    { size: 0.9,  vmin: 70,  vmax: 125, count: 7, mode: 'math',   drop: 380, octo: false }
   ];
+  // Nivel Experto: rondas que rotan entre suma exacta, orden ascendente y solo pares
+  var MATH = ['sum', 'asc', 'even'];
+  var mround = 0, math = null;
   var NEED = 10;
   var nivel = 1, cfg = CFG[1], running = false, target = null, caught = 0, sinceChange = 0;
   var W = 0, H = 0, waterTop = 0, scale = 1, fishes = [], octo = null;
@@ -171,8 +186,9 @@ var game = KidsGame.init({ title: 'Pesca' });
   var tgtEl = prog.querySelector('.tgt'), cntEl = prog.querySelector('.cnt');
   lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; pickLevel(); });
 
-  function fishSVG(col, stripes) {
+  function fishSVG(col, stripes, num, mirrored) {
     var g = 'url(#g-' + col.id + ')', d = col.d;
+    var numTxt = num != null ? '<text x="52" y="38"' + (mirrored ? ' transform="translate(104,0) scale(-1,1)"' : '') + '>' + num + '</text>' : '';
     return '<svg viewBox="-4 -8 130 86">' +
       '<path d="M92 35 L 122 8 L 114 35 L 122 62 Z" fill="' + d + '"/><path d="M98 35 L 118 16 L 112 35 L 118 54 Z" fill="' + col.b + '" opacity=".5"/>' +
       '<path d="M38 14 Q 56 -10 76 14 Z" fill="' + d + '"/>' +
@@ -182,7 +198,7 @@ var game = KidsGame.init({ title: 'Pesca' });
       '<ellipse cx="46" cy="21" rx="24" ry="8" fill="rgba(255,255,255,.45)"/>' +
       '<circle cx="26" cy="30" r="9" fill="#fff"/><circle cx="24" cy="31" r="4.5" fill="#222"/><circle cx="22" cy="28" r="1.8" fill="#fff"/>' +
       '<path d="M11 41 Q 15 46 20 42" fill="none" stroke="' + d + '" stroke-width="2.5" stroke-linecap="round"/>' +
-      '</svg>';
+      numTxt + '</svg>';
   }
   function anySVG() {
     return '<svg viewBox="-4 -8 130 86"><path d="M92 35 L 122 8 L 114 35 L 122 62 Z" fill="#5232b3"/><path d="M38 14 Q 56 -10 76 14 Z" fill="#a4202c"/><ellipse cx="55" cy="35" rx="46" ry="26" fill="url(#g-any)"/><ellipse cx="46" cy="21" rx="24" ry="8" fill="rgba(255,255,255,.45)"/><circle cx="26" cy="30" r="9" fill="#fff"/><circle cx="24" cy="31" r="4.5" fill="#222"/><circle cx="22" cy="28" r="1.8" fill="#fff"/></svg>';
@@ -208,15 +224,21 @@ var game = KidsGame.init({ title: 'Pesca' });
   }
   function placeFish(f) { f.el.style.transform = 'translate(' + (f.x - f.w / 2) + 'px,' + (f.y - f.h / 2) + 'px)'; }
 
+  function fishNumber() {
+    if (math.kind === 'sum') { var rest = math.target - math.sum; if (rest >= 1 && rest <= 6 && Math.random() < 0.4) return rest; return 1 + KidsGame.rand(6); }
+    if (math.kind === 'asc') { if (Math.random() < 0.4) return math.next; return 1 + KidsGame.rand(6); }
+    return 1 + KidsGame.rand(9);
+  }
   function spawnFish(fromSide) {
-    var col;
-    if (cfg.mode !== 'any' && target && Math.random() < 0.42) col = target; else col = KidsGame.pick(COLORS);
+    var col, num = null;
+    if (cfg.mode !== 'any' && cfg.mode !== 'math' && target && Math.random() < 0.42) col = target; else col = KidsGame.pick(COLORS);
+    if (cfg.mode === 'math' && math) num = fishNumber();
     var w = 120 * cfg.size * scale * (0.85 + Math.random() * 0.3), h = w * 70 / 120;
     var dir = fromSide != null ? fromSide : (Math.random() < 0.5 ? 1 : -1);
     var el = document.createElement('div'); el.className = 'fish ' + (dir > 0 ? 'r' : 'l');
     el.style.width = w + 'px'; el.style.height = h + 'px';
-    el.innerHTML = fishSVG(col, Math.random() < 0.5);
-    var f = { el: el, col: col, w: w, h: h, dir: dir, v: (cfg.vmin + Math.random() * (cfg.vmax - cfg.vmin)) * scale,
+    el.innerHTML = fishSVG(col, num == null && Math.random() < 0.5, num, dir > 0);
+    var f = { el: el, col: col, num: num, w: w, h: h, dir: dir, v: (cfg.vmin + Math.random() * (cfg.vmax - cfg.vmin)) * scale,
       x: dir > 0 ? -w : W + w, y: waterTop + 60 * scale + Math.random() * (H - waterTop - 60 * scale - H * 0.12 - h), phase: Math.random() * 6, flee: 0 };
     game.appendChild(el); fishes.push(f); placeFish(f);
     return f;
@@ -321,9 +343,61 @@ var game = KidsGame.init({ title: 'Pesca' });
     }, 1300);
   }
 
+  function toBucket(f) {
+    var br = bucket.getBoundingClientRect(), gr = game.getBoundingClientRect();
+    var bx = br.left - gr.left + br.width / 2, by = br.top - gr.top + br.height / 2;
+    f.el.className = 'fish tobucket';
+    f.el.style.transform = 'translate(' + (bx - f.w / 2) + 'px,' + (by - f.h / 2) + 'px) scale(.3)';
+    (function (el) { setTimeout(function () { el.remove(); }, 700); })(f.el);
+    fishes = fishes.filter(function (x) { return x !== f; });
+    KidsGame.sound.pop(); KidsGame.vibrate(25);
+    sparks(hook.x, hook.y); bucket.classList.remove('bump'); void bucket.offsetWidth; bucket.classList.add('bump');
+  }
+  function release(f, txt, sayTxt) {
+    KidsGame.sound.wrong(); splash(hook.x, waterTop, 16);
+    floatText(txt || '¡Ese no!', hook.x, waterTop - 30);
+    if (sayTxt) KidsGame.say(sayTxt);
+    f.el.className = 'fish ' + (f.dir > 0 ? 'r' : 'l'); f.y = waterTop + 50 * scale; f.flee = 1.6; placeFish(f);
+  }
+  function spillBucket() {
+    bucket.classList.remove('spill'); void bucket.offsetWidth; bucket.classList.add('spill');
+    var br = bucket.getBoundingClientRect(), gr = game.getBoundingClientRect();
+    for (var i = 0; i < 6; i++) {
+      var d = document.createElement('div'); d.className = 'drop emoji'; d.textContent = i % 2 ? '🐟' : '💦';
+      d.style.left = (br.left - gr.left + 10) + 'px'; d.style.top = (br.top - gr.top + 20) + 'px'; d.style.setProperty('--dx', (-30 - Math.random() * 90) + 'px'); d.style.animationDelay = (i * 0.07) + 's';
+      game.appendChild(d); (function (el) { setTimeout(function () { el.remove(); }, 1200); })(d);
+    }
+    KidsGame.sound.wrong(); setTimeout(KidsGame.sound.pop, 250); setTimeout(KidsGame.sound.pop, 450);
+    floatText('¡Splash! 💦 Se derramó', W / 2, waterTop - 30);
+    KidsGame.say('¡Uy! Te pasaste. Se derramó la cubeta');
+  }
+  function resolveMath(f) {
+    var n = f.num;
+    if (math.kind === 'sum') {
+      if (math.sum + n > math.target) { toBucket(f); math.sum = 0; bucketN.textContent = '0'; setTimeout(spillBucket, 500); renderHud(); return; }
+      toBucket(f); math.sum += n; caught++; bucketN.textContent = math.sum; KidsGame.addStar();
+      floatText('+' + n + ' = ' + math.sum, hook.x, waterTop - 30);
+      if (math.sum === math.target) {
+        math.sets++; KidsGame.sound.ok(); KidsGame.addStar(2); floatText('¡' + math.target + '! ⭐', W / 2, waterTop + 40);
+        renderHud();
+        if (math.sets >= 3) { finish(); return; }
+        setTimeout(function () { math.sum = 0; bucketN.textContent = '0'; newSumTarget(true); }, 900);
+      } else renderHud();
+    } else if (math.kind === 'asc') {
+      if (n !== math.next) { release(f, '¡Ese no! Busca el ' + math.next, 'Ese no. Busca el ' + math.next); return; }
+      toBucket(f); caught++; math.next++; KidsGame.addStar(); bucketN.textContent = caught; renderHud();
+      if (math.next > 6) { finish(); return; }
+      KidsGame.say('Ahora el ' + math.next);
+    } else {
+      if (n % 2 !== 0) { release(f, n + ' es impar ✖', 'El ' + n + ' es impar. Solo pares'); return; }
+      toBucket(f); caught++; KidsGame.addStar(); bucketN.textContent = caught; floatText(n + ' es par ✔', hook.x, waterTop - 30); renderHud();
+      if (caught >= NEED) { finish(); return; }
+    }
+  }
   function resolve() {
     var f = hook.fish; hook.fish = null; hook.state = 'idle';
     if (!f) return;
+    if (cfg.mode === 'math') { resolveMath(f); return; }
     if (isTarget(f)) {
       var br = bucket.getBoundingClientRect(), gr = game.getBoundingClientRect();
       var bx = br.left - gr.left + br.width / 2, by = br.top - gr.top + br.height / 2;
@@ -345,9 +419,30 @@ var game = KidsGame.init({ title: 'Pesca' });
   }
 
   function renderHud() {
-    cntEl.innerHTML = caught + '<small>/ ' + NEED + '</small>';
-    tgtEl.innerHTML = cfg.mode === 'any' ? anySVG() : fishSVG(target, false);
+    tgtEl.classList.toggle('math', cfg.mode === 'math');
+    if (cfg.mode === 'math' && math) {
+      if (math.kind === 'sum') { tgtEl.innerHTML = '<span class="lab">suma</span><span class="num">' + math.target + '</span>'; var dots = ''; for (var i = 0; i < 3; i++) dots += i < math.sets ? '⭐' : '☆'; cntEl.innerHTML = math.sum + '<small>/ ' + math.target + '</small><span class="sets">' + dots + '</span>'; }
+      else if (math.kind === 'asc') { tgtEl.innerHTML = '<span class="lab">sigue el</span><span class="num">' + math.next + '</span>'; cntEl.innerHTML = caught + '<small>/ 6</small>'; }
+      else { tgtEl.innerHTML = '<span class="lab">solo pares</span><span class="num">2 4 6 8</span>'; cntEl.innerHTML = caught + '<small>/ ' + NEED + '</small>'; }
+    } else {
+      cntEl.innerHTML = caught + '<small>/ ' + NEED + '</small>';
+      tgtEl.innerHTML = cfg.mode === 'any' ? anySVG() : fishSVG(target, false);
+    }
     tgtEl.classList.remove('pop'); void tgtEl.offsetWidth; tgtEl.classList.add('pop');
+  }
+  function newSumTarget(announce) {
+    var lo = mround < 3 ? 6 : 8, hi = mround < 3 ? 9 : 12;
+    var t = lo + KidsGame.rand(hi - lo + 1); while (t === math.target) t = lo + KidsGame.rand(hi - lo + 1);
+    math.target = t; renderHud();
+    if (announce) { showHint('Ahora suma <span class="num">' + t + '</span>', 2000); KidsGame.say('Ahora pesca peces que sumen ' + t); }
+  }
+  function startMath() {
+    var kind = MATH[mround % MATH.length];
+    math = { kind: kind, sum: 0, target: 0, sets: 0, next: 1 };
+    if (kind === 'sum') { newSumTarget(false); showHint('🪣 Pesca peces que sumen <span class="num">' + math.target + '</span>', 2600); KidsGame.say('Pesca peces que sumen ' + math.target + '. Si te pasas, la cubeta se derrama'); }
+    else if (kind === 'asc') { showHint('🔢 Pesca del <span class="num">1</span> al <span class="num">6</span> en orden', 2600); KidsGame.say('Pesca los peces en orden: primero el uno, luego el dos, hasta el seis'); }
+    else { showHint('Solo peces <span class="num">PARES</span>: 2, 4, 6, 8', 2600); KidsGame.say('Pesca solo los peces con número par: dos, cuatro, seis y ocho'); }
+    renderHud();
   }
   function setTarget(announce) {
     var others = COLORS.filter(function (c) { return c !== target; });
@@ -363,6 +458,7 @@ var game = KidsGame.init({ title: 'Pesca' });
     hookEl.classList.remove('tickle');
     layout();
     if (cfg.mode === 'any') { target = null; renderHud(); showHint('<span class="emoji">👆</span> ¡Toca para pescar!', 2000); KidsGame.say('Toca para pescar'); }
+    else if (cfg.mode === 'math') { target = null; startMath(); }
     else { target = null; setTarget(false); showHint('Pesca los ' + fishSVG(target, false), 2200); KidsGame.say('Pesca los peces ' + target.say); }
     for (var i = 0; i < cfg.count; i++) { var f = spawnFish(); f.x = Math.random() * W; placeFish(f); }
     if (cfg.octo) spawnOcto();
@@ -370,16 +466,24 @@ var game = KidsGame.init({ title: 'Pesca' });
   }
   function finish() {
     running = false;
+    KidsGame.levelDone(nivel);
+    var sub = '🐟 ' + NEED + ' peces', msg;
+    if (cfg.mode === 'math') {
+      msg = math.kind === 'sum' ? '¡Sumas de ' + math.target + '!' : math.kind === 'asc' ? '¡Del 1 al 6 en orden!' : '¡Solo pares!';
+      sub = math.kind === 'sum' ? '🪣 3 cubetas exactas' : math.kind === 'asc' ? '🔢 1 2 3 4 5 6' : '✔ 2 4 6 8 · ' + caught + ' peces';
+      mround++;
+    }
     setTimeout(function () {
       KidsGame.celebrate({
-        sub: '🐟 ' + NEED + ' peces', stars: 3,
-        onAgain: function () { startRound(); },
-        onNext: function () { nivel = Math.min(3, nivel + 1); cfg = CFG[nivel]; setBadge(); startRound(); }
+        msg: msg, sub: sub, stars: 3,
+        onAgain: function () { if (cfg.mode === 'math') mround--; startRound(); },
+        onNext: function () { if (nivel < 4) { nivel = nivel + 1; cfg = CFG[nivel]; setBadge(); } startRound(); }
       });
     }, 500);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
-  function pickLevel() { KidsGame.levelPicker({ onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); startRound(); } }); }
+  function pickLevel() { KidsGame.levelPicker({ labels: { 1: 'Cualquier pez', 2: 'Por color', 3: 'Color que cambia + pulpo', 4: 'Suma, orden y pares 🔢' }, onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); startRound(); } }); }
+  window.__kgTest = function () { return { fishes: fishes, math: math, hook: hook, caught: function () { return caught; }, catchFish: function (f) { hook.fish = f; f.el.className = 'fish caught'; hook.state = 'reel'; hook.y = waterTop; resolve(); }, target: target, spawnFish: spawnFish }; };
 
   function frame(now) {
     if (!lastT) lastT = now;

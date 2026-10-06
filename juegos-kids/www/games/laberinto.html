@@ -31,6 +31,15 @@
     animation: goalpulse 1.1s ease-in-out infinite;
   }
   .piece.key .emoji { animation: float 2s ease-in-out infinite; }
+  /* Nivel Experto: llaves de color (abren la puerta del mismo color), diamante escondido y niebla */
+  .piece.key.colored::before { background: radial-gradient(circle, rgba(255,255,255,.95) 0, var(--kc) 42%, rgba(255,255,255,0) 72%); }
+  .hud .keys .k.colored { background: var(--kc); border-radius: 50%; padding: 3px; box-shadow: inset 0 0 0 2px #fff; }
+  .hud .keys .d { opacity: .35; filter: grayscale(1); transition: transform .3s, opacity .3s, filter .3s; margin-left: 4px; }
+  .hud .keys .d.got { opacity: 1; filter: none; animation: pop .4s ease-out; }
+  .piece.gem::before { content: ""; position: absolute; inset: 16%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.95) 0, rgba(120,220,255,.6) 45%, rgba(120,220,255,0) 72%); animation: goalpulse 1.3s ease-in-out infinite; }
+  .piece.gem .emoji { animation: float 1.8s ease-in-out infinite; }
+  .piece.gem.got { transition: transform .35s ease-in, opacity .35s; opacity: 0; }
+  .piece.hidden { visibility: hidden; }
   .piece.key.got { transition: transform .35s ease-in, opacity .35s; opacity: 0; }
   .piece.goal.locked .emoji { filter: grayscale(.7) opacity(.55); animation: none; }
   .piece.goal.locked::before { animation: none; opacity: .35; }
@@ -94,9 +103,14 @@
 <script>
 var game = KidsGame.init({ title: 'Laberinto' });
 (function () {
-  // Niveles: 1 = Fácil (5x5 → 7x7), 2 = Medio (9x9 → 11x9), 3 = Difícil (13x11 → 15x11 + 3 llaves)
-  var LEVELS = { 1: [[5, 5], [7, 7]], 2: [[9, 9], [11, 9]], 3: [[13, 11], [15, 11]] };
-  var nivel = 1, keys = [], keyEls = [], keysGot = 0, badgeEl = null;
+  // Niveles: 1 = Fácil (5x5 → 7x7), 2 = Medio (9x9 → 11x11), 3 = Difícil (13x13 → 15x13 + 3 llaves),
+  // 4 = Experto (15x15 → 17x15): llaves de color que abren puertas del mismo color, niebla (solo se ven 2 celdas
+  //     alrededor) y un 💎 escondido en un callejón sin salida (estrella extra)
+  var LEVELS = { 1: [[5, 5], [7, 7]], 2: [[9, 9], [11, 11]], 3: [[13, 13], [15, 13]], 4: [[15, 15], [17, 15]] };
+  var LABELS = { 1: '5×5 y 7×7', 2: '9×9 y 11×11', 3: '13×13 y 3 llaves', 4: 'Niebla, puertas y 💎' };
+  var KEYCOL = [['#e63946', 'roja'], ['#3da9fc', 'azul'], ['#2cb67d', 'verde']];
+  var FOG_R = 2;
+  var nivel = 1, keys = [], keyEls = [], keysGot = 0, badgeEl = null, doors = [], gem = null, gemEl = null, gemGot = false, fog = false;
   var CHARS = [ ['🐰', '🥕'], ['🐱', '🐟'], ['🐶', '🦴'] ];
   var WALLS = ['#f582ae', '#7f5af0', '#3da9fc', '#ff8906', '#2cb67d'];
   var TRAILS = ['#ff5fa0', '#6a4de0', '#1f8fe8', '#ff7a00', '#17a86a'];
@@ -106,6 +120,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
   function rgba(h, al) { return 'rgba(' + hexRgb(h).join(',') + ',' + al + ')'; }
 
   var level = 0, cols, rows, cells, px, py, gx, gy, trail, done = false, wallColor, trailColor;
+  function expert() { return nivel === 4; }
   var cell = 40, off = 0;
   var hud, lvlEl, whoEl, area, wrap, canvas, ctx, charEl, goalEl, pad;
   var dragging = false;
@@ -173,12 +188,15 @@ var game = KidsGame.init({ title: 'Laberinto' });
       cols = cfg[0]; rows = cfg[1];
       cells = gen(cols, rows);
       wallColor = WALLS[(level + nivel - 1) % WALLS.length]; trailColor = TRAILS[(level + nivel - 1) % TRAILS.length];
-      placeKeys(nivel === 3 ? 3 : 0);
+      fog = expert();
+      if (expert()) placeDoorsAndKeys(); else { doors = []; placeGem(null); placeKeys(nivel === 3 ? 3 : 0); }
     }
     px = 0; py = 0; gx = cols - 1; gy = rows - 1; done = false;
     trail = [[0, 0]];
     lvlEl.textContent = String(level + 1);
-    keysGot = 0; renderKeys();
+    keysGot = 0; gemGot = false; keys.forEach(function (k) { k[2] = false; }); doors.forEach(function (d) { d.open = false; });
+    keyEls.forEach(function (el) { el.classList.remove('got'); }); if (gemEl) gemEl.classList.remove('got');
+    renderKeys();
     whoEl.firstChild.textContent = ch[0]; whoEl.lastChild.textContent = ch[1];
     charEl.firstChild.textContent = ch[0];
     goalEl.firstChild.textContent = ch[1];
@@ -201,24 +219,134 @@ var game = KidsGame.init({ title: 'Laberinto' });
   }
   function renderKeys() {
     keysEl.classList.toggle('show', keys.length > 0);
-    keysEl.innerHTML = keys.map(function (k) { return '<span class="k emoji' + (k[2] ? ' got' : '') + '">🔑</span>'; }).join('');
-    goalEl.classList.toggle('locked', keys.length > 0 && keysGot < keys.length);
+    keysEl.innerHTML = keys.map(function (k) {
+      var col = k[3] != null ? ' colored" style="--kc:' + KEYCOL[k[3]][0] : '';
+      return '<span class="k emoji' + (k[2] ? ' got' : '') + col + '">🔑</span>';
+    }).join('') + (gem ? '<span class="d emoji' + (gemGot ? ' got' : '') + '">💎</span>' : '');
+    goalEl.classList.toggle('locked', !expert() && keys.length > 0 && keysGot < keys.length);
   }
   function showPicker() {
     done = true; dragging = false;
-    KidsGame.levelPicker({ key: 'laberinto', onPick: function (n) {
+    KidsGame.levelPicker({ key: 'laberinto', labels: LABELS, onPick: function (n) {
       nivel = n; level = 0;
       var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
       start(true);
-      KidsGame.say(nivel === 3 ? 'Junta las tres llaves y lleva al animalito hasta su comida' : 'Lleva al animalito hasta su comida');
+      KidsGame.say(nivel === 4 ? 'Hay niebla. Cada llave abre la puerta de su color. Busca el diamante escondido' :
+        nivel === 3 ? 'Junta las tres llaves y lleva al animalito hasta su comida' : 'Lleva al animalito hasta su comida');
     } });
+  }
+  // --- Experto: puertas de color en el camino y llaves antes de cada puerta ---
+  function doorAt(x, y, d) {
+    for (var i = 0; i < doors.length; i++) {
+      var o = doors[i];
+      if ((o.x === x && o.y === y && o.d === d) || (o.x === x + DX[d] && o.y === y + DY[d] && o.d === OPP[d])) return o;
+    }
+    return null;
+  }
+  function hasKey(col) { for (var i = 0; i < keys.length; i++) if (keys[i][2] && keys[i][3] === col) return true; return false; }
+  // Camino único (laberinto perfecto) de (0,0) a la meta
+  function solvePath() {
+    var q = [[0, 0]], prev = {}, seen = {}; seen['0,0'] = true;
+    while (q.length) {
+      var c = q.shift();
+      if (c[0] === cols - 1 && c[1] === rows - 1) break;
+      for (var d = 0; d < 4; d++) {
+        if (!open(c[0], c[1], d)) continue;
+        var nx = c[0] + DX[d], ny = c[1] + DY[d], k = nx + ',' + ny;
+        if (seen[k]) continue; seen[k] = true; prev[k] = [c[0], c[1], d]; q.push([nx, ny]);
+      }
+    }
+    var path = [], cur = [cols - 1, rows - 1];
+    while (!(cur[0] === 0 && cur[1] === 0)) { var pr = prev[cur[0] + ',' + cur[1]]; path.unshift({ x: cur[0], y: cur[1], from: pr[2] }); cur = [pr[0], pr[1]]; }
+    path.unshift({ x: 0, y: 0, from: -1 });
+    return path;
+  }
+  // Celdas alcanzables desde (sx,sy) sin cruzar puertas; devuelve mapa 'x,y' -> distancia
+  function region(sx, sy) {
+    var q = [[sx, sy]], dist = {}; dist[sx + ',' + sy] = 0;
+    while (q.length) {
+      var c = q.shift(), cd = dist[c[0] + ',' + c[1]];
+      for (var d = 0; d < 4; d++) {
+        if (!open(c[0], c[1], d) || doorAt(c[0], c[1], d)) continue;
+        var nx = c[0] + DX[d], ny = c[1] + DY[d], k = nx + ',' + ny;
+        if (dist[k] != null) continue; dist[k] = cd + 1; q.push([nx, ny]);
+      }
+    }
+    return dist;
+  }
+  function deadEnd(x, y) { var v = cells[y][x], n = 0; for (var b = 0; b < 4; b++) if (v & (1 << b)) n++; return n === 3; }
+  function placeDoorsAndKeys() {
+    keyEls.forEach(function (el) { el.remove(); }); keyEls = []; keys = []; doors = [];
+    var path = solvePath(), onPath = {}, i;
+    path.forEach(function (c) { onPath[c.x + ',' + c.y] = true; });
+    // Lo que queda "detrás" de la meta no sirve para llaves ni diamante (pisar la meta termina el laberinto)
+    var last = path[path.length - 1], beforeLast = path[path.length - 2];
+    (function () {
+      var q = [[last.x, last.y]], seen = {}; seen[last.x + ',' + last.y] = true; seen[beforeLast.x + ',' + beforeLast.y] = true;
+      while (q.length) {
+        var c = q.shift();
+        for (var d = 0; d < 4; d++) {
+          if (!open(c[0], c[1], d)) continue;
+          var nx = c[0] + DX[d], ny = c[1] + DY[d], k = nx + ',' + ny;
+          if (seen[k]) continue; seen[k] = true; onPath[k] = true; q.push([nx, ny]);
+        }
+      }
+    })();
+    var fr = [0.35, 0.6, 0.85], idx = fr.map(function (f) { return Math.max(1, Math.min(path.length - 2, Math.round(path.length * f))); });
+    for (i = 0; i < 3; i++) { var a = path[idx[i]], b = path[idx[i] + 1]; doors.push({ x: a.x, y: a.y, d: b.from, col: i, open: false }); }
+    var used = {};
+    for (i = 0; i < 3; i++) {
+      // La llave i vive en la zona que va de la puerta anterior a la puerta i (así siempre se puede conseguir)
+      var s0 = i === 0 ? path[0] : path[idx[i - 1] + 1];
+      var reg = region(s0.x, s0.y), best = null, bestScore = -1;
+      Object.keys(reg).forEach(function (k) {
+        var xy = k.split(','), x = +xy[0], y = +xy[1];
+        if (onPath[k] || used[k] || (x === 0 && y === 0)) return;
+        var sc = reg[k] + (deadEnd(x, y) ? 40 : 0) + Math.random() * 6;
+        if (sc > bestScore) { bestScore = sc; best = [x, y]; }
+      });
+      if (!best) best = [s0.x, s0.y];
+      used[best[0] + ',' + best[1]] = true;
+      keys.push([best[0], best[1], false, i]);
+    }
+    keys.forEach(function (k) {
+      var el = document.createElement('div'); el.className = 'piece key colored'; el.style.setProperty('--kc', KEYCOL[k[3]][0]); el.innerHTML = '<span class="emoji">🔑</span>';
+      wrap.insertBefore(el, goalEl); keyEls.push(el);
+    });
+    // Diamante: el callejón sin salida más lejano del camino, fuera de las llaves
+    var cand = [], far = region(0, 0);
+    doors.forEach(function (o) { var nx = o.x + DX[o.d], ny = o.y + DY[o.d]; var r2 = region(nx, ny); Object.keys(r2).forEach(function (k) { far[k] = r2[k] + 10; }); });
+    Object.keys(far).forEach(function (k) {
+      var xy = k.split(','), x = +xy[0], y = +xy[1];
+      if (onPath[k] || used[k] || !deadEnd(x, y) || (x === 0 && y === 0)) return;
+      cand.push([x, y, far[k]]);
+    });
+    cand.sort(function (a, b) { return b[2] - a[2]; });
+    placeGem(cand.length ? KidsGame.pick(cand.slice(0, 4)) : null);
+  }
+  function placeGem(c) {
+    if (gemEl) { gemEl.remove(); gemEl = null; }
+    gem = c ? [c[0], c[1]] : null;
+    if (gem) { gemEl = document.createElement('div'); gemEl.className = 'piece gem'; gemEl.innerHTML = '<span class="emoji">💎</span>'; wrap.insertBefore(gemEl, goalEl); }
+  }
+  // Niebla: solo se ve a 2 celdas del personaje
+  function visible(x, y) { return !fog || (Math.abs(x - px) <= FOG_R && Math.abs(y - py) <= FOG_R); }
+  function fogPieces() {
+    keys.forEach(function (k, i) { keyEls[i].classList.toggle('hidden', !visible(k[0], k[1])); });
+    if (gemEl) gemEl.classList.toggle('hidden', !visible(gem[0], gem[1]));
+    goalEl.classList.toggle('hidden', !visible(gx, gy));
   }
 
   function layout() {
     var W = area.clientWidth - 4, H = area.clientHeight - 4;
     if (W < 40 || H < 40) return;
     // Si la pantalla es vertical y el laberinto es ancho, lo giramos
-    if (W < H && cols > rows || W > H && rows > cols) { cells = transpose(cells); var t = cols; cols = rows; rows = t; t = px; px = py; py = t; t = gx; gx = gy; gy = t; trail = trail.map(function (p) { return [p[1], p[0]]; }); keys.forEach(function (k) { var kk = k[0]; k[0] = k[1]; k[1] = kk; }); }
+    if (W < H && cols > rows || W > H && rows > cols) {
+      cells = transpose(cells); var t = cols; cols = rows; rows = t; t = px; px = py; py = t; t = gx; gx = gy; gy = t; trail = trail.map(function (p) { return [p[1], p[0]]; });
+      keys.forEach(function (k) { var kk = k[0]; k[0] = k[1]; k[1] = kk; });
+      doors.forEach(function (o) { var oo = o.x; o.x = o.y; o.y = oo; o.d = 3 - o.d; });
+      if (gem) { var gg = gem[0]; gem[0] = gem[1]; gem[1] = gg; }
+    }
     cell = Math.floor(Math.min(W / cols, H / rows));
     off = Math.round(cell * 0.12);
     var cw = cell * cols + off * 2, chh = cell * rows + off * 2;
@@ -227,13 +355,14 @@ var game = KidsGame.init({ title: 'Laberinto' });
     canvas.style.width = cw + 'px'; canvas.style.height = chh + 'px';
     wrap.style.width = cw + 'px'; wrap.style.height = chh + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    [charEl, goalEl].concat(keyEls).forEach(function (el) {
+    [charEl, goalEl].concat(keyEls).concat(gemEl ? [gemEl] : []).forEach(function (el) {
       el.style.width = cell + 'px'; el.style.height = cell + 'px';
       el.firstChild.style.fontSize = Math.round(cell * 0.7) + 'px';
     });
     keys.forEach(function (k, i) { place(keyEls[i], k[0], k[1]); });
+    if (gemEl) place(gemEl, gem[0], gem[1]);
     place(goalEl, gx, gy); place(charEl, px, py);
-    draw();
+    draw(); fogPieces();
   }
   function transpose(g) {
     var out = [], i, j;
@@ -307,6 +436,27 @@ var game = KidsGame.init({ title: 'Laberinto' });
     pass(0, 0, wallColor, lw);
     pass(0, -off * .22, mix(wallColor, '#ffffff', .35), lw * .55);
     pass(-off * .05, -off * .34, 'rgba(255,255,255,.7)', lw * .2);
+    // puertas de color cerradas (tabla con cerradura) sobre el hueco del pasillo
+    doors.forEach(function (o) {
+      if (o.open) return;
+      var cx = off + o.x * cell + cell / 2 + DX[o.d] * cell / 2, cy = off + o.y * cell + cell / 2 + DY[o.d] * cell / 2;
+      var horiz = DY[o.d] !== 0, L = cell * .78, T = Math.max(6, lw * 1.4);
+      ctx.save(); ctx.translate(cx, cy); if (!horiz) ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; rr(-L / 2 + 2, -T / 2 + 3, L, T, T / 2); ctx.fill();
+      ctx.fillStyle = mix(KEYCOL[o.col][0], '#000000', .25); rr(-L / 2, -T / 2, L, T, T / 2); ctx.fill();
+      ctx.fillStyle = KEYCOL[o.col][0]; rr(-L / 2, -T / 2, L, T * .62, T / 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, T * .22, 0, 6.3); ctx.fill();
+      ctx.restore();
+    });
+    // niebla: solo se ve alrededor del personaje; lo ya recorrido se intuye
+    if (fog) {
+      var seenT = {}; for (i = 0; i < trail.length; i++) seenT[trail[i][0] + ',' + trail[i][1]] = true;
+      for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) {
+        if (Math.abs(x - px) <= FOG_R && Math.abs(y - py) <= FOG_R) continue;
+        ctx.fillStyle = seenT[x + ',' + y] ? 'rgba(20,24,70,.6)' : 'rgba(20,24,70,.97)';
+        ctx.fillRect(off + x * cell - (x === 0 ? off : 0), off + y * cell - (y === 0 ? off : 0), cell + (x === 0 || x === cols - 1 ? off : 0), cell + (y === 0 || y === rows - 1 ? off : 0));
+      }
+    }
   }
   function paw(cx, cy, r, color) {
     ctx.fillStyle = color;
@@ -323,21 +473,32 @@ var game = KidsGame.init({ title: 'Laberinto' });
   function step(d) {
     if (done) return false;
     if (!open(px, py, d)) return false;
+    var door = doorAt(px, py, d);
+    if (door && !door.open) {
+      if (!hasKey(door.col)) { KidsGame.sound.wrong(); KidsGame.toast('Necesitas la llave ' + KEYCOL[door.col][1] + ' 🔑', 1100); return false; }
+      door.open = true; KidsGame.sound.pop(); KidsGame.toast('¡Se abrió la puerta ' + KEYCOL[door.col][1] + '! 🔓', 1100); burst(8);
+    }
     px += DX[d]; py += DY[d];
     var last = trail[trail.length - 1];
     if (trail.length > 1 && trail[trail.length - 2][0] === px && trail[trail.length - 2][1] === py) trail.pop();
     else if (!(last[0] === px && last[1] === py)) trail.push([px, py]);
-    draw(); place(charEl, px, py);
+    draw(); place(charEl, px, py); fogPieces();
     for (var ki = 0; ki < keys.length; ki++) {
       if (!keys[ki][2] && keys[ki][0] === px && keys[ki][1] === py) {
         keys[ki][2] = true; keysGot++; keyEls[ki].classList.add('got');
         keyEls[ki].style.transform += ' scale(1.6)';
         KidsGame.sound.ok(); KidsGame.vibrate(30); burst(8); renderKeys();
-        if (keysGot === keys.length) { KidsGame.sound.pop(); KidsGame.toast('¡Se abrió! 🔓', 1200); goalEl.classList.remove('locked'); }
+        if (expert()) KidsGame.toast('Llave ' + KEYCOL[keys[ki][3]][1] + ' 🔑', 1000);
+        else if (keysGot === keys.length) { KidsGame.sound.pop(); KidsGame.toast('¡Se abrió! 🔓', 1200); goalEl.classList.remove('locked'); }
       }
     }
+    if (gem && !gemGot && gem[0] === px && gem[1] === py) {
+      gemGot = true; gemEl.classList.add('got'); gemEl.style.transform += ' scale(1.8)';
+      KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(50); burst(14); renderKeys();
+      KidsGame.toast('¡Diamante escondido! 💎', 1400); KidsGame.say('¡Encontraste el diamante!');
+    }
     if (px === gx && py === gy) {
-      if (keysGot < keys.length) { KidsGame.sound.wrong(); KidsGame.toast('Faltan llaves 🔑', 1200); var ge = goalEl.querySelector('.lock'); ge.classList.remove('shake'); void ge.offsetWidth; ge.classList.add('shake'); }
+      if (!expert() && keysGot < keys.length) { KidsGame.sound.wrong(); KidsGame.toast('Faltan llaves 🔑', 1200); var ge = goalEl.querySelector('.lock'); ge.classList.remove('shake'); void ge.offsetWidth; ge.classList.add('shake'); }
       else win();
     }
     return true;
@@ -357,6 +518,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
       if (cd >= limit) continue;
       for (var d = 0; d < 4; d++) {
         if (!open(c[0], c[1], d)) continue;
+        var dr = doorAt(c[0], c[1], d); if (dr && !dr.open && !hasKey(dr.col)) continue;
         var nx = c[0] + DX[d], ny = c[1] + DY[d], k = key(nx, ny);
         if (dist[k] != null) continue;
         dist[k] = cd + 1; prev[k] = d;
@@ -416,13 +578,17 @@ var game = KidsGame.init({ title: 'Laberinto' });
     charEl.classList.add('hop'); burst();
     KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
     setTimeout(function () {
+      if (level >= LEVELS[nivel].length - 1) KidsGame.levelDone(nivel);
       KidsGame.celebrate({
-        sub: CHARS[level % CHARS.length][0] + ' encontró ' + CHARS[level % CHARS.length][1],
+        sub: CHARS[level % CHARS.length][0] + ' encontró ' + CHARS[level % CHARS.length][1] + (gem ? (gemGot ? ' · ¡y el 💎!' : ' · el 💎 sigue escondido') : ''),
+        stars: gem && !gemGot ? 2 : 3,
         onNext: function () { level++; start(true); },
         onAgain: function () { start(true); }
       });
     }, 900);
   }
+  // Estado para pruebas
+  window.__lab = { state: function () { return { px: px, py: py, gx: gx, gy: gy, cols: cols, rows: rows, cells: cells, keys: keys.map(function (k) { return k.slice(); }), doors: doors.map(function (o) { return { x: o.x, y: o.y, d: o.d, col: o.col, open: o.open }; }), gem: gem ? gem.slice() : null, gemGot: gemGot, done: done, nivel: nivel, level: level, fog: fog }; }, step: step };
 
   window.addEventListener('resize', function () { order(); layout(); });
   // Primero se elige el nivel; el juego arranca al escoger

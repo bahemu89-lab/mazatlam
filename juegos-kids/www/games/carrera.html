@@ -53,6 +53,13 @@
     white-space: nowrap;
   }
   .hint .emoji { font-size: 40px; animation: bounce .7s infinite; }
+  /* Nivel Experto: pregunta de la puerta */
+  .quest { display: none; align-items: center; gap: 8px; padding: 6px 18px; min-height: 64px; border-radius: 30px; font-size: 26px; font-weight: 900; color: #1f2f6b; white-space: nowrap;
+    background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(241,246,255,.93)); border: 3px solid #fff; box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
+  .quest.show { display: flex; }
+  .quest b { color: #ff3d7f; font-size: 32px; }
+  .quest .emoji { font-size: 36px; }
+  .hud .mid { display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
 <body>
@@ -64,7 +71,8 @@ var game = KidsGame.init({ title: 'Carrera' });
     null,
     { speed: 230, gapMin: 2.0, gapMax: 2.8, dur: 60, jumpH: 2.4, double: 0,   bird: 0 },
     { speed: 330, gapMin: 1.4, gapMax: 2.0, dur: 75, jumpH: 2.1, double: 0.15, bird: 0 },
-    { speed: 430, gapMin: 1.0, gapMax: 1.5, dur: 90, jumpH: 2.0, double: 0.35, bird: 0.3 }
+    { speed: 430, gapMin: 1.0, gapMax: 1.5, dur: 90, jumpH: 2.0, double: 0.35, bird: 0.3 },
+    { speed: 300, gapMin: 2.6, gapMax: 2.6, dur: 9999, jumpH: 2.0, double: 0, bird: 0, gates: true }
   ];
   var GOAL = 20;
   var nivel = 1, cfg = CFG[1], hero = '🐰', running = false;
@@ -81,7 +89,10 @@ var game = KidsGame.init({ title: 'Carrera' });
   prog.innerHTML = '<div class="cnt">⭐ 0/' + GOAL + '</div><div class="bar"><i></i></div>';
   var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
   left.appendChild(badgeHolder);
-  hud.appendChild(left); hud.appendChild(prog); hud.appendChild(lvBtn);
+  var midEl = document.createElement('div'); midEl.className = 'mid';
+  var questEl = document.createElement('div'); questEl.className = 'quest';
+  midEl.appendChild(questEl); midEl.appendChild(prog);
+  hud.appendChild(left); hud.appendChild(midEl); hud.appendChild(lvBtn);
   game.appendChild(hud);
   var cntEl = prog.querySelector('.cnt'), barEl = prog.querySelector('.bar i');
   lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; pickLevel(); });
@@ -89,9 +100,41 @@ var game = KidsGame.init({ title: 'Carrera' });
   // ---------- estado del mundo ----------
   var t = 0, elapsed = 0, stars = 0, ents = [], parts = [], texts = [], trees = [], clouds = [], hills = [], mounts = [], flowers = [];
   var FLOW = ['🌼', '🌷', '🌸', '🍄'];
-  var scrollRoad = 0, nextSpawn = 0, lastT = 0, finished = false;
-  var P = { y: 0, vy: 0, onGround: true, sx: 1, sy: 1, wobble: 0, duck: false, jumpBuf: 0, phase: 0 };
-  var holdStart = 0, holding = false;
+  var scrollRoad = 0, nextSpawn = 0, lastT = 0, finished = false, gatesSpawned = 0;
+  var P = { y: 0, vy: 0, onGround: true, sx: 1, sy: 1, wobble: 0, duck: false, jumpBuf: 0, phase: 0, lane: 0, laneY: 0 };
+  var holdStart = 0, holding = false, swipeY = 0, swiped = false;
+  // Nivel Experto: puertas de mates y letras
+  var roundN = 0, gatesDone = 0, correct = 0, curQ = '';
+  var WORDS = [['🐱', 'GATO'], ['🐶', 'PERRO'], ['🍎', 'MANZANA'], ['🌞', 'SOL'], ['🐟', 'PEZ'], ['🏠', 'CASA'], ['🌙', 'LUNA'], ['🐘', 'ELEFANTE'], ['🦋', 'MARIPOSA'], ['🍌', 'BANANA'], ['🐢', 'TORTUGA'], ['🚗', 'COCHE'], ['🌸', 'FLOR'], ['🐝', 'ABEJA'], ['🥚', 'HUEVO'], ['🍇', 'UVA'], ['🐙', 'PULPO'], ['🎈', 'GLOBO'], ['🧸', 'OSO'], ['🦆', 'PATO'], ['🍓', 'FRESA'], ['🌈', 'IRIS'], ['🦁', 'LEÓN'], ['🐸', 'RANA']];
+  var VOW = 'AEIOU', CONS = 'BCDFGLMNPRST';
+  function laneH() { return S * 1.6; }
+  function expr(n) { if (n >= 2 && Math.random() < 0.7) { var a = 1 + KidsGame.rand(n - 1); return a + '+' + (n - a); } return String(n); }
+  function makeGate() {
+    var g = { type: 'gate', x: W + S, w: S * 0.9, resolved: false, result: null, top: {}, bot: {} }, letters = roundN % 2 === 1, kind, okTxt, badTxt;
+    if (!letters) {
+      kind = KidsGame.pick(['eq', 'eq', 'big', 'small']);
+      if (kind === 'eq') { var n = 3 + KidsGame.rand(7), m = n; while (m === n) m = 2 + KidsGame.rand(8); okTxt = expr(n); badTxt = expr(m); g.q = '¿Cuál es <b>' + n + '</b>?'; g.say = '¿Cuál puerta es ' + n + '?'; }
+      else { var a = 1 + KidsGame.rand(9), b = a; while (b === a) b = 1 + KidsGame.rand(9); var hi = Math.max(a, b), lo = Math.min(a, b);
+        var hiT = expr(hi), loT = expr(lo); okTxt = kind === 'big' ? hiT : loT; badTxt = kind === 'big' ? loT : hiT;
+        g.q = kind === 'big' ? '¿Cuál es <b>MÁS</b> grande?' : '¿Cuál es <b>MÁS</b> pequeño?'; g.say = kind === 'big' ? '¿Cuál es más grande?' : '¿Cuál es más pequeño?'; }
+    } else {
+      kind = KidsGame.pick(['vowel', 'first', 'first']);
+      if (kind === 'vowel') { okTxt = VOW[KidsGame.rand(5)]; badTxt = CONS[KidsGame.rand(CONS.length)]; g.q = '¿Cuál es <b>vocal</b>?'; g.say = '¿Cuál letra es vocal?'; }
+      else { var wd = KidsGame.pick(WORDS); okTxt = wd[1][0]; badTxt = okTxt; while (badTxt === okTxt) badTxt = (VOW + CONS)[KidsGame.rand(17)]; g.q = '<span class="emoji">' + wd[0] + '</span> ¿Con qué letra empieza?'; g.say = '¿Con qué letra empieza ' + wd[1].toLowerCase() + '?'; g.pic = wd[0]; }
+    }
+    var topOk = Math.random() < 0.5;
+    g.top = { txt: topOk ? okTxt : badTxt, ok: topOk }; g.bot = { txt: topOk ? badTxt : okTxt, ok: !topOk };
+    return g;
+  }
+  function updateQuest() {
+    var next = null; for (var i = 0; i < ents.length; i++) if (ents[i].type === 'gate' && !ents[i].resolved) { if (!next || ents[i].x < next.x) next = ents[i]; }
+    var q = next ? next.q : '';
+    if (q !== curQ) { curQ = q; questEl.innerHTML = q; questEl.classList.toggle('show', !!q); if (next) KidsGame.say(next.say); }
+  }
+  function setLane(l) {
+    if (!running || !cfg.gates || P.lane === l) return;
+    P.lane = l; KidsGame.sound.tap(); KidsGame.vibrate(10);
+  }
 
   function resize() {
     W = game.clientWidth; H = game.clientHeight;
@@ -123,12 +166,22 @@ var game = KidsGame.init({ title: 'Carrera' });
   canvas.addEventListener('pointerdown', function (ev) {
     ev.preventDefault();
     if (!running) return;
-    holding = true; holdStart = performance.now();
+    holding = true; holdStart = performance.now(); swipeY = ev.clientY; swiped = false;
+    if (cfg.gates) return;
     if (cfg.bird === 0) { jump(); }
+  });
+  canvas.addEventListener('pointermove', function (ev) {
+    if (!holding || !cfg.gates || swiped) return;
+    var dy = ev.clientY - swipeY;
+    if (dy < -40) { swiped = true; setLane(1); } else if (dy > 40) { swiped = true; setLane(0); }
   });
   function release(ev) {
     if (!holding) return;
     holding = false;
+    if (cfg.gates) {
+      if (!swiped && ev && ev.clientY != null) { var r = canvas.getBoundingClientRect(); setLane(ev.clientY - r.top < groundY - laneH() * 0.55 ? 1 : 0); }
+      return;
+    }
     if (cfg.bird > 0) {
       var held = performance.now() - holdStart;
       if (held < 170 && !P.duck) jump();
@@ -143,6 +196,7 @@ var game = KidsGame.init({ title: 'Carrera' });
   var OBS = ['🪨', '🌵', '🪵'];
   function spawnWave() {
     var x = W + S;
+    if (cfg.gates) { if (gatesSpawned < GOAL) { ents.push(makeGate()); gatesSpawned++; } nextSpawn = cfg.gapMin; return; }
     var r = Math.random();
     if (r < 0.62) {
       var n = (Math.random() < cfg.double) ? 2 : 1;
@@ -194,6 +248,7 @@ var game = KidsGame.init({ title: 'Carrera' });
       if (P.y >= 0) { P.y = 0; P.vy = 0; P.onGround = true; P.sx = 1.22; P.sy = 0.78; if (P.jumpBuf > 0) { P.jumpBuf = 0; jump(); } }
     }
     P.jumpBuf = Math.max(0, P.jumpBuf - dt);
+    var targetLane = P.lane === 1 ? -laneH() : 0; P.laneY += (targetLane - P.laneY) * Math.min(1, dt * 9);
     P.sx += (1 - P.sx) * Math.min(1, dt * 10); P.sy += (1 - P.sy) * Math.min(1, dt * 10);
     P.wobble = Math.max(0, P.wobble - dt);
     P.phase += dt * (spd / 40);
@@ -207,6 +262,19 @@ var game = KidsGame.init({ title: 'Carrera' });
       e.x -= spd * dt;
       if (e.type === 'bird') { e.x -= spd * 0.25 * dt; e.flap += dt * 12; }
       if (e.x < -S * 2) { ents.splice(i, 1); continue; }
+      if (e.type === 'gate') {
+        if (!e.resolved && e.x <= hx) {
+          e.resolved = true; e.chosen = P.lane; gatesDone++;
+          var okSide = P.lane === 1 ? e.top.ok : e.bot.ok;
+          if (okSide) { e.result = 'ok'; correct++; stars++; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(15); sparkle(hx, groundY + P.laneY - S * 0.5, '#ffd166', 12); floatText('✔ ¡Sí!', hx, groundY + P.laneY - S * 1.3, '#24b36c'); }
+          else { e.result = 'bad'; P.wobble = 0.8; KidsGame.sound.wrong(); KidsGame.vibrate(40); floatText('✖ era ' + (e.top.ok ? e.top.txt : e.bot.txt), hx, groundY + P.laneY - S * 1.3, '#ff6f61'); }
+          cntEl.textContent = '✔ ' + correct + '/' + GOAL;
+          cntEl.classList.remove('pop'); void cntEl.offsetWidth; cntEl.classList.add('pop');
+          updateQuest();
+          if (gatesDone >= GOAL) { setTimeout(finish, 900); }
+        }
+        continue;
+      }
       if (e.hit) continue;
       var ex1 = e.x - e.w / 2, ex2 = e.x + e.w / 2, ey2 = groundY - e.y, ey1 = ey2 - e.h;
       if (e.type === 'star') { ey1 -= S * 0.15; ey2 += S * 0.15; ex1 -= S * 0.1; ex2 += S * 0.1; }
@@ -228,6 +296,7 @@ var game = KidsGame.init({ title: 'Carrera' });
     for (var k = parts.length - 1; k >= 0; k--) { var p = parts[k]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 500 * dt; if (p.life <= 0) parts.splice(k, 1); }
     for (var m = texts.length - 1; m >= 0; m--) { var tx = texts[m]; tx.life -= dt * 0.9; tx.y -= 60 * dt; if (tx.life <= 0) texts.splice(m, 1); }
 
+    if (cfg.gates) { updateQuest(); barEl.style.width = (gatesDone / GOAL * 100) + '%'; barEl.className = ''; return; }
     var frac = Math.max(0, 1 - elapsed / cfg.dur);
     barEl.style.width = (frac * 100) + '%'; barEl.className = frac < 0.25 ? 'low' : '';
     if (elapsed >= cfg.dur) finish();
@@ -299,10 +368,41 @@ var game = KidsGame.init({ title: 'Carrera' });
     // tierra
     var dg = ctx.createLinearGradient(0, groundY + S * 0.6, 0, H); dg.addColorStop(0, '#9b6a3c'); dg.addColorStop(1, '#6b4423');
     ctx.fillStyle = dg; ctx.fillRect(0, groundY + S * 0.6, W, H - groundY);
+    // carril de arriba (puente de madera) en el nivel Experto
+    if (cfg.gates) {
+      var ly = groundY - laneH();
+      ctx.save(); ctx.globalAlpha = 0.22; ctx.fillStyle = '#1b3a1b'; ctx.fillRect(0, ly + S * 0.3, W, S * 0.1); ctx.restore();
+      var bg = ctx.createLinearGradient(0, ly, 0, ly + S * 0.28); bg.addColorStop(0, '#d9a05f'); bg.addColorStop(1, '#8b5a2b');
+      ctx.fillStyle = bg; ctx.fillRect(0, ly, W, S * 0.28);
+      ctx.fillStyle = 'rgba(0,0,0,.18)';
+      for (var px = -scrollRoad; px < W; px += S * 0.9) ctx.fillRect(px, ly, 4, S * 0.28);
+      ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, ly, W, 3);
+    }
+  }
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function drawGate(e) {
+    var w = e.w, h = S * 0.72, x = e.x - w / 2, yTop = groundY - laneH() - S * 0.95, yBot = groundY - S * 1.05;
+    ctx.save();
+    // poste
+    ctx.fillStyle = '#8b5a2b'; ctx.fillRect(e.x - 5, yTop, 10, groundY - yTop);
+    [[yTop, e.top, 1], [yBot, e.bot, 0]].forEach(function (sg) {
+      var y = sg[0], side = sg[1], lane = sg[2];
+      var chosen = e.resolved && e.chosen === lane;
+      ctx.fillStyle = chosen ? (e.result === 'ok' ? '#b9f0c4' : '#ffc1c1') : '#fff';
+      ctx.strokeStyle = chosen ? (e.result === 'ok' ? '#24b36c' : '#e63946') : (lane ? '#3da9fc' : '#ffb703'); ctx.lineWidth = 5;
+      ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+      roundRect(x, y, w, h, 14); ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.stroke();
+      ctx.fillStyle = '#1f2f6b'; ctx.font = '900 ' + Math.round(S * 0.4) + 'px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(side.txt, e.x, y + h / 2 + 2);
+      if (chosen) emoji(e.result === 'ok' ? '✅' : '❌', x + w, y, S * 0.32);
+      else if (e.resolved && side.ok) emoji('✅', x + w, y, S * 0.28, 0.7);
+    });
+    ctx.restore();
   }
   function drawEnts() {
     ents.forEach(function (e) {
       var ex = e.x, ey = groundY - e.y;
+      if (e.type === 'gate') { drawGate(e); return; }
       if (e.type === 'star') {
         if (e.hit) {
           e.fly = (e.fly || 0) + 0.06; if (e.fly > 1) return;
@@ -325,9 +425,9 @@ var game = KidsGame.init({ title: 'Carrera' });
     });
   }
   function drawHero() {
-    var hx = W * 0.22, base = groundY + P.y;
+    var hx = W * 0.22, base = groundY + P.y + P.laneY;
     var airFrac = Math.min(1, -P.y / (S * 2));
-    shadowEllipse(hx, groundY + 5, S * 0.4 * (1 - airFrac * 0.4), S * 0.11 * (1 - airFrac * 0.4), 0.35 - airFrac * 0.15);
+    shadowEllipse(hx, groundY + P.laneY + 5, S * 0.4 * (1 - airFrac * 0.4), S * 0.11 * (1 - airFrac * 0.4), 0.35 - airFrac * 0.15);
     var bob = P.onGround && !P.duck ? Math.abs(Math.sin(P.phase)) * S * 0.06 : 0;
     var sx = P.sx, sy = P.sy;
     if (P.duck) { sx *= 1.25; sy *= 0.6; }
@@ -366,22 +466,45 @@ var game = KidsGame.init({ title: 'Carrera' });
   }
   function startRound() {
     ents = []; parts = []; texts = []; stars = 0; elapsed = 0; finished = false; nextSpawn = 1.6;
-    P.y = 0; P.vy = 0; P.onGround = true; P.duck = false; P.wobble = 0; holding = false;
+    P.y = 0; P.vy = 0; P.onGround = true; P.duck = false; P.wobble = 0; holding = false; P.lane = 0; P.laneY = 0;
+    gatesDone = 0; correct = 0; gatesSpawned = 0; curQ = ''; questEl.classList.remove('show');
     cntEl.textContent = '⭐ 0/' + GOAL; barEl.style.width = '100%'; barEl.className = '';
     running = true;
+    if (cfg.gates) {
+      cntEl.textContent = '✔ 0/' + GOAL; barEl.style.width = '0%'; nextSpawn = 2.2;
+      var letters = roundN % 2 === 1;
+      showHint('<span class="emoji">' + (letters ? '🔤' : '🔢') + '</span> Desliza ⬆️ ⬇️ y pasa por la puerta correcta', 2600);
+      KidsGame.say(letters ? 'Puertas de letras. Desliza arriba o abajo para pasar por la puerta correcta' : 'Puertas de números. Desliza arriba o abajo para pasar por la puerta correcta');
+      return;
+    }
     showHint('<span class="emoji">👆</span> ¡Toca para saltar!', 2000);
     KidsGame.say(cfg.bird > 0 ? 'Toca para saltar y mantén para agacharte' : 'Toca para saltar');
     if (cfg.bird > 0) setTimeout(function () { if (running) showHint('<span class="emoji">🐦</span> Mantén para agacharte', 2000); }, 2400);
   }
   function finish() {
     if (finished) return; finished = true; running = false;
+    if (cfg.gates) {
+      var ok = correct >= 15, letters = roundN % 2 === 1;
+      if (ok) KidsGame.levelDone(4);
+      roundN++;
+      setTimeout(function () {
+        KidsGame.celebrate({
+          msg: ok ? (letters ? '¡Lees las letras!' : '¡Eres de mates!') : '¡Casi! Otra vez',
+          sub: '✔ ' + correct + ' de ' + GOAL + ' puertas', stars: ok ? 3 : correct >= 10 ? 2 : 1,
+          onAgain: function () { roundN--; startRound(); },
+          onNext: function () { startRound(); }
+        });
+      }, 500);
+      return;
+    }
     var n = stars >= GOAL ? 3 : stars >= 10 ? 2 : 1;
+    if (stars >= GOAL) KidsGame.levelDone(nivel);
     setTimeout(function () {
       KidsGame.celebrate({
         msg: stars >= GOAL ? '¡20 estrellas!' : undefined,
         sub: '⭐ ' + stars + ' estrellas', stars: n,
         onAgain: function () { startRound(); },
-        onNext: function () { nivel = Math.min(3, nivel + 1); cfg = CFG[nivel]; setBadge(); startRound(); }
+        onNext: function () { nivel = Math.min(4, nivel + 1); cfg = CFG[nivel]; setBadge(); startRound(); }
       });
     }, 500);
   }
@@ -399,8 +522,9 @@ var game = KidsGame.init({ title: 'Carrera' });
     game.appendChild(pk);
   }
   function pickLevel() {
-    KidsGame.levelPicker({ onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); pickHero(); } });
+    KidsGame.levelPicker({ labels: { 1: 'Lento, salta', 2: 'Más rápido, 2 obstáculos', 3: 'Rápido y agáchate 🐦', 4: 'Puertas de sumas y letras' }, onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); pickHero(); } });
   }
+  window.__kgTest = function () { return { ents: ents, P: P, setLane: setLane, stars: function () { return stars; }, correct: function () { return correct; }, gatesDone: function () { return gatesDone; } }; };
   setBadge();
   pickLevel();
 })();

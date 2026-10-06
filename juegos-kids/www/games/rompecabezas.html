@@ -316,7 +316,7 @@
       bw = W - F; bh = H - trayH - 10 - F;
       tray.style.width = '100%'; tray.style.height = trayH + 'px';
     } else {
-      var trayW = Math.max(160, Math.floor(W * (expert() ? 0.34 : 0.28)));
+      var trayW = Math.max(160, Math.floor(W * (expert() ? 0.4 : 0.28)));
       bw = W - trayW - 10 - F; bh = H - F;
       tray.style.width = trayW + 'px'; tray.style.height = '100%';
     }
@@ -338,7 +338,6 @@
     }
     trayScale = Math.min(1, tw / tileW);
     if (level === 3) trayScale *= 0.82;
-    if (expert()) trayScale *= 0.8;
     tray.style.setProperty('--gap', gap + 'px');
     Array.prototype.forEach.call(board.querySelectorAll('.slot'), function (s) {
       s.style.left = (s.dataset.c * tileW) + 'px'; s.style.top = (s.dataset.r * tileH) + 'px';

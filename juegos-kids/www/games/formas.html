@@ -64,6 +64,22 @@
   @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
   .baskets.n4 .bname { font-size: min(3.2vw, 18px); padding: 3px 10px; }
   .baskets.n4 .bname svg { width: 20px; height: 20px; }
+  /* ---- Experto: cuerpos geométricos, lados y esquinas, clasificar 2x2 ---- */
+  .menu > .btn.purple { --a: #b39cff; --b: #7f5af0; --d: #5232b3; }
+  .menu.four > .btn { min-height: 84px; font-size: min(6vw, 30px); }
+  .choice .num { font-size: min(13vw, 15vh, 96px); font-weight: 900; color: #fff; text-shadow: 0 4px 0 #1a63a8, 0 8px 12px rgba(0,0,0,.3); }
+  .choice.c1 .num { text-shadow: 0 4px 0 #b8306f, 0 8px 12px rgba(0,0,0,.3); } .choice.c2 .num { text-shadow: 0 4px 0 #14784a, 0 8px 12px rgba(0,0,0,.3); } .choice.c3 .num { text-shadow: 0 4px 0 #5232b3, 0 8px 12px rgba(0,0,0,.3); }
+  .tshape .mark { position: absolute; inset: 0; pointer-events: none; }
+  .g2 { flex: 0 0 auto; display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr 1fr; gap: 8px; width: min(96vw, 520px); align-items: stretch; justify-items: stretch; }
+  .g2 .hd { display: flex; align-items: center; justify-content: center; min-width: 54px; min-height: 54px; }
+  .g2 .hd svg { width: min(12vw, 64px); height: min(12vw, 64px); overflow: visible; filter: drop-shadow(0 4px 3px rgba(20,40,90,.3)); }
+  .g2 .hd .blob { width: min(12vw, 64px); height: min(12vw, 64px); }
+  .g2 .cell { position: relative; min-height: min(16vh, 120px); border-radius: 18px; border: 4px dashed rgba(255,255,255,.9); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; padding: 6px;
+    background: var(--tint); box-shadow: inset 0 3px 8px rgba(20,40,90,.15), 0 4px 0 rgba(0,0,0,.08); transition: transform .12s, box-shadow .12s; }
+  .g2 .cell svg { width: min(9vw, 46px); height: min(9vw, 46px); overflow: visible; animation: pop .35s ease-out; }
+  .g2 .cell.hot { transform: scale(1.06); border-color: #ffd23f; box-shadow: inset 0 3px 8px rgba(20,40,90,.15), 0 0 0 5px rgba(255,210,63,.6), 0 0 22px rgba(255,230,120,.9); }
+  .g2 .cell.got { animation: pop .35s; }
+  .sort2 .area { min-height: 110px; }
   @media (max-width: 900px) {
     .choices.six { max-width: 480px; }
     .sort .hint { margin-top: 66px; }
@@ -77,15 +93,20 @@
 (function () {
   var game = KidsGame.init({ title: 'Formas y colores' });
 
+  // sides/corners: lados y esquinas (para "¿cuántos lados tiene?"); null = no se pregunta
   var SHAPES = [
-    { id: 'circulo',    name: 'el círculo',    short: 'círculo',    svg: '<circle cx="50" cy="50" r="42"/>' },
-    { id: 'cuadrado',   name: 'el cuadrado',   short: 'cuadrado',   svg: '<rect x="9" y="9" width="82" height="82" rx="8"/>' },
-    { id: 'triangulo',  name: 'el triángulo',  short: 'triángulo',  svg: '<polygon points="50,7 94,90 6,90"/>' },
-    { id: 'estrella',   name: 'la estrella',   short: 'estrella',   svg: '<polygon points="50,4 62,36 96,37 69,58 79,93 50,73 21,93 31,58 4,37 38,36"/>' },
-    { id: 'corazon',    name: 'el corazón',    short: 'corazón',    svg: '<path d="M50 92 L14 54 C0 38 12 12 32 12 C42 12 48 19 50 26 C52 19 58 12 68 12 C88 12 100 38 86 54 Z"/>' },
-    { id: 'rectangulo', name: 'el rectángulo', short: 'rectángulo', svg: '<rect x="4" y="24" width="92" height="52" rx="6"/>' },
-    { id: 'ovalo',      name: 'el óvalo',      short: 'óvalo',      svg: '<ellipse cx="50" cy="50" rx="46" ry="28"/>' },
-    { id: 'rombo',      name: 'el rombo',      short: 'rombo',      svg: '<polygon points="50,4 94,50 50,96 6,50"/>' }
+    { id: 'circulo',    name: 'el círculo',    short: 'círculo',    svg: '<circle cx="50" cy="50" r="42"/>', sides: 0 },
+    { id: 'cuadrado',   name: 'el cuadrado',   short: 'cuadrado',   svg: '<rect x="9" y="9" width="82" height="82" rx="8"/>', sides: 4 },
+    { id: 'triangulo',  name: 'el triángulo',  short: 'triángulo',  svg: '<polygon points="50,7 94,90 6,90"/>', sides: 3 },
+    { id: 'estrella',   name: 'la estrella',   short: 'estrella',   svg: '<polygon points="50,4 62,36 96,37 69,58 79,93 50,73 21,93 31,58 4,37 38,36"/>', sides: null },
+    { id: 'corazon',    name: 'el corazón',    short: 'corazón',    svg: '<path d="M50 92 L14 54 C0 38 12 12 32 12 C42 12 48 19 50 26 C52 19 58 12 68 12 C88 12 100 38 86 54 Z"/>', sides: null },
+    { id: 'rectangulo', name: 'el rectángulo', short: 'rectángulo', svg: '<rect x="4" y="24" width="92" height="52" rx="6"/>', sides: 4 },
+    { id: 'ovalo',      name: 'el óvalo',      short: 'óvalo',      svg: '<ellipse cx="50" cy="50" rx="46" ry="28"/>', sides: 0 },
+    { id: 'rombo',      name: 'el rombo',      short: 'rombo',      svg: '<polygon points="50,4 94,50 50,96 6,50"/>', sides: 4 },
+    { id: 'pentagono',  name: 'el pentágono',  short: 'pentágono',  svg: '<polygon points="50,5 95,38 78,92 22,92 5,38"/>', sides: 5 },
+    { id: 'hexagono',   name: 'el hexágono',   short: 'hexágono',   svg: '<polygon points="27,8 73,8 96,50 73,92 27,92 4,50"/>', sides: 6 },
+    { id: 'trapecio',   name: 'el trapecio',   short: 'trapecio',   svg: '<polygon points="26,18 74,18 96,84 4,84"/>', sides: 4 },
+    { id: 'semicirculo', name: 'el semicírculo', short: 'semicírculo', svg: '<path d="M4 72 A46 46 0 0 1 96 72 Z"/>', sides: null }
   ];
   var COLORS = [
     { id: 'rojo',     name: 'rojo',     hex: '#e63946', items: ['🍎','🍓','🌹','🚒'] },
@@ -97,8 +118,19 @@
     { id: 'rosa',     name: 'rosa',     hex: '#f582ae', items: ['🌸','🎀','🩷','🐷'] },
     { id: 'cafe',     name: 'café',     hex: '#8d5524', items: ['🐻','🍫','🪵','🥔'] }
   ];
-  var ACTS = ['shapes', 'colors', 'sort'];
-  var ROUNDS_PER_ACT = [4, 4, 2];
+  // Cuerpos geométricos (Experto) y objetos reales con esa forma
+  var SOLIDS = [
+    { id: 'cubo',      name: 'el cubo',      objs: ['🎲','🧊','📦','🎁'] },
+    { id: 'esfera',    name: 'la esfera',    objs: ['⚽','🏀','🌍','🎱','🍊'] },
+    { id: 'cono',      name: 'el cono',      objs: ['🍦','🎉','🥕'] },
+    { id: 'cilindro',  name: 'el cilindro',  objs: ['🥫','🪣','🔋','🥁'] },
+    { id: 'piramide',  name: 'la pirámide',  objs: ['🔺','⛺','🏔️'] }
+  ];
+  var ACTS_BY_LEVEL = { 1: ['shapes', 'colors', 'sort'], 2: ['shapes', 'colors', 'sort'], 3: ['shapes', 'colors', 'sort'], 4: ['solids', 'sides', 'sort2', 'shapes'] };
+  var ROUNDS_BY_ACT = { shapes: 4, colors: 4, sort: 2, solids: 4, sides: 4, sort2: 2 };
+  var MENU = { shapes: ['🔺', 'Formas', ''], colors: ['🎨', 'Colores', 'blue'], sort: ['🧺', 'Clasifica', 'green'], solids: ['🎲', 'Cuerpos 3D', 'purple'], sides: ['🔢', 'Lados', 'blue'], sort2: ['🧺', 'Clasifica 2×2', 'green'] };
+  var LABELS = { 1: '3 opciones · 5 formas', 2: '4 opciones · 8 formas', 3: '6 opciones · 12 formas', 4: 'cuerpos 3D · lados · 2×2' };
+  var ACTS = ACTS_BY_LEVEL[1];
 
   var level = 1, act = 0, roundsInAct = 0, correctTotal = 0, nextBurst = 5, nextParty = 8, lock = false;
 
@@ -122,6 +154,21 @@
       '<g fill="url(#' + id + ')" stroke="' + shade(color, -.35) + '" stroke-width="2.5" stroke-linejoin="round">' + shape.svg + '</g>' +
       '<g clip-path="url(#' + id + 'c)"><ellipse cx="36" cy="26" rx="26" ry="13" fill="#fff" opacity=".5" transform="rotate(-25 36 26)"/>' +
       '<ellipse cx="62" cy="84" rx="30" ry="9" fill="#fff" opacity=".14"/></g></svg>';
+  }
+  // Cuerpos 3D con degradados: cubo, esfera, cono, cilindro, pirámide
+  function solidSVG(sol, color) {
+    var id = 's' + (uid++), c = color, L = shade(c, .45), D = shade(c, -.35), DD = shade(c, -.55);
+    var defs = '<defs><linearGradient id="' + id + 'a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + L + '"/><stop offset="1" stop-color="' + c + '"/></linearGradient>' +
+      '<linearGradient id="' + id + 'b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="' + DD + '"/></linearGradient>' +
+      '<linearGradient id="' + id + 'h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + D + '"/><stop offset=".35" stop-color="' + L + '"/><stop offset=".7" stop-color="' + c + '"/><stop offset="1" stop-color="' + DD + '"/></linearGradient>' +
+      '<radialGradient id="' + id + 'r" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="' + shade(c, .7) + '"/><stop offset=".4" stop-color="' + c + '"/><stop offset="1" stop-color="' + DD + '"/></radialGradient></defs>';
+    var sh = '<ellipse cx="52" cy="94" rx="36" ry="6" fill="rgba(0,0,0,.2)"/>', body;
+    if (sol.id === 'cubo') body = '<polygon points="20,34 60,34 60,90 20,90" fill="url(#' + id + 'a)"/><polygon points="60,34 84,14 84,70 60,90" fill="url(#' + id + 'b)"/><polygon points="20,34 44,14 84,14 60,34" fill="' + L + '"/><polygon points="20,34 60,34 60,90 20,90" fill="none" stroke="' + DD + '" stroke-width="2"/><polyline points="60,34 84,14 84,70 60,90" fill="none" stroke="' + DD + '" stroke-width="2"/><polyline points="20,34 44,14 84,14" fill="none" stroke="' + DD + '" stroke-width="2"/>';
+    else if (sol.id === 'esfera') body = '<circle cx="50" cy="52" r="40" fill="url(#' + id + 'r)" stroke="' + DD + '" stroke-width="2"/><ellipse cx="36" cy="34" rx="12" ry="7" fill="#fff" opacity=".55" transform="rotate(-30 36 34)"/>';
+    else if (sol.id === 'cono') body = '<polygon points="50,6 86,80 14,80" fill="url(#' + id + 'h)"/><ellipse cx="50" cy="80" rx="36" ry="11" fill="url(#' + id + 'b)" stroke="' + DD + '" stroke-width="2"/><polyline points="14,80 50,6 86,80" fill="none" stroke="' + DD + '" stroke-width="2"/>';
+    else if (sol.id === 'cilindro') body = '<rect x="18" y="22" width="64" height="60" fill="url(#' + id + 'h)"/><ellipse cx="50" cy="82" rx="32" ry="10" fill="url(#' + id + 'b)" stroke="' + DD + '" stroke-width="2"/><ellipse cx="50" cy="22" rx="32" ry="10" fill="' + L + '" stroke="' + DD + '" stroke-width="2"/><line x1="18" y1="22" x2="18" y2="82" stroke="' + DD + '" stroke-width="2"/><line x1="82" y1="22" x2="82" y2="82" stroke="' + DD + '" stroke-width="2"/>';
+    else body = '<polygon points="50,8 90,78 50,90" fill="url(#' + id + 'b)"/><polygon points="50,8 10,78 50,90" fill="url(#' + id + 'a)"/><polyline points="10,78 50,8 90,78 50,90 10,78" fill="none" stroke="' + DD + '" stroke-width="2"/><line x1="50" y1="8" x2="50" y2="90" stroke="' + DD + '" stroke-width="1.5"/>';
+    return '<svg viewBox="0 0 100 100" overflow="visible">' + defs + sh + body + '</svg>';
   }
   var BLOB = '<path d="M50 6 C72 2 94 18 95 42 C96 64 84 92 58 95 C34 98 6 84 5 58 C4 30 28 10 50 6 Z"/><circle cx="16" cy="20" r="7"/><circle cx="88" cy="82" r="6"/><circle cx="84" cy="12" r="4.5"/><circle cx="10" cy="86" r="4"/>';
   // Mancha de pintura en 3D: degradado radial, grosor y brillo húmedo
@@ -169,12 +216,12 @@
   }
 
   /* ---------- Niveles ---------- */
-  function shapePool() { return level === 1 ? SHAPES.slice(0, 5) : SHAPES; }
+  function shapePool() { return level === 1 ? SHAPES.slice(0, 5) : level === 2 ? SHAPES.slice(0, 8) : SHAPES; }
   function colorPool() { return level === 1 ? COLORS.slice(0, 4) : COLORS; }
   function nOptions() { return level === 1 ? 3 : level === 2 ? 4 : 6; }
   function pickLevel() {
     game.innerHTML = ''; lock = true; pieces = []; area = null; basketsEl = null; dragging = null;
-    KidsGame.levelPicker({ onPick: function (n) { level = n; showMenu(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; ACTS = ACTS_BY_LEVEL[n]; correctTotal = 0; nextBurst = 5; nextParty = 8; showMenu(); } });
   }
   function hud() {
     var h = el('div', 'hud');
@@ -187,9 +234,10 @@
   /* ---------- Menú ---------- */
   function showMenu() {
     game.innerHTML = '';
-    var m = el('div', 'screen menu');
+    var m = el('div', 'screen menu' + (ACTS.length > 3 ? ' four' : ''));
     m.appendChild(hud());
-    [['🔺', 'Formas', ''], ['🎨', 'Colores', 'blue'], ['🧺', 'Clasifica', 'green']].forEach(function (b, i) {
+    ACTS.forEach(function (a, i) {
+      var b = MENU[a];
       var btn = el('button', 'btn big ' + b[2], '<span class="emoji">' + b[0] + '</span> ' + b[1]);
       onTap(btn, function () { KidsGame.sound.tap(); startAct(i); });
       m.appendChild(btn);
@@ -198,10 +246,8 @@
     KidsGame.say('Formas y colores. Elige un juego');
   }
 
-  function startAct(i) {
-    act = i; roundsInAct = 0;
-    if (ACTS[act] === 'shapes') shapesRound(); else if (ACTS[act] === 'colors') colorsRound(); else sortRound();
-  }
+  var ROUND_FN = { shapes: shapesRound, colors: colorsRound, sort: sortRound, solids: solidsRound, sides: sidesRound, sort2: sort2Round };
+  function startAct(i) { act = i; roundsInAct = 0; ROUND_FN[ACTS[act]](); }
   function nextAct() { startAct((act + 1) % ACTS.length); }
   function buildScreen(cls) {
     game.innerHTML = '';
@@ -218,14 +264,16 @@
     KidsGame.addStar(); KidsGame.sound.ok(); KidsGame.vibrate(30);
     if (correctTotal >= nextBurst) { nextBurst += 5; KidsGame.confetti(45); setTimeout(KidsGame.sound.win, 250); }
   }
-  // Al terminar una ronda: celebrar cada 8 aciertos, rotar actividad, o seguir
+  // Al terminar una ronda: celebrar cada 8 aciertos (cuenta como nivel completado), rotar actividad, o seguir
+  var TOAST = { shapes: '🔺 ¡Ahora formas!', colors: '🎨 ¡Ahora colores!', sort: '🧺 ¡Ahora a clasificar!', solids: '🎲 ¡Ahora cuerpos 3D!', sides: '🔢 ¡Ahora lados!', sort2: '🧺 ¡Clasifica en la tabla!' };
   function afterRound(again) {
     roundsInAct++;
     if (correctTotal >= nextParty) {
       nextParty += 8;
+      KidsGame.levelDone(level);
       KidsGame.celebrate({ sub: '¡' + correctTotal + ' aciertos!', onNext: nextAct, onAgain: function () { startAct(act); } });
-    } else if (roundsInAct >= ROUNDS_PER_ACT[act]) {
-      KidsGame.toast(['🎨 ¡Ahora colores!', '🧺 ¡Ahora a clasificar!', '🔺 ¡Ahora formas!'][act]);
+    } else if (roundsInAct >= ROUNDS_BY_ACT[ACTS[act]]) {
+      KidsGame.toast(TOAST[ACTS[(act + 1) % ACTS.length]]);
       setTimeout(nextAct, 700);
     } else again();
   }
@@ -281,11 +329,57 @@
     KidsGame.say('Encuentra el color ' + target.name);
   }
 
+  /* ---------- (d) Cuerpos 3D: cuerpo -> objeto real, u objeto -> cuerpo (Experto) ---------- */
+  function solidsRound() {
+    var s = buildScreen('find solids');
+    var target = KidsGame.pick(SOLIDS), toObj = roundsInAct % 2 === 0;
+    var cols = KidsGame.shuffle(COLORS);
+    s.dataset.target = target.id;
+    var top = el('div', 'target');
+    var obj = KidsGame.pick(target.objs);
+    top.innerHTML = '<div class="tshape">' + (toObj ? solidSVG(target, cols[0].hex) : '<span class="emoji" style="font-size:min(20vw,18vh,130px)">' + obj + '</span>') + '</div><div class="tname">' + (toObj ? '¿Qué parece ' + target.name + '?' : '¿Qué cuerpo es?') + '</div>';
+    var say = toObj ? 'Esto es ' + target.name + '. ¿Qué objeto tiene esa forma?' : '¿Qué cuerpo geométrico es? ¿Cubo, esfera, cono, cilindro o pirámide?';
+    onTap(top, function () { KidsGame.sound.tap(); KidsGame.say(say); });
+    var row = el('div', 'choices');
+    KidsGame.shuffle(SOLIDS).forEach(function (sol, i) {
+      var c = el('div', 'card choice'); c.dataset.id = sol.id; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 0.9) + 's';
+      c.innerHTML = toObj ? '<span class="emoji">' + (sol === target ? obj : KidsGame.pick(sol.objs)) + '</span>' : solidSVG(sol, cols[(i + 1) % cols.length].hex);
+      onTap(c, function () { if (sol === target && !lock) KidsGame.say('¡Sí! ' + (toObj ? obj + ' es como ' : '') + target.name); answer(c, sol === target, solidsRound); });
+      row.appendChild(c);
+    });
+    s.appendChild(top); s.appendChild(row);
+    KidsGame.say(say);
+  }
+
+  /* ---------- (e) ¿Cuántos lados / esquinas tiene? (Experto) ---------- */
+  function sidesRound() {
+    var s = buildScreen('find sides');
+    // primero se elige cuántos lados (3-6 por igual) y luego una figura con ese número, para variar
+    var k = KidsGame.pick([3, 4, 5, 6]);
+    var target = KidsGame.pick(SHAPES.filter(function (x) { return x.sides === k; })), corners = roundsInAct % 2 === 1;
+    var col = KidsGame.pick(COLORS);
+    s.dataset.target = String(target.sides);
+    var top = el('div', 'target');
+    top.innerHTML = '<div class="tshape">' + shapeSVG(target, col.hex) + '</div><div class="tname">¿Cuántos ' + (corners ? 'picos' : 'lados') + ' tiene?</div>';
+    var say = '¿Cuántos ' + (corners ? 'picos, o esquinas,' : 'lados') + ' tiene ' + target.name + '? Cuéntalos con el dedo';
+    onTap(top, function () { KidsGame.sound.tap(); KidsGame.say(say); });
+    var row = el('div', 'choices');
+    var opts = KidsGame.shuffle([3, 4, 5, 6]);
+    opts.forEach(function (n, i) {
+      var c = el('div', 'card choice c' + (i % 4)); c.dataset.id = n; c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 0.9) + 's';
+      c.innerHTML = '<span class="num" style="color:' + ['#f0569a', '#2f95e8', '#24b36c', '#7f5af0'][i % 4] + '">' + n + '</span>';
+      onTap(c, function () { if (n === target.sides && !lock) KidsGame.say(target.name + ' tiene ' + n + ' ' + (corners ? 'picos' : 'lados')); answer(c, n === target.sides, sidesRound); });
+      row.appendChild(c);
+    });
+    s.appendChild(top); s.appendChild(row);
+    KidsGame.say(say);
+  }
+
   /* ---------- (c) Clasifica (nivel 1-2 por color; nivel 3 por forma Y color) ---------- */
   var pieces = [], area = null, basketsEl = null, dragging = null;
   function sortRound() {
     var s = buildScreen('sort');
-    var byShape = level === 3;
+    var byShape = level >= 3;
     var nb = level === 1 ? 2 : level === 2 ? (roundsInAct === 0 ? 2 : 3) : (roundsInAct === 0 ? 3 : 4);
     var per = byShape ? 2 : 3;
     var bins = [];
@@ -321,6 +415,38 @@
     layoutSort();
     KidsGame.say(byShape ? 'Pon cada figura en la canasta de su forma y su color' : 'Pon cada figura en su canasta');
   }
+  /* ---------- (f) Clasifica 2x2: tabla color × forma (Experto) ---------- */
+  function sort2Round() {
+    var s = buildScreen('sort sort2');
+    var cs = KidsGame.shuffle(COLORS).slice(0, 2), ss = KidsGame.shuffle(SHAPES.filter(function (x) { return ['estrella', 'corazon'].indexOf(x.id) < 0; })).slice(0, 2);
+    s.appendChild(el('div', 'hint', '🧺 Cada figura en su casilla: color y forma'));
+    area = el('div', 'area');
+    basketsEl = el('div', 'g2');
+    basketsEl.appendChild(el('div', 'hd'));
+    ss.forEach(function (sh) { basketsEl.appendChild(el('div', 'hd', shapeSVG(sh, '#9aa7c7'))); });
+    cs.forEach(function (c) {
+      basketsEl.appendChild(el('div', 'hd', '<div class="blob">' + blobSVG(c.hex) + '</div>'));
+      ss.forEach(function (sh) {
+        var d = el('div', 'cell'); d.dataset.color = c.id; d.dataset.shape = sh.id; d.style.setProperty('--tint', shade(c.hex, .78));
+        basketsEl.appendChild(d);
+      });
+    });
+    pieces = [];
+    cs.forEach(function (c) { ss.forEach(function (sh) {
+      for (var i = 0; i < 2; i++) {
+        var p = el('div', 'piece'); p.dataset.color = c.id; p.dataset.shape = sh.id;
+        p.innerHTML = shapeSVG(sh, c.hex);
+        p._jx = Math.random() * 2 - 1; p._jy = Math.random() * 2 - 1;
+        p.addEventListener('pointerdown', function (e) { down(e, this); });
+        pieces.push(p);
+      }
+    }); });
+    pieces = KidsGame.shuffle(pieces);
+    pieces.forEach(function (p, i) { p._k = i; p.style.animationDelay = (i * 60) + 'ms, ' + (-i * 0.7) + 's'; area.appendChild(p); });
+    s.appendChild(area); s.appendChild(basketsEl);
+    layoutSort();
+    KidsGame.say('Mira la fila del color y la columna de la forma. Arrastra cada figura a su casilla');
+  }
   function layoutSort() {
     if (!area || !area.isConnected) return;
     var W = area.clientWidth, H = area.clientHeight, n = pieces.length;
@@ -340,6 +466,7 @@
   function basketAt(x, y) {
     var hit = null;
     Array.prototype.forEach.call(basketsEl.children, function (b) {
+      if (b.dataset.color == null) return; // encabezados de la tabla 2x2
       var r = b.getBoundingClientRect();
       if (x >= r.left && x <= r.right && y >= r.top - 24 && y <= r.bottom + 24) hit = b;
     });
@@ -369,16 +496,17 @@
     Array.prototype.forEach.call(basketsEl.children, function (b) { b.classList.remove('hot'); });
     var hit = basketAt(r.left + r.width / 2, r.top + r.height / 2);
     if (hit && matches(hit, p)) {
-      // Cae dentro de la boca de la canasta
+      // Cae dentro de la boca de la canasta (o al centro de la casilla)
       var mouth = hit.querySelector('.mouth'), br = mouth ? mouth.getBoundingClientRect() : hit.getBoundingClientRect();
       p.classList.add('gone');
       // Se anima desde la posición original (left/top) hacia el centro de la boca
       var ox = parseFloat(p.style.left), oy = parseFloat(p.style.top), sz = parseFloat(p.style.width), ar = area.getBoundingClientRect();
       p.style.transform = 'translate(' + (br.left + br.width / 2 - (ar.left + ox + sz / 2)) + 'px,' + (br.top + br.height / 2 - (ar.top + oy + sz / 2)) + 'px) scale(0.1)';
       KidsGame.sound.pop(); replay(hit, 'got'); sparks(hit, '#ffe066'); scored();
+      if (hit.classList.contains('cell')) hit.insertAdjacentHTML('beforeend', p.innerHTML);
       pieces = pieces.filter(function (x) { return x !== p; });
       setTimeout(function () { p.remove(); }, 350);
-      if (!pieces.length) { lock = true; setTimeout(function () { afterRound(sortRound); }, 700); }
+      if (!pieces.length) { lock = true; setTimeout(function () { afterRound(ROUND_FN[ACTS[act]]); }, 700); }
     } else {
       p.style.transform = '';
       if (hit) { KidsGame.sound.wrong(); replay(p, 'bad'); } else KidsGame.sound.pop();
@@ -388,9 +516,26 @@
   document.addEventListener('pointerup', up);
   document.addEventListener('pointercancel', up);
 
-  window.addEventListener('resize', function () { if (ACTS[act] === 'sort') layoutSort(); });
+  window.addEventListener('resize', function () { if (area) layoutSort(); });
   // Expuesto para pruebas
-  window.__formas = { setLevel: function (n) { level = n; showMenu(); }, get level() { return level; }, start: startAct, sort: function (r) { act = 2; roundsInAct = r || 0; sortRound(); } };
+  window.__formas = {
+    setLevel: function (n) { level = n; ACTS = ACTS_BY_LEVEL[n]; showMenu(); }, get level() { return level; }, get act() { return ACTS[act]; }, get lock() { return lock; }, get total() { return correctTotal; },
+    start: startAct, sort: function (r) { act = ACTS.indexOf('sort'); roundsInAct = r || 0; sortRound(); },
+    get pieces() { return pieces.length; },
+    // resuelve la ronda actual: toca la opción correcta, o arrastra (eventos sintéticos) una pieza a su cesta/casilla
+    solve: function () {
+      var scr = game.querySelector('.screen');
+      if (scr.classList.contains('find')) { var c = scr.querySelector('.choice[data-id="' + scr.dataset.target + '"]'); c.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); return 'find:' + scr.dataset.target; }
+      var p = pieces[0]; if (!p) return false;
+      var target = Array.prototype.filter.call(basketsEl.children, function (b) { return b.dataset.color != null && matches(b, p); })[0];
+      var pr = p.getBoundingClientRect(), tr = target.getBoundingClientRect();
+      var o = { bubbles: true, pointerId: 7, clientX: pr.left + pr.width / 2, clientY: pr.top + pr.height / 2 };
+      p.dispatchEvent(new PointerEvent('pointerdown', o));
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 7, clientX: tr.left + tr.width / 2, clientY: tr.top + tr.height / 2 }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7, clientX: tr.left + tr.width / 2, clientY: tr.top + tr.height / 2 }));
+      return 'drag:' + p.dataset.color + '/' + p.dataset.shape;
+    }
+  };
   pickLevel();
 })();
 </script>

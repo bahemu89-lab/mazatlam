@@ -10,7 +10,7 @@
     display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px; touch-action: none;
     background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,246,190,.55), rgba(255,255,255,0) 70%);
   }
-  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; }
+  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; flex-wrap: wrap; row-gap: var(--gap); }
   /* Franja de suelo soleado detrás de las sombras */
   .row.top::before {
     content: ""; position: absolute; left: 50%; top: -16px; bottom: -16px; z-index: -1; border-radius: 34px;
@@ -126,6 +126,11 @@
   }
   @keyframes ring { 0%{transform:scale(.4);opacity:1} 100%{transform:scale(3.2);opacity:0} }
   .row.mid { gap: 12px; z-index: 2; }
+  .slot.decoy::before { border-color: rgba(140,95,20,.2); }
+  .slot .emoji.rot { transition: transform .5s cubic-bezier(.3,1.4,.4,1), filter .35s, opacity .35s; }
+  .hint .spin { display: inline-block; animation: spin 2.4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hint.small { font-size: 20px; padding: 6px 16px; }
   .row.mid .kg-level-badge { font-size: 20px; padding: 8px 16px; }
   .row.mid .lvbtn { font-size: 28px; }
 </style>
@@ -150,7 +155,10 @@ var game = KidsGame.init({ title: 'Sombras' });
     ['🐔','🐓','🐦','🐧','🦆','🦢','🦉','🦜','🐤','🦩','🕊️','🦚'],
     ['🐟','🐠','🐡','🦈','🐬','🐳','🐋','🦭','🐙','🦑','🦐','🦞']
   ];
-  var DIFF = { 1: { base: 3, max: 4 }, 2: { base: 5, max: 6 }, 3: { base: 7, max: 8 } };
+  // 4 = Experto: 9 sombras GIRADAS o en espejo (hay que rotarlas mentalmente) + 1 sombra señuelo sin objeto
+  var DIFF = { 1: { base: 3, max: 4 }, 2: { base: 5, max: 6 }, 3: { base: 7, max: 8, hard: true }, 4: { base: 9, max: 9, hard: true, rot: true, decoy: 1 } };
+  var LABELS = { 1: '3-4 sombras', 2: '5-6 sombras', 3: '7-8 · parecidas', 4: '9 giradas · 1 trampa' };
+  var ROTS = ['rotate(90deg)', 'rotate(-90deg)', 'rotate(180deg)', 'scaleX(-1)', 'scaleX(-1) rotate(90deg)', 'scaleX(-1) rotate(-90deg)', 'rotate(135deg)', 'rotate(-135deg)'];
   var nivel = 1, running = false;
   var round = 0, count = 3, items = [], slots = [], placed = 0;
   var hint = document.createElement('div'); hint.className = 'hint';
@@ -162,21 +170,24 @@ var game = KidsGame.init({ title: 'Sombras' });
   game.appendChild(top); game.appendChild(mid); game.appendChild(bottom);
 
   function layout() {
-    var n = items.length || 3;
+    var n = items.length || 3, nTop = slots.length || n;
     var W = game.clientWidth - 16 - 44, H = game.clientHeight - mid.offsetHeight - 40;
     var gap = 14;
-    var sz = Math.floor(Math.min((W - (n - 1) * gap) / n, H / 2.6, 200));
+    function szFor(cols, rows) { return Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - 40) / (rows + 1.2), 200)); }
+    // una fila si caben bien; si las fichas quedarían pequeñas, dos filas arriba y dos abajo
+    var cols = nTop, rows = 2, sz = szFor(cols, rows);
+    if (sz < 100 && nTop > 4) { cols = Math.ceil(nTop / 2); rows = 4; sz = szFor(cols, rows); }
     sz = Math.max(64, sz);
     game.style.setProperty('--sz', sz + 'px');
     game.style.setProperty('--gap', gap + 'px');
-    game.style.setProperty('--n', n);
+    game.style.setProperty('--n', Math.min(cols, nTop));
   }
 
   function pickLevel() {
     running = false; drag = null;
     top.innerHTML = ''; bottom.innerHTML = ''; mid.innerHTML = '';
     items = []; slots = [];
-    KidsGame.levelPicker({ onPick: function (n) { nivel = n; round = 0; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { nivel = n; round = 0; start(); } });
   }
   function buildHud() {
     mid.innerHTML = '';
@@ -208,17 +219,23 @@ var game = KidsGame.init({ title: 'Sombras' });
     running = true;
     var D = DIFF[nivel];
     count = Math.min(D.base + Math.floor(round / 2), D.max);
-    var set = (nivel === 3 ? SETS_HARD : SETS)[round % SETS.length];
-    items = KidsGame.shuffle(set).slice(0, count);
+    var set = (D.hard ? SETS_HARD : SETS)[round % SETS.length];
+    var pool = KidsGame.shuffle(set);
+    items = pool.slice(0, count);
+    var decoys = D.decoy ? pool.slice(count, count + D.decoy) : [];
     placed = 0; slots = [];
     top.innerHTML = ''; bottom.innerHTML = '';
-    hint.innerHTML = '<span class="emoji hand">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0);opacity:.7">🐶</span>';
+    hint.className = 'hint' + (D.rot ? ' small' : '');
+    hint.innerHTML = D.rot ? '<span class="emoji hand">👆</span> Arrastra · <span class="emoji spin">🔄</span> ¡Están giradas!' : '<span class="emoji hand">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0);opacity:.7">🐶</span>';
     buildHud();
-    items.forEach(function (em, i) {
+    // sombras (con señuelos mezclados) en posiciones al azar
+    var slotList = items.map(function (em) { return { v: em, decoy: false }; }).concat(decoys.map(function (em) { return { v: em, decoy: true }; }));
+    KidsGame.shuffle(slotList).forEach(function (it, i) {
       var s = document.createElement('div');
-      s.className = 'slot pop'; s.style.animationDelay = (i * 60) + 'ms';
-      s.dataset.v = em;
-      s.innerHTML = '<span class="emoji">' + em + '</span>';
+      s.className = 'slot pop' + (it.decoy ? ' decoy' : ''); s.style.animationDelay = (i * 60) + 'ms';
+      s.dataset.v = it.v; if (it.decoy) s.dataset.decoy = '1';
+      s.innerHTML = '<span class="emoji' + (D.rot ? ' rot' : '') + '">' + it.v + '</span>';
+      if (D.rot) { var em = s.querySelector('.emoji'); em.style.transform = 'skewX(-6deg) scaleY(.96) ' + KidsGame.pick(ROTS); }
       top.appendChild(s); slots.push(s);
     });
     KidsGame.shuffle(items).forEach(function (em, i) {
@@ -231,7 +248,7 @@ var game = KidsGame.init({ title: 'Sombras' });
       bottom.appendChild(o);
     });
     layout();
-    KidsGame.say('¿Dónde va cada sombra?');
+    KidsGame.say(D.rot ? 'Las sombras están giradas o al revés. ¿Dónde va cada una? Hay una sombra de más' : '¿Dónde va cada sombra?');
   }
 
   var drag = null;
@@ -283,8 +300,9 @@ var game = KidsGame.init({ title: 'Sombras' });
     if (d.hover) d.hover.classList.remove('hover');
     if (!running) return;
     var target = slotAt(ev.clientX, ev.clientY);
-    if (target && !target.classList.contains('ok') && target.dataset.v === d.o.dataset.v) {
+    if (target && !target.classList.contains('ok') && !target.dataset.decoy && target.dataset.v === d.o.dataset.v) {
       target.classList.add('ok');
+      var em = target.querySelector('.emoji'); if (em.style.transform) em.style.transform = ''; // la sombra girada vuelve a su posición
       d.o.classList.add('gone');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       burst(target);
@@ -292,6 +310,7 @@ var game = KidsGame.init({ title: 'Sombras' });
       if (placed === items.length) setTimeout(finish, 600);
     } else if (target) {
       KidsGame.sound.wrong();
+      if (target.dataset.decoy) { KidsGame.toast('🙈 ¡Esa sombra es de mentira!', 1300); KidsGame.say('Esa sombra no es de ningún objeto'); }
       target.classList.remove('bad'); void target.offsetWidth; target.classList.add('bad');
       d.o.classList.remove('bad'); void d.o.offsetWidth; d.o.classList.add('bad');
       setTimeout(function () { target.classList.remove('bad'); d.o.classList.remove('bad'); }, 400);
@@ -299,14 +318,29 @@ var game = KidsGame.init({ title: 'Sombras' });
   }
 
   function finish() {
+    if (count >= DIFF[nivel].max) KidsGame.levelDone(nivel);
     KidsGame.celebrate({
-      sub: 'Ronda ' + (round + 1),
+      sub: 'Ronda ' + (round + 1) + ' · ' + count + ' sombras',
       onNext: function () { round++; start(); },
       onAgain: function () { start(); }
     });
   }
 
   window.addEventListener('resize', function () { if (running) layout(); });
+  // Expuesto para pruebas
+  window.__som = {
+    get items() { return items; }, get slots() { return slots.length; }, get placed() { return placed; }, get round() { return round; },
+    // arrastra (eventos sintéticos) un objeto hasta la sombra indicada (o la correcta); devuelve si acertó
+    drop: function (v, toV) {
+      var o = bottom.querySelector('.obj[data-v="' + v + '"]:not(.gone)'); var s = slots.filter(function (x) { return x.dataset.v === (toV || v) && (toV ? true : !x.dataset.decoy); })[0];
+      if (!o || !s) return null;
+      var a = o.getBoundingClientRect(), b = s.getBoundingClientRect();
+      o.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 9, clientX: a.left + a.width / 2, clientY: a.top + a.height / 2 }));
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 9, clientX: b.left + b.width / 2, clientY: b.top + b.height / 2 }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 9, clientX: b.left + b.width / 2, clientY: b.top + b.height / 2 }));
+      return s.classList.contains('ok');
+    }
+  };
   pickLevel();
 })();
 </script>
