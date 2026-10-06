@@ -120,7 +120,8 @@
     back.onclick = function () { sounds.tap(); location.href = '../index.html'; };
     bar.appendChild(back);
     var h = document.createElement('h1'); h.textContent = opts.title || ''; bar.appendChild(h);
-    starsEl = document.createElement('div'); starsEl.className = 'stars'; starsEl.textContent = opts.showStars === false ? '' : '⭐ 0';
+    starsEl = document.createElement('div'); starsEl.className = 'stars'; starsEl.textContent = '⭐ 0';
+    if (opts.showStars === false) starsEl.style.display = 'none';
     bar.appendChild(starsEl);
     document.body.insertBefore(bar, document.body.firstChild);
     var game = document.querySelector('.game');

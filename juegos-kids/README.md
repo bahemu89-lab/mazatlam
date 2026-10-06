@@ -1,10 +1,10 @@
 # 🎈 Juegos Mazatlam — app Android para niñas y niños de 4 a 6 años
 
-App **sin internet** con 24 juegos, pensada para instalarse en una tablet Android aparte.
+App **sin internet** con 40 juegos, pensada para instalarse en una tablet Android aparte.
 Los juegos están inspirados en los más populares para esta edad (memoria, colorear, rompecabezas,
 globos, letras, números, formas y colores, sombras, dibujar, piano, Simón dice, atrapa al topo,
 laberinto, alimenta a los animales, crea tu monstruo, tres en raya, el intruso, ¿qué sigue?, diferencias,
-sumas, carrera, pesca, mi mascota y vestir). Todos tienen tres niveles: Fácil, Medio y Difícil. Todo funciona con toques,
+sumas, carrera, pesca, mi mascota y vestir). Todos tienen cuatro niveles: Fácil, Medio, Difícil y Experto 🏆, y la página **Progreso** (toca las estrellas del menú) muestra qué niveles completó y cuántas estrellas gana por día. Todo funciona con toques,
 con sonidos, estrellas y celebraciones, sin anuncios ni compras.
 
 ## Instalar el APK en la tablet
@@ -47,6 +47,22 @@ Sugerencia: activa en la tablet **"Fijar pantalla"** (Ajustes → Seguridad) par
 | 🎣 Pesca | tiempo de reacción, colores |
 | 🐶 Mi mascota | cuidar, responsabilidad |
 | 👗 Vestir | creatividad, clima y ocasiones |
+| 🔢 Sudoku | lógica de restricciones (4x4 y 6x6 con dibujos) |
+| 🤖 Programa al robot | pensamiento computacional (secuencias, repeticiones) |
+| 🗼 Torre | planificación (Torre de Hanói) |
+| 🕵️ ¿Quién es? | deducción con pistas |
+| 🧩 La pieza que falta | razonamiento abstracto (matrices) |
+| ⚖️ La balanza | igualdad y ecuaciones con objetos |
+| 🪙 La tiendita | dinero, sumar precios, dar cambio |
+| 🕒 El reloj | leer y poner la hora |
+| 🍕 Reparte igual | división, mitades y cuartos |
+| ✏️ Forma la palabra | escritura: letras, sílabas, teclado |
+| 🎵 Rimas | conciencia fonológica |
+| ❓ Adivinanzas | comprensión oral e inferencia |
+| 📖 Cuenta la historia | secuencias temporales e inventar cuentos |
+| 🔷 Tangram | geometría, rotación mental |
+| 🪞 Espejo | simetría |
+| 🧱 Construye | visión espacial 3D |
 
 ## Actualizar la app sin desinstalarla
 
