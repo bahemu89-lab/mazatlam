@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>Reparte igual</title>
+<style>
+  .game {
+    display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
+    background:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 100% 45% at 50% 112%, rgba(60,20,0,.35), rgba(0,0,0,0) 60%),
+      linear-gradient(180deg, #fff4d6 0%, #ffe0a6 40%, #f7c47a 100%);
+  }
+  .game::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .45;
+    background:
+      radial-gradient(circle at 10% 22%, rgba(255,255,255,.9) 0 10px, rgba(255,255,255,0) 11px),
+      radial-gradient(circle at 90% 18%, rgba(255,255,255,.8) 0 8px, rgba(255,255,255,0) 9px),
+      radial-gradient(circle at 92% 70%, rgba(255,255,255,.8) 0 12px, rgba(255,255,255,0) 13px),
+      radial-gradient(circle at 6% 80%, rgba(255,255,255,.8) 0 9px, rgba(255,255,255,0) 10px),
+      repeating-linear-gradient(45deg, rgba(255,120,120,.10) 0 24px, rgba(255,255,255,0) 24px 48px);
+  }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
+  .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
+  .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
+  .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #b8500a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+
+  .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 8px; }
+  .top { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; }
+  .tray { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 4px; min-height: 96px; max-width: 820px; padding: 8px 16px; border-radius: 30px;
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.6), rgba(255,255,255,0) 70%), repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 22px, rgba(120,60,10,.08) 22px 24px), linear-gradient(180deg, #ffd58a 0%, #f2b25a 60%, #d8923a 100%);
+    border: 3px solid #fff7e0; box-shadow: 0 8px 0 #a8672a, 0 16px 24px rgba(60,30,0,.3), inset 0 2px 0 #fff, inset 0 -6px 0 rgba(0,0,0,.08); }
+  .tray.empty::after { content: "✔"; font-size: 40px; color: #24b36c; text-shadow: 0 2px 0 #fff; }
+  .it { position: relative; width: var(--o); height: var(--o); display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; animation: wob 3s ease-in-out infinite; }
+  @keyframes wob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-4px) rotate(3deg); } }
+  .it .emoji { font-size: calc(var(--o) * .72); filter: drop-shadow(0 5px 4px rgba(0,0,0,.3)); }
+  .it.lifted { opacity: .25; }
+  .plates { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 12px 18px; width: 100%; }
+  .plate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; width: var(--pw); transition: transform .2s; }
+  .kid { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-bottom: -10px;
+    background: radial-gradient(circle at 35% 30%, #fff, #ffe9a8 45%, #ffb703 100%); box-shadow: 0 4px 0 #c47f00, 0 8px 14px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 4px rgba(255,255,255,.6); }
+  .kid .emoji { font-size: 40px; }
+  .kid.basket { background: radial-gradient(circle at 35% 30%, #fff, #e6d3b3 45%, #a8672a 100%); box-shadow: 0 4px 0 #6b3f12, 0 8px 14px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 4px rgba(255,255,255,.6); }
+  .dish { position: relative; width: var(--pw); height: calc(var(--pw) * .62); border-radius: 50%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 0; padding: 14px 10px 6px;
+    background: radial-gradient(ellipse at 40% 30%, #ffffff, #f0f4fb 60%, #c9d2e6 100%); border: 4px solid #fff;
+    box-shadow: 0 8px 0 #9fb0cc, 0 14px 20px rgba(20,40,90,.3), inset 0 0 0 10px rgba(200,215,240,.5), inset 0 2px 0 #fff; transition: box-shadow .25s, transform .15s; }
+  .dish.bk { border-radius: 30% 30% 40% 40%; background: radial-gradient(ellipse at 40% 20%, #fff2d6, #e6c28a 50%, #b07a3a 100%); box-shadow: 0 8px 0 #6b3f12, 0 14px 20px rgba(60,30,0,.3), inset 0 0 0 8px rgba(255,255,255,.25); }
+  .dish .it { width: calc(var(--o) * .78); height: calc(var(--o) * .78); animation: none; }
+  .dish .it .emoji { font-size: calc(var(--o) * .56); }
+  .dish .sl { width: calc(var(--o) * .8); height: calc(var(--o) * .8); animation: none; }
+  .plate.hot .dish { transform: scale(1.06); box-shadow: 0 8px 0 #9fb0cc, 0 14px 20px rgba(20,40,90,.3), 0 0 0 6px #7dd0ff, 0 0 26px 6px rgba(125,208,255,.8), inset 0 2px 0 #fff; }
+  .plate.eq .dish { box-shadow: 0 8px 0 #3fa864, 0 14px 20px rgba(0,60,40,.3), 0 0 0 6px #ffe98a, 0 0 32px 8px rgba(255,233,138,.9), inset 0 2px 0 #fff; }
+  .plate.bad .dish { animation: shake .4s; }
+  .cnt { position: absolute; right: -4px; top: -6px; min-width: 34px; height: 34px; line-height: 34px; padding: 0 8px; border-radius: 17px; text-align: center; font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); z-index: 3;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 3px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.6); transition: transform .15s; }
+  .cnt.bump { animation: bump .3s; }
+  @keyframes bump { 50% { transform: scale(1.3); } }
+
+  .ghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -60%) scale(1.15); font-size: 60px; line-height: 1; filter: drop-shadow(0 12px 10px rgba(0,0,0,.35)); font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+  .ghost svg { width: 70px; height: 70px; }
+
+  .pzwrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .pz { position: relative; width: var(--pz); height: var(--pz); touch-action: none; }
+  .pz svg { width: 100%; height: 100%; overflow: visible; }
+  .pz .sl { cursor: grab; transition: transform .15s; transform-origin: 0 0; }
+  .pz .sl.hi .cheese { fill: #ffe98a; }
+  .pz.bad { animation: shake .4s; }
+  .cuts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .cuts .btn { font-size: 22px; min-height: 64px; min-width: 76px; padding: 4px 12px; }
+  .cuts .btn.on { outline: 5px solid #fff; outline-offset: 2px; }
+  .pzs { display: flex; gap: clamp(16px, 5vw, 60px); justify-content: center; align-items: center; }
+  .pzs .pz { cursor: pointer; }
+  .pzs .pz:active { transform: scale(.96); }
+  .pzs .pz.ok svg { filter: drop-shadow(0 0 18px #ffe98a); }
+  .frac { font-size: 30px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #b8500a, 0 4px 8px rgba(0,0,0,.3); text-align: center; }
+  .nums { position: relative; display: flex; gap: clamp(14px, 3vw, 30px); padding: 10px 22px; border-radius: 34px; }
+  .q { font-size: clamp(20px, 3vw, 30px); font-weight: 900; color: #fff; text-shadow: 0 2px 0 #b8500a, 0 4px 8px rgba(0,0,0,.3); text-align: center; }
+  .num {
+    --a: #7dd0ff; --b: #2f95e8; --d: #1a63a8; --n: 84px;
+    position: relative; width: var(--n); height: var(--n); border-radius: 26%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: calc(var(--n) * .55); font-weight: 900; color: #fff; text-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(0,0,0,.3);
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, var(--a), var(--b));
+    border: 3px solid rgba(255,255,255,.85);
+    box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(60,30,0,.3), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -5px 0 rgba(0,0,0,.1);
+    transition: transform .12s, box-shadow .12s; animation: pop .4s ease-out backwards;
+  }
+  .num::before { content: ""; position: absolute; left: 8%; right: 8%; top: 4%; height: 36%; border-radius: 18% 18% 50% 50%; background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0)); pointer-events: none; }
+  .num:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--d), 0 6px 10px rgba(0,0,0,.3); }
+  .num.c1 { --a: #ff9ccb; --b: #f0569a; --d: #b8306f; }
+  .num.c3 { --a: #b39cff; --b: #7f5af0; --d: #5232b3; }
+  .num.bad { animation: shake .4s; }
+  .num.ok { --a: #8ef0b0; --b: #24b36c; --d: #14784a; transform: scale(1.12); box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); animation: none; }
+  .num.dim { opacity: .4; transform: scale(.9); animation: none; }
+  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
+  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'Reparte igual' });
+(function () {
+  var ROUNDS = 6;
+  var ITEMS = ['🍪', '🍓', '🍬', '🧁', '🍎', '🍩', '🍇', '🥕'];
+  var INAME = { '🍪': 'galletas', '🍓': 'fresas', '🍬': 'dulces', '🧁': 'pastelitos', '🍎': 'manzanas', '🍩': 'donas', '🍇': 'uvas', '🥕': 'zanahorias' };
+  var KIDS = ['🧒', '👧', '👦', '👶', '🧑', '👱‍♀️'];
+  var LABELS = { 1: 'Entre 2 o 3', 2: 'Hasta 12, ¿cuántos?', 3: 'Pizza en partes', 4: 'Sobras y fracciones' };
+  var FRACQ = [[2, 'la mitad', 2], [4, 'la mitad', 2], [6, 'la mitad', 2], [8, 'la mitad', 2], [4, 'un cuarto', 4], [8, 'un cuarto', 4], [3, 'un tercio', 3], [6, 'un tercio', 3]];
+  var CMP = [[[2, 1], [4, 1]], [[3, 2], [3, 1]], [[4, 3], [2, 1]], [[3, 1], [4, 1]], [[4, 2], [8, 3]], [[2, 1], [8, 5]], [[6, 2], [3, 2]], [[8, 6], [4, 1]], [[6, 5], [2, 1]], [[4, 1], [8, 1]]];
+
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', uid = 0;
+  var hud, dots, instrTxt, stage, top, platesEl, bottom;
+
+  function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+
+  // ---------- pizza renderizada ----------
+  function wedgePath(i, n, r) {
+    if (n === 1) return 'M0,' + (-r) + ' A' + r + ',' + r + ' 0 1 1 -0.01,' + (-r) + ' Z';
+    var a0 = (i / n) * Math.PI * 2 - Math.PI / 2, a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2, lg = (a1 - a0) > Math.PI ? 1 : 0;
+    return 'M0,0 L' + (r * Math.cos(a0)).toFixed(2) + ',' + (r * Math.sin(a0)).toFixed(2) + ' A' + r + ',' + r + ' 0 ' + lg + ' 1 ' + (r * Math.cos(a1)).toFixed(2) + ',' + (r * Math.sin(a1)).toFixed(2) + ' Z';
+  }
+  function pizzaSVG(n, present, size) {
+    var id = 'pz' + (++uid), s = '<svg viewBox="-112 -112 224 224" width="' + size + '" height="' + size + '"><defs>' +
+      '<linearGradient id="' + id + 'c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3c777"/><stop offset=".5" stop-color="#d9924a"/><stop offset="1" stop-color="#9c5a1e"/></linearGradient>' +
+      '<radialGradient id="' + id + 'q" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fff2a8"/><stop offset=".6" stop-color="#ffcf4a"/><stop offset="1" stop-color="#f0a030"/></radialGradient>' +
+      '<radialGradient id="' + id + 'p" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ff7d6a"/><stop offset=".7" stop-color="#d12f2f"/><stop offset="1" stop-color="#8e1515"/></radialGradient>' +
+      '<radialGradient id="' + id + 'd" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".75" stop-color="#eef2fb"/><stop offset="1" stop-color="#c9d2e6"/></radialGradient>' +
+      '<filter id="' + id + 's" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#5a2a00" flood-opacity=".35"/></filter>' +
+      '</defs><circle r="108" fill="url(#' + id + 'd)" stroke="#fff" stroke-width="3" filter="url(#' + id + 's)"/><circle r="96" fill="none" stroke="#dde4f2" stroke-width="2"/>';
+    for (var i = 0; i < n; i++) {
+      if (!present[i]) continue;
+      s += '<g class="sl" data-i="' + i + '">' +
+        '<path d="' + wedgePath(i, n, 92) + '" fill="url(#' + id + 'c)" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<path class="cheese" d="' + wedgePath(i, n, 80) + '" fill="url(#' + id + 'q)"/>';
+      var m = n <= 2 ? 5 : n <= 4 ? 3 : n <= 6 ? 2 : 1, a0 = (i / n) * Math.PI * 2 - Math.PI / 2, span = Math.PI * 2 / n;
+      for (var j = 0; j < m; j++) {
+        var a = a0 + span * (j + 1) / (m + 1), rr = (j % 2 ? 62 : 42), cx = rr * Math.cos(a), cy = rr * Math.sin(a);
+        s += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="9" fill="url(#' + id + 'p)" stroke="#8e1515" stroke-width="1"/><ellipse cx="' + (cx - 3).toFixed(1) + '" cy="' + (cy - 3).toFixed(1) + '" rx="3" ry="1.8" fill="rgba(255,255,255,.5)"/>';
+        if (n <= 4 && j === 0) { var ab = a + span * 0.18, bx = 72 * Math.cos(ab), by = 72 * Math.sin(ab); s += '<ellipse cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" rx="7" ry="4" fill="#3e9c3e" transform="rotate(' + (ab * 180 / Math.PI).toFixed(0) + ' ' + bx.toFixed(1) + ' ' + by.toFixed(1) + ')"/>'; }
+      }
+      s += '<path d="' + wedgePath(i, n, 92) + '" fill="rgba(0,0,0,0)" pointer-events="all"/></g>';
+    }
+    return s + '</svg>';
+  }
+  function sliceSVG(n, size) { return '<svg viewBox="-112 -112 224 224" width="' + size + '" height="' + size + '"><path d="' + wedgePath(0, n, 100) + '" fill="#d9924a" stroke="#fff" stroke-width="3" transform="translate(0,45)"/><path d="' + wedgePath(0, n, 86) + '" fill="#ffcf4a" transform="translate(0,45)"/><circle cx="0" cy="-5" r="10" fill="#d12f2f"/></svg>'; }
+
+  function build() {
+    game.innerHTML = '';
+    hud = el('div', 'hud panel');
+    hud.appendChild(KidsGame.levelBadge(nivel));
+    dots = el('div', 'dots');
+    for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
+    hud.appendChild(dots);
+    var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
+    lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+    hud.appendChild(lb);
+    game.appendChild(hud);
+    var instr = el('div', 'instr panel', '<span class="ico emoji">🍽️</span><span class="txt"></span>');
+    instrTxt = instr.querySelector('.txt');
+    var sp = el('button', 'btn round blue', '🔊');
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
+    instr.appendChild(sp);
+    game.appendChild(instr);
+    stage = el('div', 'stage');
+    top = el('div', 'top'); platesEl = el('div', 'plates'); bottom = el('div', 'bottom');
+    stage.appendChild(top); stage.appendChild(platesEl); stage.appendChild(bottom);
+    game.appendChild(stage);
+    window.addEventListener('resize', layout);
+  }
+  function layout() {
+    if (!stage || !cur) return;
+    var W = stage.clientWidth, H = stage.clientHeight;
+    var k = cur.k || 2, extra = cur.mode === 'left' ? 1 : 0;
+    var pw = Math.max(130, Math.min(230, Math.floor((W - 40) / (k + extra)) - 18, Math.floor(H * 0.42)));
+    stage.style.setProperty('--pw', pw + 'px');
+    var o = Math.max(44, Math.min(72, Math.floor(pw / 3.4)));
+    stage.style.setProperty('--o', o + 'px');
+    var pz = Math.max(170, Math.min(300, H - (cur.mode === 'cmp' ? 170 : cur.mode === 'half' ? 190 : 150), W * 0.42));
+    stage.style.setProperty('--pz', pz + 'px');
+  }
+
+  function showPicker() {
+    running = false; lock = true;
+    if (stage) { top.innerHTML = ''; platesEl.innerHTML = ''; bottom.innerHTML = ''; }
+    KidsGame.levelPicker({ key: 'reparte', labels: LABELS, onPick: function (lv) { start(lv); } });
+  }
+  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+
+  function makeRound() {
+    var c = { mode: 'share', step: 0, k: 2, n: 0, e: KidsGame.pick(ITEMS), kids: KidsGame.shuffle(KIDS), items: [], cuts: 0, present: [], give: [] };
+    if (nivel === 1) {
+      c.k = 2 + KidsGame.rand(2); c.n = c.k * (1 + KidsGame.rand(c.k === 2 ? 4 : 3));
+      c.instr = 'Reparte igual entre ' + c.k; c.say = 'Hay ' + c.n + ' ' + INAME[c.e] + '. Repártelas igual entre ' + c.k + ' amigos. Cada uno debe tener lo mismo.';
+    } else if (nivel === 2) {
+      c.k = 2 + KidsGame.rand(3); c.n = c.k * (2 + KidsGame.rand(Math.floor(12 / c.k) - 1));
+      c.ans = c.n / c.k; c.opts = KidsGame.shuffle([c.ans, c.ans + 1, c.ans > 1 ? c.ans - 1 : c.ans + 2]);
+      c.instr = 'Reparte igual entre ' + c.k; c.say = 'Hay ' + c.n + ' ' + INAME[c.e] + ' para ' + c.k + ' amigos. Repártelas igual y luego dime cuántas le tocan a cada uno.';
+    } else if (nivel === 3) {
+      if (round % 2 === 0) {
+        c.mode = 'pizza'; c.k = KidsGame.pick([2, 3, 4]); c.cuts = 0;
+        c.instr = 'Corta la pizza y reparte igual entre ' + c.k; c.say = 'Hay ' + c.k + ' amigos. Corta la pizza en partes iguales y dale a cada uno lo mismo. ¿Cuántas rebanadas necesitas?';
+      } else {
+        c.mode = 'half'; var fq = KidsGame.pick(FRACQ); c.cuts = fq[0]; c.present = []; for (var i = 0; i < fq[0]; i++) c.present.push(true);
+        c.word = fq[1]; c.ans = fq[0] / fq[2]; c.opts = KidsGame.shuffle([c.ans, c.ans + 1, c.ans > 1 ? c.ans - 1 : c.ans + 2]);
+        c.instr = '¿Cuántas rebanadas son ' + c.word + '?'; c.say = 'La pizza tiene ' + fq[0] + ' rebanadas. ¿Cuántas rebanadas son ' + c.word + '?';
+      }
+    } else {
+      if (round % 2 === 0) {
+        c.mode = 'left'; c.k = 2 + KidsGame.rand(3); var q = 2 + KidsGame.rand(3), r = 1 + KidsGame.rand(c.k - 1); c.n = c.k * q + r; if (c.n > 16) { q = 2; c.n = c.k * q + r; }
+        c.rem = r; c.ans = r; c.opts = KidsGame.shuffle([r, r + 1, r + 2]);
+        c.instr = 'Reparte igual; lo que sobra, a la canasta'; c.say = 'Hay ' + c.n + ' ' + INAME[c.e] + ' para ' + c.k + ' amigos. Reparte igual. Lo que sobre, ponlo en la canasta.';
+      } else {
+        c.mode = 'cmp'; var pr = KidsGame.pick(CMP); if (Math.random() < 0.5) pr = [pr[1], pr[0]]; c.pz = pr;
+        c.ans = (pr[0][1] / pr[0][0] > pr[1][1] / pr[1][0]) ? 0 : 1;
+        c.instr = '¿Qué pizza tiene más? Tócala'; c.say = 'Mira las dos pizzas. ¿Cuál tiene más pizza? Tócala.';
+      }
+    }
+    for (var j = 0; j < c.n; j++) c.items.push({ e: c.e, where: -1 });
+    return c;
+  }
+
+  function newRound() {
+    if (!running) return;
+    cur = makeRound(); lock = false;
+    instrTxt.textContent = cur.instr; sayText = cur.say;
+    top.innerHTML = ''; platesEl.innerHTML = ''; bottom.innerHTML = '';
+    layout();
+    if (cur.mode === 'share' || cur.mode === 'left') renderShare();
+    else if (cur.mode === 'pizza') renderPizza();
+    else if (cur.mode === 'half') renderHalf();
+    else renderCmp();
+    KidsGame.say(sayText);
+  }
+
+  // ---------- repartir objetos ----------
+  function renderShare() {
+    top.innerHTML = ''; platesEl.innerHTML = '';
+    var tray = el('div', 'tray'), inTray = 0;
+    cur.items.forEach(function (it, i) { if (it.where === -1) { inTray++; tray.appendChild(makeItem(it, i)); } });
+    tray.classList.toggle('empty', inTray === 0);
+    top.appendChild(tray);
+    var counts = [];
+    for (var p = 0; p < cur.k; p++) {
+      var pl = el('div', 'plate'); pl._p = p;
+      pl.appendChild(el('div', 'kid', '<span class="emoji">' + cur.kids[p] + '</span>'));
+      var dish = el('div', 'dish'); var c = 0;
+      cur.items.forEach(function (it, i) { if (it.where === p) { c++; dish.appendChild(makeItem(it, i)); } });
+      counts.push(c);
+      pl.appendChild(dish); pl.appendChild(el('div', 'cnt', String(c)));
+      platesEl.appendChild(pl);
+    }
+    if (cur.mode === 'left') {
+      var bk = el('div', 'plate'); bk._p = 'b';
+      bk.appendChild(el('div', 'kid basket', '<span class="emoji">🧺</span>'));
+      var bd = el('div', 'dish bk'); var bc = 0;
+      cur.items.forEach(function (it, i) { if (it.where === 'b') { bc++; bd.appendChild(makeItem(it, i)); } });
+      bk.appendChild(bd); bk.appendChild(el('div', 'cnt', String(bc)));
+      platesEl.appendChild(bk);
+    }
+    var eq = inTray === 0 && counts.every(function (v) { return v === counts[0]; }) && counts[0] > 0;
+    if (eq) platesEl.querySelectorAll('.plate').forEach(function (pl) { if (pl._p !== 'b') pl.classList.add('eq'); });
+  }
+  function makeItem(it, i) {
+    var d = el('div', 'it', '<span class="emoji">' + it.e + '</span>');
+    d.style.animationDelay = (Math.random() * 3) + 's';
+    d.addEventListener('pointerdown', function (ev) { dragItem(ev, i, d); });
+    return d;
+  }
+  function dragItem(ev, i, d) {
+    if (lock || !running || cur.step !== 0) return;
+    ev.preventDefault();
+    var g = el('div', 'ghost', cur.items[i].e); document.body.appendChild(g);
+    g.style.left = ev.clientX + 'px'; g.style.top = ev.clientY + 'px';
+    d.classList.add('lifted'); KidsGame.sound.tap();
+    var plates = Array.prototype.slice.call(platesEl.querySelectorAll('.plate'));
+    function hit(x, y) { for (var k = 0; k < plates.length; k++) { var r = plates[k].getBoundingClientRect(); if (x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 12) return plates[k]; } return null; }
+    function mv(e) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px'; var h = hit(e.clientX, e.clientY); plates.forEach(function (p) { p.classList.toggle('hot', p === h); }); }
+    function up(e) {
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      g.remove(); d.classList.remove('lifted'); plates.forEach(function (p) { p.classList.remove('hot'); });
+      var h = hit(e.clientX, e.clientY);
+      var tr = top.querySelector('.tray'), tb = tr && tr.getBoundingClientRect();
+      if (h) moveItem(i, h._p);
+      else if (tb && e.clientX >= tb.left && e.clientX <= tb.right && e.clientY >= tb.top && e.clientY <= tb.bottom) moveItem(i, -1);
+    }
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  }
+  function moveItem(i, where) {
+    if (cur.items[i].where === where) return;
+    cur.items[i].where = where; KidsGame.sound.pop();
+    renderShare();
+    var cnts = platesEl.querySelectorAll('.cnt'); for (var k = 0; k < cnts.length; k++) cnts[k].classList.add('bump');
+    checkShare();
+  }
+  function plateCounts() { var c = []; for (var p = 0; p < cur.k; p++) c.push(0); var b = 0, t = 0; cur.items.forEach(function (it) { if (it.where === -1) t++; else if (it.where === 'b') b++; else c[it.where]++; }); return { c: c, b: b, t: t }; }
+  function checkShare() {
+    var pc = plateCounts(); if (pc.t > 0) return;
+    var eq = pc.c.every(function (v) { return v === pc.c[0]; });
+    if (eq && cur.mode === 'left' && pc.b >= cur.k) { KidsGame.sound.wrong(); KidsGame.say('Sobran muchas. Todavía puedes repartir más.'); platesEl.lastChild.classList.add('bad'); setTimeout(function () { platesEl.lastChild.classList.remove('bad'); }, 500); return; }
+    if (!eq) {
+      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      var mx = Math.max.apply(null, pc.c);
+      platesEl.querySelectorAll('.plate').forEach(function (pl) { if (pl._p !== 'b' && pc.c[pl._p] === mx) { pl.classList.add('bad'); setTimeout(function () { pl.classList.remove('bad'); }, 500); } });
+      KidsGame.say(nivel <= 2 ? 'No es igual. Mira los números: uno tiene más.' : 'No es igual.');
+      return;
+    }
+    lock = true; KidsGame.sound.ok();
+    if (cur.opts) { cur.step = 1; setTimeout(function () { lock = false; askNum(cur.mode === 'left' ? '¿Cuántas sobran?' : '¿Cuántas le tocan a cada uno?'); }, 700); }
+    else setTimeout(function () { win(platesEl); }, 300);
+  }
+  function askNum(q) {
+    instrTxt.textContent = q; sayText = q; KidsGame.say(q);
+    bottom.innerHTML = ''; bottom.appendChild(el('div', 'q', q));
+    var nums = el('div', 'nums panel');
+    cur.opts.forEach(function (v, i) {
+      var n = el('div', 'num ' + ['c1', 'c2', 'c3'][i], String(v)); n.style.animationDelay = (i * 90) + 'ms';
+      n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); choose(n, v); });
+      nums.appendChild(n);
+    });
+    bottom.appendChild(nums);
+  }
+  function choose(n, v) {
+    if (lock || !running) return;
+    if (v !== cur.ans) {
+      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad'); setTimeout(function () { n.classList.remove('bad'); }, 450);
+      return;
+    }
+    lock = true; n.classList.add('ok');
+    var all = bottom.querySelectorAll('.num'); for (var i = 0; i < all.length; i++) if (all[i] !== n) all[i].classList.add('dim');
+    if (cur.mode === 'half') { var sls = top.querySelectorAll('.sl'); for (var s = 0; s < cur.ans && s < sls.length; s++) sls[s].classList.add('hi'); }
+    setTimeout(function () { win(n); }, 350);
+  }
+
+  // ---------- pizza: cortar y repartir ----------
+  function renderPizza() {
+    top.innerHTML = '';
+    var wrap = el('div', 'pzwrap');
+    var pz = el('div', 'pz', pizzaSVG(cur.cuts || 1, cur.cuts ? cur.present : [true], 300));
+    wrap.appendChild(pz);
+    var cuts = el('div', 'cuts');
+    [2, 3, 4, 6, 8].forEach(function (n, i) {
+      var b = el('button', 'btn ' + ['blue', 'purple', 'green', 'blue', 'purple'][i] + (cur.cuts === n ? ' on' : ''), '✂️ ' + n);
+      b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); setCuts(n); });
+      cuts.appendChild(b);
+    });
+    wrap.appendChild(cuts);
+    top.appendChild(wrap);
+    if (cur.cuts) pz.querySelectorAll('.sl').forEach(function (sl) { sl.addEventListener('pointerdown', function (ev) { dragSlice(ev, parseInt(sl.getAttribute('data-i'), 10), sl); }); });
+    platesEl.innerHTML = '';
+    for (var p = 0; p < cur.k; p++) {
+      var pl = el('div', 'plate'); pl._p = p;
+      pl.appendChild(el('div', 'kid', '<span class="emoji">' + cur.kids[p] + '</span>'));
+      var dish = el('div', 'dish');
+      for (var s = 0; s < cur.give[p]; s++) dish.appendChild(el('div', 'sl', sliceSVG(cur.cuts, 46)));
+      pl.appendChild(dish); pl.appendChild(el('div', 'cnt', String(cur.give[p])));
+      (function (pp) { pl.addEventListener('pointerdown', function (ev) { ev.preventDefault(); takeBack(pp); }); })(p);
+      platesEl.appendChild(pl);
+    }
+    var left = cur.present.filter(function (v) { return v; }).length;
+    if (cur.cuts && left === 0 && cur.give.every(function (v) { return v === cur.give[0]; })) platesEl.querySelectorAll('.plate').forEach(function (pl) { pl.classList.add('eq'); });
+  }
+  function setCuts(n) {
+    if (lock || !running) return;
+    cur.cuts = n; cur.present = []; for (var i = 0; i < n; i++) cur.present.push(true);
+    cur.give = []; for (var p = 0; p < cur.k; p++) cur.give.push(0);
+    KidsGame.sound.pop(); KidsGame.say(n + ' rebanadas'); renderPizza();
+  }
+  function dragSlice(ev, i, sl) {
+    if (lock || !running) return;
+    ev.preventDefault(); ev.stopPropagation();
+    var g = el('div', 'ghost', sliceSVG(cur.cuts, 70)); document.body.appendChild(g);
+    g.style.left = ev.clientX + 'px'; g.style.top = ev.clientY + 'px';
+    sl.style.opacity = '.3'; KidsGame.sound.tap();
+    var plates = Array.prototype.slice.call(platesEl.querySelectorAll('.plate'));
+    function hit(x, y) { for (var k = 0; k < plates.length; k++) { var r = plates[k].getBoundingClientRect(); if (x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 12) return plates[k]; } return null; }
+    function mv(e) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px'; var h = hit(e.clientX, e.clientY); plates.forEach(function (p) { p.classList.toggle('hot', p === h); }); }
+    function up(e) {
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      g.remove(); sl.style.opacity = ''; plates.forEach(function (p) { p.classList.remove('hot'); });
+      var h = hit(e.clientX, e.clientY);
+      if (h) giveSlice(i, h._p);
+    }
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  }
+  function giveSlice(i, p) {
+    cur.present[i] = false; cur.give[p]++; KidsGame.sound.pop(); renderPizza(); checkPizza();
+  }
+  function takeBack(p) {
+    if (lock || !running || cur.give[p] <= 0) return;
+    cur.give[p]--; for (var i = 0; i < cur.present.length; i++) if (!cur.present[i]) { cur.present[i] = true; break; }
+    KidsGame.sound.tap(); renderPizza();
+  }
+  function checkPizza() {
+    var left = cur.present.filter(function (v) { return v; }).length; if (left > 0) return;
+    var eq = cur.give.every(function (v) { return v === cur.give[0]; });
+    if (!eq) {
+      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      var mx = Math.max.apply(null, cur.give);
+      platesEl.querySelectorAll('.plate').forEach(function (pl) { if (cur.give[pl._p] === mx) { pl.classList.add('bad'); setTimeout(function () { pl.classList.remove('bad'); }, 500); } });
+      KidsGame.say(cur.cuts % cur.k !== 0 ? 'Con ' + cur.cuts + ' rebanadas no sale igual para ' + cur.k + '. Prueba otro corte.' : 'No es igual. Toca un plato para regresar una rebanada.');
+      return;
+    }
+    lock = true; setTimeout(function () { win(platesEl); }, 300);
+  }
+
+  // ---------- ¿cuántas rebanadas son la mitad? ----------
+  function renderHalf() {
+    top.innerHTML = ''; platesEl.innerHTML = '';
+    var wrap = el('div', 'pzwrap');
+    wrap.appendChild(el('div', 'pz', pizzaSVG(cur.cuts, cur.present, 300)));
+    wrap.appendChild(el('div', 'frac', cur.cuts + ' rebanadas'));
+    top.appendChild(wrap);
+    askNum('¿Cuántas son ' + cur.word + '?');
+  }
+
+  // ---------- comparar fracciones ----------
+  function renderCmp() {
+    top.innerHTML = ''; platesEl.innerHTML = '';
+    var row = el('div', 'pzs');
+    cur.pz.forEach(function (f, idx) {
+      var pres = []; for (var i = 0; i < f[0]; i++) pres.push(i < f[1]);
+      var w = el('div', 'pzwrap'); var pz = el('div', 'pz', pizzaSVG(f[0], pres, 300)); pz.style.animation = 'pop .4s ease-out backwards'; pz.style.animationDelay = (idx * 120) + 'ms';
+      pz.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tapPizza(pz, idx); });
+      w.appendChild(pz); w.appendChild(el('div', 'frac', f[1] + '/' + f[0]));
+      row.appendChild(w);
+    });
+    top.appendChild(row);
+  }
+  function tapPizza(pz, idx) {
+    if (lock || !running) return;
+    if (idx !== cur.ans) {
+      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      pz.classList.remove('bad'); void pz.offsetWidth; pz.classList.add('bad'); setTimeout(function () { pz.classList.remove('bad'); }, 450);
+      return;
+    }
+    lock = true; pz.classList.add('ok'); win(pz);
+  }
+
+  function sparkle(x, y, n) {
+    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
+    for (var i = 0; i < (n || 18); i++) {
+      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
+      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 120;
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
+      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
+      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
+    }
+  }
+  function win(at) {
+    lock = true;
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    var g = game.getBoundingClientRect(), r = at.getBoundingClientRect();
+    sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+    KidsGame.say(KidsGame.pick(['¡Todos tienen lo mismo!', '¡Muy bien!', '¡Repartido igual!', '¡Eso es!']));
+    dots.children[round].classList.add('on'); round++;
+    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1700);
+  }
+  function finish() {
+    running = false;
+    KidsGame.levelDone(nivel);
+    KidsGame.celebrate({
+      sub: '¡' + ROUNDS + ' repartos perfectos!',
+      onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
+      onAgain: function () { start(nivel); }
+    });
+  }
+
+  window.__g3 = {
+    state: function () { return cur && { mode: cur.mode, step: cur.step, k: cur.k, n: cur.n, cuts: cur.cuts, ans: cur.ans, round: round, nivel: nivel, lock: lock }; },
+    solve: function () {
+      if (!cur || lock) return false;
+      var m = cur.mode;
+      if ((m === 'share' || m === 'left') && cur.step === 0) {
+        var q = Math.floor(cur.n / cur.k);
+        cur.items.forEach(function (it, i) { it.where = i < q * cur.k ? i % cur.k : 'b'; });
+        renderShare(); checkShare();
+        if (!cur.opts) return true;
+        setTimeout(function () { var ns = bottom.querySelectorAll('.num'); for (var j = 0; j < ns.length; j++) if (parseInt(ns[j].textContent, 10) === cur.ans) choose(ns[j], cur.ans); }, 900);
+        return true;
+      }
+      if (m === 'pizza') { setCuts(cur.k === 3 ? 6 : cur.k * 2); for (var i = 0; i < cur.cuts; i++) { cur.present[i] = false; cur.give[i % cur.k]++; } renderPizza(); checkPizza(); return true; }
+      if (m === 'half' || cur.step === 1) { var ns = bottom.querySelectorAll('.num'); for (var j = 0; j < ns.length; j++) if (parseInt(ns[j].textContent, 10) === cur.ans) { choose(ns[j], cur.ans); return true; } return false; }
+      if (m === 'cmp') { var pzs = top.querySelectorAll('.pz'); tapPizza(pzs[cur.ans], cur.ans); return true; }
+      return false;
+    },
+    wrong: function () {
+      if (!cur || lock) return false;
+      var m = cur.mode;
+      if ((m === 'share' || m === 'left') && cur.step === 0) { cur.items.forEach(function (it) { it.where = 0; }); renderShare(); checkShare(); cur.items.forEach(function (it) { it.where = -1; }); renderShare(); return true; }
+      if (m === 'pizza') { setCuts(cur.k === 2 ? 3 : 2); for (var i = 0; i < cur.cuts; i++) { cur.present[i] = false; cur.give[0]++; } renderPizza(); checkPizza(); return true; }
+      if (m === 'half') { var ns = bottom.querySelectorAll('.num'); for (var j = 0; j < ns.length; j++) if (parseInt(ns[j].textContent, 10) !== cur.ans) { choose(ns[j], parseInt(ns[j].textContent, 10)); return true; } }
+      if (m === 'cmp') { var pzs = top.querySelectorAll('.pz'); tapPizza(pzs[1 - cur.ans], 1 - cur.ans); return true; }
+      return false;
+    }
+  };
+  showPicker();
+})();
+</script>
+</body>
+</html>

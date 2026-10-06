@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="../common.css">
+<title>La tiendita</title>
+<style>
+  .game {
+    display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
+    background:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 46px, rgba(255,255,255,0) 46px 92px),
+      linear-gradient(180deg, #ffd6e0 0%, #ffb8c9 50%, #f59bb3 100%);
+  }
+  .game::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 56px; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(90deg, #ff6f8e 0 60px, #fff 60px 120px);
+    border-bottom: 6px solid #d64266; box-shadow: 0 8px 16px rgba(120,0,40,.25);
+    -webkit-mask: radial-gradient(circle at 30px 56px, rgba(0,0,0,0) 28px, #000 29px) repeat-x; -webkit-mask-size: 60px 100%;
+    mask: radial-gradient(circle at 30px 56px, rgba(0,0,0,0) 28px, #000 29px) repeat-x; mask-size: 60px 100%;
+  }
+  .game::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(45deg, #ffe9ef 0 40px, #ffd1dc 40px 80px); opacity: .7;
+    box-shadow: inset 0 10px 20px rgba(120,0,40,.15);
+  }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
+  .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
+  .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
+  .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #b8306f; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+
+  .shop { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; max-width: 980px; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 10px; --is: clamp(104px, 19vh, 190px); }
+  .shelf { flex: 0 0 auto; position: relative; display: flex; justify-content: space-evenly; align-items: flex-end; height: 112px; padding: 0 20px 14px; border-radius: 12px 12px 18px 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0 68%, #e2a062 68%, #b8702f 86%, #7a4714 100%);
+    box-shadow: 0 10px 18px rgba(80,20,20,.25); }
+  .shelf::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 68%; border-radius: 12px 12px 0 0; background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08)); box-shadow: inset 0 3px 0 rgba(255,255,255,.5); }
+  .prod { position: relative; width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; }
+  .prod .emoji { font-size: 58px; animation: float 4s ease-in-out infinite; }
+  .prod.picked { opacity: .3; filter: grayscale(.8); }
+  .prod.picked .emoji { animation: none; }
+  .tag { position: absolute; right: -8px; bottom: -4px; padding: 2px 9px 2px 12px; border-radius: 6px 12px 12px 6px; font-size: 17px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6);
+    box-shadow: 0 3px 0 #c47f00, 0 4px 8px rgba(0,0,0,.25), inset 0 1px 0 #fff; z-index: 2; }
+  .tag::before { content: ""; position: absolute; left: 3px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%; background: #7a4b00; box-shadow: inset 0 1px 1px rgba(0,0,0,.4); }
+
+  .counter { flex: 0 1 auto; min-height: 200px; max-height: 440px; position: relative; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 12px; padding: 12px 14px; border-radius: 28px;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.4), rgba(255,255,255,0) 70%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 30px, rgba(90,40,10,.08) 30px 32px),
+      linear-gradient(180deg, #f0b36e 0%, #d6893f 60%, #a85f20 100%);
+    border: 3px solid #ffe3c0;
+    box-shadow: 0 10px 0 #7a4714, 0 20px 30px rgba(80,20,20,.35), inset 0 2px 0 #fff, inset 0 0 0 6px rgba(255,255,255,.15); }
+  .who { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 150px; }
+  .medal { width: calc(var(--is) * .72); height: calc(var(--is) * .72); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #ffd6e0 45%, #f0569a 100%);
+    box-shadow: 0 6px 0 #b8306f, 0 12px 20px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 5px rgba(255,255,255,.5); }
+  .medal .emoji { font-size: calc(var(--is) * .45); }
+  .bubble { position: relative; padding: 8px 14px; border-radius: 18px; background: linear-gradient(180deg, #fff, #f1f4fb); border: 3px solid #fff; font-size: clamp(16px, 2.2vw, 22px); font-weight: 900; color: #1f2f6b; text-align: center; max-width: 180px; line-height: 1.15;
+    box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22); animation: pop .35s ease-out; }
+  .bubble::before { content: ""; position: absolute; left: 50%; top: -12px; margin-left: -8px; border: 8px solid transparent; border-bottom-color: #fff; border-top: 0; }
+  .bubble.err { background: linear-gradient(180deg, #ffe9e9, #ffc9c9); color: #b8306f; }
+  .bubble.ok { background: linear-gradient(180deg, #e9ffe9, #b9f0c4); color: #14784a; }
+  .buy { flex: 1 1 200px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; min-height: 120px; }
+  .item { position: relative; width: var(--is); height: var(--is); border-radius: 26px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #ffffff, #f1f4fb); border: 3px solid #fff; box-shadow: 0 7px 0 #c9d2e6, 0 14px 22px rgba(20,40,90,.25), inset 0 2px 0 #fff; animation: pop .4s ease-out backwards; }
+  .item .emoji { font-size: calc(var(--is) * .6); }
+  .item .tag { right: -10px; bottom: -8px; font-size: 24px; padding: 3px 12px 3px 16px; }
+  .item .tag::before { width: 7px; height: 7px; margin-top: -3.5px; }
+  .plus { font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 3px 0 #b8306f, 0 5px 8px rgba(0,0,0,.3); }
+  .billwrap { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+  .billwrap svg { filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)); }
+  .paybox { flex: 0 1 300px; min-width: 240px; min-height: 160px; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 24px; position: relative;
+    background: linear-gradient(180deg, #fff6d0, #ffe08a); border: 4px dashed #fff; transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 7px 0 #c47f00, 0 14px 22px rgba(80,20,20,.3), inset 0 2px 0 #fff; }
+  .paybox.hot { transform: scale(1.04); box-shadow: 0 7px 0 #c47f00, 0 14px 22px rgba(80,20,20,.3), 0 0 0 6px #7dd0ff, 0 0 30px 6px rgba(125,208,255,.8); }
+  .paybox.bad { animation: shake .4s; }
+  .paybox.win { border-style: solid; background: linear-gradient(180deg, #e9ffe9, #b9f0c4); box-shadow: 0 7px 0 #14784a, 0 14px 22px rgba(0,60,40,.3), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); }
+  .paybox .lbl { font-size: 18px; font-weight: 900; color: #8a4b0a; text-shadow: 0 1px 0 #fff; }
+  .paybox .tot { font-size: clamp(42px, 6vw, 60px); line-height: 1; font-weight: 900; color: #fff; text-shadow: 0 3px 0 #c47f00, 0 6px 10px rgba(0,0,0,.3); transition: transform .15s; }
+  .paybox .tot.bump { animation: bump .3s; }
+  @keyframes bump { 50% { transform: scale(1.25); } }
+  .paid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2px; min-height: 48px; }
+  .paid .pc { width: 44px; height: 44px; margin: 0 -6px; cursor: pointer; animation: pop .3s ease-out; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
+  .paid .pc svg { width: 100%; height: 100%; }
+
+  .wallet { position: relative; z-index: 2; flex: 0 0 auto; width: 100%; max-width: 980px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 14px; border-radius: 34px; }
+  .coins { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; flex: 1 1 auto; }
+  .coin { position: relative; width: 92px; height: 92px; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; transition: transform .12s; }
+  .coin svg { filter: drop-shadow(0 5px 5px rgba(0,0,0,.35)); transition: transform .12s; }
+  .coin:active svg { transform: scale(1.1); }
+  .coin.empty { opacity: .3; filter: grayscale(1); pointer-events: none; }
+  .coin .cnt { position: absolute; right: 0; top: 0; min-width: 28px; height: 28px; line-height: 28px; padding: 0 7px; border-radius: 14px; text-align: center; font-size: 17px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 2px 0 #1a63a8, 0 3px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.6); z-index: 2; }
+  .ghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -55%) scale(1.15); filter: drop-shadow(0 14px 12px rgba(0,0,0,.4)); }
+  .pay { font-size: 26px; min-height: 72px; padding: 8px 22px; white-space: nowrap; }
+  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
+  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
+  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  @media (max-height: 820px) and (min-aspect-ratio: 1/1) { .shelf { height: 92px; } .prod { width: 70px; height: 70px; } .prod .emoji { font-size: 48px; } }
+</style>
+</head>
+<body>
+<script src="../common.js"></script>
+<script>
+var game = KidsGame.init({ title: 'La tiendita' });
+(function () {
+  var ROUNDS = 6;
+  var PRODS = ['🍎', '🍌', '🍬', '🍪', '🥐', '🍩', '🧃', '🍦', '🍭', '🧁', '🥪', '🍕', '🧸', '🎈', '🍫', '📚', '⚽', '🚗', '🎁', '🪁', '🧩', '🎀', '🎨', '🪀', '🦆', '🧢', '🍇', '🥕'];
+  var PNAME = { '🍎': 'la manzana', '🍌': 'el plátano', '🍬': 'el dulce', '🍪': 'la galleta', '🥐': 'el pan', '🍩': 'la dona', '🧃': 'el jugo', '🍦': 'el helado', '🍭': 'la paleta', '🧁': 'el pastelito', '🥪': 'el sándwich', '🍕': 'la pizza', '🧸': 'el osito', '🎈': 'el globo', '🍫': 'el chocolate', '📚': 'los libros', '⚽': 'el balón', '🚗': 'el carrito', '🎁': 'el regalo', '🪁': 'el papalote', '🧩': 'el rompecabezas', '🎀': 'el moño', '🎨': 'las pinturas', '🪀': 'el yoyo', '🦆': 'el patito', '🧢': 'la gorra', '🍇': 'las uvas', '🥕': 'la zanahoria' };
+  var LABELS = { 1: 'Monedas de $1', 2: 'Combina monedas', 3: 'Dos cosas', 4: 'Da el cambio' };
+  var KEEPERS = ['👩‍🌾', '🧑‍🍳', '👨‍🌾', '👩‍🍳'], CUSTS = ['🧒', '👧', '👦', '👵', '👴', '🧑'];
+
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, total = 0, paid = [];
+  var hud, dots, instrTxt, shop, shelf, counter, who, bubble, buy, paybox, totEl, paidEl, wallet, coinsEl, sayText = '';
+
+  function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+
+  // Monedas y billete renderizados en SVG (estilo mexicano: bimetálicas)
+  function coinSVG(v, size) {
+    var id = 'c' + v + '_' + Math.floor(Math.random() * 1e6);
+    var gold = '<radialGradient id="g' + id + '" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6c0"/><stop offset=".45" stop-color="#f5c542"/><stop offset="1" stop-color="#a86a0a"/></radialGradient>';
+    var silver = '<radialGradient id="s' + id + '" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#d4dae6"/><stop offset="1" stop-color="#6d7a92"/></radialGradient>';
+    var hi = '<ellipse cx="38" cy="30" rx="18" ry="9" fill="rgba(255,255,255,.55)" transform="rotate(-30 38 30)"/>';
+    if (v === 20) {
+      return '<svg viewBox="0 0 120 64" width="' + (size * 1.5) + '" height="' + (size * 0.8) + '"><defs><linearGradient id="b' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe6ff"/><stop offset=".5" stop-color="#5fb0ea"/><stop offset="1" stop-color="#2a6fb5"/></linearGradient></defs>' +
+        '<rect x="2" y="2" width="116" height="60" rx="8" fill="url(#b' + id + ')" stroke="#fff" stroke-width="3"/>' +
+        '<rect x="10" y="10" width="100" height="44" rx="6" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-dasharray="4 3"/>' +
+        '<circle cx="34" cy="32" r="14" fill="rgba(255,255,255,.35)"/><text x="34" y="38" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="inherit">$</text>' +
+        '<text x="78" y="42" text-anchor="middle" font-size="30" font-weight="900" fill="#fff" stroke="#1a4f8a" stroke-width="1" paint-order="stroke" font-family="inherit">20</text></svg>';
+    }
+    var outer = (v === 1 || v === 2 || v === 5) ? 'url(#s' + id + ')' : 'url(#g' + id + ')';
+    var inner = (v === 2 || v === 5) ? 'url(#g' + id + ')' : (v === 10 ? 'url(#s' + id + ')' : null);
+    var col = (v === 1) ? '#4b5468' : (v === 10 ? '#4b5468' : '#7a4b00');
+    var r = v === 1 ? 24 : v === 2 ? 26 : v === 5 ? 29 : 32;
+    return '<svg viewBox="0 0 64 64" width="' + size + '" height="' + size + '"><defs>' + gold + silver + '</defs>' +
+      '<circle cx="32" cy="32" r="' + r + '" fill="' + outer + '" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/>' +
+      '<circle cx="32" cy="32" r="' + (r - 2.5) + '" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" stroke-dasharray="2 2"/>' +
+      (inner ? '<circle cx="32" cy="32" r="' + (r - 8) + '" fill="' + inner + '" stroke="rgba(0,0,0,.2)" stroke-width="1"/>' : '') +
+      hi + '<text x="32" y="' + (32 + r * 0.33) + '" text-anchor="middle" font-size="' + (r * 0.95) + '" font-weight="900" fill="' + col + '" font-family="inherit" style="text-shadow:0 1px 0 rgba(255,255,255,.6)">' + v + '</text></svg>';
+  }
+
+  function build() {
+    game.innerHTML = '';
+    hud = el('div', 'hud panel');
+    hud.appendChild(KidsGame.levelBadge(nivel));
+    dots = el('div', 'dots');
+    for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
+    hud.appendChild(dots);
+    var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
+    lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+    hud.appendChild(lb);
+    game.appendChild(hud);
+
+    var instr = el('div', 'instr panel', '<span class="ico emoji">🛒</span><span class="txt"></span>');
+    instrTxt = instr.querySelector('.txt');
+    var sp = el('button', 'btn round blue', '🔊');
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
+    instr.appendChild(sp);
+    game.appendChild(instr);
+
+    shop = el('div', 'shop');
+    shelf = el('div', 'shelf');
+    counter = el('div', 'counter');
+    who = el('div', 'who'); bubble = el('div', 'bubble');
+    buy = el('div', 'buy');
+    paybox = el('div', 'paybox', '<div class="lbl"></div><div class="tot">$0</div><div class="paid"></div>');
+    totEl = paybox.querySelector('.tot'); paidEl = paybox.querySelector('.paid');
+    counter.appendChild(who); counter.appendChild(buy); counter.appendChild(paybox);
+    shop.appendChild(shelf); shop.appendChild(counter);
+    game.appendChild(shop);
+
+    wallet = el('div', 'wallet panel');
+    coinsEl = el('div', 'coins'); wallet.appendChild(coinsEl);
+    var pay = el('button', 'btn green pay', '💳 Pagar');
+    pay.addEventListener('pointerdown', function (ev) { ev.preventDefault(); checkPay(); });
+    wallet.appendChild(pay);
+    game.appendChild(wallet);
+  }
+
+  function showPicker() {
+    running = false; lock = true;
+    if (buy) { buy.innerHTML = ''; coinsEl.innerHTML = ''; }
+    KidsGame.levelPicker({ key: 'tienda', labels: LABELS, onPick: function (lv) { start(lv); } });
+  }
+  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+
+  function makeRound() {
+    var c = { items: [], need: 0, wallet: null, bill: 0, keeper: KidsGame.pick(KEEPERS), cust: KidsGame.pick(CUSTS), shelf: KidsGame.shuffle(PRODS).slice(0, 4) };
+    var p1, p2;
+    if (nivel === 1) {
+      p1 = 1 + KidsGame.rand(5); c.items = [{ e: c.shelf[0], p: p1 }]; c.need = p1;
+      c.wallet = [{ v: 1, n: 7 }];
+      c.instr = 'Paga justo con monedas de $1'; c.say = PNAME[c.shelf[0]] + ' cuesta ' + p1 + (p1 === 1 ? ' peso' : ' pesos') + '. Paga con monedas de 1.';
+      c.bub = 'Cuesta $' + p1;
+    } else if (nivel === 2) {
+      p1 = 3 + KidsGame.rand(8); c.items = [{ e: c.shelf[0], p: p1 }]; c.need = p1;
+      c.wallet = [{ v: 1, n: 3 }, { v: 2, n: 3 }, { v: 5, n: 2 }];
+      c.instr = 'Combina monedas y paga justo'; c.say = PNAME[c.shelf[0]] + ' cuesta ' + p1 + ' pesos. Combina las monedas para pagar justo.';
+      c.bub = 'Cuesta $' + p1;
+    } else if (nivel === 3) {
+      p1 = 2 + KidsGame.rand(9); p2 = 2 + KidsGame.rand(Math.min(9, 20 - p1 - 1));
+      c.items = [{ e: c.shelf[0], p: p1 }, { e: c.shelf[1], p: p2 }]; c.need = p1 + p2;
+      c.wallet = [{ v: 1, n: 3 }, { v: 2, n: 3 }, { v: 5, n: 2 }, { v: 10, n: 2 }];
+      c.instr = 'Suma las dos cosas y paga justo'; c.say = 'Llevas dos cosas: ' + PNAME[c.shelf[0]] + ' de ' + p1 + ' pesos y ' + PNAME[c.shelf[1]] + ' de ' + p2 + ' pesos. ¿Cuánto es en total? Paga justo.';
+      c.bub = '$' + p1 + ' + $' + p2 + ' = ?';
+    } else {
+      c.bill = Math.random() < 0.4 ? 10 : 20;
+      p1 = c.bill === 10 ? 1 + KidsGame.rand(9) : 5 + KidsGame.rand(15);
+      c.items = [{ e: c.shelf[0], p: p1 }]; c.need = c.bill - p1;
+      c.wallet = [{ v: 1, n: 4 }, { v: 2, n: 3 }, { v: 5, n: 2 }, { v: 10, n: 1 }];
+      c.instr = 'Tú cobras: da el cambio correcto'; c.say = 'Tú eres la cajera. ' + PNAME[c.shelf[0]] + ' cuesta ' + p1 + ' pesos y te pagan con ' + c.bill + '. ¿Cuánto cambio le das?';
+      c.bub = 'Pago con $' + c.bill;
+    }
+    return c;
+  }
+
+  function newRound() {
+    if (!running) return;
+    cur = makeRound(); lock = false; total = 0; paid = [];
+    instrTxt.textContent = cur.instr; sayText = cur.say;
+    shelf.innerHTML = '';
+    cur.shelf.forEach(function (e, i) {
+      var isBuy = cur.items.some(function (it) { return it.e === e; });
+      var pr = el('div', 'prod' + (isBuy ? ' picked' : ''), '<span class="emoji">' + e + '</span>');
+      pr.querySelector('.emoji').style.animationDelay = (i * 0.7) + 's';
+      if (!isBuy) pr.appendChild(el('span', 'tag', '$' + (1 + KidsGame.rand(9))));
+      shelf.appendChild(pr);
+    });
+    who.innerHTML = '';
+    var m = el('div', 'medal', '<span class="emoji">' + (nivel === 4 ? cur.cust : cur.keeper) + '</span>');
+    who.appendChild(m); bubble.className = 'bubble'; bubble.textContent = cur.bub; who.appendChild(bubble);
+    buy.innerHTML = '';
+    cur.items.forEach(function (it, i) {
+      if (i) buy.appendChild(el('div', 'plus', '+'));
+      var d = el('div', 'item', '<span class="emoji">' + it.e + '</span><span class="tag">$' + it.p + '</span>');
+      d.style.animationDelay = (i * 120) + 'ms'; buy.appendChild(d);
+    });
+    if (nivel === 4) { var bw = el('div', 'billwrap', coinSVG(cur.bill === 20 ? 20 : 10, cur.bill === 20 ? 84 : 96) + '<span>paga con</span>'); buy.appendChild(bw); }
+    paybox.className = 'paybox'; paybox.querySelector('.lbl').textContent = nivel === 4 ? 'Cambio' : 'Pagas';
+    totEl.textContent = '$0'; paidEl.innerHTML = '';
+    coinsEl.innerHTML = '';
+    cur.wallet.forEach(function (w) {
+      var c = el('div', 'coin', coinSVG(w.v, w.v === 20 ? 66 : 66 + w.v) + '<span class="cnt">×' + w.n + '</span>');
+      c._w = w; w.el = c;
+      c.addEventListener('pointerdown', function (ev) { startDrag(ev, w); });
+      coinsEl.appendChild(c);
+    });
+    KidsGame.say(sayText);
+  }
+
+  function startDrag(ev, w) {
+    if (lock || !running || w.n <= 0) return;
+    ev.preventDefault();
+    var g = el('div', 'ghost', coinSVG(w.v, 72)); document.body.appendChild(g);
+    g.style.left = ev.clientX + 'px'; g.style.top = ev.clientY + 'px';
+    KidsGame.sound.tap();
+    function mv(e) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px'; paybox.classList.toggle('hot', overBox(e.clientX, e.clientY)); }
+    function up(e) {
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+      g.remove(); paybox.classList.remove('hot');
+      if (overBox(e.clientX, e.clientY)) addCoin(w);
+    }
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  }
+  function overBox(x, y) { var r = paybox.getBoundingClientRect(), m = 24; return x >= r.left - m && x <= r.right + m && y >= r.top - m && y <= r.bottom + m; }
+  function updWallet(w) { w.el.querySelector('.cnt').textContent = '×' + w.n; w.el.classList.toggle('empty', w.n <= 0); }
+  function setTotal() { totEl.textContent = '$' + total; totEl.classList.remove('bump'); void totEl.offsetWidth; totEl.classList.add('bump'); }
+  function addCoin(w) {
+    if (w.n <= 0) return;
+    w.n--; updWallet(w); total += w.v; paid.push(w);
+    var pc = el('div', 'pc', coinSVG(w.v, 44)); pc._w = w;
+    pc.addEventListener('pointerdown', function (ev) { ev.preventDefault(); removeCoin(pc); });
+    paidEl.appendChild(pc);
+    KidsGame.sound.pop(); setTotal(); KidsGame.say(String(total));
+  }
+  function removeCoin(pc) {
+    if (lock || !running) return;
+    var w = pc._w; w.n++; updWallet(w); total -= w.v; pc.remove();
+    var i = paid.indexOf(w); if (i >= 0) paid.splice(i, 1);
+    KidsGame.sound.tap(); setTotal();
+  }
+  function checkPay() {
+    if (lock || !running) return;
+    KidsGame.sound.tap();
+    if (total === cur.need) { win(); return; }
+    KidsGame.sound.wrong(); KidsGame.vibrate(20);
+    paybox.classList.remove('bad'); void paybox.offsetWidth; paybox.classList.add('bad');
+    var d = cur.need - total, msg;
+    if (total === 0) msg = nivel === 4 ? 'Dame mi cambio' : 'Pon monedas';
+    else if (d > 0) msg = 'Faltan $' + d; else msg = 'Te pasaste $' + (-d);
+    bubble.className = 'bubble err'; bubble.textContent = msg; bubble.style.animation = 'none'; void bubble.offsetWidth; bubble.style.animation = '';
+    KidsGame.say(msg.replace('$', '') + (d > 0 && total ? ' pesos' : ''));
+  }
+
+  function sparkle(x, y, n) {
+    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
+    for (var i = 0; i < (n || 18); i++) {
+      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
+      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 110;
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
+      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
+      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
+    }
+  }
+  function win() {
+    lock = true;
+    paybox.classList.add('win');
+    bubble.className = 'bubble ok'; bubble.textContent = nivel === 4 ? '¡Gracias! 😊' : '¡Justo! ¡Gracias!';
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    var g = game.getBoundingClientRect(), r = paybox.getBoundingClientRect();
+    sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+    KidsGame.say(nivel === 4 ? '¡Cambio correcto! Gracias.' : '¡Pagaste justo! Gracias.');
+    dots.children[round].classList.add('on'); round++;
+    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1700);
+  }
+  function finish() {
+    running = false;
+    KidsGame.levelDone(nivel);
+    KidsGame.celebrate({
+      sub: '¡' + ROUNDS + ' compras perfectas!',
+      onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
+      onAgain: function () { start(nivel); }
+    });
+  }
+
+  window.__g3 = {
+    state: function () { return cur && { need: cur.need, total: total, nivel: nivel, round: round, lock: lock, bill: cur.bill }; },
+    solve: function () {
+      if (!cur || lock) return false;
+      var rem = cur.need - total, ws = cur.wallet.slice().sort(function (a, b) { return b.v - a.v; });
+      ws.forEach(function (w) { while (rem >= w.v && w.n > 0) { addCoin(w); rem -= w.v; } });
+      if (rem !== 0) return false;
+      checkPay(); return true;
+    },
+    wrong: function () { if (!cur || lock) return false; var w = cur.wallet[0], k = 0; do { addCoin(w); k++; } while (total === cur.need && k < 3); checkPay(); while (k-- > 0) removeCoin(paidEl.lastChild); return true; }
+  };
+  showPicker();
+})();
+</script>
+</body>
+</html>
