@@ -144,10 +144,13 @@ body::after {
 #kg-levels .box { padding: 22px 26px; text-align: center; max-width: 92vw; animation: pop .4s ease-out; }
 #kg-levels .ttl { font-size: 32px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); margin-bottom: 16px; }
 #kg-levels .row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-#kg-levels .btn { flex-direction: column; gap: 2px; min-width: 150px; min-height: 110px; padding: 10px 22px; }
+#kg-levels .btn { flex-direction: column; gap: 2px; min-width: 150px; min-height: 110px; padding: 10px 22px; position: relative; }
+#kg-levels .lv-sub { font-size: 15px; font-weight: 700; opacity: .92; line-height: 1.1; margin-top: 2px; }
+#kg-levels .lv-done { position: absolute; top: -10px; right: -8px; font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+#kg-levels .btn.yellow .lv-stars { font-size: 30px; }
 #kg-levels .btn.last { outline: 5px solid #fff; outline-offset: 3px; }
 #kg-levels .lv-stars { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
 #kg-levels .lv-txt { font-size: 26px; }
-@media (max-width: 560px) { #kg-levels .btn { min-width: 120px; min-height: 96px; } #kg-levels .lv-txt { font-size: 22px; } }
+@media (max-width: 700px) { #kg-levels .btn { min-width: 128px; min-height: 96px; padding: 8px 12px; } #kg-levels .lv-txt { font-size: 22px; } #kg-levels .row { gap: 10px; } }
 .kg-level-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-weight: 900; font-size: 18px; color: #7a4b00;
   background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }

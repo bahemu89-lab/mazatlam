@@ -38,6 +38,10 @@
   .c1{--a:#ff9ccb;--b:#f0569a;--d:#b8306f}.c2{--a:#7dd0ff;--b:#2f95e8;--d:#1a63a8}.c3{--a:#8ef0b0;--b:#24b36c;--d:#14784a}.c4{--a:#ffc077;--b:#ff7a1a;--d:#b8500a}
   .c5{--a:#b39cff;--b:#7f5af0;--d:#5232b3}.c6{--a:#ff8fb1;--b:#e53170;--d:#a11f4e}.c7{--a:#7fe3e0;--b:#00a8a8;--d:#00706f}.c8{--a:#ffe98a;--b:#ffb703;--d:#c47f00;color:#6a3f00}
   .c8 span.name{text-shadow:0 1px 0 rgba(255,255,255,.5);background:rgba(255,255,255,.25)}
+  .grid h2.sec { grid-column: 1 / -1; margin: 10px 0 0; font-size: 26px; text-align: left; padding-left: 6px; }
+  .tile .lv { position: absolute; top: 8px; left: 10px; font-size: 16px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  .tile .sg { position: absolute; top: 6px; right: 10px; font-size: 14px; background: rgba(0,0,0,.25); padding: 2px 8px; border-radius: 12px; }
+  .menubar .total { cursor: pointer; }
   .footer { flex: 0 0 auto; text-align: center; font-size: 14px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); padding: 4px; position: relative; z-index: 2; }
 </style>
 </head>
@@ -45,49 +49,82 @@
   <div class="menubar">
     <div class="logo emoji">🎈</div>
     <h1 class="title-outline">¡A jugar!</h1>
-    <div class="total" id="total">⭐ 0</div>
+    <a class="total" id="total" href="progreso.html">⭐ 0</a>
   </div>
   <div class="grid" id="grid"></div>
   <div class="footer">Juegos de Mazatlam · sin internet</div>
 <script src="common.js"></script>
 <script>
-  var juegos = [
-    { f: 'memoria',      n: 'Memoria',        e: '🐵', c: 'c1' },
-    { f: 'colorear',     n: 'Colorear',       e: '🎨', c: 'c2' },
-    { f: 'rompecabezas', n: 'Rompecabezas',   e: '🧩', c: 'c3' },
-    { f: 'globos',       n: 'Globos',         e: '🎈', c: 'c4' },
-    { f: 'letras',       n: 'Letras',         e: '🔤', c: 'c5' },
-    { f: 'numeros',      n: 'Números',        e: '🔢', c: 'c6' },
-    { f: 'formas',       n: 'Formas y colores', e: '🔺', c: 'c7' },
-    { f: 'sombras',      n: 'Sombras',        e: '🐘', c: 'c8' },
-    { f: 'dibujar',      n: 'Dibujar',        e: '🖍️', c: 'c2' },
-    { f: 'piano',        n: 'Piano',          e: '🎹', c: 'c1' },
-    { f: 'simon',        n: 'Simón dice',     e: '🟢', c: 'c4' },
-    { f: 'atrapa',       n: 'Atrapa al topo', e: '🐹', c: 'c3' },
-    { f: 'laberinto',    n: 'Laberinto',      e: '🐰', c: 'c6' },
-    { f: 'alimenta',     n: 'Alimenta',       e: '🍌', c: 'c5' },
-    { f: 'monstruo',     n: 'Crea tu monstruo', e: '👾', c: 'c8' },
-    { f: 'gato',         n: 'Tres en raya',   e: '🐱', c: 'c7' },
-    { f: 'intruso',      n: 'El intruso',     e: '🔍', c: 'c1' },
-    { f: 'patrones',     n: '¿Qué sigue?',    e: '🔵', c: 'c3' },
-    { f: 'diferencias',  n: 'Diferencias',    e: '👀', c: 'c5' },
-    { f: 'sumas',        n: 'Sumas',          e: '➕', c: 'c4' },
-    { f: 'carrera',      n: 'Carrera',        e: '🏃', c: 'c2' },
-    { f: 'pesca',        n: 'Pesca',          e: '🎣', c: 'c7' },
-    { f: 'mascota',      n: 'Mi mascota',     e: '🐶', c: 'c6' },
-    { f: 'vestir',       n: 'Vestir',         e: '👗', c: 'c8' }
+  var secciones = [
+    { t: '🧠 Lógica y pensamiento', juegos: [
+      { f: 'sudoku',       n: 'Sudoku',           e: '🔢', c: 'c5' },
+      { f: 'robot',        n: 'Programa al robot', e: '🤖', c: 'c2' },
+      { f: 'hanoi',        n: 'Torre',            e: '🗼', c: 'c4' },
+      { f: 'quien',        n: '¿Quién es?',       e: '🕵️', c: 'c6' },
+      { f: 'matrices',     n: 'La pieza que falta', e: '🧩', c: 'c7' },
+      { f: 'patrones',     n: '¿Qué sigue?',      e: '🔵', c: 'c3' },
+      { f: 'intruso',      n: 'El intruso',       e: '🔍', c: 'c1' },
+      { f: 'diferencias',  n: 'Diferencias',      e: '👀', c: 'c5' },
+      { f: 'memoria',      n: 'Memoria',          e: '🐵', c: 'c1' },
+      { f: 'simon',        n: 'Simón dice',       e: '🟢', c: 'c4' }
+    ]},
+    { t: '➕ Matemáticas', juegos: [
+      { f: 'numeros',      n: 'Números',          e: '🔢', c: 'c6' },
+      { f: 'sumas',        n: 'Sumas y restas',   e: '➕', c: 'c4' },
+      { f: 'balanza',      n: 'La balanza',       e: '⚖️', c: 'c2' },
+      { f: 'tienda',       n: 'La tiendita',      e: '🪙', c: 'c8' },
+      { f: 'reloj',        n: 'El reloj',         e: '🕒', c: 'c7' },
+      { f: 'reparte',      n: 'Reparte igual',    e: '🍕', c: 'c1' },
+      { f: 'formas',       n: 'Formas y colores', e: '🔺', c: 'c7' }
+    ]},
+    { t: '🔤 Letras y palabras', juegos: [
+      { f: 'letras',       n: 'Letras',           e: '🔤', c: 'c5' },
+      { f: 'palabras',     n: 'Forma la palabra', e: '✏️', c: 'c2' },
+      { f: 'rimas',        n: 'Rimas',            e: '🎵', c: 'c1' },
+      { f: 'adivinanzas',  n: 'Adivinanzas',      e: '❓', c: 'c6' },
+      { f: 'historia',     n: 'Cuenta la historia', e: '📖', c: 'c3' }
+    ]},
+    { t: '🎨 Creatividad y espacio', juegos: [
+      { f: 'tangram',      n: 'Tangram',          e: '🔷', c: 'c4' },
+      { f: 'simetria',     n: 'Espejo',           e: '🪞', c: 'c2' },
+      { f: 'bloques',      n: 'Construye',        e: '🧱', c: 'c8' },
+      { f: 'rompecabezas', n: 'Rompecabezas',     e: '🧩', c: 'c3' },
+      { f: 'colorear',     n: 'Colorear',         e: '🎨', c: 'c2' },
+      { f: 'dibujar',      n: 'Dibujar',          e: '🖍️', c: 'c1' },
+      { f: 'monstruo',     n: 'Crea tu monstruo', e: '👾', c: 'c8' },
+      { f: 'vestir',       n: 'Vestir',           e: '👗', c: 'c6' },
+      { f: 'piano',        n: 'Piano',            e: '🎹', c: 'c5' },
+      { f: 'sombras',      n: 'Sombras',          e: '🐘', c: 'c8' }
+    ]},
+    { t: '🏃 Acción y cuidado', juegos: [
+      { f: 'laberinto',    n: 'Laberinto',        e: '🐰', c: 'c6' },
+      { f: 'carrera',      n: 'Carrera',          e: '🏃', c: 'c2' },
+      { f: 'pesca',        n: 'Pesca',            e: '🎣', c: 'c7' },
+      { f: 'globos',       n: 'Globos',           e: '🎈', c: 'c4' },
+      { f: 'atrapa',       n: 'Atrapa al topo',   e: '🐹', c: 'c3' },
+      { f: 'alimenta',     n: 'Alimenta',         e: '🍌', c: 'c5' },
+      { f: 'mascota',      n: 'Mi mascota',       e: '🐶', c: 'c6' },
+      { f: 'gato',         n: 'Tres en raya',     e: '🐱', c: 'c7' }
+    ]}
   ];
   var grid = document.getElementById('grid');
-  juegos.forEach(function (j) {
-    var a = document.createElement('a');
-    a.className = 'tile ' + j.c; a.href = 'games/' + j.f + '.html';
-    a.innerHTML = '<span class="gloss"></span><span class="emoji">' + j.e + '</span><span class="name">' + j.n + '</span>';
-    a.addEventListener('pointerdown', function () { KidsGame.sound.tap(); });
-    a.style.animationDelay = (Math.random() * 3) + 's';
-    grid.appendChild(a);
+  var starsGame = {}, done = {};
+  try { starsGame = JSON.parse(localStorage.getItem('kg-stars-game') || '{}'); done = JSON.parse(localStorage.getItem('kg-done') || '{}'); } catch (e) {}
+  var tiles = [];
+  secciones.forEach(function (sec) {
+    var h = document.createElement('h2'); h.className = 'sec title-outline'; h.textContent = sec.t; grid.appendChild(h);
+    sec.juegos.forEach(function (j) {
+      var a = document.createElement('a');
+      a.className = 'tile ' + j.c; a.href = 'games/' + j.f + '.html';
+      var d = done[j.f] || {}; var lv = (d[4] ? '🏆' : d[3] ? '⭐⭐⭐' : d[2] ? '⭐⭐' : d[1] ? '⭐' : '');
+      a.innerHTML = '<span class="gloss"></span><span class="emoji">' + j.e + '</span><span class="name">' + j.n + '</span>' +
+        (lv ? '<span class="lv">' + lv + '</span>' : '') + (starsGame[j.f] ? '<span class="sg">⭐ ' + starsGame[j.f] + '</span>' : '');
+      a.addEventListener('pointerdown', function () { KidsGame.sound.tap(); });
+      grid.appendChild(a); tiles.push(a);
+    });
   });
   // Destello aleatorio en los mosaicos
-  setInterval(function () { var t = grid.children[KidsGame.rand(grid.children.length)]; if (!t) return; t.classList.remove('shine'); void t.offsetWidth; t.classList.add('shine'); }, 1400);
+  setInterval(function () { var t = tiles[KidsGame.rand(tiles.length)]; if (!t) return; t.classList.remove('shine'); void t.offsetWidth; t.classList.add('shine'); }, 1400);
   try { document.getElementById('total').textContent = '⭐ ' + (localStorage.getItem('kg-total-stars') || 0); } catch (e) {}
 </script>
 </body>

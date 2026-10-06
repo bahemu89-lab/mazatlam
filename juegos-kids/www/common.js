@@ -52,6 +52,12 @@
     try {
       var key = 'kg-total-stars';
       localStorage.setItem(key, String((parseInt(localStorage.getItem(key) || '0', 10) || 0) + (n || 1)));
+      var per = JSON.parse(localStorage.getItem('kg-stars-game') || '{}');
+      var g = (location.pathname.match(/([^\/]+)\.html?$/) || [0, 'menu'])[1];
+      per[g] = (per[g] || 0) + (n || 1); localStorage.setItem('kg-stars-game', JSON.stringify(per));
+      var day = new Date().toISOString().slice(0, 10);
+      var days = JSON.parse(localStorage.getItem('kg-stars-day') || '{}');
+      days[day] = (days[day] || 0) + (n || 1); localStorage.setItem('kg-stars-day', JSON.stringify(days));
     } catch (e) {}
   }
 
@@ -126,21 +132,33 @@
   // levelPicker({ title, onPick }) -> pantalla "Elige tu nivel" con 3 botones; llama onPick(1|2|3).
   // Recuerda el último nivel elegido por juego (localStorage) y lo marca con un anillo.
   var LEVELS = [
-    { n: 1, txt: 'Fácil',   stars: '⭐',    cls: 'green'  },
-    { n: 2, txt: 'Medio',   stars: '⭐⭐',   cls: 'blue'   },
-    { n: 3, txt: 'Difícil', stars: '⭐⭐⭐',  cls: 'purple' }
+    { n: 1, txt: 'Fácil',   stars: '⭐',     cls: 'green'  },
+    { n: 2, txt: 'Medio',   stars: '⭐⭐',    cls: 'blue'   },
+    { n: 3, txt: 'Difícil', stars: '⭐⭐⭐',   cls: 'purple' },
+    { n: 4, txt: 'Experto', stars: '🏆',     cls: 'yellow' }
   ];
+  function gameKey() {
+    var m = location.pathname.match(/([^\/]+)\.html?$/);
+    return m ? m[1] : (document.title || 'juego').replace(/\W+/g, '-').toLowerCase();
+  }
+  function readJSON(key, def) { try { return JSON.parse(localStorage.getItem(key)) || def; } catch (e) { return def; } }
+  function writeJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  // levelPicker({ title, labels: {1:'3 piezas',2:'6 piezas',...}, onPick }) -> pantalla "¿Qué tan difícil?" con 4 niveles.
+  // Recuerda el último nivel por juego y muestra ✅ en los niveles ya completados (ver levelDone).
   function levelPicker(opts) {
     opts = opts || {};
-    var key = 'kg-level-' + (opts.key || (document.title || location.pathname).replace(/\W+/g, '-').toLowerCase());
+    var g = opts.key || gameKey();
+    var key = 'kg-level-' + g;
     var last = 0; try { last = parseInt(localStorage.getItem(key) || '0', 10) || 0; } catch (e) {}
+    var done = readJSON('kg-done', {})[g] || {};
     var o = document.createElement('div'); o.id = 'kg-levels';
     o.innerHTML = '<div class="box panel"><div class="ttl">' + (opts.title || '¿Qué tan difícil?') + '</div><div class="row"></div></div>';
     var row = o.querySelector('.row');
     LEVELS.forEach(function (L) {
       var b = document.createElement('button');
       b.className = 'btn big ' + L.cls + (last === L.n ? ' last' : '');
-      b.innerHTML = '<span class="lv-stars">' + L.stars + '</span><span class="lv-txt">' + L.txt + '</span>';
+      var sub = opts.labels && opts.labels[L.n] ? '<span class="lv-sub">' + opts.labels[L.n] + '</span>' : '';
+      b.innerHTML = '<span class="lv-stars">' + L.stars + '</span><span class="lv-txt">' + L.txt + '</span>' + sub + (done[L.n] ? '<span class="lv-done">✅</span>' : '');
       b.onclick = function () {
         sounds.tap(); try { localStorage.setItem(key, String(L.n)); } catch (e) {}
         o.classList.add('hide'); setTimeout(function () { o.remove(); }, 250);
@@ -151,10 +169,15 @@
     document.body.appendChild(o);
     return o;
   }
+  // levelDone(nivel) -> registra que la niña completó ese nivel de este juego (para el selector y la página de progreso)
+  function levelDone(level) {
+    var g = gameKey(); var all = readJSON('kg-done', {}); all[g] = all[g] || {};
+    all[g][level] = (all[g][level] || 0) + 1; writeJSON('kg-done', all);
+  }
   // levelBadge(level, text?) -> etiqueta "Nivel ⭐⭐" para el HUD (devuelve el elemento)
   function levelBadge(level, text) {
     var el = document.createElement('div'); el.className = 'kg-level-badge';
-    el.textContent = (text || 'Nivel') + ' ' + (LEVELS[Math.min(3, Math.max(1, level)) - 1].stars);
+    el.textContent = (text || 'Nivel') + ' ' + (LEVELS[Math.min(4, Math.max(1, level)) - 1].stars);
     return el;
   }
 
@@ -163,6 +186,6 @@
     shuffle: shuffle, rand: rand, pick: pick,
     addStar: addStar, getStars: function () { return stars; },
     celebrate: celebrate, confetti: confetti, toast: toast,
-    levelPicker: levelPicker, levelBadge: levelBadge
+    levelPicker: levelPicker, levelBadge: levelBadge, levelDone: levelDone
   };
 })();

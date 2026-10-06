@@ -36,3 +36,13 @@ Clases CSS disponibles: `.btn` (+ `.round .blue .green .yellow .purple .big`), `
 - Cada nivel cambia de verdad la dificultad (más piezas, más rapidez, más distractores, menos ayudas).
   Dentro de cada nivel puede haber progresión (rondas más difíciles). `KidsGame.celebrate` con `onNext` avanza.
 - Mostrar en el HUD el nivel con `KidsGame.levelBadge(nivel)` y ofrecer un botón "🎚️" para volver al selector.
+
+## Cuatro niveles y reto de verdad (actualización para 5-6 años)
+La mamá dice que los juegos son "muy básicos". Cada juego ahora tiene 4 niveles con `KidsGame.levelPicker`:
+1 Fácil (4 años), 2 Medio (5 años), 3 Difícil (5-6 años) y 4 **Experto 🏆** (6-7 años: debe costar trabajo de verdad).
+- Pasar `labels: {1:'3 piezas', 2:'6 piezas', 3:'12 piezas', 4:'20 piezas'}` al picker para que la mamá sepa qué cambia.
+- Al terminar una ronda completa de un nivel llamar `KidsGame.levelDone(nivel)` (marca ✅ en el selector y alimenta
+  `progreso.html`). Llamarlo justo antes de `celebrate`.
+- Pensar: ¿qué haría que un niño de 6 años tenga que detenerse a razonar? Eso va en Experto: varios pasos, memoria
+  de trabajo, restricciones múltiples, menos ayudas, tiempo acotado (pero nunca castigo), problemas de varios pasos.
+- Las ayudas (pistas, guías) se reducen por nivel; en Experto hay como máximo 1 pista.

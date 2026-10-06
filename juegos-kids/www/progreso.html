@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Progreso</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .wrap { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .stat { padding: 14px; text-align: center; }
+  .stat .big { font-size: 40px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff; line-height: 1; }
+  .stat .lbl { font-size: 15px; color: #6b7a99; margin-top: 4px; }
+  h2.sec { margin: 18px 0 8px; font-size: 24px; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+  td { background: linear-gradient(180deg, #fff, #f1f4fb); padding: 10px 12px; font-size: 18px; box-shadow: 0 4px 0 #c9d2e6; }
+  td:first-child { border-radius: 16px 0 0 16px; } td:last-child { border-radius: 0 16px 16px 0; white-space: nowrap; }
+  td.lv span { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 50%; margin-right: 4px;
+               background: #e6ebf5; color: #9aa6c4; font-size: 15px; font-weight: 900; }
+  td.lv span.ok { background: linear-gradient(180deg, #8ef0b0, #24b36c); color: #fff; box-shadow: 0 3px 0 #14784a; }
+  td.lv span.ok4 { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; box-shadow: 0 3px 0 #c47f00; }
+  .dias { display: flex; gap: 6px; align-items: flex-end; height: 90px; margin-top: 6px; }
+  .dias .d { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; font-size: 12px; color: #6b7a99; }
+  .dias .bar { width: 70%; background: linear-gradient(180deg, #ffe98a, #ffb703); border-radius: 8px 8px 0 0; box-shadow: 0 3px 0 #c47f00; min-height: 4px; }
+  .dias .n { font-weight: 900; color: #7a4b00; font-size: 14px; }
+  .nota { font-size: 14px; color: #6b7a99; margin-top: 14px; }
+  .reset { margin-top: 16px; text-align: center; }
+  .reset .btn { font-size: 18px; min-height: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="resumen">
+    <div class="panel stat"><div class="big" id="tot">0</div><div class="lbl">⭐ estrellas en total</div></div>
+    <div class="panel stat"><div class="big" id="hoy">0</div><div class="lbl">⭐ hoy</div></div>
+    <div class="panel stat"><div class="big" id="jug">0</div><div class="lbl">juegos jugados</div></div>
+    <div class="panel stat"><div class="big" id="exp">0</div><div class="lbl">🏆 niveles Experto</div></div>
+  </div>
+  <div class="panel" style="padding:12px 16px">
+    <div style="font-size:18px">Estrellas de los últimos 7 días</div>
+    <div class="dias" id="dias"></div>
+  </div>
+  <div id="tablas"></div>
+  <div class="nota">Cada juego tiene 4 niveles: ⭐ Fácil, ⭐⭐ Medio, ⭐⭐⭐ Difícil y 🏆 Experto. Un círculo verde o dorado indica que completó ese nivel por lo menos una vez. Para una niña de 5 años, el objetivo es que la mayoría quede en Difícil y vaya probando Experto.</div>
+  <div class="reset"><button class="btn purple" id="reset">🗑️ Borrar progreso</button></div>
+</div>
+<script src="common.js"></script>
+<script>
+  KidsGame.init({ title: 'Progreso', showStars: false });
+  var game = document.querySelector('.game'); if (game) game.remove();
+  var starsGame = {}, done = {}, days = {}, total = 0;
+  try {
+    starsGame = JSON.parse(localStorage.getItem('kg-stars-game') || '{}');
+    done = JSON.parse(localStorage.getItem('kg-done') || '{}');
+    days = JSON.parse(localStorage.getItem('kg-stars-day') || '{}');
+    total = parseInt(localStorage.getItem('kg-total-stars') || '0', 10) || 0;
+  } catch (e) {}
+  var hoy = new Date().toISOString().slice(0, 10);
+  document.getElementById('tot').textContent = total;
+  document.getElementById('hoy').textContent = days[hoy] || 0;
+  document.getElementById('jug').textContent = Object.keys(starsGame).filter(function (k) { return k !== 'menu'; }).length;
+  var exp = 0; Object.keys(done).forEach(function (g) { if (done[g][4]) exp++; });
+  document.getElementById('exp').textContent = exp;
+  var dias = document.getElementById('dias'); var max = 1;
+  var lista = [];
+  for (var i = 6; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); var k = d.toISOString().slice(0, 10); lista.push({ k: k, n: days[k] || 0, lbl: ['D','L','M','M','J','V','S'][d.getDay()] }); max = Math.max(max, days[k] || 0); }
+  lista.forEach(function (x) { var el = document.createElement('div'); el.className = 'd'; el.innerHTML = '<div class="n">' + (x.n || '') + '</div><div class="bar" style="height:' + Math.round(60 * x.n / max) + 'px"></div><div>' + x.lbl + '</div>'; dias.appendChild(el); });
+  var secciones = [
+    ['🧠 Lógica y pensamiento', { sudoku: 'Sudoku', robot: 'Programa al robot', hanoi: 'Torre', quien: '¿Quién es?', matrices: 'La pieza que falta', patrones: '¿Qué sigue?', intruso: 'El intruso', diferencias: 'Diferencias', memoria: 'Memoria', simon: 'Simón dice' }],
+    ['➕ Matemáticas', { numeros: 'Números', sumas: 'Sumas y restas', balanza: 'La balanza', tienda: 'La tiendita', reloj: 'El reloj', reparte: 'Reparte igual', formas: 'Formas y colores' }],
+    ['🔤 Letras y palabras', { letras: 'Letras', palabras: 'Forma la palabra', rimas: 'Rimas', adivinanzas: 'Adivinanzas', historia: 'Cuenta la historia' }],
+    ['🎨 Creatividad y espacio', { tangram: 'Tangram', simetria: 'Espejo', bloques: 'Construye', rompecabezas: 'Rompecabezas', colorear: 'Colorear', dibujar: 'Dibujar', monstruo: 'Crea tu monstruo', vestir: 'Vestir', piano: 'Piano', sombras: 'Sombras' }],
+    ['🏃 Acción y cuidado', { laberinto: 'Laberinto', carrera: 'Carrera', pesca: 'Pesca', globos: 'Globos', atrapa: 'Atrapa al topo', alimenta: 'Alimenta', mascota: 'Mi mascota', gato: 'Tres en raya' }]
+  ];
+  var cont = document.getElementById('tablas');
+  secciones.forEach(function (sec) {
+    var h = document.createElement('h2'); h.className = 'sec'; h.textContent = sec[0]; cont.appendChild(h);
+    var t = document.createElement('table');
+    Object.keys(sec[1]).forEach(function (g) {
+      var d = done[g] || {};
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + sec[1][g] + '</td><td class="lv">' + [1, 2, 3, 4].map(function (n) {
+        return '<span class="' + (d[n] ? (n === 4 ? 'ok4' : 'ok') : '') + '">' + (n === 4 ? '🏆' : n) + '</span>';
+      }).join('') + '</td><td>⭐ ' + (starsGame[g] || 0) + '</td>';
+      t.appendChild(tr);
+    });
+    cont.appendChild(t);
+  });
+  var pedir = false;
+  document.getElementById('reset').onclick = function () {
+    if (!pedir) { pedir = true; this.textContent = '¿Seguro? Toca otra vez para borrar'; KidsGame.sound.tap(); return; }
+    try { ['kg-stars-game', 'kg-done', 'kg-stars-day', 'kg-total-stars'].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
+    location.reload();
+  };
+  // El botón 🏠 de la barra regresa al menú (common.js apunta a ../index.html; aquí estamos en la raíz)
+  document.querySelector('.topbar .btn').onclick = function () { KidsGame.sound.tap(); location.href = 'index.html'; };
+</script>
+</body>
+</html>
