@@ -202,6 +202,7 @@ var game = KidsGame.init({ title: 'Alimenta' });
     budget = foods.length;
     lvlEl.textContent = String(round + 1);
     hintBtn.classList.toggle('show', expert); hintBtn.classList.remove('off'); budgetEl.classList.toggle('show', expert); renderBudget();
+    hud.querySelector('.dish').style.display = expert ? 'none' : '';
     animalsEl.innerHTML = ''; tray.innerHTML = '';
     chosen.forEach(function (p, idx) {
       var a = document.createElement('div');

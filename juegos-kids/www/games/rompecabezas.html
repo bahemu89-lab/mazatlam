@@ -49,10 +49,16 @@
     animation: pop .3s ease-out; transform: rotate(var(--rot, 0deg));
   }
   .tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(160deg, rgba(255,255,255,.28), rgba(255,255,255,0) 45%, rgba(0,0,0,.1)); }
-  .tile.drag { position: fixed; z-index: 20; animation: none; border-radius: 6px; transform: scale(1.08) rotate(0deg);
+  .tile.drag { position: fixed; z-index: 20; animation: none; border-radius: 6px; transform: scale(1.08) rotate(var(--drot, 0deg));
     box-shadow: 0 10px 0 rgba(60,40,20,.3), 0 26px 30px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 0 rgba(0,0,0,.25); }
   .tile.placed { position: absolute; box-shadow: none; border-radius: 0; cursor: default; animation: pop .3s ease-out; transform: none; }
   .tile.placed::after { display: none; }
+  /* Nivel Experto: las fichas llegan giradas; un toque las gira 90° */
+  .tile.rot { transition: transform .25s cubic-bezier(.3,1.3,.5,1); }
+  .tile.spin { animation: none; }
+  .tile.nope { animation: shake .4s; }
+  .tray.expert { gap: 14px; }
+  .hud .btn.turn { font-size: 20px; padding: 8px 12px; white-space: nowrap; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -173,13 +179,53 @@
     '<circle cx="175" cy="122" r="15" fill="url(#eye)"/><circle cx="225" cy="122" r="15" fill="url(#eye)"/><circle cx="177" cy="124" r="8" fill="url(#pupil)"/><circle cx="227" cy="124" r="8" fill="url(#pupil)"/><circle cx="180" cy="120" r="3" fill="#fff"/><circle cx="230" cy="120" r="3" fill="#fff"/><circle cx="174" cy="128" r="1.5" fill="#fff" opacity=".8"/><circle cx="224" cy="128" r="1.5" fill="#fff" opacity=".8"/>' +
     '<polygon points="200,150 191,141 209,141" fill="#f582ae"/><ellipse cx="197" cy="143" rx="3" ry="1.5" fill="#fff" opacity=".6"/><path d="M200 150 Q192 162 182 155 M200 150 Q208 162 218 155" stroke="#172c66" stroke-width="3" fill="none" stroke-linecap="round"/>' +
     '<g stroke="#172c66" stroke-width="2.5" stroke-linecap="round"><line x1="120" y1="140" x2="165" y2="148"/><line x1="120" y1="158" x2="165" y2="156"/><line x1="280" y1="140" x2="235" y2="148"/><line x1="280" y1="158" x2="235" y2="156"/></g>' +
-    '<circle cx="160" cy="150" r="7" fill="#f582ae" opacity=".6"/><circle cx="240" cy="150" r="7" fill="#f582ae" opacity=".6"/></svg>'
+    '<circle cx="160" cy="150" r="7" fill="#f582ae" opacity=".6"/><circle cx="240" cy="150" r="7" fill="#f582ae" opacity=".6"/></svg>',
+    // 7. Granja: granero, silo, molino, vaca, gallinas y girasoles
+    S + '<defs>' + LG('sky7', '#5cb8ff', '#e6f6ff', 1) + RG('sun7', '#fff7c2', '#ffd43b', '#ff9f1c') + GLOW('glow7', '#ffe680') + LG('cloud7', '#ffffff', '#d5e9fb', 1) +
+    LG('field', '#c9f27f', '#5aa839', 1) + LG('dirt', '#e2b56e', '#a56f32', 1) + LG('barn', '#ff6b6b', '#b71c2e', 1) + LG('barnroof', '#8d3a3a', '#4d1616', 1) + LG('silo', '#f2f4f8', '#9aa6bb') + LG('siloTop', '#e63946', '#8e1220', 1) +
+    LG('mill', '#fff5d6', '#cfae7a', 1) + LG('wood7', '#d9a25f', '#8a4f1d', 1) + RG('cow', '#ffffff', '#f1f1f1', '#c9c9c9') + RG('spot', '#5a4636', '#2e2219', '#1a120c') + RG('hen', '#ffe9a3', '#ffb703', '#b86f00') +
+    RG('petal', '#ffe27a', '#ffb703', '#d98a00') + RG('seed', '#8a5a2b', '#4a2d14', '#2a1708') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#sky7)"/><circle cx="70" cy="60" r="70" fill="url(#glow7)"/><circle cx="70" cy="60" r="30" fill="url(#sun7)"/><ellipse cx="60" cy="48" rx="10" ry="5" fill="#fff" opacity=".55"/>' +
+    '<g fill="url(#cloud7)" filter="url(#sh)"><ellipse cx="190" cy="48" rx="34" ry="15"/><ellipse cx="215" cy="40" rx="24" ry="13"/><ellipse cx="330" cy="70" rx="30" ry="13"/><ellipse cx="350" cy="62" rx="20" ry="11"/></g>' +
+    '<ellipse cx="200" cy="330" rx="300" ry="130" fill="url(#field)"/><path d="M0 250 Q200 225 400 250 L400 300 L0 300 Z" fill="url(#dirt)" opacity=".9"/><path d="M0 262 Q200 240 400 262" stroke="#fff" stroke-width="2" fill="none" opacity=".35"/>' +
+    '<g filter="url(#sh)"><rect x="300" y="90" width="52" height="150" rx="10" fill="url(#silo)"/><path d="M296 96 Q326 60 356 96 Z" fill="url(#siloTop)"/><rect x="300" y="130" width="52" height="4" fill="#000" opacity=".12"/><rect x="300" y="170" width="52" height="4" fill="#000" opacity=".12"/><rect x="318" y="100" width="16" height="22" rx="3" fill="#8ccfff"/></g>' +
+    '<g filter="url(#sh)"><polygon points="130,150 200,100 270,150" fill="url(#barnroof)"/><rect x="140" y="150" width="120" height="90" fill="url(#barn)"/><rect x="140" y="150" width="120" height="8" fill="#fff" opacity=".35"/>' +
+    '<rect x="180" y="185" width="40" height="55" rx="3" fill="#5e3410"/><rect x="183" y="188" width="34" height="49" rx="2" fill="url(#wood7)"/><line x1="183" y1="188" x2="217" y2="237" stroke="#5e3410" stroke-width="3"/><line x1="217" y1="188" x2="183" y2="237" stroke="#5e3410" stroke-width="3"/>' +
+    '<rect x="188" y="122" width="24" height="18" rx="3" fill="#fff"/><rect x="190" y="124" width="20" height="14" rx="2" fill="#8ccfff"/><line x1="200" y1="124" x2="200" y2="138" stroke="#fff" stroke-width="2"/></g>' +
+    '<g filter="url(#sh)"><rect x="52" y="150" width="26" height="90" fill="url(#mill)"/><polygon points="48,152 65,120 82,152" fill="#8e1220"/><g stroke="#5e3410" stroke-width="4" stroke-linecap="round"><line x1="65" y1="140" x2="65" y2="98"/><line x1="65" y1="140" x2="107" y2="140"/><line x1="65" y1="140" x2="65" y2="182"/><line x1="65" y1="140" x2="23" y2="140"/></g><g fill="#fff" stroke="#9aa6bb" stroke-width="1.5" opacity=".95"><rect x="58" y="100" width="14" height="30" rx="3"/><rect x="75" y="133" width="30" height="14" rx="3"/><rect x="58" y="150" width="14" height="30" rx="3"/><rect x="25" y="133" width="30" height="14" rx="3"/></g><circle cx="65" cy="140" r="5" fill="#ffd166"/></g>' +
+    '<g stroke="#8a4f1d" stroke-width="5" stroke-linecap="round"><line x1="0" y1="222" x2="130" y2="222"/><line x1="0" y1="238" x2="130" y2="238"/><line x1="20" y1="212" x2="20" y2="248"/><line x1="60" y1="212" x2="60" y2="248"/><line x1="100" y1="212" x2="100" y2="248"/></g>' +
+    '<ellipse cx="250" cy="292" rx="52" ry="7" fill="#000" opacity=".16"/><g filter="url(#sh)"><ellipse cx="250" cy="270" rx="46" ry="26" fill="url(#cow)"/><ellipse cx="236" cy="266" rx="12" ry="8" fill="url(#spot)"/><ellipse cx="266" cy="276" rx="9" ry="6" fill="url(#spot)"/><g stroke="#c9c9c9" stroke-width="8" stroke-linecap="round"><line x1="226" y1="288" x2="226" y2="296"/><line x1="244" y1="290" x2="244" y2="298"/><line x1="258" y1="290" x2="258" y2="298"/><line x1="276" y1="288" x2="276" y2="296"/></g>' +
+    '<circle cx="292" cy="258" r="18" fill="url(#cow)"/><ellipse cx="296" cy="266" rx="11" ry="7" fill="#f7b2c4"/><circle cx="293" cy="266" r="1.8" fill="#8e4a5c"/><circle cx="300" cy="266" r="1.8" fill="#8e4a5c"/><circle cx="286" cy="254" r="3" fill="#2e2219"/><circle cx="298" cy="254" r="3" fill="#2e2219"/><ellipse cx="278" cy="244" rx="6" ry="4" fill="#2e2219"/><ellipse cx="306" cy="244" rx="6" ry="4" fill="#2e2219"/><path d="M284 240 q-6 -8 2 -10 M300 240 q6 -8 -2 -10" stroke="#e3c08a" stroke-width="3" fill="none" stroke-linecap="round"/></g>' +
+    '<g filter="url(#sh)"><ellipse cx="150" cy="268" rx="14" ry="10" fill="url(#hen)"/><circle cx="162" cy="258" r="7" fill="url(#hen)"/><polygon points="168,258 176,260 168,263" fill="#ff8906"/><circle cx="164" cy="256" r="1.5" fill="#2e2219"/><path d="M158 250 q2 -5 5 -1 q2 -5 5 -1" stroke="#e63946" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="112" cy="276" rx="9" ry="7" fill="#fff"/><circle cx="120" cy="270" r="5" fill="#fff"/><polygon points="124,270 130,272 124,274" fill="#ff8906"/><circle cx="121" cy="269" r="1.2" fill="#2e2219"/></g>' +
+    '<g stroke="#2a9d5c" stroke-width="5" stroke-linecap="round"><line x1="360" y1="262" x2="360" y2="200"/><line x1="385" y1="268" x2="385" y2="214"/></g><g fill="url(#petal)"><circle cx="360" cy="184" r="7"/><circle cx="360" cy="216" r="7"/><circle cx="344" cy="200" r="7"/><circle cx="376" cy="200" r="7"/><circle cx="349" cy="189" r="6"/><circle cx="371" cy="189" r="6"/><circle cx="349" cy="211" r="6"/><circle cx="371" cy="211" r="6"/></g><circle cx="360" cy="200" r="8" fill="url(#seed)"/>' +
+    '<g fill="url(#petal)"><circle cx="385" cy="200" r="6"/><circle cx="385" cy="228" r="6"/><circle cx="371" cy="214" r="6"/><circle cx="399" cy="214" r="6"/></g><circle cx="385" cy="214" r="6" fill="url(#seed)"/></svg>',
+    // 8. Castillo con dragón amigable, foso y estrellas
+    S + '<defs>' + LG('night', '#1b2a6b', '#6a4fb8', 1) + GLOW('moonglow', '#fff6c8') + RG('moon8', '#ffffff', '#fff3b0', '#e2c15a') + LG('hill8', '#5a8f3a', '#2d5a24', 1) + LG('water', '#7fd0ff', '#1f63b8', 1) +
+    LG('stone', '#e8e4f2', '#9b93b8') + LG('stoneD', '#cfc8e4', '#7a7099') + LG('roof8', '#ff7b7b', '#b71c2e', 1) + LG('gate', '#b07040', '#5e3410', 1) + LG('bridge', '#c98b48', '#7a4418', 1) + LG('flag', '#ffd166', '#ff9f1c') +
+    RG('dragon', '#b5f5c8', '#2cb67d', '#166b45') + RG('belly', '#fff6c2', '#ffe08a', '#e3b43c') + LG('wing', '#7f5af0', '#4a2fa8', 1) + GLOW('fire', '#ffb020') + SH + '</defs>' +
+    '<rect width="400" height="300" fill="url(#night)"/><g fill="#fff"><circle cx="30" cy="40" r="2.5"/><circle cx="90" cy="24" r="2"/><circle cx="150" cy="50" r="1.8"/><circle cx="250" cy="20" r="2.4"/><circle cx="370" cy="44" r="2"/><circle cx="330" cy="18" r="1.6"/><circle cx="200" cy="80" r="1.6"/><circle cx="60" cy="100" r="1.8"/><circle cx="380" cy="100" r="1.6"/></g>' +
+    '<g fill="#fff" opacity=".9"><polygon points="300,60 303,70 313,73 303,76 300,86 297,76 287,73 297,70"/></g>' +
+    '<circle cx="340" cy="60" r="56" fill="url(#moonglow)" opacity=".7"/><circle cx="340" cy="60" r="26" fill="url(#moon8)"/><circle cx="332" cy="52" r="5" fill="#e2c15a" opacity=".5"/><circle cx="348" cy="68" r="3" fill="#e2c15a" opacity=".5"/>' +
+    '<ellipse cx="200" cy="300" rx="280" ry="90" fill="url(#hill8)"/><ellipse cx="200" cy="300" rx="150" ry="34" fill="url(#water)"/><path d="M80 290 Q120 282 160 290 M240 292 Q280 284 320 292" stroke="#fff" stroke-width="2" fill="none" opacity=".5"/>' +
+    '<g filter="url(#sh)"><rect x="70" y="120" width="44" height="130" fill="url(#stone)"/><rect x="286" y="120" width="44" height="130" fill="url(#stone)"/><polygon points="64,122 92,80 120,122" fill="url(#roof8)"/><polygon points="280,122 308,80 336,122" fill="url(#roof8)"/>' +
+    '<rect x="110" y="160" width="180" height="90" fill="url(#stoneD)"/><g fill="url(#stoneD)"><rect x="110" y="146" width="14" height="16"/><rect x="138" y="146" width="14" height="16"/><rect x="166" y="146" width="14" height="16"/><rect x="194" y="146" width="14" height="16"/><rect x="222" y="146" width="14" height="16"/><rect x="250" y="146" width="14" height="16"/><rect x="278" y="146" width="12" height="16"/></g>' +
+    '<rect x="172" y="100" width="56" height="62" fill="url(#stone)"/><g fill="url(#stone)"><rect x="172" y="88" width="12" height="14"/><rect x="194" y="88" width="12" height="14"/><rect x="216" y="88" width="12" height="14"/></g>' +
+    '<g stroke="#5e3410" stroke-width="3"><line x1="92" y1="80" x2="92" y2="52"/><line x1="308" y1="80" x2="308" y2="52"/><line x1="200" y1="88" x2="200" y2="58"/></g><polygon points="92,52 118,60 92,68" fill="url(#flag)"/><polygon points="308,52 334,60 308,68" fill="url(#flag)"/><polygon points="200,58 226,66 200,74" fill="#f582ae"/>' +
+    '<path d="M178 250 L178 212 Q200 190 222 212 L222 250 Z" fill="url(#gate)"/><g stroke="#2e2219" stroke-width="2" opacity=".6"><line x1="188" y1="212" x2="188" y2="250"/><line x1="200" y1="204" x2="200" y2="250"/><line x1="212" y1="212" x2="212" y2="250"/></g>' +
+    '<path d="M172 250 L228 250 L246 294 L154 294 Z" fill="url(#bridge)"/><g stroke="#5e3410" stroke-width="2" opacity=".5"><line x1="168" y1="262" x2="232" y2="262"/><line x1="162" y1="276" x2="238" y2="276"/></g><g stroke="#cfc8e4" stroke-width="2.5"><line x1="172" y1="250" x2="154" y2="294"/><line x1="228" y1="250" x2="246" y2="294"/></g>' +
+    '<g fill="#ffe08a"><rect x="84" y="140" width="14" height="20" rx="7"/><rect x="300" y="140" width="14" height="20" rx="7"/><rect x="128" y="190" width="12" height="18" rx="6"/><rect x="260" y="190" width="12" height="18" rx="6"/><rect x="192" y="112" width="16" height="22" rx="8"/></g></g>' +
+    '<g filter="url(#sh)"><path d="M48 212 Q30 186 54 176" stroke="url(#dragon)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M44 170 L20 150 L52 158 Z" fill="url(#wing)"/><ellipse cx="60" cy="222" rx="34" ry="24" fill="url(#dragon)"/><ellipse cx="66" cy="230" rx="20" ry="13" fill="url(#belly)"/>' +
+    '<circle cx="92" cy="200" r="20" fill="url(#dragon)"/><ellipse cx="108" cy="206" rx="12" ry="8" fill="url(#dragon)"/><circle cx="96" cy="194" r="5" fill="#fff"/><circle cx="98" cy="194" r="2.5" fill="#172c66"/><circle cx="112" cy="206" r="1.8" fill="#172c66"/><path d="M104 212 q6 4 12 0" stroke="#172c66" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+    '<g fill="#ffd166"><polygon points="78,186 84,170 90,186"/><polygon points="90,184 96,168 102,184"/></g><g fill="url(#dragon)"><ellipse cx="42" cy="244" rx="9" ry="6"/><ellipse cx="76" cy="246" rx="9" ry="6"/></g>' +
+    '<circle cx="128" cy="210" r="14" fill="url(#fire)" opacity=".8"/><polygon points="120,206 140,202 132,212 142,214 124,218" fill="#ff8906"/><polygon points="122,208 134,206 128,212" fill="#fff1a8"/></g></svg>'
   ];
-  // Rejillas por nivel (progresión dentro del nivel)
-  var GRIDS = { 1: [[2, 2], [3, 2]], 2: [[3, 3], [4, 3]], 3: [[4, 4], [5, 4], [6, 4]] };
-  var HINTS = 3;
+  // Rejillas por nivel (progresión dentro del nivel). Nivel 4 (Experto): fichas giradas que hay que enderezar y 1 sola pista
+  var GRIDS = { 1: [[2, 2], [3, 2]], 2: [[3, 3], [4, 3], [4, 4]], 3: [[4, 4], [5, 4], [6, 4]], 4: [[6, 5], [7, 5]] };
+  var HINTS = { 1: 3, 2: 2, 3: 2, 4: 1 };
+  var LABELS = { 1: '2×2 y 3×2 con guía', 2: '3×3 → 4×4', 3: '4×4 → 6×4 sin guía', 4: '7×5 y girar fichas' };
   var level = 1, step = 0, scene = 0, cols = 2, rows = 2, tiles = [], placed = 0, url = '';
-  var boardW = 0, boardH = 0, tileW = 0, tileH = 0, trayScale = 1, dragging = null, hints = HINTS, peekTimer = null, ghostTimer = null, ghost = null, peek = null;
+  var boardW = 0, boardH = 0, tileW = 0, tileH = 0, trayScale = 1, dragging = null, hints = 3, peekTimer = null, ghostTimer = null, ghost = null, peek = null;
+  function expert() { return level === 4; }
 
   function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
@@ -192,7 +238,8 @@
   var lvlBtn = el('button', 'btn round yellow'); lvlBtn.textContent = '🎚️'; lvlBtn.setAttribute('aria-label', 'Nivel');
   var badge = el('span'), piecesEl = el('span', 'pieces');
   var hintBtn = el('button', 'btn yellow hint'); hintBtn.setAttribute('aria-label', 'Pista');
-  left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(piecesEl); right.appendChild(hintBtn);
+  var turnEl = el('span', 'btn purple turn'); turnEl.textContent = '🔄 Toca para girar'; turnEl.style.display = 'none';
+  left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(piecesEl); right.appendChild(turnEl); right.appendChild(hintBtn);
   hud.appendChild(left); hud.appendChild(right);
   var wrap = el('div', 'wrap'), boardBox = el('div', 'boardbox'), board = el('div', 'board'), tray = el('div', 'tray');
   boardBox.appendChild(board); wrap.appendChild(boardBox); wrap.appendChild(tray);
@@ -200,12 +247,13 @@
   onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
   onTap(hintBtn, showHint);
   // Expuesto para pruebas (set: índice de nivel 0..2, escena, paso dentro del nivel)
-  window.__pz = { get cols() { return cols; }, get rows() { return rows; }, get level() { return level; }, get hints() { return hints; },
-    set: function (l, sc, st) { level = Math.min(3, Math.max(1, (l | 0) + 1)); scene = sc || 0; step = st || 0; start(); } };
+  window.__pz = { get cols() { return cols; }, get rows() { return rows; }, get level() { return level; }, get hints() { return hints; }, get step() { return step; }, get scenes() { return SCENES.length; },
+    get tiles() { return tiles.map(function (t) { return { c: t.c, r: t.r, state: t.state, rot: t.rot || 0 }; }); },
+    set: function (l, sc, st) { level = Math.min(4, Math.max(1, (l | 0) + 1)); scene = sc || 0; step = st || 0; start(); } };
 
   function pickLevel() {
     board.className = 'board'; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; dragging = null; clearTimeout(ghostTimer); clearTimeout(peekTimer);
-    KidsGame.levelPicker({ onPick: function (n) { level = n; step = 0; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; step = 0; start(); } });
   }
   function setHud() {
     badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level));
@@ -224,7 +272,8 @@
   function start() {
     var lv = GRIDS[level][Math.min(step, GRIDS[level].length - 1)]; cols = lv[0]; rows = lv[1];
     url = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SCENES[scene % SCENES.length]) + '")';
-    board.className = 'board lvl' + level; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; placed = 0; dragging = null; hints = HINTS;
+    board.className = 'board lvl' + level; board.innerHTML = ''; tray.innerHTML = ''; tiles = []; placed = 0; dragging = null; hints = HINTS[level];
+    tray.classList.toggle('expert', expert()); turnEl.style.display = expert() ? '' : 'none';
     clearTimeout(ghostTimer); clearTimeout(peekTimer);
     setHud();
     // Nivel 1: la imagen guía se ve 3 segundos y se desvanece. Niveles 2 y 3: sin guía.
@@ -243,9 +292,11 @@
     KidsGame.shuffle(all).forEach(function (t, i) {
       var d = el('div', 'tile'); d.style.backgroundImage = url; d.style.animationDelay = (i * 50) + 'ms';
       d.dataset.c = t.c; d.dataset.r = t.r;
-      // Nivel 3: fichas giradas en la bandeja (se enderezan al tomarlas)
+      // Nivel 3: fichas ladeadas en la bandeja (se enderezan al tomarlas)
       if (level === 3) d.style.setProperty('--rot', (Math.random() * 28 - 14).toFixed(1) + 'deg');
-      t.el = d; t.state = 'tray';
+      // Nivel 4: fichas giradas 90/180/270°; hay que girarlas (toque) hasta enderezarlas antes de que encajen
+      t.rot = 0; t.el = d; t.state = 'tray';
+      if (expert()) { t.rot = KidsGame.pick([90, 180, 270]); d.classList.add('rot'); setRot(t); }
       d.addEventListener('pointerdown', function (e) { down(e, t); });
       tray.appendChild(d); tiles.push(t);
     });
@@ -253,18 +304,19 @@
     KidsGame.say('Arma el rompecabezas');
   }
 
+  function setRot(t) { t.el.style.setProperty('--rot', t.rot + 'deg'); t.el.style.setProperty('--drot', t.rot + 'deg'); }
   function layout() {
-    var W = game.clientWidth - 16, H = game.clientHeight - 82, gap = 8, n = tiles.length, F = 36, B = 6;
+    var W = game.clientWidth - 16, H = game.clientHeight - 82, gap = expert() ? 14 : 8, n = tiles.length, F = 36, B = 6;
     if (!n || W < 50 || H < 50) return;
     var portrait = H > W;
     wrap.className = 'wrap' + (portrait ? ' portrait' : '');
     var bw, bh, tw, th, tcols, trows;
     if (portrait) {
-      var trayH = Math.max(130, Math.floor(H * 0.3));
+      var trayH = Math.max(130, Math.floor(H * (expert() ? 0.36 : 0.3)));
       bw = W - F; bh = H - trayH - 10 - F;
       tray.style.width = '100%'; tray.style.height = trayH + 'px';
     } else {
-      var trayW = Math.max(160, Math.floor(W * 0.28));
+      var trayW = Math.max(160, Math.floor(W * (expert() ? 0.34 : 0.28)));
       bw = W - trayW - 10 - F; bh = H - F;
       tray.style.width = trayW + 'px'; tray.style.height = '100%';
     }
@@ -275,17 +327,18 @@
     board.style.width = boardW + 'px'; board.style.height = boardH + 'px';
     // Tamaño de las fichas en la bandeja para que quepan todas
     if (portrait) {
-      trows = level === 3 ? 3 : 2; tcols = Math.ceil(n / trows);
+      trows = expert() ? 4 : level === 3 ? 3 : 2; tcols = Math.ceil(n / trows);
       tw = (W - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
       var availH = parseFloat(tray.style.height) - B - (trows + 1) * gap;
       if (trows * th > availH) { th = availH / trows; tw = th * tileW / tileH; }
     } else {
-      tcols = level === 3 ? 3 : 2; trows = Math.ceil(n / tcols);
+      tcols = expert() ? 4 : level === 3 ? 3 : 2; trows = Math.ceil(n / tcols);
       tw = (parseFloat(tray.style.width) - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
       if (trows * th > H - B - (trows + 1) * gap) { th = (H - B - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
     }
     trayScale = Math.min(1, tw / tileW);
     if (level === 3) trayScale *= 0.82;
+    if (expert()) trayScale *= 0.8;
     tray.style.setProperty('--gap', gap + 'px');
     Array.prototype.forEach.call(board.querySelectorAll('.slot'), function (s) {
       s.style.left = (s.dataset.c * tileW) + 'px'; s.style.top = (s.dataset.r * tileH) + 'px';
@@ -308,7 +361,7 @@
   function down(e, t) {
     if (t.state !== 'tray' || dragging) return;
     e.preventDefault();
-    dragging = { t: t, id: e.pointerId };
+    dragging = { t: t, id: e.pointerId, x0: e.clientX, y0: e.clientY, moved: false };
     t.idx = Array.prototype.indexOf.call(tray.children, t.el);
     t.state = 'drag'; t.el.style.animationDelay = '';
     document.body.appendChild(t.el); t.el.className = 'tile drag';
@@ -317,22 +370,39 @@
   }
   function move(e) {
     if (!dragging || e.pointerId !== dragging.id) return;
-    e.preventDefault(); moveTo(dragging.t, e.clientX, e.clientY);
+    e.preventDefault();
+    if (Math.abs(e.clientX - dragging.x0) + Math.abs(e.clientY - dragging.y0) > 10) dragging.moved = true;
+    moveTo(dragging.t, e.clientX, e.clientY);
+  }
+  function toTray(t, cls) {
+    t.state = 'tray'; t.el.className = 'tile' + (expert() ? ' rot' : '') + (cls ? ' ' + cls : ''); t.el.style.left = ''; t.el.style.top = '';
+    var ref = tray.children[t.idx] || null; tray.insertBefore(t.el, ref); styleTile(t);
   }
   function up(e) {
     if (!dragging || e.pointerId !== dragging.id) return;
-    var t = dragging.t; dragging = null;
+    var t = dragging.t, tapped = !dragging.moved; dragging = null;
+    // Experto: un toque (sin arrastrar) gira la ficha 90°
+    if (expert() && tapped) {
+      t.rot = (t.rot + 90) % 360; toTray(t, 'spin'); setRot(t);
+      KidsGame.sound.pop(); KidsGame.vibrate(15);
+      return;
+    }
     var br = board.getBoundingClientRect();
     var tl = parseFloat(t.el.style.left), tt = parseFloat(t.el.style.top);
     var dx = tl - (br.left + t.c * tileW), dy = tt - (br.top + t.r * tileH);
-    if (Math.sqrt(dx * dx + dy * dy) < 0.35 * tileW) {
+    var near = Math.sqrt(dx * dx + dy * dy) < 0.35 * tileW;
+    if (near && expert() && t.rot % 360 !== 0) {
+      // Está en su lugar pero torcida: no encaja; hay que girarla
+      toTray(t, 'nope'); KidsGame.sound.wrong(); KidsGame.toast('Gírala 🔄', 900);
+      return;
+    }
+    if (near) {
       t.state = 'placed'; t.el.className = 'tile placed'; board.appendChild(t.el); styleTile(t);
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       placed++;
       if (placed === tiles.length) finish();
     } else {
-      t.state = 'tray'; t.el.className = 'tile'; t.el.style.left = ''; t.el.style.top = '';
-      var ref = tray.children[t.idx] || null; tray.insertBefore(t.el, ref); styleTile(t);
+      toTray(t);
       KidsGame.sound.pop();
     }
   }
@@ -345,9 +415,10 @@
     board.classList.add('done');
     KidsGame.confetti(30);
     setTimeout(function () {
+      if (step >= GRIDS[level].length - 1) KidsGame.levelDone(level);
       KidsGame.celebrate({
         sub: 'Nivel ' + level + ' · ' + cols + '×' + rows + ' completo',
-        onNext: function () { scene++; step++; if (step >= GRIDS[level].length) { step = 0; level = Math.min(level + 1, 3); } start(); },
+        onNext: function () { scene++; step++; if (step >= GRIDS[level].length) { step = 0; level = Math.min(level + 1, 4); } start(); },
         onAgain: function () { start(); }
       });
     }, 1300);
