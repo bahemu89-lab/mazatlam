@@ -9,6 +9,7 @@ Carpeta para llevar el control de los precios y el catálogo de la operación en
   - **Catálogo USA**: 72 productos con código, nombre en el BMS, español, inglés revisado, proveedor, costos SELECT/CHOICE en USD/lb, precio de venta en USD/lb y USD/kg, observación y estatus.
   - **Observaciones**: pendientes de la revisión, con prioridad y estatus.
   - **Bitácora**: qué archivo llegó, cuándo y si ya se revisó.
+  - **Importar Odoo**: productos con el formato para cargarlos en Odoo (código y nombre del BMS, inglés como descripción secundaria, unidad lb).
 - `originales/`: copia sin cambios de los archivos recibidos.
 
 > Los `.xlsx` tienen costos, márgenes y teléfonos de proveedores. Este repositorio es **público**, por eso `.gitignore` los deja fuera del repo hasta que se decida dónde guardarlos.
@@ -27,15 +28,15 @@ El archivo **sí sirve como base**, pero no está listo para dar de alta product
 5. **Totales que no cuadran**: COMPRA CARNICO suma 20,670 kg; los pedidos por proveedor suman 21,990 kg.
 6. **Traducciones al inglés con errores**: pulpa blanca, negra y bola se traducen distinto en cada hoja; "RIB EYE" sale como T-BONE, "TENDER DE POLLO" como FRENCH FRIES, "LONGANIZA PREMIUM" como chicharrón, además de faltas de ortografía (CHIKEN, SAUSAJ, TONGE…).
 
-## ¿Español o inglés?
+## Sistema y idioma (decidido 07-oct-2026)
 
-Recomendación: **el español se queda como nombre principal y el inglés va como segundo nombre.**
+- **USA se maneja en Odoo**, con **los mismos productos, códigos y descripciones del BMS** de México. Por eso los códigos equivocados (11014, 16025, 31035) sí hay que corregirlos antes de cargar.
+- **Descripción principal: español**, igual que en el BMS (campo *Name* en Odoo).
+- **Descripción secundaria: inglés** (campo *Sales Description* en Odoo, o traducción del nombre si se activa el idioma inglés). Es la que sirve para etiqueta de báscula y empaque, porque en USA las etiquetas de carne deben ir en inglés (USDA-FSIS).
+- **Proveedores americanos (EG MEAT, Bay Premium, Sukarne USA):** pedir con el nombre del corte en inglés (por ejemplo pulpa negra = *bottom round*).
+- **Unidad: libra (lb)** y precio en USD por libra.
 
-- **BMS y operación interna (altas, pedidos, inventario, reportes): español.** La plantilla de altas y el BMS trabajan con la descripción en español y en mayúsculas, igual que en México. Así los códigos y nombres siguen siendo los mismos en los dos países.
-- **Cliente en tienda: bilingüe.** La competencia que puso Erika (Northgate, Superior) son súper hispanos, donde el cliente busca "pulpa negra" o "diezmillo". El letrero de precio lleva el nombre en español grande y el inglés abajo.
-- **Etiqueta de báscula y empaque: inglés obligatorio.** En USA las etiquetas de carne deben ir en inglés (USDA-FSIS); el español se puede agregar. Para esto sirve la columna *Product (English) — revisado*, y puede ir en la "Descripción corta" del producto.
-- **Proveedores americanos (EG MEAT, Bay Premium, Sukarne USA): inglés** con el nombre del corte americano, para que no haya confusión al pedir (por ejemplo pulpa negra = *bottom round*).
-- **Precio en USD por libra.** En USA se vende por libra; la columna en kg queda solo como referencia para compararla con México.
+La hoja **Importar Odoo** del libro de control ya trae los productos con los nombres de campo de Odoo. 44 de los 72 productos están listos; los otros 28 están marcados con el motivo (sin código, código equivocado o sin costo).
 
 ## Pendientes para cerrar
 
