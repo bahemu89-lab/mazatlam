@@ -10,6 +10,11 @@ Carpeta para llevar el control de los precios y el catálogo de la operación en
   - **Observaciones**: pendientes de la revisión, con prioridad y estatus.
   - **Bitácora**: qué archivo llegó, cuándo y si ya se revisó.
   - **Importar Odoo**: productos con el formato para cargarlos en Odoo (código y nombre del BMS, inglés como descripción secundaria, unidad lb).
+- `PRODUCTOS_USA_ODOO.xlsx`: el formato de importación de Odoo (`formato_ejemplo_odoo`) ya lleno.
+  - **Productos**: 45 productos completos, listos para importar.
+  - **Pendientes**: 118 productos en el mismo formato con la columna *Qué falta*.
+  - **Impuestos USA** y **Categorías USA**: lo que hay que crear en Odoo antes de importar.
+  - **Guía USA**: orden de importación y criterios usados.
 - `originales/`: copia sin cambios de los archivos recibidos.
 
 > Los `.xlsx` tienen costos, márgenes y teléfonos de proveedores. Este repositorio es **público**, por eso `.gitignore` los deja fuera del repo hasta que se decida dónde guardarlos.
@@ -45,3 +50,14 @@ La hoja **Importar Odoo** del libro de control ya trae los productos con los nom
 - Decidir la unidad de venta (lb) y si el precio sale de SELECT o CHOICE.
 - Conseguir los 23 costos que faltan.
 - Confirmar las traducciones de cortes con EG MEAT.
+
+## Formato Odoo (12-oct-2026)
+
+Se llenó `formato_ejemplo_odoo` con los productos del catálogo de Erika, del planograma y de `2. Productos`. Cambios respecto al formato de México:
+
+- **Impuestos:** los de México (IVA, IEPS, retenciones) no aplican. Alimentos llevan `CA Exempt Food 0%`; lo gravable (bebidas con alcohol, desechables, comida preparada) lleva `CA Sales Tax` con la tasa de la dirección de cada tienda. En compras no va impuesto.
+- **Código SAT:** no se usa en USA. Se llenó con la clave UNSPSC de la categoría, pero al importar en la empresa de USA se marca como *No importar*.
+- **Tipo de producto:** `Bienes` con inventario *Por cantidad* (el ejemplo traía `Combo`).
+- **Columnas agregadas:** descripción de venta en inglés, disponible en PdV, pesar con báscula, proveedor y precio de proveedor.
+- **No se pasaron** "Dividendos Pagados" ni "ASESORIAS" (servicios contables de México).
+
