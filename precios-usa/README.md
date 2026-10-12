@@ -10,12 +10,11 @@ Carpeta para llevar el control de los precios y el catálogo de la operación en
   - **Observaciones**: pendientes de la revisión, con prioridad y estatus.
   - **Bitácora**: qué archivo llegó, cuándo y si ya se revisó.
   - **Importar Odoo**: productos con el formato para cargarlos en Odoo (código y nombre del BMS, inglés como descripción secundaria, unidad lb).
-- `PRODUCTOS_USA_ODOO.xlsx`: el formato de importación de Odoo (`formato_ejemplo_odoo`) ya lleno.
-  - **Productos**: 45 productos completos, listos para importar.
-  - **Pendientes**: 118 productos en el mismo formato con la columna *Qué falta*.
-  - **Impuestos USA** y **Categorías USA**: lo que hay que crear en Odoo antes de importar.
-  - **Guía USA**: orden de importación y criterios usados.
-- `ODOO_CONFIG_USA.xlsx`: lo que hay que importar en Odoo **antes** de los productos: categorías, impuestos y proveedores, con instrucciones paso a paso.
+- **`ODOO_USA_COMPLETO.xlsx` (el que se usa)**: todo en un solo archivo.
+  - **PLAN ODOO**: los 28 pasos en orden (empresa, ajustes, catálogos, productos, arranque y trámites fuera de Odoo), con menú de Odoo, hoja a importar, si ya se puede hacer, responsable y estatus.
+  - Hojas **Imp 1 a Imp 6**: lo que se importa, en ese orden (categorías, impuestos, proveedores, productos, inventario inicial y pedido inicial).
+  - **Pendientes**: productos a los que les falta algún dato.
+- `PRODUCTOS_USA_ODOO.xlsx` y `ODOO_CONFIG_USA.xlsx`: versiones anteriores por separado; su contenido ya está dentro de `ODOO_USA_COMPLETO.xlsx`.
 - `originales/`: copia sin cambios de los archivos recibidos.
 
 > Los `.xlsx` tienen costos, márgenes y teléfonos de proveedores. Este repositorio es **público**, por eso `.gitignore` los deja fuera del repo hasta que se decida dónde guardarlos.
