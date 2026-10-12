@@ -15,6 +15,7 @@ Carpeta para llevar el control de los precios y el catálogo de la operación en
   - **Pendientes**: 118 productos en el mismo formato con la columna *Qué falta*.
   - **Impuestos USA** y **Categorías USA**: lo que hay que crear en Odoo antes de importar.
   - **Guía USA**: orden de importación y criterios usados.
+- `ODOO_CONFIG_USA.xlsx`: lo que hay que importar en Odoo **antes** de los productos: categorías, impuestos y proveedores, con instrucciones paso a paso.
 - `originales/`: copia sin cambios de los archivos recibidos.
 
 > Los `.xlsx` tienen costos, márgenes y teléfonos de proveedores. Este repositorio es **público**, por eso `.gitignore` los deja fuera del repo hasta que se decida dónde guardarlos.
