@@ -71,3 +71,11 @@ Archivo `ALTA DE PRODUCTO USA.xlsx` (correo "Alta de productos USA", cc Erika): 
 - **10 siguen sin código** BMS y quedan en *Pendientes*, ya con costo y precio.
 - Revisar con Compras: el periodo de afectación trae una fecha de inicio distinta en cada renglón (12 al 24 de octubre) y la unidad dice KG aunque el precio es por libra.
 
+## Impuestos por producto (13-oct-2026)
+
+Hoja **Impuestos por producto** en `ODOO_USA_COMPLETO.xlsx`: los 167 productos con su impuesto y fundamento.
+
+- **Ninguno paga sales tax en California**: todos son alimentos para preparar en casa (carne cruda y marinada, pollo, lácteos, huevo, tortillas, botanas, salsas, especias, verdura). Llevan `CA Exempt Food 0%`. Fundamento: CDTFA Regulación 1602.
+- La michelada de 32 oz se dejó exenta porque las del mercado son mezcla sin alcohol para preparar con cerveza; si la etiqueta dice que trae alcohol o gas, cambia a `CA Sales Tax` (y lleva CRV).
+- Pagarían sales tax si se venden: refrescos y bebidas con gas, cerveza/alcohol, hielo, carbón, desechables, limpieza y comida caliente o para consumir en tienda (Reg. 1603). Lo pagado con EBT/SNAP no lleva impuesto (Reg. 1602.5).
+
