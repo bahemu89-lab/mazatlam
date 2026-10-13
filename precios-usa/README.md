@@ -61,3 +61,13 @@ Se llenó `formato_ejemplo_odoo` con los productos del catálogo de Erika, del p
 - **Columnas agregadas:** descripción de venta en inglés, disponible en PdV, pesar con báscula, proveedor y precio de proveedor.
 - **No se pasaron** "Dividendos Pagados" ni "ASESORIAS" (servicios contables de México).
 
+## Productos de Compras (correo de Jessica, 12-oct-2026)
+
+Archivo `ALTA DE PRODUCTO USA.xlsx` (correo "Alta de productos USA", cc Erika): 13 productos con costo USD/lb y precio = costo / 0.55.
+
+- **9 completan** productos que estaban sin costo (chorizo uruguayo, chorizo ahumado, longaniza picante, pollo fresco blanco, patas, hígado, mollejas, buche y corazón de pollo). El costo de Jessica reemplaza al de Erika donde había (pollo blanco 1.42 → 1.29, mollejas 1.17 → 1.19).
+- **4 son nuevos**: costilla marinada BBQ, chuleta natural adobada, churrasco de sirloin, bistec de lomo al pastor.
+- **3 ya tienen código** por nombre idéntico en el BMS: 13045 Pata de pollo, 13046 Hígado de pollo, 13047 Molleja de pollo (confirmar). Pasaron a *Productos* (ahora 48 listos).
+- **10 siguen sin código** BMS y quedan en *Pendientes*, ya con costo y precio.
+- Revisar con Compras: el periodo de afectación trae una fecha de inicio distinta en cada renglón (12 al 24 de octubre) y la unidad dice KG aunque el precio es por libra.
+
