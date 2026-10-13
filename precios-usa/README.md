@@ -79,3 +79,9 @@ Hoja **Impuestos por producto** en `ODOO_USA_COMPLETO.xlsx`: los 167 productos c
 - La michelada de 32 oz se dejó exenta porque las del mercado son mezcla sin alcohol para preparar con cerveza; si la etiqueta dice que trae alcohol o gas, cambia a `CA Sales Tax` (y lleva CRV).
 - Pagarían sales tax si se venden: refrescos y bebidas con gas, cerveza/alcohol, hielo, carbón, desechables, limpieza y comida caliente o para consumir en tienda (Reg. 1603). Lo pagado con EBT/SNAP no lleva impuesto (Reg. 1602.5).
 
+## Revisión final del archivo (13-oct-2026)
+
+Se validaron los 167 productos (48 listos + 119 pendientes) contra las listas del propio archivo: categoría, impuesto, unidad de medida, clave UNSPSC, tipo/rastreo, inglés, báscula, proveedor, referencias y nombres duplicados, precio mayor que costo, y que inventario y pedido inicial solo usen productos listos. Sin errores.
+
+Correcciones: papas (granel, por libra) marcadas para báscula; pollo empanizado/procesado con clave UNSPSC 50112010 (pollo procesado) en vez de pollo fresco.
+
