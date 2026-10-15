@@ -104,3 +104,12 @@ Hoja **Mercado California** en `ODOO_USA_COMPLETO.xlsx`: precio al público enco
 - Son precios en línea (suelen ser 10–20 % más altos que en anaquel) tomados de resultados de búsqueda; verificar en tienda.
 - Aviso: Tío Francisco (Rizo-López Foods) retiró sus lácteos en feb-2024 por listeria; confirmar marca con el proveedor.
 
+## Formato del proveedor completo (15-oct-2026)
+
+`2._Productos_USA_LLENO.xlsx` regenerado desde el formato original del proveedor:
+- Productos desde la fila 2 (se quitaron los 2 ejemplos de México con retención de ISR, que fallarían en la empresa de USA).
+- 158 productos: 58 con costo y precio reales y 100 con precio estimado del mercado de California (precio = mercado − 5 %; costo = precio × 55 %).
+- 9 productos sin precio ni comparable quedaron fuera para que no entren con precio 0 (queso fresco Jiménez, jamón 6 lb, huevo flat 20, cueritos 45 g, tostadas de nopal, sopes, platanillo, machaca a granel, arrachera Paosa).
+- Validado contra las listas del propio formato (tipo, rastreo, clave SAT, unidad, impuestos, políticas): sin errores.
+- Hoja *Formato proveedor* en `ODOO_USA_COMPLETO.xlsx` dice el origen del precio de cada producto.
+
