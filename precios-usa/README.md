@@ -94,3 +94,13 @@ Correcciones: papas (granel, por libra) marcadas para báscula; pollo empanizado
 - Clave SAT: la lista del formato no trae res ni pollo frescos; se usaron 50112000 (carnes) y 50112010 (pollo).
 - El formato no tiene columnas para descripción en inglés, báscula ni proveedor; esos datos siguen en `ODOO_USA_COMPLETO.xlsx`.
 
+## Precios de mercado en California (15-oct-2026)
+
+Hoja **Mercado California** en `ODOO_USA_COMPLETO.xlsx`: precio al público encontrado en supermercados hispanos de California (Northgate, Cardenas, El Super, Superior, Vallarta, Rancho San Miguel, Food 4 Less, Smart & Final; abarrotes también Walmart, Ralphs, Costco, H-E-B) para 140 de los 167 productos, con fuente.
+
+- Compara tu precio contra el típico del mercado: 19 productos ARRIBA (>10%), 19 ABAJO, 18 EN LÍNEA (los demás no tienen precio propio todavía).
+- Precio sugerido = mercado − 5 % (editable); costo máximo = el que permite 45 % de margen con ese precio (editable).
+- 32 productos no alcanzan 45 % de margen a precio de mercado con su costo actual (costilla cargada, cola, lengua, diezmillo c/hueso, pulpa bola/negra, T-bone, costilla BBQ, churrasco, deshebrada, patas/molleja/dentros de pollo, entre otros): hay que negociar costo o aceptar menos margen.
+- Son precios en línea (suelen ser 10–20 % más altos que en anaquel) tomados de resultados de búsqueda; verificar en tienda.
+- Aviso: Tío Francisco (Rizo-López Foods) retiró sus lácteos en feb-2024 por listeria; confirmar marca con el proveedor.
+
