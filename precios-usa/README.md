@@ -85,3 +85,12 @@ Se validaron los 167 productos (48 listos + 119 pendientes) contra las listas de
 
 Correcciones: papas (granel, por libra) marcadas para báscula; pollo empanizado/procesado con clave UNSPSC 50112010 (pollo procesado) en vez de pollo fresco.
 
+## Formato del proveedor de Odoo (15-oct-2026)
+
+`2._Productos_USA_LLENO.xlsx`: el formato que pidió el proveedor (`2._Productos1.xlsx`) llenado sin cambiar su estructura (se editaron solo las celdas; se conservan listas desplegables, protección de hoja y hojas ocultas).
+
+- Productos en las filas 4 a 170: 48 completos (filas 4–51) y 119 con datos pendientes (filas 52–170). Las 2 filas de ejemplo del proveedor no se tocaron.
+- Único ajuste: en la hoja *Impuestos* se agregaron `CA Exempt Food 0%` y `CA Sales Tax` (filas 34–35) y la lista de "Impuestos cliente" se amplió a esas filas.
+- Clave SAT: la lista del formato no trae res ni pollo frescos; se usaron 50112000 (carnes) y 50112010 (pollo).
+- El formato no tiene columnas para descripción en inglés, báscula ni proveedor; esos datos siguen en `ODOO_USA_COMPLETO.xlsx`.
+
