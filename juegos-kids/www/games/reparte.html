@@ -6,32 +6,41 @@
 <link rel="stylesheet" href="../common.css">
 <title>Reparte igual</title>
 <style>
+  /* ===== El picnic: pradera con flores, mantel a cuadros y los amigos (SVG) que sonríen cuando todos tienen lo mismo ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse 100% 45% at 50% 112%, rgba(60,20,0,.35), rgba(0,0,0,0) 60%),
-      linear-gradient(180deg, #fff4d6 0%, #ffe0a6 40%, #f7c47a 100%);
+      radial-gradient(circle at 8% 44%, #ff8fb3 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 14% 50%, #ffd23f 0 4px, rgba(0,0,0,0) 5px), radial-gradient(circle at 90% 46%, #ffd23f 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 95% 52%, #fff 0 4px, rgba(0,0,0,0) 5px), radial-gradient(circle at 50% 48%, #ff8fb3 0 4px, rgba(0,0,0,0) 5px),
+      radial-gradient(ellipse 60% 30% at 50% 0%, rgba(255,255,255,.6), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #d6f0ff 0%, #ecf8ff 28%, #a6e06f 36%, #6cc24a 60%, #4f9d3c 100%);
   }
-  .game::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .45;
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
     background:
-      radial-gradient(circle at 10% 22%, rgba(255,255,255,.9) 0 10px, rgba(255,255,255,0) 11px),
-      radial-gradient(circle at 90% 18%, rgba(255,255,255,.8) 0 8px, rgba(255,255,255,0) 9px),
-      radial-gradient(circle at 92% 70%, rgba(255,255,255,.8) 0 12px, rgba(255,255,255,0) 13px),
-      radial-gradient(circle at 6% 80%, rgba(255,255,255,.8) 0 9px, rgba(255,255,255,0) 10px),
-      repeating-linear-gradient(45deg, rgba(255,120,120,.10) 0 24px, rgba(255,255,255,0) 24px 48px);
-  }
+      radial-gradient(circle at 6% 24%, #2f7a35 0 54px, rgba(0,0,0,0) 55px), radial-gradient(circle at 12% 30%, #4fa04a 0 44px, rgba(0,0,0,0) 45px),
+      radial-gradient(circle at 94% 22%, #2f7a35 0 58px, rgba(0,0,0,0) 59px), radial-gradient(circle at 88% 30%, #4fa04a 0 46px, rgba(0,0,0,0) 47px),
+      linear-gradient(90deg, #8a5a2b, #b57a3f 45%, #6b3d12) 7% 40% / 20px 16% no-repeat, linear-gradient(90deg, #8a5a2b, #b57a3f 45%, #6b3d12) 93% 40% / 20px 16% no-repeat;
+    background-repeat: no-repeat; }
+  /* Mantel del picnic (patrón desbloqueable) */
+  .game::after { content: ""; position: absolute; left: -4%; right: -4%; bottom: -10px; height: 56%; pointer-events: none; z-index: 0; border-radius: 40% 40% 0 0 / 30px 30px 0 0;
+    background: repeating-linear-gradient(0deg, rgba(230,57,70,.4) 0 26px, rgba(0,0,0,0) 26px 52px), repeating-linear-gradient(90deg, rgba(230,57,70,.4) 0 26px, rgba(0,0,0,0) 26px 52px), #fff6f6;
+    box-shadow: 0 -8px 20px rgba(0,60,0,.2), inset 0 6px 0 rgba(255,255,255,.6); }
+  .game.m-azul::after { background: repeating-linear-gradient(0deg, rgba(61,169,252,.4) 0 26px, rgba(0,0,0,0) 26px 52px), repeating-linear-gradient(90deg, rgba(61,169,252,.4) 0 26px, rgba(0,0,0,0) 26px 52px), #f4faff; }
+  .game.m-amarillo::after { background: radial-gradient(circle at 50% 50%, #fff 0 9px, rgba(0,0,0,0) 10px) 0 0 / 44px 44px, #ffd54a; }
+  .game.m-morado::after { background: repeating-linear-gradient(45deg, #c8b8ff 0 22px, #fff 22px 44px); }
+  .game.m-arcoiris::after { background: repeating-linear-gradient(90deg, #ff8a80 0 36px, #ffd166 36px 72px, #a8f0c6 72px 108px, #9fd8ff 108px 144px, #d6c8ff 144px 180px); }
   .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
-  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 10px; border-radius: 40px; max-width: 100%; }
   .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #b8500a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+  .instr .hero { width: 64px; height: 56px; flex: 0 0 auto; filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); cursor: pointer; }
 
   .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 8px; }
+  .stage { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .stage.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .stage.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   .top { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; }
   .tray { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 4px; min-height: 96px; max-width: 820px; padding: 8px 16px; border-radius: 30px;
     background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.6), rgba(255,255,255,0) 70%), repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 22px, rgba(120,60,10,.08) 22px 24px), linear-gradient(180deg, #ffd58a 0%, #f2b25a 60%, #d8923a 100%);
@@ -43,10 +52,19 @@
   .it.lifted { opacity: .25; }
   .plates { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 12px 18px; width: 100%; }
   .plate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; width: var(--pw); transition: transform .2s; }
-  .kid { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-bottom: -10px;
-    background: radial-gradient(circle at 35% 30%, #fff, #ffe9a8 45%, #ffb703 100%); box-shadow: 0 4px 0 #c47f00, 0 8px 14px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 4px rgba(255,255,255,.6); }
-  .kid .emoji { font-size: 40px; }
-  .kid.basket { background: radial-gradient(circle at 35% 30%, #fff, #e6d3b3 45%, #a8672a 100%); box-shadow: 0 4px 0 #6b3f12, 0 8px 14px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 4px rgba(255,255,255,.6); }
+  /* Amigos del picnic: caras SVG que cambian de ánimo */
+  .kid { width: 92px; height: 92px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-bottom: -22px; }
+  .kid svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
+  .kid .k-eyes { transform-origin: 60px 52px; animation: kblink 4.8s infinite; }
+  @keyframes kblink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+  .kid .k-happy, .kid .k-smile, .kid .k-sad { display: none; }
+  .plate.eq .kid .k-eyes, .plate.eq .kid .k-neutral { display: none; }
+  .plate.eq .kid .k-happy, .plate.eq .kid .k-smile { display: block; }
+  .plate.eq .kid svg { animation: kjump .6s ease-out; }
+  @keyframes kjump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-14px) scale(1.06); } 70% { transform: translateY(0) scale(.96, 1.04); } }
+  .plate.sad .kid .k-neutral { display: none; }
+  .plate.sad .kid .k-sad { display: block; }
+  .kid.basket { width: 84px; height: 84px; margin-bottom: -14px; }
   .dish { position: relative; width: var(--pw); height: calc(var(--pw) * .62); border-radius: 50%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 0; padding: 14px 10px 6px;
     background: radial-gradient(ellipse at 40% 30%, #ffffff, #f0f4fb 60%, #c9d2e6 100%); border: 4px solid #fff;
     box-shadow: 0 8px 0 #9fb0cc, 0 14px 20px rgba(20,40,90,.3), inset 0 0 0 10px rgba(200,215,240,.5), inset 0 2px 0 #fff; transition: box-shadow .25s, transform .15s; }
@@ -57,7 +75,7 @@
   .plate.hot .dish { transform: scale(1.06); box-shadow: 0 8px 0 #9fb0cc, 0 14px 20px rgba(20,40,90,.3), 0 0 0 6px #7dd0ff, 0 0 26px 6px rgba(125,208,255,.8), inset 0 2px 0 #fff; }
   .plate.eq .dish { box-shadow: 0 8px 0 #3fa864, 0 14px 20px rgba(0,60,40,.3), 0 0 0 6px #ffe98a, 0 0 32px 8px rgba(255,233,138,.9), inset 0 2px 0 #fff; }
   .plate.bad .dish { animation: shake .4s; }
-  .cnt { position: absolute; right: -4px; top: -6px; min-width: 34px; height: 34px; line-height: 34px; padding: 0 8px; border-radius: 17px; text-align: center; font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); z-index: 3;
+  .cnt { position: absolute; right: -4px; top: 44px; min-width: 34px; height: 34px; line-height: 34px; padding: 0 8px; border-radius: 17px; text-align: center; font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); z-index: 3;
     background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 3px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.6); transition: transform .15s; }
   .cnt.bump { animation: bump .3s; }
   @keyframes bump { 50% { transform: scale(1.3); } }
@@ -97,9 +115,14 @@
   .num.bad { animation: shake .4s; }
   .num.ok { --a: #8ef0b0; --b: #24b36c; --d: #14784a; transform: scale(1.12); box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); animation: none; }
   .num.dim { opacity: .4; transform: scale(.9); animation: none; }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #ffc077, #ff7a1a); text-shadow: 0 3px 0 #b8500a, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #b8500a, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  @media (max-width: 700px) { .kid { width: 80px; height: 80px; margin-bottom: -18px; } .cnt { top: 36px; } }
 </style>
 </head>
 <body>
@@ -108,17 +131,72 @@
 var game = KidsGame.init({ title: 'Reparte igual' });
 (function () {
   var ROUNDS = 6;
-  var ITEMS = ['🍪', '🍓', '🍬', '🧁', '🍎', '🍩', '🍇', '🥕'];
-  var INAME = { '🍪': 'galletas', '🍓': 'fresas', '🍬': 'dulces', '🧁': 'pastelitos', '🍎': 'manzanas', '🍩': 'donas', '🍇': 'uvas', '🥕': 'zanahorias' };
-  var KIDS = ['🧒', '👧', '👦', '👶', '🧑', '👱‍♀️'];
+  var ITEMS = ['🍪', '🍓', '🍬', '🧁', '🍎', '🍩', '🍇', '🥕', '🥪', '🍒', '🧀', '🍉'];
+  var INAME = { '🍪': 'galletas', '🍓': 'fresas', '🍬': 'dulces', '🧁': 'pastelitos', '🍎': 'manzanas', '🍩': 'donas', '🍇': 'uvas', '🥕': 'zanahorias', '🥪': 'sándwiches', '🍒': 'cerezas', '🧀': 'quesitos', '🍉': 'sandías' };
   var LABELS = { 1: 'Entre 2 o 3', 2: 'Hasta 12, ¿cuántos?', 3: 'Pizza en partes', 4: 'Sobras y fracciones' };
+  var HOWTO = [{ icon: '🍪', text: 'Arrastra la comida a los platos' }, { icon: '⚖️', text: 'Todos deben tener lo mismo' }, { icon: '😊', text: 'Si es igual, ¡los amigos sonríen!' }];
   var FRACQ = [[2, 'la mitad', 2], [4, 'la mitad', 2], [6, 'la mitad', 2], [8, 'la mitad', 2], [4, 'un cuarto', 4], [8, 'un cuarto', 4], [3, 'un tercio', 3], [6, 'un tercio', 3]];
   var CMP = [[[2, 1], [4, 1]], [[3, 2], [3, 1]], [[4, 3], [2, 1]], [[3, 1], [4, 1]], [[4, 2], [8, 3]], [[2, 1], [8, 5]], [[6, 2], [3, 2]], [[8, 6], [4, 1]], [[6, 5], [2, 1]], [[4, 1], [8, 1]]];
+  // Amigos del picnic (variantes de piel, pelo y camiseta) y manteles desbloqueables
+  var KIDS = [
+    { skin: '#ffd9b8', hair: '#5a3717', shirt: '#3da9fc', style: 'bob' }, { skin: '#c68642', hair: '#2b1705', shirt: '#f582ae', style: 'puffs' },
+    { skin: '#f1c27d', hair: '#e8a33d', shirt: '#2cb67d', style: 'short' }, { skin: '#8d5524', hair: '#1a0f05', shirt: '#ffb703', style: 'curly' },
+    { skin: '#ffe0c2', hair: '#c9184a', shirt: '#7f5af0', style: 'pig' }, { skin: '#e0ac69', hair: '#4a2c10', shirt: '#ff8906', style: 'bun' }
+  ];
+  var MANTAS = [['rojo', 'el mantel rojo'], ['azul', 'el mantel azul'], ['amarillo', 'el mantel de lunares'], ['morado', 'el mantel de rayas'], ['arcoiris', 'el mantel arcoíris']];
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', uid = 0;
-  var hud, dots, instrTxt, stage, top, platesEl, bottom;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', uid = 0, streak = 0, handShown = false;
+  var hud, dots, instrTxt, instr, stage, top, platesEl, bottom, banner;
 
   function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function unlockedMantas() { var u = readJSON('kg-reparte-mantas', ['rojo']); if (u.indexOf('rojo') < 0) u.unshift('rojo'); return u; }
+  function applyManta() {
+    var sel = null; try { sel = localStorage.getItem('kg-reparte-manta'); } catch (e) {}
+    var u = unlockedMantas(); if (!sel || u.indexOf(sel) < 0) sel = u[u.length - 1];
+    MANTAS.forEach(function (m) { game.classList.remove('m-' + m[0]); }); game.classList.add('m-' + sel);
+    return sel;
+  }
+
+  // ---- Amigos del picnic en SVG: ojos que parpadean, boca neutra / sonrisa grande / triste ----
+  function hairSVG(k) {
+    var h = k.hair;
+    if (k.style === 'bob') return '<path d="M28 56 Q26 20 60 20 Q94 20 92 56 L92 70 Q86 62 84 48 Q60 40 36 48 Q34 62 28 70Z" fill="' + h + '"/>';
+    if (k.style === 'puffs') return '<circle cx="30" cy="34" r="14" fill="' + h + '"/><circle cx="90" cy="34" r="14" fill="' + h + '"/><path d="M30 52 Q32 20 60 20 Q88 20 90 52 Q74 40 60 42 Q46 40 30 52Z" fill="' + h + '"/>';
+    if (k.style === 'short') return '<path d="M30 50 Q32 18 60 18 Q88 18 90 50 Q78 36 60 38 Q42 36 30 50Z" fill="' + h + '"/><path d="M44 30 Q50 18 60 22" fill="none" stroke="' + h + '" stroke-width="6" stroke-linecap="round"/>';
+    if (k.style === 'curly') return '<circle cx="36" cy="34" r="12" fill="' + h + '"/><circle cx="52" cy="24" r="12" fill="' + h + '"/><circle cx="68" cy="24" r="12" fill="' + h + '"/><circle cx="84" cy="34" r="12" fill="' + h + '"/><circle cx="60" cy="30" r="12" fill="' + h + '"/><path d="M30 46 Q60 30 90 46 Q74 42 60 44 Q46 42 30 46Z" fill="' + h + '"/>';
+    if (k.style === 'pig') return '<path d="M30 52 Q32 18 60 18 Q88 18 90 52 Q74 38 60 40 Q46 38 30 52Z" fill="' + h + '"/><ellipse cx="24" cy="64" rx="9" ry="16" fill="' + h + '"/><ellipse cx="96" cy="64" rx="9" ry="16" fill="' + h + '"/><circle cx="26" cy="50" r="4" fill="#ffd166"/><circle cx="94" cy="50" r="4" fill="#ffd166"/>';
+    return '<path d="M30 52 Q32 18 60 18 Q88 18 90 52 Q74 38 60 40 Q46 38 30 52Z" fill="' + h + '"/><circle cx="60" cy="16" r="12" fill="' + h + '"/><path d="M50 16 Q60 8 70 16" fill="none" stroke="#f582ae" stroke-width="4" stroke-linecap="round"/>';
+  }
+  function kidSVG(i, size, happy) {
+    var k = KIDS[i % KIDS.length];
+    return '<svg viewBox="0 0 120 120" width="' + size + '" height="' + size + '" class="' + (happy ? 'kidhappy' : '') + '" aria-hidden="true">' +
+      '<path d="M26 118 Q26 86 60 86 Q94 86 94 118Z" fill="' + k.shirt + '"/><path d="M48 88 L60 100 L72 88" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>' +
+      '<circle cx="60" cy="54" r="30" fill="' + k.skin + '"/>' +
+      hairSVG(k) +
+      '<g class="k-eyes"><ellipse cx="49" cy="56" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="71" cy="56" rx="4" ry="5" fill="#2b2b2b"/><circle cx="50.5" cy="54" r="1.5" fill="#fff"/><circle cx="72.5" cy="54" r="1.5" fill="#fff"/></g>' +
+      '<g class="k-happy"><path d="M43 57 Q49 50 55 57" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/><path d="M65 57 Q71 50 77 57" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/></g>' +
+      '<circle cx="42" cy="64" r="4.5" fill="#ff8aa8" opacity=".55"/><circle cx="78" cy="64" r="4.5" fill="#ff8aa8" opacity=".55"/>' +
+      '<path class="k-neutral" d="M53 70 Q60 75 67 70" fill="none" stroke="#9c3b12" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<path class="k-smile" d="M48 68 Q60 84 72 68 Z" fill="#9c3b12"/><path class="k-smile" d="M53 74 Q60 80 67 74 Z" fill="#ff8aa8"/>' +
+      '<path class="k-sad" d="M52 74 Q60 67 68 74" fill="none" stroke="#9c3b12" stroke-width="2.5" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+  function basketSVG(size) {
+    return '<svg viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs><pattern id="bkw" patternUnits="userSpaceOnUse" width="14" height="10"><rect width="14" height="10" fill="#c98b48"/><rect width="7" height="5" fill="#e0a862"/><rect x="7" y="5" width="7" height="5" fill="#e0a862"/></pattern></defs>' +
+      '<path d="M34 54 C32 22 88 22 86 54" fill="none" stroke="#8b5222" stroke-width="8" stroke-linecap="round"/>' +
+      '<path d="M18 54 L30 104 Q60 112 90 104 L102 54 Z" fill="url(#bkw)" stroke="#6b3d12" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<path d="M22 70 Q60 82 98 70 L96 80 Q60 92 24 80Z" fill="#e63946"/><path d="M22 70 Q60 82 98 70" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/>' +
+      '<path d="M14 54 Q60 66 106 54" fill="none" stroke="#e0a862" stroke-width="9" stroke-linecap="round"/><path d="M14 54 Q60 66 106 54" fill="none" stroke="#8b5222" stroke-width="9" stroke-dasharray="6 8" opacity=".5" stroke-linecap="round"/></svg>';
+  }
+  function heroSVG(size) {
+    return '<svg class="hero" viewBox="0 0 170 120" width="' + Math.round(size * 1.4) + '" height="' + size + '" aria-hidden="true">' +
+      '<ellipse cx="85" cy="114" rx="70" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<g transform="translate(0 4)">' + kidSVG(0, 110, true).replace(/<svg[^>]*>|<\/svg>/g, '').replace('class="k-eyes"', 'class="k-eyes" style="display:none"').replace('class="k-happy"', 'class="k-happy" style="display:block"').replace('class="k-neutral"', 'class="k-neutral" style="display:none"').replace(/class="k-smile"/g, 'class="k-smile" style="display:block"') + '</g>' +
+      '<g transform="translate(78 10) scale(.8)">' + basketSVG(110).replace(/<svg[^>]*>|<\/svg>/g, '').replace('id="bkw"', 'id="bkw2"').replace('url(#bkw)', 'url(#bkw2)') + '</g>' +
+      '<text x="128" y="62" font-size="30" text-anchor="middle">🍎</text></svg>';
+  }
 
   // ---------- pizza renderizada ----------
   function wedgePath(i, n, r) {
@@ -132,8 +210,7 @@ var game = KidsGame.init({ title: 'Reparte igual' });
       '<radialGradient id="' + id + 'q" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fff2a8"/><stop offset=".6" stop-color="#ffcf4a"/><stop offset="1" stop-color="#f0a030"/></radialGradient>' +
       '<radialGradient id="' + id + 'p" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ff7d6a"/><stop offset=".7" stop-color="#d12f2f"/><stop offset="1" stop-color="#8e1515"/></radialGradient>' +
       '<radialGradient id="' + id + 'd" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".75" stop-color="#eef2fb"/><stop offset="1" stop-color="#c9d2e6"/></radialGradient>' +
-      '<filter id="' + id + 's" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#5a2a00" flood-opacity=".35"/></filter>' +
-      '</defs><circle r="108" fill="url(#' + id + 'd)" stroke="#fff" stroke-width="3" filter="url(#' + id + 's)"/><circle r="96" fill="none" stroke="#dde4f2" stroke-width="2"/>';
+      '</defs><circle cy="6" r="108" fill="rgba(90,42,0,.25)"/><circle r="108" fill="url(#' + id + 'd)" stroke="#fff" stroke-width="3"/><circle r="96" fill="none" stroke="#dde4f2" stroke-width="2"/>';
     for (var i = 0; i < n; i++) {
       if (!present[i]) continue;
       s += '<g class="sl" data-i="' + i + '">' +
@@ -158,12 +235,16 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     dots = el('div', 'dots');
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
+    var mb = el('button', 'btn round blue', '🎨'); mb.setAttribute('aria-label', 'Cambiar mantel');
+    mb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); cycleManta(); });
+    hud.appendChild(mb);
     var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
-    var instr = el('div', 'instr panel', '<span class="ico emoji">🍽️</span><span class="txt"></span>');
+    instr = el('div', 'instr panel', heroSVG(56) + '<span class="txt"></span>');
     instrTxt = instr.querySelector('.txt');
+    instr.querySelector('.hero').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); KidsGame.say(sayText); });
     var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
     instr.appendChild(sp);
@@ -172,29 +253,53 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     top = el('div', 'top'); platesEl = el('div', 'plates'); bottom = el('div', 'bottom');
     stage.appendChild(top); stage.appendChild(platesEl); stage.appendChild(bottom);
     game.appendChild(stage);
+    banner = el('div', 'rbanner'); game.appendChild(banner);
+    applyManta();
     window.addEventListener('resize', layout);
+  }
+  function cycleManta() {
+    KidsGame.sound.tap();
+    var u = unlockedMantas();
+    if (u.length < 2) { KidsGame.toast('🎁 Completa un nivel para ganar un mantel nuevo', 1800); KidsGame.say('Completa un nivel para ganar un mantel nuevo'); return; }
+    var cur = applyManta(), nx = u[(u.indexOf(cur) + 1) % u.length];
+    try { localStorage.setItem('kg-reparte-manta', nx); } catch (e) {}
+    applyManta(); KidsGame.sound.pop();
+    for (var i = 0; i < MANTAS.length; i++) if (MANTAS[i][0] === nx) KidsGame.toast('🧺 ' + MANTAS[i][1], 1200);
   }
   function layout() {
     if (!stage || !cur) return;
     var W = stage.clientWidth, H = stage.clientHeight;
     var k = cur.k || 2, extra = cur.mode === 'left' ? 1 : 0;
-    var pw = Math.max(130, Math.min(230, Math.floor((W - 40) / (k + extra)) - 18, Math.floor(H * 0.42)));
+    var pw = Math.max(130, Math.min(230, Math.floor((W - 40) / (k + extra)) - 18, Math.floor(H * 0.38)));
     stage.style.setProperty('--pw', pw + 'px');
     var o = Math.max(44, Math.min(72, Math.floor(pw / 3.4)));
     stage.style.setProperty('--o', o + 'px');
-    var pz = Math.max(170, Math.min(300, H - (cur.mode === 'cmp' ? 170 : cur.mode === 'half' ? 190 : 150), W * 0.42));
+    // la pizza deja sitio a lo que va debajo: botones de corte + platos (pizza), pregunta + números (half) o la fracción (cmp)
+    var pz = Math.max(170, Math.min(300, H - (cur.mode === 'cmp' ? 120 : cur.mode === 'half' ? 210 : 270), W * 0.42));
     stage.style.setProperty('--pz', pz + 'px');
   }
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++;
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 14, chars: streak >= 3 ? ['⭐', '✨', '🍓'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
 
   function showPicker() {
     running = false; lock = true;
     if (stage) { top.innerHTML = ''; platesEl.innerHTML = ''; bottom.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'reparte', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'reparte', labels: LABELS, howto: HOWTO, art: heroSVG(60), music: 'alegre', onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; build(); newRound(true); }
 
   function makeRound() {
-    var c = { mode: 'share', step: 0, k: 2, n: 0, e: KidsGame.pick(ITEMS), kids: KidsGame.shuffle(KIDS), items: [], cuts: 0, present: [], give: [] };
+    var c = { mode: 'share', step: 0, k: 2, n: 0, e: KidsGame.pick(ITEMS), kids: KidsGame.shuffle([0, 1, 2, 3, 4, 5]), items: [], cuts: 0, present: [], give: [] };
     if (nivel === 1) {
       c.k = 2 + KidsGame.rand(2); c.n = c.k * (1 + KidsGame.rand(c.k === 2 ? 4 : 3));
       c.instr = 'Reparte igual entre ' + c.k; c.say = 'Hay ' + c.n + ' ' + INAME[c.e] + '. Repártelas igual entre ' + c.k + ' amigos. Cada uno debe tener lo mismo.';
@@ -204,7 +309,7 @@ var game = KidsGame.init({ title: 'Reparte igual' });
       c.instr = 'Reparte igual entre ' + c.k; c.say = 'Hay ' + c.n + ' ' + INAME[c.e] + ' para ' + c.k + ' amigos. Repártelas igual y luego dime cuántas le tocan a cada uno.';
     } else if (nivel === 3) {
       if (round % 2 === 0) {
-        c.mode = 'pizza'; c.k = KidsGame.pick([2, 3, 4]); c.cuts = 0;
+        c.mode = 'pizza'; c.k = KidsGame.pick([2, 3, 4]); c.cuts = 0; for (var g = 0; g < c.k; g++) c.give.push(0);
         c.instr = 'Corta la pizza y reparte igual entre ' + c.k; c.say = 'Hay ' + c.k + ' amigos. Corta la pizza en partes iguales y dale a cada uno lo mismo. ¿Cuántas rebanadas necesitas?';
       } else {
         c.mode = 'half'; var fq = KidsGame.pick(FRACQ); c.cuts = fq[0]; c.present = []; for (var i = 0; i < fq[0]; i++) c.present.push(true);
@@ -226,7 +331,13 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     return c;
   }
 
-  function newRound() {
+  // Entre rondas el picnic sale deslizando y la ronda nueva entra (nunca un cambio seco)
+  function newRound(first) {
+    if (!running) return;
+    if (!first) { lock = true; stage.classList.add('out'); setTimeout(function () { stage.classList.remove('out'); doRound(); }, 300); }
+    else doRound();
+  }
+  function doRound() {
     if (!running) return;
     cur = makeRound(); lock = false;
     instrTxt.textContent = cur.instr; sayText = cur.say;
@@ -236,7 +347,11 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     else if (cur.mode === 'pizza') renderPizza();
     else if (cur.mode === 'half') renderHalf();
     else renderCmp();
+    stage.classList.add('in'); void stage.offsetWidth; stage.classList.remove('in');
+    showBanner('Ronda ' + (round + 1) + ' de ' + ROUNDS);
     KidsGame.say(sayText);
+    // Tutorial: en la primera ronda del nivel 1 la manita arrastra una galleta al primer plato
+    if (nivel === 1 && round === 0 && !handShown) { handShown = true; setTimeout(function () { var it = top.querySelector('.it'), pl = platesEl.querySelector('.dish'); if (running && !lock && it && pl) KidsGame.hand({ from: it, to: pl }); }, 1200); }
   }
 
   // ---------- repartir objetos ----------
@@ -249,7 +364,7 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     var counts = [];
     for (var p = 0; p < cur.k; p++) {
       var pl = el('div', 'plate'); pl._p = p;
-      pl.appendChild(el('div', 'kid', '<span class="emoji">' + cur.kids[p] + '</span>'));
+      pl.appendChild(el('div', 'kid', kidSVG(cur.kids[p], 92)));
       var dish = el('div', 'dish'); var c = 0;
       cur.items.forEach(function (it, i) { if (it.where === p) { c++; dish.appendChild(makeItem(it, i)); } });
       counts.push(c);
@@ -258,7 +373,7 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     }
     if (cur.mode === 'left') {
       var bk = el('div', 'plate'); bk._p = 'b';
-      bk.appendChild(el('div', 'kid basket', '<span class="emoji">🧺</span>'));
+      bk.appendChild(el('div', 'kid basket', basketSVG(84)));
       var bd = el('div', 'dish bk'); var bc = 0;
       cur.items.forEach(function (it, i) { if (it.where === 'b') { bc++; bd.appendChild(makeItem(it, i)); } });
       bk.appendChild(bd); bk.appendChild(el('div', 'cnt', String(bc)));
@@ -300,14 +415,21 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     checkShare();
   }
   function plateCounts() { var c = []; for (var p = 0; p < cur.k; p++) c.push(0); var b = 0, t = 0; cur.items.forEach(function (it) { if (it.where === -1) t++; else if (it.where === 'b') b++; else c[it.where]++; }); return { c: c, b: b, t: t }; }
+  function sadFaces(pc) {
+    var mx = Math.max.apply(null, pc.c);
+    platesEl.querySelectorAll('.plate').forEach(function (pl) {
+      if (pl._p === 'b') return;
+      if (pc.c[pl._p] === mx) { pl.classList.add('bad'); setTimeout(function () { pl.classList.remove('bad'); }, 500); }
+      else { pl.classList.add('sad'); setTimeout(function () { pl.classList.remove('sad'); }, 1600); }
+    });
+  }
   function checkShare() {
     var pc = plateCounts(); if (pc.t > 0) return;
     var eq = pc.c.every(function (v) { return v === pc.c[0]; });
-    if (eq && cur.mode === 'left' && pc.b >= cur.k) { KidsGame.sound.wrong(); KidsGame.say('Sobran muchas. Todavía puedes repartir más.'); platesEl.lastChild.classList.add('bad'); setTimeout(function () { platesEl.lastChild.classList.remove('bad'); }, 500); return; }
+    if (eq && cur.mode === 'left' && pc.b >= cur.k) { KidsGame.sound.wrong(); streak = 0; KidsGame.say('Sobran muchas. Todavía puedes repartir más.'); platesEl.lastChild.classList.add('bad'); setTimeout(function () { platesEl.lastChild.classList.remove('bad'); }, 500); return; }
     if (!eq) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      var mx = Math.max.apply(null, pc.c);
-      platesEl.querySelectorAll('.plate').forEach(function (pl) { if (pl._p !== 'b' && pc.c[pl._p] === mx) { pl.classList.add('bad'); setTimeout(function () { pl.classList.remove('bad'); }, 500); } });
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); streak = 0;
+      sadFaces(pc);
       KidsGame.say(nivel <= 2 ? 'No es igual. Mira los números: uno tiene más.' : 'No es igual.');
       return;
     }
@@ -329,7 +451,7 @@ var game = KidsGame.init({ title: 'Reparte igual' });
   function choose(n, v) {
     if (lock || !running) return;
     if (v !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(n);
       n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad'); setTimeout(function () { n.classList.remove('bad'); }, 450);
       return;
     }
@@ -357,10 +479,10 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     platesEl.innerHTML = '';
     for (var p = 0; p < cur.k; p++) {
       var pl = el('div', 'plate'); pl._p = p;
-      pl.appendChild(el('div', 'kid', '<span class="emoji">' + cur.kids[p] + '</span>'));
+      pl.appendChild(el('div', 'kid', kidSVG(cur.kids[p], 92)));
       var dish = el('div', 'dish');
       for (var s = 0; s < cur.give[p]; s++) dish.appendChild(el('div', 'sl', sliceSVG(cur.cuts, 46)));
-      pl.appendChild(dish); pl.appendChild(el('div', 'cnt', String(cur.give[p])));
+      pl.appendChild(dish); pl.appendChild(el('div', 'cnt', String(cur.give[p] || 0)));
       (function (pp) { pl.addEventListener('pointerdown', function (ev) { ev.preventDefault(); takeBack(pp); }); })(p);
       platesEl.appendChild(pl);
     }
@@ -402,9 +524,8 @@ var game = KidsGame.init({ title: 'Reparte igual' });
     var left = cur.present.filter(function (v) { return v; }).length; if (left > 0) return;
     var eq = cur.give.every(function (v) { return v === cur.give[0]; });
     if (!eq) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      var mx = Math.max.apply(null, cur.give);
-      platesEl.querySelectorAll('.plate').forEach(function (pl) { if (cur.give[pl._p] === mx) { pl.classList.add('bad'); setTimeout(function () { pl.classList.remove('bad'); }, 500); } });
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); streak = 0;
+      sadFaces({ c: cur.give });
       KidsGame.say(cur.cuts % cur.k !== 0 ? 'Con ' + cur.cuts + ' rebanadas no sale igual para ' + cur.k + '. Prueba otro corte.' : 'No es igual. Toca un plato para regresar una rebanada.');
       return;
     }
@@ -437,29 +558,17 @@ var game = KidsGame.init({ title: 'Reparte igual' });
   function tapPizza(pz, idx) {
     if (lock || !running) return;
     if (idx !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(pz);
       pz.classList.remove('bad'); void pz.offsetWidth; pz.classList.add('bad'); setTimeout(function () { pz.classList.remove('bad'); }, 450);
       return;
     }
     lock = true; pz.classList.add('ok'); win(pz);
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 120;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
-    }
-  }
   function win(at) {
     lock = true;
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-    var g = game.getBoundingClientRect(), r = at.getBoundingClientRect();
-    sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+    hit(at);
     KidsGame.say(KidsGame.pick(['¡Todos tienen lo mismo!', '¡Muy bien!', '¡Repartido igual!', '¡Eso es!']));
     dots.children[round].classList.add('on'); round++;
     setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1700);
@@ -467,15 +576,19 @@ var game = KidsGame.init({ title: 'Reparte igual' });
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var sub = '¡' + ROUNDS + ' repartos perfectos!';
+    // Recompensa cosmética: un mantel nuevo para el picnic por nivel completado
+    var m = MANTAS[nivel], u = unlockedMantas();
+    if (m && u.indexOf(m[0]) < 0) { u.push(m[0]); writeJSON('kg-reparte-mantas', u); try { localStorage.setItem('kg-reparte-manta', m[0]); } catch (e) {} applyManta(); sub += ' · 🧺 ¡Ganaste ' + m[1] + '!'; }
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' repartos perfectos!',
+      sub: sub,
       onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
       onAgain: function () { start(nivel); }
     });
   }
 
   window.__g3 = {
-    state: function () { return cur && { mode: cur.mode, step: cur.step, k: cur.k, n: cur.n, cuts: cur.cuts, ans: cur.ans, round: round, nivel: nivel, lock: lock }; },
+    state: function () { return cur && { mode: cur.mode, step: cur.step, k: cur.k, n: cur.n, cuts: cur.cuts, ans: cur.ans, round: round, nivel: nivel, lock: lock, streak: streak }; },
     solve: function () {
       if (!cur || lock) return false;
       var m = cur.mode;

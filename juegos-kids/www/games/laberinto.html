@@ -53,19 +53,60 @@
     pointer-events: none; transition: transform .16s ease-out; will-change: transform;
   }
   .piece .emoji { display: block; position: relative; z-index: 1; }
+  .piece svg { display: block; position: relative; z-index: 1; width: 86%; height: 86%; overflow: visible; }
+  /* Personaje con cuerpo: patas y orejas que se mueven al caminar */
+  .piece.char svg { animation: idle 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+  .piece.char .legL, .piece.char .legR { transform-origin: 50px 86px; }
+  .piece.char.walk .legL { animation: legA .28s ease-in-out infinite alternate; }
+  .piece.char.walk .legR { animation: legB .28s ease-in-out infinite alternate; }
+  @keyframes legA { from { transform: translateY(0) rotate(-12deg); } to { transform: translateY(-5px) rotate(12deg); } }
+  @keyframes legB { from { transform: translateY(-5px) rotate(12deg); } to { transform: translateY(0) rotate(-12deg); } }
+  .piece.char .earL, .piece.char .earR { transform-origin: 50px 40px; }
+  .piece.char.walk .earL { animation: earA .28s ease-in-out infinite alternate; }
+  .piece.char.walk .earR { animation: earB .28s ease-in-out infinite alternate; }
+  @keyframes earA { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+  @keyframes earB { from { transform: rotate(6deg); } to { transform: rotate(-6deg); } }
+  .piece.char.walk svg { animation: walkbob .28s ease-in-out infinite alternate; }
+  @keyframes walkbob { from { transform: translateY(0) scale(1, 1); } to { transform: translateY(-6%) scale(.96, 1.04); } }
+  .piece.char.flip svg { animation: none; transform: scaleX(-1); }
+  .piece.char.flip.walk svg { animation: walkbobF .28s ease-in-out infinite alternate; }
+  @keyframes walkbobF { from { transform: scaleX(-1) translateY(0); } to { transform: scaleX(-1) translateY(-6%); } }
+  .piece.char .eyes { animation: mzblink 4.5s infinite; transform-origin: 50px 46px; }
+  .hat { display: none; } .h-gorra .hat.gorra, .h-mono .hat.mono, .h-mago .hat.mago, .h-corona .hat.corona { display: block; }
+  /* Cofre del tesoro: se abre al llegar */
+  .piece.goal .lid { transform-origin: 50px 52px; transition: transform .5s cubic-bezier(.3,1.4,.5,1); }
+  .piece.goal.open .lid { transform: rotate(-110deg); }
+  .piece.goal .glow { opacity: 0; transition: opacity .4s; }
+  .piece.goal.open .glow { opacity: 1; animation: goalpulse 1s ease-in-out infinite; transform-origin: 50px 50px; }
+  .piece.goal .treat { opacity: 0; transition: transform .6s cubic-bezier(.3,1.5,.5,1), opacity .3s; transform: translateY(10px) scale(.4); }
+  .piece.goal.open .treat { opacity: 1; transform: translateY(-34px) scale(1); }
+  .piece.goal.locked svg { filter: grayscale(.6) opacity(.7); animation: none; }
+  .hud .who .m svg { width: 40px; height: 40px; }
+  .hud .hatbtn { width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 24px; border-radius: 50%; }
+  .rbanner { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.6); opacity: 0; z-index: 30; pointer-events: none; padding: 14px 34px; border-radius: 40px;
+    background: linear-gradient(180deg, #fff, #eef2ff); border: 4px solid #fff; box-shadow: 0 8px 0 #c9d2e6, 0 18px 30px rgba(0,0,0,.3); font-size: 32px; font-weight: 900; color: #1f2f6b; text-align: center; white-space: nowrap;
+    transition: transform .35s cubic-bezier(.3,1.4,.5,1), opacity .3s; display: flex; align-items: center; gap: 12px; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .rbanner small { display: block; font-size: 18px; color: #6b7a99; }
+  .rbanner svg { width: 54px; height: 54px; }
+  .streak { position: fixed; left: 50%; top: 80px; transform: translateX(-50%) scale(0); z-index: 31; pointer-events: none; padding: 4px 18px; border-radius: 30px; font-size: 22px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #ff9f43, #ff6f61); box-shadow: 0 4px 0 #b8306f, 0 8px 14px rgba(0,0,0,.25); text-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.3,1.5,.5,1); white-space: nowrap; }
+  .streak.show { transform: translateX(-50%) scale(1); }
+  .wrap.enter { animation: mazeIn .45s cubic-bezier(.3,1.3,.5,1); }
+  @keyframes mazeIn { from { transform: scale(.85) translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
   .piece.char::before {
     content: ""; position: absolute; left: 22%; right: 22%; bottom: 6%; height: 18%; border-radius: 50%;
     background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.32), rgba(0,0,0,0) 70%);
   }
-  .piece.char .emoji { animation: idle 1.6s ease-in-out infinite; }
-  .piece.hop .emoji { animation: hop .5s ease-out 3; }
-  .piece .emoji.shake { animation: shake .35s; }
+  .piece.hop svg { animation: hop .5s ease-out 3 !important; }
+  .piece svg.shake, .piece .emoji.shake { animation: shake .35s !important; }
   .piece.goal::before {
     content: ""; position: absolute; inset: 4%; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,250,200,.95) 0, rgba(255,214,80,.6) 45%, rgba(255,190,40,0) 72%);
     animation: goalpulse 1.4s ease-in-out infinite;
   }
   .piece.goal .emoji { animation: wig 1.4s ease-in-out infinite; }
+  .piece.goal svg { animation: float 2.2s ease-in-out infinite; }
   @keyframes idle { 0%,100%{transform:translateY(0) scale(1,1)} 50%{transform:translateY(-6%) scale(.97,1.04)} }
   @keyframes hop { 0%,100%{transform:translateY(0) scale(1)} 30%{transform:translateY(-32%) scale(1.15,1.25)} 60%{transform:translateY(0) scale(1.2,.85)} }
   @keyframes wig { 0%,100%{transform:rotate(-8deg) scale(1)} 50%{transform:rotate(8deg) scale(1.12)} }
@@ -111,7 +152,55 @@ var game = KidsGame.init({ title: 'Laberinto' });
   var KEYCOL = [['#e63946', 'roja'], ['#3da9fc', 'azul'], ['#2cb67d', 'verde']];
   var FOG_R = 2;
   var nivel = 1, keys = [], keyEls = [], keysGot = 0, badgeEl = null, doors = [], gem = null, gemEl = null, gemGot = false, fog = false;
-  var CHARS = [ ['🐰', '🥕'], ['🐱', '🐟'], ['🐶', '🦴'] ];
+  // Personajes en SVG (cuerpo, orejas y patas animables) y el premio que guarda su cofre
+  var CHARS = [
+    { id: 'conejo', n: 'Conejita', treat: '🥕', a: '#ffffff', b: '#dcdde8', c: '#b9bacc', in: '#ffb3c6', ears: 'long' },
+    { id: 'gato',   n: 'Gatito',   treat: '🐟', a: '#ffc266', b: '#f29a2e', c: '#c46f12', in: '#ffe8c2', ears: 'tri' },
+    { id: 'perro',  n: 'Perrito',  treat: '🦴', a: '#e6c9a8', b: '#c89a66', c: '#8a5a2b', in: '#fff', ears: 'flop' },
+    { id: 'rana',   n: 'Ranita',   treat: '🍓', a: '#a8f0a0', b: '#5fcf6a', c: '#2d8a3e', in: '#eafff0', ears: 'none' }
+  ];
+  var HATS = [{ id: 'none', n: 'Sin gorro', e: '🐰', lv: 0 }, { id: 'gorra', n: 'Gorra', e: '🧢', lv: 1 }, { id: 'mono', n: 'Moño', e: '🎀', lv: 2 }, { id: 'mago', n: 'Gorro de maga', e: '🧙', lv: 3 }, { id: 'corona', n: 'Corona', e: '👑', lv: 4 }];
+  var hat = HATS[0];
+  try { var hid = localStorage.getItem('kg-lab-hat'); HATS.forEach(function (h) { if (h.id === hid) hat = h; }); } catch (e) {}
+  function doneLv() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').laberinto || {}; } catch (e) { return {}; } }
+  function hatOpen(h) { return !h.lv || !!doneLv()[h.lv]; }
+  function charSVG(ch, size) {
+    var id = 'lc' + ch.id;
+    var s = '<svg viewBox="0 0 100 100"' + (size ? ' width="' + size + '" height="' + size + '"' : '') + '><defs><radialGradient id="' + id + '" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="' + ch.a + '"/><stop offset=".6" stop-color="' + ch.b + '"/><stop offset="1" stop-color="' + ch.c + '"/></radialGradient></defs>';
+    var ears = '';
+    if (ch.ears === 'long') ears = '<g class="earL"><ellipse cx="36" cy="18" rx="8" ry="20" fill="url(#' + id + ')" transform="rotate(-12 36 18)"/><ellipse cx="36" cy="20" rx="4" ry="13" fill="' + ch.in + '" transform="rotate(-12 36 20)"/></g><g class="earR"><ellipse cx="64" cy="18" rx="8" ry="20" fill="url(#' + id + ')" transform="rotate(12 64 18)"/><ellipse cx="64" cy="20" rx="4" ry="13" fill="' + ch.in + '" transform="rotate(12 64 20)"/></g>';
+    else if (ch.ears === 'tri') ears = '<g class="earL"><path d="M26 42 L 28 14 L 46 32 Z" fill="url(#' + id + ')" stroke="' + ch.c + '" stroke-width="1.5" stroke-linejoin="round"/><path d="M30 38 L 31 22 L 41 32 Z" fill="' + ch.in + '"/></g><g class="earR"><path d="M74 42 L 72 14 L 54 32 Z" fill="url(#' + id + ')" stroke="' + ch.c + '" stroke-width="1.5" stroke-linejoin="round"/><path d="M70 38 L 69 22 L 59 32 Z" fill="' + ch.in + '"/></g>';
+    else if (ch.ears === 'flop') ears = '<g class="earL"><path d="M30 30 C 14 30, 12 60, 24 66 C 32 68, 36 50, 34 32 Z" fill="' + ch.c + '"/></g><g class="earR"><path d="M70 30 C 86 30, 88 60, 76 66 C 68 68, 64 50, 66 32 Z" fill="' + ch.c + '"/></g>';
+    else ears = '<g class="earL"><circle cx="36" cy="26" r="10" fill="url(#' + id + ')"/><circle cx="36" cy="26" r="6" fill="#fff"/><circle cx="37" cy="27" r="3.2" fill="#2b2b2b"/></g><g class="earR"><circle cx="64" cy="26" r="10" fill="url(#' + id + ')"/><circle cx="64" cy="26" r="6" fill="#fff"/><circle cx="63" cy="27" r="3.2" fill="#2b2b2b"/></g>';
+    var eyes = ch.ears === 'none' ? '' : '<g class="eyes"><ellipse cx="41" cy="46" rx="5.5" ry="6.5" fill="#fff"/><ellipse cx="59" cy="46" rx="5.5" ry="6.5" fill="#fff"/><circle cx="42" cy="47" r="3.3" fill="#2b2b2b"/><circle cx="60" cy="47" r="3.3" fill="#2b2b2b"/><circle cx="43.5" cy="45.5" r="1.2" fill="#fff"/><circle cx="61.5" cy="45.5" r="1.2" fill="#fff"/></g>';
+    var hats = '<g class="hat gorra"><path d="M26 34 Q 50 12 74 34 Z" fill="#e63946"/><rect x="22" y="32" width="56" height="7" rx="3.5" fill="#9c1d40"/><circle cx="50" cy="16" r="4" fill="#ffd166"/></g>' +
+      '<g class="hat mono"><path d="M50 22 L 30 10 L 32 32 Z M 50 22 L 70 10 L 68 32 Z" fill="#f582ae" stroke="#b8306f" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="22" r="6" fill="#ff9ccb" stroke="#b8306f" stroke-width="2"/></g>' +
+      '<g class="hat mago"><path d="M50 -6 L 28 36 L 72 36 Z" fill="#7f5af0" stroke="#5232b3" stroke-width="2" stroke-linejoin="round"/><ellipse cx="50" cy="36" rx="28" ry="6" fill="#5232b3"/><path d="M50 8 l2 5 5 1 -4 3 1 5 -4 -3 -4 3 1 -5 -4 -3 5 -1 z" fill="#ffd166"/></g>' +
+      '<g class="hat corona"><path d="M32 34 L 28 10 L 40 24 L 50 6 L 60 24 L 72 10 L 68 34 Z" fill="#ffd166" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="26" r="3" fill="#e63946"/><circle cx="38" cy="28" r="2" fill="#3da9fc"/><circle cx="62" cy="28" r="2" fill="#3da9fc"/></g>';
+    s += '<ellipse cx="50" cy="94" rx="26" ry="5" fill="rgba(0,0,0,.2)"/>' +
+      '<g class="legL"><ellipse cx="38" cy="88" rx="10" ry="6" fill="' + ch.c + '"/></g><g class="legR"><ellipse cx="62" cy="88" rx="10" ry="6" fill="' + ch.c + '"/></g>' +
+      '<ellipse cx="50" cy="70" rx="24" ry="22" fill="url(#' + id + ')"/><ellipse cx="50" cy="74" rx="14" ry="13" fill="' + ch.in + '" opacity=".9"/>' +
+      ears +
+      '<circle cx="50" cy="44" r="26" fill="url(#' + id + ')"/><ellipse cx="40" cy="30" rx="9" ry="4" fill="#fff" opacity=".35" transform="rotate(-25 40 30)"/>' +
+      '<ellipse cx="50" cy="58" rx="12" ry="8" fill="' + ch.in + '" opacity=".9"/>' + eyes +
+      (ch.ears === 'none' ? '<ellipse cx="50" cy="50" rx="12" ry="7" fill="' + ch.in + '" opacity=".8"/><path d="M38 52 Q 50 62 62 52" stroke="#2d8a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>' :
+        '<ellipse cx="50" cy="56" rx="3.5" ry="2.6" fill="#ff8aa8"/><path d="M45 60 q 5 5 10 0" stroke="#9c3b12" stroke-width="2" fill="none" stroke-linecap="round"/>') +
+      '<circle cx="32" cy="54" r="4.5" fill="#ff8aa8" opacity=".5"/><circle cx="68" cy="54" r="4.5" fill="#ff8aa8" opacity=".5"/>' + hats + '</svg>';
+    return s;
+  }
+  function chestSVG(treat) {
+    return '<svg viewBox="0 0 100 100"><defs><linearGradient id="lcw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a05f"/><stop offset="1" stop-color="#8b5a2b"/></linearGradient><radialGradient id="lcg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6b0" stop-opacity=".95"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></radialGradient></defs>' +
+      '<circle class="glow" cx="50" cy="50" r="48" fill="url(#lcg)"/>' +
+      '<text class="treat emoji" x="50" y="56" font-size="40" text-anchor="middle">' + treat + '</text>' +
+      '<ellipse cx="50" cy="92" rx="34" ry="5" fill="rgba(0,0,0,.22)"/>' +
+      '<rect x="16" y="50" width="68" height="40" rx="6" fill="url(#lcw)" stroke="#5c3510" stroke-width="2.5"/><rect x="16" y="58" width="68" height="6" fill="rgba(0,0,0,.18)"/><rect x="44" y="50" width="12" height="40" fill="#ffd166" stroke="#c47f00" stroke-width="2"/>' +
+      '<g class="lid"><path d="M16 52 L 16 40 Q 16 22 34 22 L 66 22 Q 84 22 84 40 L 84 52 Z" fill="url(#lcw)" stroke="#5c3510" stroke-width="2.5"/><path d="M44 52 L 44 22 L 56 22 L 56 52 Z" fill="#ffd166" stroke="#c47f00" stroke-width="2"/><path d="M22 40 Q 22 28 34 28" stroke="rgba(255,255,255,.4)" stroke-width="3" fill="none" stroke-linecap="round"/></g>' +
+      '<rect x="43" y="56" width="14" height="12" rx="3" fill="#ffd166" stroke="#c47f00" stroke-width="2"/><circle cx="50" cy="61" r="2.2" fill="#5c3510"/></svg>';
+  }
+  function keySVG(col) {
+    col = col || '#ffd166'; var d = col === '#ffd166' ? '#c47f00' : col;
+    return '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="90" rx="22" ry="4" fill="rgba(0,0,0,.2)"/><g transform="rotate(-40 50 50)"><circle cx="34" cy="50" r="16" fill="none" stroke="' + col + '" stroke-width="10"/><circle cx="34" cy="50" r="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3"/><rect x="48" y="45" width="40" height="10" rx="4" fill="' + col + '"/><rect x="72" y="52" width="7" height="12" rx="2" fill="' + col + '"/><rect x="82" y="52" width="6" height="9" rx="2" fill="' + col + '"/><rect x="50" y="46" width="36" height="3" fill="rgba(255,255,255,.5)"/></g><circle cx="20" cy="30" r="3" fill="#fff" opacity=".9"/></svg>';
+  }
   var WALLS = ['#f582ae', '#7f5af0', '#3da9fc', '#ff8906', '#2cb67d'];
   var TRAILS = ['#ff5fa0', '#6a4de0', '#1f8fe8', '#ff7a00', '#17a86a'];
   // Paleta de cada pared: claro (luz arriba), medio, oscuro (grosor) y brillo
@@ -127,16 +216,32 @@ var game = KidsGame.init({ title: 'Laberinto' });
 
   game.innerHTML = '';
   hud = document.createElement('div'); hud.className = 'hud';
-  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="who"><span class="m emoji"></span><span class="arr">➜</span><span class="m emoji"></span></span><span class="keys"></span><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
+  hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="who"><span class="m"></span><span class="arr">➜</span><span class="m emoji">🧰</span></span><span class="keys"></span><button class="btn green hatbtn" aria-label="Gorro">🎩</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
   lvlEl = hud.querySelector('b'); whoEl = hud.querySelector('.who');
   var keysEl = hud.querySelector('.keys');
   badgeEl = KidsGame.levelBadge(nivel); hud.insertBefore(badgeEl, hud.firstChild);
   hud.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+  hud.querySelector('.hatbtn').addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); KidsGame.sound.tap();
+    var i = HATS.indexOf(hat), next = hat;
+    for (var k = 1; k <= HATS.length; k++) { var h = HATS[(i + k) % HATS.length]; if (hatOpen(h)) { next = h; break; } }
+    var locked = HATS.filter(function (h) { return !hatOpen(h); })[0];
+    if (next === hat && locked) { KidsGame.toast('🔒 ' + locked.n + ': completa el nivel ' + locked.lv, 1500); return; }
+    hat = next; try { localStorage.setItem('kg-lab-hat', hat.id); } catch (e) {}
+    applyHat(); KidsGame.toast(hat.e + ' ' + hat.n, 1000); KidsGame.fx.ring(ev.currentTarget);
+  });
+  function applyHat() { charEl.className = charEl.className.replace(/\bh-\w+/g, '').trim() + ' h-' + hat.id; whoEl.firstChild.className = 'm h-' + hat.id; }
   area = document.createElement('div'); area.className = 'area';
   wrap = document.createElement('div'); wrap.className = 'wrap';
   canvas = document.createElement('canvas'); ctx = canvas.getContext('2d');
-  charEl = document.createElement('div'); charEl.className = 'piece char'; charEl.innerHTML = '<span class="emoji"></span>';
-  goalEl = document.createElement('div'); goalEl.className = 'piece goal'; goalEl.innerHTML = '<span class="emoji"></span><span class="lock emoji">🔒</span>';
+  charEl = document.createElement('div'); charEl.className = 'piece char';
+  goalEl = document.createElement('div'); goalEl.className = 'piece goal'; goalEl.innerHTML = chestSVG('🥕') + '<span class="lock emoji">🔒</span>';
+  var banner = document.createElement('div'); banner.className = 'rbanner'; document.body.appendChild(banner);
+  var streakEl = document.createElement('div'); streakEl.className = 'streak'; document.body.appendChild(streakEl);
+  var bannerT = null, streakT = null, streak = 0, bumps = 0, firstRound = true, walkT = null, handMarker = null;
+  function showBanner(html, ms) { banner.innerHTML = html; banner.classList.add('show'); clearTimeout(bannerT); bannerT = setTimeout(function () { banner.classList.remove('show'); }, ms || 1500); }
+  function showStreak(txt) { streakEl.textContent = txt; streakEl.classList.add('show'); clearTimeout(streakT); streakT = setTimeout(function () { streakEl.classList.remove('show'); }, 1400); }
+  function walking() { charEl.classList.add('walk'); clearTimeout(walkT); walkT = setTimeout(function () { charEl.classList.remove('walk'); }, 260); }
   wrap.appendChild(canvas); wrap.appendChild(goalEl); wrap.appendChild(charEl);
   area.appendChild(wrap);
   pad = document.createElement('div'); pad.className = 'pad';
@@ -197,11 +302,24 @@ var game = KidsGame.init({ title: 'Laberinto' });
     keysGot = 0; gemGot = false; keys.forEach(function (k) { k[2] = false; }); doors.forEach(function (d) { d.open = false; });
     keyEls.forEach(function (el) { el.classList.remove('got'); }); if (gemEl) gemEl.classList.remove('got');
     renderKeys();
-    whoEl.firstChild.textContent = ch[0]; whoEl.lastChild.textContent = ch[1];
-    charEl.firstChild.textContent = ch[0];
-    goalEl.firstChild.textContent = ch[1];
-    charEl.classList.remove('hop');
+    whoEl.firstChild.innerHTML = charSVG(ch, 40);
+    charEl.innerHTML = charSVG(ch); goalEl.innerHTML = chestSVG(ch.treat) + '<span class="lock emoji">🔒</span>';
+    charEl.classList.remove('hop'); charEl.classList.remove('flip'); goalEl.classList.remove('open'); applyHat();
+    bumps = 0;
     layout();
+    wrap.classList.remove('enter'); void wrap.offsetWidth; wrap.classList.add('enter');
+    showBanner(charSVG(ch, 54) + '<span>Ronda ' + (level + 1) + '<small>' + ch.n + ' busca el cofre</small></span>', 1600);
+    if (handMarker) { handMarker.remove(); handMarker = null; }
+    if (nivel === 1 && level === 0 && firstRound && newMaze) {
+      firstRound = false;
+      var d0 = -1; for (var dd = 0; dd < 4; dd++) if (open(0, 0, dd)) { d0 = dd; break; }
+      if (d0 >= 0) {
+        handMarker = document.createElement('div'); handMarker.className = 'piece'; handMarker.style.width = cell + 'px'; handMarker.style.height = cell + 'px';
+        var tx = DX[d0] * 2, ty = DY[d0] * 2; while (!(tx >= 0 && ty >= 0 && tx < cols && ty < rows)) { tx -= DX[d0]; ty -= DY[d0]; }
+        place(handMarker, tx, ty); wrap.appendChild(handMarker);
+        setTimeout(function () { if (handMarker && !done) KidsGame.hand({ from: charEl, to: handMarker, timeout: 9000 }); }, 1800);
+      }
+    }
   }
   // Llaves (nivel 3): repartidas lejos del inicio y de la meta; la meta se abre al juntarlas todas
   function placeKeys(n) {
@@ -213,7 +331,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
       if (okk) keys.push([kx, ky, false]);
     }
     keys.forEach(function () {
-      var el = document.createElement('div'); el.className = 'piece key'; el.innerHTML = '<span class="emoji">🔑</span>';
+      var el = document.createElement('div'); el.className = 'piece key'; el.innerHTML = keySVG();
       wrap.insertBefore(el, goalEl); keyEls.push(el);
     });
   }
@@ -227,7 +345,8 @@ var game = KidsGame.init({ title: 'Laberinto' });
   }
   function showPicker() {
     done = true; dragging = false;
-    KidsGame.levelPicker({ key: 'laberinto', labels: LABELS, onPick: function (n) {
+    KidsGame.levelPicker({ key: 'laberinto', labels: LABELS, music: 'aventura', art: '<span class="h-' + hat.id + '">' + charSVG(CHARS[0], 64) + '</span>',
+      howto: [{ icon: '👆', text: 'Toca el camino o usa las flechas' }, { icon: '🔑', text: 'Junta las llaves para abrir' }, { icon: '🧰', text: 'Llega al cofre del tesoro' }], onPick: function (n) {
       nivel = n; level = 0;
       var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
       start(true);
@@ -310,7 +429,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
       keys.push([best[0], best[1], false, i]);
     }
     keys.forEach(function (k) {
-      var el = document.createElement('div'); el.className = 'piece key colored'; el.style.setProperty('--kc', KEYCOL[k[3]][0]); el.innerHTML = '<span class="emoji">🔑</span>';
+      var el = document.createElement('div'); el.className = 'piece key colored'; el.style.setProperty('--kc', KEYCOL[k[3]][0]); el.innerHTML = keySVG(KEYCOL[k[3]][0]);
       wrap.insertBefore(el, goalEl); keyEls.push(el);
     });
     // Diamante: el callejón sin salida más lejano del camino, fuera de las llaves
@@ -357,10 +476,11 @@ var game = KidsGame.init({ title: 'Laberinto' });
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     [charEl, goalEl].concat(keyEls).concat(gemEl ? [gemEl] : []).forEach(function (el) {
       el.style.width = cell + 'px'; el.style.height = cell + 'px';
-      el.firstChild.style.fontSize = Math.round(cell * 0.7) + 'px';
+      var em = el.querySelector('.emoji'); if (em) em.style.fontSize = Math.round(cell * 0.7) + 'px';
     });
     keys.forEach(function (k, i) { place(keyEls[i], k[0], k[1]); });
     if (gemEl) place(gemEl, gem[0], gem[1]);
+    if (handMarker) { handMarker.remove(); handMarker = null; }
     place(goalEl, gx, gy); place(charEl, px, py);
     draw(); fogPieces();
   }
@@ -478,7 +598,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
       if (!hasKey(door.col)) { KidsGame.sound.wrong(); KidsGame.toast('Necesitas la llave ' + KEYCOL[door.col][1] + ' 🔑', 1100); return false; }
       door.open = true; KidsGame.sound.pop(); KidsGame.toast('¡Se abrió la puerta ' + KEYCOL[door.col][1] + '! 🔓', 1100); burst(8);
     }
-    px += DX[d]; py += DY[d];
+    px += DX[d]; py += DY[d]; walking(); if (d === 3) charEl.classList.add('flip'); else if (d === 1) charEl.classList.remove('flip');
     var last = trail[trail.length - 1];
     if (trail.length > 1 && trail[trail.length - 2][0] === px && trail[trail.length - 2][1] === py) trail.pop();
     else if (!(last[0] === px && last[1] === py)) trail.push([px, py]);
@@ -487,7 +607,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
       if (!keys[ki][2] && keys[ki][0] === px && keys[ki][1] === py) {
         keys[ki][2] = true; keysGot++; keyEls[ki].classList.add('got');
         keyEls[ki].style.transform += ' scale(1.6)';
-        KidsGame.sound.ok(); KidsGame.vibrate(30); burst(8); renderKeys();
+        KidsGame.sound.ok(); KidsGame.vibrate(30); burst(8); renderKeys(); KidsGame.fx.ring(keyEls[ki]); KidsGame.fx.floatText(keyEls[ki].getBoundingClientRect().left + cell / 2, keyEls[ki].getBoundingClientRect().top, '🔑 +1', 'good');
         if (expert()) KidsGame.toast('Llave ' + KEYCOL[keys[ki][3]][1] + ' 🔑', 1000);
         else if (keysGot === keys.length) { KidsGame.sound.pop(); KidsGame.toast('¡Se abrió! 🔓', 1200); goalEl.classList.remove('locked'); }
       }
@@ -506,7 +626,7 @@ var game = KidsGame.init({ title: 'Laberinto' });
   function tryDir(d) {
     if (done) return;
     if (step(d)) KidsGame.sound.tap();
-    else { KidsGame.sound.wrong(); var e = charEl.firstChild; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); }
+    else { KidsGame.sound.wrong(); bumps++; var e = charEl.firstChild; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); }
   }
   // Camino corto (máx 3 pasos) hacia la celda del dedo, solo por pasillos abiertos
   function pathTo(tx, ty, limit) {
@@ -574,21 +694,29 @@ var game = KidsGame.init({ title: 'Laberinto' });
     }
   }
   function win() {
-    done = true; dragging = false;
-    charEl.classList.add('hop'); burst();
+    done = true; dragging = false; var ch = CHARS[level % CHARS.length];
+    charEl.classList.add('hop'); burst(); goalEl.classList.add('open'); KidsGame.fx.ring(goalEl);
+    var gr = goalEl.getBoundingClientRect(); KidsGame.fx.burst(gr.left + gr.width / 2, gr.top + gr.height / 2, { n: 16, chars: ['⭐', '💎', '🪙', '✨'] });
     KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
+    if (bumps === 0) { streak++; if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + ' sin chocar!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + ' sin chocar!'); else if (streak >= 1) KidsGame.fx.floatText(gr.left + gr.width / 2, gr.top, '¡Sin chocar!', 'good'); } else streak = 0;
     setTimeout(function () {
       if (level >= LEVELS[nivel].length - 1) KidsGame.levelDone(nivel);
+      var nh = HATS[nivel]; if (level >= LEVELS[nivel].length - 1 && nh) setTimeout(function () { KidsGame.toast('🎁 Gorro nuevo: ' + nh.e + ' ' + nh.n + ' (botón 🎩)', 2400); }, 900);
       KidsGame.celebrate({
-        sub: CHARS[level % CHARS.length][0] + ' encontró ' + CHARS[level % CHARS.length][1] + (gem ? (gemGot ? ' · ¡y el 💎!' : ' · el 💎 sigue escondido') : ''),
+        sub: ch.n + ' abrió el cofre ' + ch.treat + (gem ? (gemGot ? ' · ¡y el 💎!' : ' · el 💎 sigue escondido') : ''),
         stars: gem && !gemGot ? 2 : 3,
         onNext: function () { level++; start(true); },
         onAgain: function () { start(true); }
       });
-    }, 900);
+    }, 1300);
   }
   // Estado para pruebas
-  window.__lab = { state: function () { return { px: px, py: py, gx: gx, gy: gy, cols: cols, rows: rows, cells: cells, keys: keys.map(function (k) { return k.slice(); }), doors: doors.map(function (o) { return { x: o.x, y: o.y, d: o.d, col: o.col, open: o.open }; }), gem: gem ? gem.slice() : null, gemGot: gemGot, done: done, nivel: nivel, level: level, fog: fog }; }, step: step };
+  function solve() {
+    var targets = keys.filter(function (k) { return !k[2]; }).map(function (k) { return [k[0], k[1]]; }); targets.push([gx, gy]);
+    for (var i = 0; i < targets.length && !done; i++) { var pth = pathTo(targets[i][0], targets[i][1], 9999); if (!pth) continue; for (var j = 0; j < pth.length && !done; j++) step(pth[j]); }
+    return { done: done, px: px, py: py, streak: streak };
+  }
+  window.__lab = { solve: solve, state: function () { return { px: px, py: py, gx: gx, gy: gy, cols: cols, rows: rows, cells: cells, keys: keys.map(function (k) { return k.slice(); }), doors: doors.map(function (o) { return { x: o.x, y: o.y, d: o.d, col: o.col, open: o.open }; }), gem: gem ? gem.slice() : null, gemGot: gemGot, done: done, nivel: nivel, level: level, fog: fog }; }, step: step };
 
   window.addEventListener('resize', function () { order(); layout(); });
   // Primero se elige el nivel; el juego arranca al escoger

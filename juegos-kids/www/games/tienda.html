@@ -408,7 +408,7 @@ var game = KidsGame.init({ title: 'La tiendita' });
   function registerRing() {
     KidsGame.sound.note(1568); setTimeout(function () { KidsGame.sound.note(2093); }, 140);
     var r = paybox.getBoundingClientRect();
-    KidsGame.fx.floatText(r.left + r.width / 2, r.top - 10, '¡Ring! 🔔', 'good');
+    setTimeout(function () { KidsGame.fx.floatText(r.left + r.width * 0.25, r.top + 10, '¡Ring! 🔔', 'good'); }, 350);
   }
   function win() {
     lock = true;

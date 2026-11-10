@@ -6,49 +6,67 @@
 <link rel="stylesheet" href="../common.css">
 <title>Tres en raya</title>
 <style>
-  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 10px; }
-  .score { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 6px 20px; font-size: 24px; border-radius: 30px; border: 3px solid #fff;
+  /* ===== Mundo: "La granja" — cielo, granero, pacas de heno y fichas de animalitos de granja en SVG ===== */
+  .game { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 10px;
+    background:
+      radial-gradient(ellipse 60% 24% at 20% 40%, #7ccb5e 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 60% 22% at 85% 42%, #6fc256 0 60%, rgba(0,0,0,0) 61%),
+      linear-gradient(180deg, #9fdcff 0%, #d9f2ff 38%, #a8e07a 40%, #7cc95a 75%, #5fb04a 100%); }
+  .game::before { content: ""; position: absolute; left: 0; right: 0; top: 41%; height: 6%; z-index: 0; pointer-events: none; opacity: .9;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 28%, #e3b574 28%, #b9843f 44%, rgba(0,0,0,0) 44%, rgba(0,0,0,0) 62%, #e3b574 62%, #b9843f 78%, rgba(0,0,0,0) 78%),
+      linear-gradient(90deg, rgba(0,0,0,0) 0 10px, #d9a764 10px 22px, #b8853f 22px 28px, rgba(0,0,0,0) 28px 60px) 0 0 / 60px 100% repeat-x; }
+  .barn { position: absolute; left: 3%; top: 16%; width: 170px; height: 150px; z-index: 0; pointer-events: none; }
+  .barn svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 6px rgba(0,0,0,.25)); }
+  .hay { position: absolute; right: 3%; top: 26%; width: 120px; height: 80px; z-index: 0; pointer-events: none; }
+  .hay svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); }
+  .deco { position: absolute; z-index: 0; pointer-events: none; font-size: 40px; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); line-height: 1; font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; animation: float 3.6s ease-in-out infinite; }
+  .score { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 6px 20px; font-size: 24px; border-radius: 30px; border: 3px solid #fff; position: relative; z-index: 2;
     background: linear-gradient(180deg, #ffffff, #eef3ff); box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
   .score .p { display: flex; align-items: center; gap: 6px; }
-  .score .p .emoji { font-size: 32px; }
+  .score .p svg { width: 40px; height: 40px; }
   .score .vs { color: #a9b4cc; }
-  .turn { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 24px; min-height: 56px; padding: 4px 18px; border-radius: 30px;
+  .turn { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; font-size: 24px; min-height: 56px; padding: 4px 18px; border-radius: 30px; position: relative; z-index: 2;
     color: #fff; font-weight: 900; text-shadow: 0 2px 0 #1f7fae, 0 4px 8px rgba(0,0,0,.25); }
-  .turn .emoji { font-size: 42px; display: inline-block; }
-  .turn .emoji.bounce { animation: bounce .7s infinite; }
-  .boardwrap { flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
-  /* Tablero de madera gruesa con veta, borde claro y sombra */
-  .board { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: var(--bs); height: var(--bs);
-    padding: 14px; border-radius: 28px; border: 4px solid #efcf8f;
+  .turn svg { width: 50px; height: 50px; display: inline-block; filter: drop-shadow(0 4px 3px rgba(0,0,0,.3)); }
+  .turn svg.bounce { animation: bounce .7s infinite; }
+  .boardwrap { flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+  /* Tablero: cerca de madera con casillas de heno (temas desbloqueables) */
+  .board { --bg1: #e2ad68; --bg2: #c98a46; --bg3: #a7672d; --edge: #7a4418; --frame: #efcf8f; --c1: #f6ecd2; --c2: #fff9e8; --cin: rgba(60,30,0,.32);
+    position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: var(--bs); height: var(--bs);
+    padding: 14px; border-radius: 28px; border: 4px solid var(--frame);
     background:
       repeating-linear-gradient(180deg, rgba(255,255,255,.06) 0 6px, rgba(0,0,0,0) 6px 11px, rgba(60,30,0,.07) 11px 16px, rgba(0,0,0,0) 16px 26px),
-      linear-gradient(160deg, #e2ad68 0%, #c98a46 50%, #a7672d 100%);
-    box-shadow: 0 12px 0 #7a4418, 0 24px 34px rgba(0,0,0,.35), inset 0 3px 0 rgba(255,255,255,.35), inset 0 -4px 8px rgba(60,30,0,.25); }
-  /* Casillas hundidas (bisel interior) */
-  .cell { position: relative; border-radius: 18px; min-width: 64px; min-height: 64px; font-size: calc(var(--bs) * .2); border: 0;
-    background: linear-gradient(180deg, #f6ecd2 0%, #fff9e8 100%);
-    box-shadow: inset 0 5px 10px rgba(60,30,0,.32), inset 0 -2px 0 rgba(255,255,255,.9), inset 3px 0 6px rgba(60,30,0,.1), 0 1px 0 rgba(255,255,255,.35);
-    transition: transform .12s, box-shadow .12s, background .2s; }
+      linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+    box-shadow: 0 12px 0 var(--edge), 0 24px 34px rgba(0,0,0,.35), inset 0 3px 0 rgba(255,255,255,.35), inset 0 -4px 8px rgba(60,30,0,.25);
+    transition: transform .35s cubic-bezier(.2,1.3,.4,1), opacity .3s; }
+  .board.out { transform: scale(.9); opacity: 0; }
+  .board.t-heno { --bg1: #f2d27a; --bg2: #d9ad4a; --bg3: #b8862a; --edge: #8a6014; --frame: #fff0b8; --c1: #fff6d6; --c2: #fffdf2; }
+  .board.t-flores { --bg1: #ffb3d1; --bg2: #ff8fb6; --bg3: #e0608f; --edge: #9c2f5a; --frame: #ffe0ec; --c1: #fff0f6; --c2: #ffffff; --cin: rgba(120,20,60,.28); }
+  .board.t-noche { --bg1: #6a5a9e; --bg2: #4a3c7e; --bg3: #2e2456; --edge: #1a1236; --frame: #b8a8ff; --c1: #e6e0ff; --c2: #f7f4ff; --cin: rgba(20,10,60,.4); }
+  .board.t-arcoiris { --bg1: #ff8a80; --bg2: #ffd166; --bg3: #7dd0ff; --edge: #5232b3; --frame: #fff; --c1: #f3fff0; --c2: #ffffff; }
+  .board.t-arcoiris { background: linear-gradient(135deg, #ff8a80 0%, #ffd166 25%, #8ef0b0 50%, #7dd0ff 75%, #b39cff 100%); }
+  .cell { position: relative; border-radius: 18px; min-width: 64px; min-height: 64px; border: 0; padding: 0;
+    background: linear-gradient(180deg, var(--c1) 0%, var(--c2) 100%);
+    box-shadow: inset 0 5px 10px var(--cin), inset 0 -2px 0 rgba(255,255,255,.9), inset 3px 0 6px rgba(60,30,0,.1), 0 1px 0 rgba(255,255,255,.35);
+    transition: transform .12s, box-shadow .12s, background .2s; display: flex; align-items: center; justify-content: center; }
   .cell::after { display: none; }
-  .cell:active { transform: none; background: linear-gradient(180deg, #ffe9a8, #fff4cf); box-shadow: inset 0 5px 10px rgba(60,30,0,.28), inset 0 -2px 0 rgba(255,255,255,.9); }
-  .cell .emoji { display: block; position: relative; z-index: 1; }
+  .cell:active { transform: none; background: linear-gradient(180deg, #ffe9a8, #fff4cf); }
+  .cell svg { width: 78%; height: 78%; display: block; position: relative; z-index: 1; overflow: visible; }
   .cell.filled { cursor: default; }
-  .cell.filled::before { content: ""; position: absolute; left: 22%; right: 22%; bottom: 10%; height: 14%; border-radius: 50%;
+  .cell.filled::before { content: ""; position: absolute; left: 22%; right: 22%; bottom: 8%; height: 14%; border-radius: 50%;
     background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.3), rgba(0,0,0,0) 70%); animation: shadowin .45s ease-out; }
-  .cell.filled .emoji { animation: piecein .5s cubic-bezier(.2,1.4,.5,1); }
+  .cell.filled svg { animation: piecein .5s cubic-bezier(.2,1.4,.5,1); }
   @keyframes piecein { 0%{transform:scale(.2) translateY(-60%);opacity:0} 55%{transform:scale(1.2,.85) translateY(4%);opacity:1} 75%{transform:scale(.95,1.08) translateY(-3%)} 100%{transform:scale(1) translateY(0)} }
   @keyframes shadowin { 0%{transform:scale(.3);opacity:0} 100%{transform:scale(1);opacity:1} }
-  .cell.win { background: linear-gradient(180deg, #fff2b8, #ffe08a); animation: glow .6s ease-in-out infinite alternate; }
-  .cell.win .emoji { animation: bounce .6s infinite; }
-  @keyframes glow { from { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 5px #ffb703, 0 0 14px #ffd166; } to { box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 7px #ff8906, 0 0 34px #ffb703; } }
+  .cell.win { background: linear-gradient(180deg, #fff2b8, #ffe08a); box-shadow: inset 0 4px 8px rgba(120,80,0,.25), 0 0 0 5px #ffb703, 0 0 18px #ffd166; animation: winpulse .6s ease-in-out infinite alternate; }
+  @keyframes winpulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+  .cell.win svg { animation: cheer .5s ease-in-out infinite; }
+  @keyframes cheer { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-12px) rotate(6deg); } }
   .cell.hint { background: #f3efff; }
-  /* Nivel Experto: tablero 4x4 "cuatro en raya" con gravedad (las fichas caen) */
   .board.n4 { gap: 8px; padding: 12px; }
-  .board.n4 .cell { font-size: calc(var(--bs) * .15); border-radius: 14px; }
-  .board.n4 .cell.filled .emoji { animation: piecedrop .5s cubic-bezier(.3,1.2,.5,1); }
+  .board.n4 .cell { border-radius: 14px; }
+  .board.n4 .cell.filled svg { animation: piecedrop .5s cubic-bezier(.3,1.2,.5,1); }
   @keyframes piecedrop { 0%{transform:translateY(-320%) scale(.9);opacity:.5} 60%{transform:translateY(0) scale(1.1,.85);opacity:1} 80%{transform:translateY(-14%) scale(.95,1.08)} 100%{transform:translateY(0) scale(1)} }
-  .board.n4 .cell.drop { background: linear-gradient(180deg, #ffe9a8, #fff4cf); }
-  /* Línea ganadora con brillo */
   .winline { position: absolute; inset: 14px; width: calc(100% - 28px); height: calc(100% - 28px); pointer-events: none; z-index: 2; overflow: visible; display: none; }
   .winline.show { display: block; }
   .winline line { stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawline .6s ease-out forwards; }
@@ -56,28 +74,33 @@
   .winline .core { stroke: url(#wl); stroke-width: 16; }
   .winline .hi { stroke: rgba(255,255,255,.8); stroke-width: 5; animation-delay: .12s; }
   @keyframes drawline { to { stroke-dashoffset: 0; } }
-  .foot { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .foot { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; position: relative; z-index: 2; }
   .foot .btn { font-size: 20px; min-height: 64px; padding: 6px 16px; }
   .foot .btn.on { box-shadow: 0 0 0 4px #2cb67d, 0 6px 0 var(--d), 0 12px 18px rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.6); }
-  .foot .lvbtn { width: 60px; height: 60px; min-width: 60px; min-height: 60px; padding: 0; font-size: 26px; border-radius: 50%; }
-  .spark { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; font-size: 26px; animation: sparkfly 1s ease-out forwards; }
-  @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4) rotate(200deg);opacity:0} }
-  /* pantalla de elección */
+  .foot .lvbtn, .foot .thbtn { width: 60px; height: 60px; min-width: 60px; min-height: 60px; padding: 0; font-size: 26px; border-radius: 50%; }
+  .banner { position: absolute; left: 50%; top: 42%; z-index: 12; pointer-events: none; padding: 10px 32px; border-radius: 40px; white-space: nowrap;
+    font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); border: 3px solid #fff; box-shadow: 0 6px 0 #1a63a8, 0 14px 24px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
+  .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
+  /* pantalla de elección de ficha */
   .pick { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 3;
     background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%), linear-gradient(180deg, rgba(143,214,255,.6), rgba(255,250,240,.75)); }
   .pick .box { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22px 26px; max-width: 94vw; animation: pop .4s ease-out; }
   .pick h2 { margin: 0; font-size: 30px; text-align: center; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); }
   .pick .choices { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-  .pick .choice { width: 112px; height: 112px; font-size: 62px; border-radius: 50%; padding: 0; }
-  .pick .choice .emoji { animation: float 3s ease-in-out infinite; }
-  .pick .choice:nth-child(2) .emoji { animation-delay: -.8s; } .pick .choice:nth-child(3) .emoji { animation-delay: -1.6s; } .pick .choice:nth-child(4) .emoji { animation-delay: -2.4s; }
+  .pick .choice { width: 116px; height: 116px; border-radius: 50%; padding: 0; }
+  .pick .choice svg { width: 82px; height: 82px; animation: float 3s ease-in-out infinite; overflow: visible; }
+  .pick .choice:nth-child(2) svg { animation-delay: -.8s; } .pick .choice:nth-child(3) svg { animation-delay: -1.6s; } .pick .choice:nth-child(4) svg { animation-delay: -2.4s; }
   .pick .choice.taken { opacity: .3; pointer-events: none; }
   .pick .mode { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   @media (orientation: landscape) {
     .game { flex-direction: row; justify-content: center; }
-    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex: 0 0 auto; width: 320px; padding: 18px 10px; }
+    .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex: 0 0 auto; width: 320px; padding: 18px 10px; position: relative; z-index: 2; }
     .boardwrap { flex: 1 1 0; align-self: stretch; }
   }
+  @media (max-width: 700px) { .barn { width: 120px; height: 106px; } .hay { width: 90px; height: 60px; } }
 </style>
 </head>
 <body>
@@ -85,10 +108,68 @@
 <script>
 var game = KidsGame.init({ title: 'Tres en raya' });
 (function () {
-  var PIECES = ['🐱', '🐶', '🦄', '🌟'];
-  var BOTS = ['🤖', '🐭'];
-  var PALS = [ { a: '#ff9ccb', b: '#f0569a', d: '#b8306f' }, { a: '#7dd0ff', b: '#2f95e8', d: '#1a63a8' }, { a: '#8ef0b0', b: '#24b36c', d: '#14784a' }, { a: '#ffe98a', b: '#ffb703', d: '#c47f00' } ];
-  // Líneas ganadoras: 3 en raya (3x3) o 4 en raya (4x4)
+  // ---------- Fichas de granja en SVG ----------
+  var PIECES = {
+    gallina: { n: 'Gallina', pal: { a: '#ffd9a8', b: '#ff9f43', d: '#b35a00' } },
+    zorro:   { n: 'Zorro',   pal: { a: '#ffb08a', b: '#ff6b2c', d: '#a83a0a' } },
+    cerdito: { n: 'Cerdito', pal: { a: '#ffd1e0', b: '#ff8fb1', d: '#b84a74' } },
+    vaquita: { n: 'Vaquita', pal: { a: '#e8f0ff', b: '#9fb4d8', d: '#4a5f8a' } },
+    tractor: { n: 'Tractor', pal: { a: '#ffe08a', b: '#ffb703', d: '#c47f00' }, bot: true }
+  };
+  function pieceSVG(id) {
+    var s = '<svg viewBox="0 0 100 100" aria-hidden="true"><defs>' +
+      '<radialGradient id="pg-' + id + '" cx="38%" cy="30%" r="75%">';
+    var g = { gallina: ['#ffffff', '#f3ece6', '#c9b8a8'], zorro: ['#ffc89a', '#ff8a3c', '#b8541a'], cerdito: ['#ffd6e0', '#ffb3c7', '#d9768f'], vaquita: ['#ffffff', '#f4f4f4', '#c9c9c9'], tractor: ['#ffd166', '#ff9f1c', '#b35a00'] }[id];
+    s += '<stop offset="0" stop-color="' + g[0] + '"/><stop offset=".55" stop-color="' + g[1] + '"/><stop offset="1" stop-color="' + g[2] + '"/></radialGradient></defs>';
+    var F = 'url(#pg-' + id + ')', st = ' stroke="' + g[2] + '" stroke-width="2.5" stroke-linejoin="round"';
+    s += '<ellipse cx="50" cy="94" rx="30" ry="5" fill="rgba(0,0,0,.2)"/>';
+    if (id === 'gallina') {
+      s += '<path d="M34 30 Q 36 10 46 22 Q 50 6 58 22 Q 66 10 68 30 Z" fill="#e63946" stroke="#9c1f2a" stroke-width="2" stroke-linejoin="round"/>' +
+        '<circle cx="50" cy="56" r="34" fill="' + F + '"' + st + '/>' +
+        '<path d="M22 60 Q 8 58 12 46 Q 20 50 24 58 Z M78 60 Q 92 58 88 46 Q 80 50 76 58 Z" fill="' + F + '"' + st + '/>' +
+        '<ellipse cx="38" cy="52" rx="6" ry="7" fill="#fff"/><ellipse cx="62" cy="52" rx="6" ry="7" fill="#fff"/><circle cx="39" cy="53" r="3.6" fill="#222"/><circle cx="63" cy="53" r="3.6" fill="#222"/><circle cx="40.5" cy="51" r="1.4" fill="#fff"/><circle cx="64.5" cy="51" r="1.4" fill="#fff"/>' +
+        '<path d="M42 62 L 58 62 L 50 72 Z" fill="#ffa21a" stroke="#c97700" stroke-width="1.5" stroke-linejoin="round"/><path d="M46 72 Q 50 82 54 72 Z" fill="#e63946"/>' +
+        '<circle cx="28" cy="64" r="5" fill="#ff8aa8" opacity=".5"/><circle cx="72" cy="64" r="5" fill="#ff8aa8" opacity=".5"/>';
+    } else if (id === 'zorro') {
+      s += '<polygon points="20,46 14,8 48,30" fill="' + F + '"' + st + '/><polygon points="80,46 86,8 52,30" fill="' + F + '"' + st + '/><polygon points="25,40 22,16 42,30" fill="#fff"/><polygon points="75,40 78,16 58,30" fill="#fff"/>' +
+        '<circle cx="50" cy="56" r="33" fill="' + F + '"' + st + '/><path d="M24 62 Q 50 96 76 62 Q 64 78 50 78 Q 36 78 24 62 Z" fill="#fff"/>' +
+        '<ellipse cx="38" cy="52" rx="6" ry="7" fill="#fff"/><ellipse cx="62" cy="52" rx="6" ry="7" fill="#fff"/><circle cx="39" cy="53" r="3.6" fill="#222"/><circle cx="63" cy="53" r="3.6" fill="#222"/><circle cx="40.5" cy="51" r="1.4" fill="#fff"/><circle cx="64.5" cy="51" r="1.4" fill="#fff"/>' +
+        '<ellipse cx="50" cy="70" rx="6" ry="4.5" fill="#2b2b2b"/><path d="M42 78 Q 50 84 58 78" stroke="#8a4b12" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    } else if (id === 'cerdito') {
+      s += '<polygon points="24,44 20,14 46,30" fill="' + F + '"' + st + '/><polygon points="76,44 80,14 54,30" fill="' + F + '"' + st + '/>' +
+        '<circle cx="50" cy="56" r="33" fill="' + F + '"' + st + '/>' +
+        '<ellipse cx="38" cy="50" rx="6" ry="7" fill="#fff"/><ellipse cx="62" cy="50" rx="6" ry="7" fill="#fff"/><circle cx="39" cy="51" r="3.6" fill="#222"/><circle cx="63" cy="51" r="3.6" fill="#222"/><circle cx="40.5" cy="49" r="1.4" fill="#fff"/><circle cx="64.5" cy="49" r="1.4" fill="#fff"/>' +
+        '<ellipse cx="50" cy="68" rx="14" ry="10" fill="#ff8fb1" stroke="#d9768f" stroke-width="2"/><circle cx="45" cy="68" r="2.5" fill="#b84a74"/><circle cx="55" cy="68" r="2.5" fill="#b84a74"/>' +
+        '<circle cx="26" cy="62" r="5" fill="#ff5f9e" opacity=".4"/><circle cx="74" cy="62" r="5" fill="#ff5f9e" opacity=".4"/>';
+    } else if (id === 'vaquita') {
+      s += '<path d="M28 30 Q 16 10 30 8 Q 34 20 40 28 Z M72 30 Q 84 10 70 8 Q 66 20 60 28 Z" fill="#e9c9a0" stroke="#b08a56" stroke-width="2"/>' +
+        '<ellipse cx="16" cy="52" rx="11" ry="8" fill="' + F + '"' + st + '/><ellipse cx="84" cy="52" rx="11" ry="8" fill="' + F + '"' + st + '/>' +
+        '<circle cx="50" cy="56" r="33" fill="' + F + '"' + st + '/><ellipse cx="32" cy="40" rx="10" ry="8" fill="#2b2b2b" opacity=".85"/><ellipse cx="68" cy="74" rx="8" ry="6" fill="#2b2b2b" opacity=".85"/>' +
+        '<ellipse cx="38" cy="50" rx="6" ry="7" fill="#fff"/><ellipse cx="62" cy="50" rx="6" ry="7" fill="#fff"/><circle cx="39" cy="51" r="3.6" fill="#222"/><circle cx="63" cy="51" r="3.6" fill="#222"/><circle cx="40.5" cy="49" r="1.4" fill="#fff"/><circle cx="64.5" cy="49" r="1.4" fill="#fff"/>' +
+        '<ellipse cx="50" cy="70" rx="15" ry="10" fill="#ffc7d1" stroke="#c9a0a8" stroke-width="2"/><circle cx="45" cy="70" r="2.5" fill="#9c5a66"/><circle cx="55" cy="70" r="2.5" fill="#9c5a66"/>';
+    } else {
+      s += '<rect x="22" y="40" width="56" height="30" rx="8" fill="' + F + '"' + st + '/><rect x="46" y="20" width="28" height="26" rx="6" fill="#ff9f1c" stroke="#b35a00" stroke-width="2.5"/><rect x="52" y="26" width="16" height="14" rx="3" fill="#bfe8ff"/>' +
+        '<rect x="26" y="20" width="8" height="22" rx="3" fill="#555"/><circle cx="32" cy="74" r="14" fill="#333"/><circle cx="32" cy="74" r="7" fill="#aaa"/><circle cx="70" cy="76" r="10" fill="#333"/><circle cx="70" cy="76" r="5" fill="#aaa"/>' +
+        '<circle cx="40" cy="55" r="3" fill="#fff"/><circle cx="60" cy="55" r="3" fill="#fff"/><path d="M42 62 Q 50 66 58 62" stroke="#8a4b12" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    }
+    return s + '</svg>';
+  }
+  function barnSVG() {
+    return '<svg viewBox="0 0 170 150" aria-hidden="true"><path d="M20 60 L 85 14 L 150 60 Z" fill="#9c2f2f"/><rect x="20" y="60" width="130" height="86" fill="#d84343"/><rect x="20" y="60" width="130" height="8" fill="#b83333"/>' +
+      '<rect x="62" y="90" width="46" height="56" rx="4" fill="#7a2a1a"/><path d="M62 90 L 108 146 M108 90 L 62 146" stroke="#e8c7a0" stroke-width="4"/><rect x="60" y="88" width="50" height="6" fill="#e8c7a0"/>' +
+      '<rect x="30" y="72" width="22" height="22" rx="3" fill="#bfe8ff" stroke="#fff" stroke-width="3"/><rect x="118" y="72" width="22" height="22" rx="3" fill="#bfe8ff" stroke="#fff" stroke-width="3"/>' +
+      '<path d="M78 34 L 92 34 L 92 20 L 78 20 Z" fill="#fff"/><circle cx="85" cy="40" r="7" fill="#fff"/><circle cx="85" cy="40" r="3" fill="#333"/></svg>';
+  }
+  function haySVG() {
+    return '<svg viewBox="0 0 120 80" aria-hidden="true"><defs><linearGradient id="hayg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#d9a400"/></linearGradient></defs>' +
+      '<rect x="4" y="30" width="60" height="46" rx="10" fill="url(#hayg)" stroke="#b8860b" stroke-width="2"/><rect x="58" y="30" width="58" height="46" rx="10" fill="url(#hayg)" stroke="#b8860b" stroke-width="2"/><rect x="30" y="4" width="60" height="40" rx="10" fill="url(#hayg)" stroke="#b8860b" stroke-width="2"/>' +
+      '<path d="M12 46 L 56 46 M12 60 L 56 60 M66 46 L 108 46 M66 60 L 108 60 M38 18 L 82 18 M38 30 L 82 30" stroke="#b8860b" stroke-width="2" opacity=".6"/></svg>';
+  }
+  var PLAYER_PIECES = ['gallina', 'zorro', 'cerdito', 'vaquita'];
+  var THEMES = [{ id: 'madera', n: 'Madera', e: '🪵', lv: 0 }, { id: 'heno', n: 'Heno', e: '🌾', lv: 1 }, { id: 'flores', n: 'Flores', e: '🌸', lv: 2 }, { id: 'noche', n: 'Noche', e: '🌙', lv: 3 }, { id: 'arcoiris', n: 'Arcoíris', e: '🌈', lv: 4 }];
+  var theme = 'madera'; try { theme = JSON.parse(localStorage.getItem('kg-gato-tema') || '{}').sel || 'madera'; } catch (e) {}
+  function doneLevels() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').gato || {}; } catch (e) { return {}; } }
+  function themesUnlocked() { var d = doneLevels(); return THEMES.filter(function (t) { return !t.lv || d[t.lv]; }); }
   function linesFor(n) {
     var L = [], i, j, row, col;
     for (i = 0; i < n; i++) { row = []; col = []; for (j = 0; j < n; j++) { row.push(i * n + j); col.push(j * n + i); } L.push(row); L.push(col); }
@@ -96,32 +177,44 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     return L;
   }
   var N = 3, LINES = linesFor(3), GRAVITY = false;
-  var twoPlayers = false, p1 = null, p2 = null, board, turn, busy = false, score = [0, 0], over = false;
-  // Nivel del robot: 1 = 15% listo, 2 = 75% listo, 3 = perfecto (empatar es ganar),
-  // 4 = Experto: tablero 4x4 con gravedad (cuatro en raya) y robot que mira varias jugadas adelante
+  var twoPlayers = false, p1 = null, p2 = null, board, turn, busy = false, score = [0, 0], over = false, streak = 0, hand = null, handShown = false, games = 0;
   var nivel = 1, badgeEl = null;
   var LABELS = { 1: 'Robot distraído', 2: 'Robot listo', 3: 'Robot perfecto', 4: '4 en raya, fichas caen' };
-  var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [], lineSvg;
+  var scoreEl, turnEl, wrap, boardEl, foot, pickEl, cells = [], lineSvg, bannerEl;
 
-  game.innerHTML = '';
+  game.innerHTML = '<div class="barn">' + barnSVG() + '</div><div class="hay">' + haySVG() + '</div><span class="deco" style="left:14%;bottom:4%">🌻</span><span class="deco" style="right:6%;bottom:6%;animation-delay:-1.5s">🐑</span><span class="deco" style="left:4%;bottom:12%;font-size:34px;animation-delay:-2.5s">🐥</span>';
   var side = document.createElement('div'); side.className = 'side panel';
   scoreEl = document.createElement('div'); scoreEl.className = 'score';
   turnEl = document.createElement('div'); turnEl.className = 'turn';
   wrap = document.createElement('div'); wrap.className = 'boardwrap';
   boardEl = document.createElement('div'); boardEl.className = 'board';
   foot = document.createElement('div'); foot.className = 'foot';
-  foot.innerHTML = '<button class="btn purple mode-btn">👧👦 Dos jugadores</button><button class="btn blue new-btn">🔄 Nuevo</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
+  foot.innerHTML = '<button class="btn purple mode-btn">👧👦 Dos jugadores</button><button class="btn blue new-btn">🔄 Nuevo</button><button class="btn green thbtn" aria-label="Tema">🎨</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
   badgeEl = KidsGame.levelBadge(nivel); foot.insertBefore(badgeEl, foot.firstChild);
+  bannerEl = document.createElement('div'); bannerEl.className = 'banner';
   wrap.appendChild(boardEl);
   side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot);
-  game.appendChild(side); game.appendChild(wrap);
+  game.appendChild(side); game.appendChild(wrap); game.appendChild(bannerEl);
+  var bannerT = null;
+  function banner(txt, gold, ms) { clearTimeout(bannerT); bannerEl.textContent = txt; bannerEl.className = 'banner show' + (gold ? ' gold' : ''); bannerT = setTimeout(function () { bannerEl.classList.remove('show'); }, ms || 1100); }
+  function applyTheme() {
+    if (themesUnlocked().map(function (t) { return t.id; }).indexOf(theme) < 0) theme = 'madera';
+    THEMES.forEach(function (t) { boardEl.classList.remove('t-' + t.id); }); boardEl.classList.add('t-' + theme);
+    try { localStorage.setItem('kg-gato-tema', JSON.stringify({ sel: theme })); } catch (e) {}
+  }
+  function cycleTheme() {
+    var u = themesUnlocked(), k = 0; u.forEach(function (t, i) { if (t.id === theme) k = i; });
+    if (u.length < 2) { KidsGame.sound.tap(); KidsGame.toast('🎨 Gana una partida para más tableros', 1600); return; }
+    var nt = u[(k + 1) % u.length]; theme = nt.id; applyTheme(); KidsGame.sound.pop(); KidsGame.toast(nt.e + ' Tablero de ' + nt.n.toLowerCase(), 1200); KidsGame.fx.burstAt(boardEl, { n: 10, chars: ['✨'] });
+  }
+  function checkThemeUnlock(before) { var after = themesUnlocked(); if (after.length > before) { var t = after[after.length - 1]; KidsGame.toast('🎨 ¡Nuevo tablero: ' + t.e + ' ' + t.n + '! Toca 🎨', 2600); } }
   function buildBoard(n) {
     N = n; LINES = linesFor(n); GRAVITY = n === 4;
     cells.forEach(function (c) { c.remove(); }); cells = [];
     boardEl.classList.toggle('n4', n === 4);
     boardEl.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)'; boardEl.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
     for (var i = 0; i < n * n; i++) {
-      var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i; c.innerHTML = '<span class="emoji"></span>';
+      var c = document.createElement('div'); c.className = 'cell card'; c.dataset.i = i;
       c.addEventListener('pointerdown', onCell); boardEl.insertBefore(c, lineSvg || null); cells.push(c);
     }
   }
@@ -133,12 +226,12 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   boardEl.appendChild(lineSvg);
   pickEl = document.createElement('div'); pickEl.className = 'pick';
   game.appendChild(pickEl);
+  applyTheme();
 
   function order() {
-    // Vertical: marcador, turno, tablero, botones. Horizontal: panel lateral + tablero
     var land = window.innerWidth > window.innerHeight;
     if (land) { if (scoreEl.parentNode !== side) { side.appendChild(scoreEl); side.appendChild(turnEl); side.appendChild(foot); } if (side.parentNode !== game) game.insertBefore(side, wrap); }
-    else { game.insertBefore(scoreEl, wrap); game.insertBefore(turnEl, wrap); game.appendChild(foot); if (side.parentNode) side.parentNode.removeChild(side); }
+    else { game.insertBefore(scoreEl, wrap); game.insertBefore(turnEl, wrap); game.insertBefore(foot, bannerEl); if (side.parentNode) side.parentNode.removeChild(side); }
     layout();
   }
   function layout() {
@@ -154,14 +247,14 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     var h = document.createElement('h2');
     h.textContent = who === 1 ? (twoPlayers ? '👧 Jugador 1: elige tu ficha' : '¿Con cuál quieres jugar?') : '👦 Jugador 2: elige tu ficha';
     var ch = document.createElement('div'); ch.className = 'choices';
-    PIECES.forEach(function (e, idx) {
-      var b = document.createElement('button'); b.className = 'btn choice'; b.innerHTML = '<span class="emoji">' + e + '</span>';
-      if (who === 2 && e === p1) b.classList.add('taken');
-      var pal = PALS[idx % PALS.length]; b.style.setProperty('--a', pal.a); b.style.setProperty('--b', pal.b); b.style.setProperty('--d', pal.d);
+    PLAYER_PIECES.forEach(function (id, idx) {
+      var b = document.createElement('button'); b.className = 'btn choice'; b.innerHTML = pieceSVG(id);
+      if (who === 2 && id === p1) b.classList.add('taken');
+      var pal = PIECES[id].pal; b.style.setProperty('--a', pal.a); b.style.setProperty('--b', pal.b); b.style.setProperty('--d', pal.d);
       b.addEventListener('pointerdown', function (ev) {
-        ev.preventDefault(); KidsGame.sound.pop();
-        if (who === 1) { p1 = e; if (twoPlayers) showPick(2); else { p2 = KidsGame.pick(BOTS); startGame(); } }
-        else { p2 = e; startGame(); }
+        ev.preventDefault(); KidsGame.sound.pop(); KidsGame.fx.burstAt(b, { n: 8, chars: ['✨', '⭐'] });
+        if (who === 1) { p1 = id; if (twoPlayers) showPick(2); else { p2 = id === 'gallina' ? 'zorro' : (id === 'zorro' ? 'gallina' : KidsGame.pick(['tractor', id === 'cerdito' ? 'vaquita' : 'cerdito'])); startGame(); } }
+        else { p2 = id; startGame(); }
       });
       ch.appendChild(b);
     });
@@ -182,26 +275,30 @@ var game = KidsGame.init({ title: 'Tres en raya' });
 
   function startGame() {
     pickEl.style.display = 'none';
-    score = [0, 0]; renderScore();
+    score = [0, 0]; renderScore(); games = 0;
     foot.querySelector('.mode-btn').textContent = twoPlayers ? '🤖 Contra el robot' : '👧👦 Dos jugadores';
     newRound(true);
   }
   function newRound(firstIsP1) {
-    board = []; for (var k = 0; k < N * N; k++) board.push(0); over = false; busy = false;
-    cells.forEach(function (c) { c.className = 'cell card'; c.firstChild.textContent = ''; });
-    lineSvg.classList.remove('show');
-    turn = firstIsP1 ? 1 : 2;
-    renderTurn();
-    if (turn === 2 && !twoPlayers) botMove();
+    board = []; for (var k = 0; k < N * N; k++) board.push(0); over = false; busy = false; games++;
+    boardEl.classList.add('out');
+    setTimeout(function () {
+      cells.forEach(function (c) { c.className = 'cell card'; c.innerHTML = ''; });
+      lineSvg.classList.remove('show'); boardEl.classList.remove('out');
+      turn = firstIsP1 ? 1 : 2;
+      renderTurn(); banner('Partida ' + games, false, 900);
+      if (turn === 2 && !twoPlayers) botMove();
+      else if (nivel === 1 && !handShown && !twoPlayers) { handShown = true; hand = KidsGame.hand({ el: cells[4] }); }
+    }, games === 1 ? 0 : 320);
   }
   function renderScore() {
-    scoreEl.innerHTML = '<span class="p"><span class="emoji">' + p1 + '</span> ' + stars(score[0]) + '</span><span class="vs">·</span><span class="p"><span class="emoji">' + p2 + '</span> ' + stars(score[1]) + '</span>';
+    scoreEl.innerHTML = '<span class="p">' + pieceSVG(p1) + ' ' + stars(score[0]) + '</span><span class="vs">·</span><span class="p">' + pieceSVG(p2) + ' ' + stars(score[1]) + '</span>';
   }
   function stars(n) { return n ? '⭐'.repeat(Math.min(n, 5)) + (n > 5 ? ' ' + n : '') : '–'; }
   function renderTurn() {
     var e = turn === 1 ? p1 : p2;
     var txt = twoPlayers ? 'Turno de ' : (turn === 1 ? (GRAVITY ? '¡Tu turno! 4 en raya' : '¡Tu turno!') : 'Piensa...');
-    turnEl.innerHTML = '<span>' + txt + '</span><span class="emoji bounce">' + e + '</span>';
+    turnEl.innerHTML = '<span>' + txt + '</span>' + pieceSVG(e).replace('<svg ', '<svg class="bounce" ');
   }
 
   function onCell(ev) {
@@ -209,11 +306,10 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     if (over || busy) return;
     if (turn === 2 && !twoPlayers) return;
     var i = parseInt(this.dataset.i, 10);
-    if (GRAVITY) { var d = dropIndex(board, i % N); if (d < 0) { KidsGame.sound.wrong(); this.classList.remove('bad'); void this.offsetWidth; this.classList.add('bad'); return; } i = d; }
-    if (board[i]) { KidsGame.sound.wrong(); this.classList.remove('bad'); void this.offsetWidth; this.classList.add('bad'); return; }
+    if (GRAVITY) { var d = dropIndex(board, i % N); if (d < 0) { KidsGame.sound.wrong(); KidsGame.fx.shake(this); return; } i = d; }
+    if (board[i]) { KidsGame.sound.wrong(); KidsGame.fx.shake(this); return; }
     play(i, turn);
   }
-  // Gravedad: la ficha cae a la casilla libre más baja de la columna (-1 si está llena)
   function dropIndex(b, col) { for (var r = N - 1; r >= 0; r--) if (!b[r * N + col]) return r * N + col; return -1; }
   function legalMoves(b) {
     var m = [], i;
@@ -223,8 +319,9 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   }
   function play(i, who) {
     board[i] = who;
-    cells[i].classList.add('filled'); cells[i].firstChild.textContent = who === 1 ? p1 : p2;
+    cells[i].classList.add('filled'); cells[i].innerHTML = pieceSVG(who === 1 ? p1 : p2);
     KidsGame.sound.pop(); KidsGame.vibrate(20);
+    if (who === 1 || twoPlayers) KidsGame.fx.burstAt(cells[i], { n: 6, r: 50 });
     var w = winner();
     if (w) return finish(w);
     if (board.indexOf(0) < 0) return finish(0);
@@ -241,8 +338,6 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     for (var k = 0; k < LINES.length; k++) { var w = lineOwner(board, LINES[k]); if (w) return { who: w, line: LINES[k] }; }
     return null;
   }
-  // Robot: nivel 1 = 15% listo, nivel 2 = 75% listo (gana o bloquea), nivel 3 = perfecto (minimax),
-  // nivel 4 = gana/bloquea y mira 3 jugadas adelante (alfa-beta con heurística)
   function botMove() {
     busy = true;
     setTimeout(function () {
@@ -270,7 +365,6 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     for (var k = 0; k < LINES.length; k++) { var w = lineOwner(b, LINES[k]); if (w) return w; }
     return 0;
   }
-  // Heurística 4x4: líneas abiertas para el robot cuentan a favor, para la niña en contra
   var HW = [0, 1, 12, 120, 10000];
   function heur(b) {
     var sc = 0;
@@ -325,45 +419,31 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   function drawLine(l) {
     var C = N === 4 ? [37.5, 112.5, 187.5, 262.5] : [50, 150, 250], a = l[0], b = l[l.length - 1];
     var x1 = C[a % N], y1 = C[Math.floor(a / N)], x2 = C[b % N], y2 = C[Math.floor(b / N)];
-    // alarga un poco la línea hacia afuera de las casillas
     var dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy), ex = dx / len * 22, ey = dy / len * 22;
     lineSvg.querySelectorAll('line').forEach(function (ln) {
       ln.setAttribute('x1', x1 - ex); ln.setAttribute('y1', y1 - ey); ln.setAttribute('x2', x2 + ex); ln.setAttribute('y2', y2 + ey);
     });
     lineSvg.classList.remove('show'); void lineSvg.offsetWidth; lineSvg.classList.add('show');
   }
-  function burst(els, n) {
-    els.forEach(function (el) {
-      var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      for (var i = 0; i < (n || 7); i++) {
-        var d = document.createElement('div'); d.className = 'spark emoji'; d.textContent = KidsGame.pick(['✨', '⭐', '🌟', '💫']);
-        var a = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 90;
-        d.style.left = cx + 'px'; d.style.top = cy + 'px';
-        d.style.setProperty('--dx', Math.cos(a) * dist + 'px'); d.style.setProperty('--dy', Math.sin(a) * dist - 30 + 'px');
-        d.style.animationDelay = (Math.random() * .3) + 's';
-        document.body.appendChild(d);
-        (function (el2) { setTimeout(function () { el2.remove(); }, 1500); })(d);
-      }
-    });
-  }
+  function burst(els) { els.forEach(function (el, k) { setTimeout(function () { KidsGame.fx.burstAt(el, { n: 8, r: 80, chars: ['✨', '⭐', '🌟'] }); }, k * 120); }); }
 
   function finish(w) {
     over = true; busy = true;
     turnEl.innerHTML = '';
+    var before = themesUnlocked().length;
     if (w === 0) {
       if (nivel >= 3 && !twoPlayers) {
-        // Contra el robot perfecto/experto, empatar es ganar
-        KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells, 4);
+        KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60); burst(cells.slice(0, 4)); banner('🤝 ¡Empate!', true, 1300);
         setTimeout(function () {
-          KidsGame.levelDone(nivel);
+          KidsGame.levelDone(nivel); checkThemeUnlock(before);
           KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: nivel === 4 ? '¡Le empataste al robot experto! ¡Eso es ganar!' : '¡Le empataste al robot perfecto! ¡Eso es ganar!', stars: 3, onAgain: function () { newRound(true); } });
-        }, 900);
+        }, 1000);
         return;
       }
-      KidsGame.toast('¡Empate! 🤝', 1500); KidsGame.addStar(1); KidsGame.sound.ok();
+      KidsGame.toast('¡Empate! 🤝', 1500); KidsGame.addStar(1); KidsGame.sound.ok(); banner('🤝 ¡Empate!', false, 1200);
       setTimeout(function () {
         KidsGame.celebrate({ msg: '¡Empate! 🤝', sub: 'Los dos jugaron muy bien', stars: 1, say: false, onAgain: function () { newRound(true); } });
-      }, 900);
+      }, 1000);
       return;
     }
     w.line.forEach(function (i) { cells[i].classList.add('win'); });
@@ -373,16 +453,18 @@ var game = KidsGame.init({ title: 'Tres en raya' });
     if (w.who === 1 || twoPlayers) {
       KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
       burst(w.line.map(function (i) { return cells[i]; }));
+      banner(twoPlayers ? '🎉 ¡Ganó ' + PIECES[pieceWon].n + '!' : '🎉 ¡Ganaste!', true, 1300);
+      if (!twoPlayers) { streak++; var r = boardEl.getBoundingClientRect(); if (streak === 3 || (streak > 3 && streak % 5 === 0)) setTimeout(function () { KidsGame.fx.floatText(r.left + r.width / 2, r.top + 40, '¡Racha x' + streak + '!'); }, 400); if (streak % 5 === 0) setTimeout(function () { KidsGame.addStar(); KidsGame.toast('⭐ ¡Bonus de racha!', 1400); }, 800); }
       setTimeout(function () {
-        if (!twoPlayers) KidsGame.levelDone(nivel);
+        if (!twoPlayers) { KidsGame.levelDone(nivel); checkThemeUnlock(before); }
         KidsGame.celebrate({
-          msg: twoPlayers ? '¡Ganó ' + pieceWon + '!' : '¡Ganaste!', sub: pieceWon + ' hizo ' + (N === 4 ? 'cuatro' : 'tres') + ' en raya',
+          msg: twoPlayers ? '¡Ganó ' + PIECES[pieceWon].n + '!' : '¡Ganaste!', sub: PIECES[pieceWon].n + ' hizo ' + (N === 4 ? 'cuatro' : 'tres') + ' en raya' + (streak >= 3 && !twoPlayers ? ' · 🔥 racha x' + streak : ''),
           onAgain: function () { newRound(w.who !== 1); }
         });
-      }, 1100);
+      }, 1300);
     } else {
-      // El robot ganó: sin drama, otra vez
-      KidsGame.sound.pop(); KidsGame.toast('¡Casi! Otra vez 💪', 1800); KidsGame.say('¡Casi! Otra vez');
+      streak = 0;
+      KidsGame.sound.pop(); banner('💪 ¡Casi! Otra vez', false, 1500); KidsGame.say('¡Casi! Otra vez');
       setTimeout(function () { newRound(true); }, 2000);
     }
   }
@@ -393,18 +475,20 @@ var game = KidsGame.init({ title: 'Tres en raya' });
   foot.querySelector('.new-btn').addEventListener('pointerdown', function (ev) {
     ev.preventDefault(); KidsGame.sound.tap(); p1 = p2 = null; showPick(1);
   });
+  foot.querySelector('.thbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); cycleTheme(); });
   function showPicker() {
-    over = true; busy = true; pickEl.style.display = 'none';
-    KidsGame.levelPicker({ key: 'gato', labels: LABELS, onPick: function (n) {
-      nivel = n;
+    over = true; busy = true; pickEl.style.display = 'none'; if (hand) { hand.stop(); hand = null; }
+    KidsGame.levelPicker({ key: 'gato', labels: LABELS, music: 'alegre', art: pieceSVG('gallina').replace('<svg ', '<svg width="60" height="60" '),
+      howto: [{ icon: '🐔', text: 'Elige tu animalito de la granja' }, { icon: '👆', text: 'Toca una casilla en tu turno' }, { icon: '3️⃣', text: 'Tres en raya para ganar' }],
+      onPick: function (n) {
+      nivel = n; streak = 0; handShown = false;
       var nb = KidsGame.levelBadge(nivel); foot.replaceChild(nb, badgeEl); badgeEl = nb;
-      buildBoard(n === 4 ? 4 : 3); layout();
+      buildBoard(n === 4 ? 4 : 3); layout(); applyTheme();
       if (n === 4) { KidsGame.toast('Las fichas caen: ¡4 en raya! 🪂', 2200); }
       p1 = p2 = null; showPick(1);
     } });
   }
-  // Expuesto para pruebas
-  window.__gato = { state: function () { return { board: board ? board.slice() : null, n: N, turn: turn, over: over, busy: busy, nivel: nivel, twoPlayers: twoPlayers, score: score.slice(), gravity: GRAVITY }; },
+  window.__gato = { state: function () { return { board: board ? board.slice() : null, n: N, turn: turn, over: over, busy: busy, nivel: nivel, twoPlayers: twoPlayers, score: score.slice(), gravity: GRAVITY, streak: streak, p1: p1, p2: p2, theme: theme }; },
     best: function () { return bestMove(1); }, legal: function () { return legalMoves(board); } };
   foot.querySelector('.lvbtn').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
 

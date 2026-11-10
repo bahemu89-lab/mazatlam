@@ -6,15 +6,15 @@
 <link rel="stylesheet" href="../common.css">
 <title>El reloj</title>
 <style>
+  /* ===== La torre del reloj: cielo, torre de piedra con techo rojo y la puertita del cucú ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
       radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.45), rgba(255,255,255,0) 70%),
-      radial-gradient(circle at 15% 25%, rgba(255,255,255,.35) 0 14px, rgba(255,255,255,0) 15px),
-      radial-gradient(circle at 88% 30%, rgba(255,255,255,.3) 0 10px, rgba(255,255,255,0) 11px),
-      radial-gradient(circle at 75% 80%, rgba(255,255,255,.25) 0 18px, rgba(255,255,255,0) 19px),
-      radial-gradient(circle at 10% 75%, rgba(255,255,255,.25) 0 12px, rgba(255,255,255,0) 13px),
-      linear-gradient(180deg, #cfe6ff 0%, #9ac1f0 45%, #6f93d8 100%);
+      radial-gradient(ellipse 120px 50px at 15% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 150px 60px at 85% 28%, rgba(255,255,255,.7), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 110px 45px at 70% 62%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #bfe0ff 0%, #8fbdf0 50%, #6f93d8 100%);
   }
   .game::after { content: ""; position: absolute; left: -5%; right: -5%; bottom: -30px; height: 22%; pointer-events: none; z-index: 0; border-radius: 50% 50% 0 0;
     background: linear-gradient(180deg, #5b6fc0, #3e4f9a); box-shadow: inset 0 10px 20px rgba(255,255,255,.2), 0 -8px 20px rgba(20,30,80,.25); opacity: .55; }
@@ -23,22 +23,51 @@
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
-  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 10px; border-radius: 40px; max-width: 100%; }
   .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #2f4aa8; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+  .instr .hero { width: 58px; height: 58px; flex: 0 0 auto; filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); cursor: pointer; }
+  .hero .hb-bird { transform-origin: 60px 40px; animation: hbpeek 3.6s ease-in-out infinite; }
+  @keyframes hbpeek { 0%, 70%, 100% { transform: translateY(0); } 80%, 90% { transform: translateY(-6px); } }
 
   .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 28px; }
+  .stage { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .stage.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .stage.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   .clockwrap { position: relative; flex: 0 0 auto; width: var(--cs); height: var(--cs); touch-action: none; }
-  .clockwrap svg { width: 100%; height: 100%; overflow: visible; }
+  .clockwrap > svg { position: relative; z-index: 1; width: 100%; height: 100%; overflow: visible; }
+  /* Torre de piedra detrás del reloj (se recorta abajo con el escenario) */
+  .tower { position: absolute; left: 11%; right: 11%; top: -16%; height: 420%; z-index: 0; border-radius: 16px 16px 0 0;
+    background:
+      repeating-linear-gradient(0deg, rgba(60,40,20,.14) 0 2px, rgba(0,0,0,0) 2px 28px),
+      repeating-linear-gradient(90deg, rgba(60,40,20,.1) 0 2px, rgba(0,0,0,0) 2px 56px),
+      linear-gradient(90deg, #b8a48c 0%, #ead9c3 38%, #d6c3a9 68%, #9e8a71 100%);
+    box-shadow: inset 0 0 0 6px rgba(255,255,255,.22), 0 0 36px rgba(20,30,80,.3); }
+  .tower::before { content: ""; position: absolute; left: -14%; right: -14%; top: -19%; height: 20%; background: linear-gradient(180deg, #ff6f61, #c9184a); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .tower::after { content: ""; position: absolute; left: -8%; right: -8%; top: 0; height: 12px; background: linear-gradient(180deg, #8f7b63, #6b5a46); border-radius: 4px; }
+  /* Puertita del cucú sobre el reloj */
+  .cuckoo { position: absolute; left: 50%; top: -7%; width: 24%; height: 18%; margin-left: -12%; z-index: 2; }
+  .cuckoo .frame { position: absolute; inset: 0; border-radius: 50% 50% 8px 8px; background: linear-gradient(180deg, #4a2c10, #2b1705); box-shadow: inset 0 0 0 4px #8a5a32, 0 4px 8px rgba(0,0,0,.35); overflow: hidden; }
+  .cuckoo .bird { position: absolute; left: 10%; right: 10%; top: 12%; bottom: 0; transform: translateY(110%) scale(.7); opacity: 0; transition: transform .45s cubic-bezier(.3,1.5,.5,1), opacity .2s; }
+  .cuckoo .bird svg { width: 100%; height: 100%; overflow: visible; }
+  .cuckoo .dl, .cuckoo .dr { position: absolute; top: 0; bottom: 0; width: 50%; background: linear-gradient(90deg, #c98b48, #e0a862); box-shadow: inset 0 0 0 3px rgba(90,50,0,.35); transition: transform .4s ease-in-out; border-radius: 50% 0 0 0; }
+  .cuckoo .dr { right: 0; border-radius: 0 50% 0 0; background: linear-gradient(90deg, #e0a862, #c98b48); }
+  .cuckoo .dl { left: 0; transform-origin: left center; }
+  .cuckoo .dr { transform-origin: right center; }
+  .cuckoo.open .dl { transform: perspective(300px) rotateY(-110deg); }
+  .cuckoo.open .dr { transform: perspective(300px) rotateY(110deg); }
+  .cuckoo.open .bird { transform: translateY(-22%) scale(1); opacity: 1; }
+  .cuckoo .say { position: absolute; left: 100%; top: -10px; margin-left: 6px; padding: 4px 12px; border-radius: 16px; background: #fff; color: #b8306f; font-size: 20px; font-weight: 900; white-space: nowrap; box-shadow: 0 4px 0 #c9d2e6; opacity: 0; transform: scale(.5); transition: transform .3s cubic-bezier(.3,1.5,.5,1), opacity .2s; }
+  .cuckoo.open .say { opacity: 1; transform: scale(1); }
   .hand { transform-origin: 200px 200px; }
   .clock.anim .hand { transition: transform .5s cubic-bezier(.3,1.3,.5,1); }
-  .knob { display: none; cursor: grab; }
+  .knob { display: none; cursor: grab; transform-box: fill-box; transform-origin: center; }
   .clock.set .knob { display: block; }
   .clock.set .grab { cursor: grab; }
   .clock.set.hh .hour .knob { animation: kpulse 1.2s ease-in-out infinite; }
   .clock.set.mm .minute .knob { animation: kpulse 1.2s ease-in-out infinite; }
-  @keyframes kpulse { 50% { r: 22; } }
-  .clock.win .face { filter: drop-shadow(0 0 16px #ffe98a); }
+  @keyframes kpulse { 50% { transform: scale(1.25); } }
+  .winglow { opacity: 0; transition: opacity .35s; }
+  .clock.win .winglow { opacity: 1; }
   .clock.bad { animation: shake .4s; }
   .ntxt { font-family: var(--font); font-weight: 900; fill: #1f2f6b; font-size: 34px; }
 
@@ -77,9 +106,13 @@
   .act.lifted { opacity: .3; }
   .act.ok { pointer-events: none; }
   .ghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -55%) scale(1.08); filter: drop-shadow(0 14px 12px rgba(0,0,0,.4)); }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); text-shadow: 0 3px 0 #1a63a8, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #1a63a8, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 </style>
 </head>
 <body>
@@ -89,6 +122,7 @@ var game = KidsGame.init({ title: 'El reloj' });
 (function () {
   var ROUNDS = 6;
   var LABELS = { 1: 'Horas en punto', 2: 'Y media', 3: 'Cuartos y +1 hora', 4: 'Minutos y rutina' };
+  var HOWTO = [{ icon: '👀', text: 'Mira las manecillas del reloj de la torre' }, { icon: '👆', text: 'Toca la hora correcta o mueve las manecillas' }, { icon: '🐦', text: 'A la hora en punto, ¡sale el cucú!' }];
   var SCHED = { 1: ['read', 'set', 'read', 'set', 'read', 'set'], 2: ['read', 'set', 'read', 'set', 'read', 'set'], 3: ['read', 'set', 'later', 'read', 'set', 'later'], 4: ['read', 'set', 'order', 'read', 'set', 'order'] };
   var STEP = { 1: 60, 2: 30, 3: 15, 4: 5 };
   var ACTS = [
@@ -97,8 +131,8 @@ var game = KidsGame.init({ title: 'El reloj' });
   ];
   var HN = ['doce', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once'];
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '';
-  var hud, dots, instrTxt, stage, clockWrap, clockG, hourG, minG, side, digital, opts, hintEl, H = 3, M = 0, dragHand = null;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', streak = 0, handShown = false;
+  var hud, dots, instrTxt, stage, clockWrap, clockG, hourG, minG, side, digital, opts, hintEl, cuckoo, banner, H = 3, M = 0, dragHand = null;
 
   function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
   function pad(m) { return (m < 10 ? '0' : '') + m; }
@@ -114,6 +148,32 @@ var game = KidsGame.init({ title: 'El reloj' });
     return base + ' y ' + m;
   }
 
+  // ---- Hero art: el pajarito cucú y el reloj de la torre (SVG) ----
+  function birdSVG() {
+    return '<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="cbb" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#fff3a8"/><stop offset="1" stop-color="#ffb703"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="70" rx="34" ry="30" fill="url(#cbb)" stroke="#c47f00" stroke-width="2.5"/>' +
+      '<path d="M30 74 Q14 86 28 96 Q38 90 40 80Z" fill="#ff9f1c" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/>' +
+      '<circle cx="60" cy="42" r="24" fill="url(#cbb)" stroke="#c47f00" stroke-width="2.5"/>' +
+      '<path d="M48 22 Q52 8 60 18 Q66 6 70 20Z" fill="#ff6f61"/>' +
+      '<circle cx="52" cy="40" r="5" fill="#2b2b2b"/><circle cx="68" cy="40" r="5" fill="#2b2b2b"/><circle cx="54" cy="38" r="1.8" fill="#fff"/><circle cx="70" cy="38" r="1.8" fill="#fff"/>' +
+      '<path d="M54 50 L66 50 L60 60Z" fill="#ff8906" stroke="#b85a00" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<ellipse cx="60" cy="76" rx="18" ry="16" fill="#fff6d0"/>' +
+      '<path d="M50 100 l-5 8 M50 100 l0 9 M50 100 l5 8 M70 100 l-5 8 M70 100 l0 9 M70 100 l5 8" stroke="#ff8906" stroke-width="3" stroke-linecap="round"/></svg>';
+  }
+  function heroSVG(size) {
+    return '<svg class="hero" viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<linearGradient id="hwd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a862"/><stop offset="1" stop-color="#8b5222"/></linearGradient>' +
+      '<radialGradient id="hfc" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9d6f5"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="114" rx="30" ry="5" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M60 4 L10 46 L110 46 Z" fill="#c9184a"/><path d="M60 10 L20 44 L100 44 Z" fill="#ff6f61"/>' +
+      '<rect x="22" y="44" width="76" height="62" rx="6" fill="url(#hwd)" stroke="#6b3d12" stroke-width="2"/>' +
+      '<g class="hb-bird"><rect x="48" y="40" width="24" height="18" rx="4" fill="#2b1705"/><g transform="translate(49 36) scale(.18)">' + birdSVG().replace(/<svg[^>]*>|<\/svg>/g, '').replace(/id="cbb"/g, 'id="cbb2"').replace(/url\(#cbb\)/g, 'url(#cbb2)') + '</g></g>' +
+      '<circle cx="60" cy="80" r="23" fill="#ffd166" stroke="#a86a0a" stroke-width="2"/><circle cx="60" cy="80" r="18" fill="url(#hfc)" stroke="#8fa6d8" stroke-width="1.5"/>' +
+      '<path d="M60 80 L60 68 M60 80 L69 80" stroke="#1f2f6b" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="80" r="2.5" fill="#f0569a"/>' +
+      '<path d="M44 106 L44 116 M76 106 L76 116" stroke="#6b3d12" stroke-width="4" stroke-linecap="round"/><circle cx="44" cy="117" r="3" fill="#ffd166"/><circle cx="76" cy="117" r="3" fill="#ffd166"/>' +
+      '</svg>';
+  }
+
   function build() {
     game.innerHTML = '';
     hud = el('div', 'hud panel');
@@ -126,8 +186,9 @@ var game = KidsGame.init({ title: 'El reloj' });
     hud.appendChild(lb);
     game.appendChild(hud);
 
-    var instr = el('div', 'instr panel', '<span class="ico emoji">⏰</span><span class="txt"></span>');
+    var instr = el('div', 'instr panel', heroSVG(58) + '<span class="txt"></span>');
     instrTxt = instr.querySelector('.txt');
+    instr.querySelector('.hero').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); cuckooPop(1); });
     var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
     instr.appendChild(sp);
@@ -141,7 +202,9 @@ var game = KidsGame.init({ title: 'El reloj' });
       ticks += '<line x1="' + (200 + r1 * Math.sin(a)) + '" y1="' + (200 - r1 * Math.cos(a)) + '" x2="' + (200 + r2 * Math.sin(a)) + '" y2="' + (200 - r2 * Math.cos(a)) + '" stroke="' + (big ? '#1f2f6b' : '#8fa6d8') + '" stroke-width="' + (big ? 6 : 2.5) + '" stroke-linecap="round"/>';
     }
     for (var n = 1; n <= 12; n++) { var an = n * 30 * Math.PI / 180; nums += '<text class="ntxt" x="' + (200 + 128 * Math.sin(an)) + '" y="' + (200 - 128 * Math.cos(an) + 12) + '" text-anchor="middle">' + n + '</text>'; }
-    clockWrap.innerHTML = '<svg viewBox="0 0 400 400"><defs>' +
+    // Sin filtros SVG: las sombras son formas desplazadas (más barato en tablets)
+    clockWrap.innerHTML = '<div class="tower"></div><div class="cuckoo"><div class="frame"><div class="bird">' + birdSVG() + '</div><div class="dl"></div><div class="dr"></div></div><div class="say">¡Cucú!</div></div>' +
+      '<svg viewBox="0 0 400 400"><defs>' +
       '<linearGradient id="gBez" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".4" stop-color="#f0b429"/><stop offset="1" stop-color="#9a5e08"/></linearGradient>' +
       '<radialGradient id="gFace" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#eef3ff"/><stop offset="1" stop-color="#c9d6f5"/></radialGradient>' +
       '<linearGradient id="gHour" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9ccb"/><stop offset=".5" stop-color="#f0569a"/><stop offset="1" stop-color="#b8306f"/></linearGradient>' +
@@ -149,24 +212,27 @@ var game = KidsGame.init({ title: 'El reloj' });
       '<radialGradient id="gCap" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffd54a"/><stop offset="1" stop-color="#a86a0a"/></radialGradient>' +
       '<radialGradient id="gKnobH" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffd6e8"/><stop offset=".6" stop-color="#f0569a"/><stop offset="1" stop-color="#b8306f"/></radialGradient>' +
       '<radialGradient id="gKnobM" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d6f0ff"/><stop offset=".6" stop-color="#2f95e8"/><stop offset="1" stop-color="#1a63a8"/></radialGradient>' +
-      '<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#10204a" flood-opacity=".35"/></filter>' +
-      '<filter id="hsh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#10204a" flood-opacity=".4"/></filter>' +
+      '<radialGradient id="gWin" cx=".5" cy=".5" r=".5"><stop offset=".7" stop-color="#ffe98a" stop-opacity=".9"/><stop offset="1" stop-color="#ffe98a" stop-opacity="0"/></radialGradient>' +
       '</defs><g class="clock anim">' +
+      '<circle class="winglow" cx="200" cy="200" r="218" fill="url(#gWin)"/>' +
       '<ellipse cx="200" cy="392" rx="150" ry="12" fill="rgba(20,30,80,.25)"/>' +
-      '<circle cx="200" cy="200" r="192" fill="url(#gBez)" filter="url(#sh)"/>' +
+      '<circle cx="200" cy="206" r="192" fill="rgba(60,30,0,.28)"/>' +
+      '<circle cx="200" cy="200" r="192" fill="url(#gBez)"/>' +
       '<circle cx="200" cy="200" r="178" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="3"/>' +
       '<path d="M60,120 A160,160 0 0 1 200,30" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="10" stroke-linecap="round"/>' +
       '<circle class="face" cx="200" cy="200" r="172" fill="url(#gFace)" stroke="#8fa6d8" stroke-width="3"/>' +
       ticks + nums +
       '<g class="hand hour"><line class="grab" x1="200" y1="200" x2="200" y2="100" stroke="rgba(0,0,0,0)" stroke-width="60" pointer-events="all"/>' +
-      '<path d="M190,222 L190,135 L200,100 L210,135 L210,222 Z" fill="url(#gHour)" stroke="#8a1d4e" stroke-width="2" stroke-linejoin="round" filter="url(#hsh)"/>' +
+      '<path d="M193,226 L193,139 L203,104 L213,139 L213,226 Z" fill="rgba(16,32,74,.28)"/>' +
+      '<path d="M190,222 L190,135 L200,100 L210,135 L210,222 Z" fill="url(#gHour)" stroke="#8a1d4e" stroke-width="2" stroke-linejoin="round"/>' +
       '<circle class="knob" cx="200" cy="106" r="18" fill="url(#gKnobH)" stroke="#fff" stroke-width="3" pointer-events="all"/></g>' +
       '<g class="hand minute"><line class="grab" x1="200" y1="200" x2="200" y2="50" stroke="rgba(0,0,0,0)" stroke-width="56" pointer-events="all"/>' +
-      '<path d="M193,222 L193,80 L200,46 L207,80 L207,222 Z" fill="url(#gMin)" stroke="#124a80" stroke-width="2" stroke-linejoin="round" filter="url(#hsh)"/>' +
+      '<path d="M196,226 L196,84 L203,50 L210,84 L210,226 Z" fill="rgba(16,32,74,.28)"/>' +
+      '<path d="M193,222 L193,80 L200,46 L207,80 L207,222 Z" fill="url(#gMin)" stroke="#124a80" stroke-width="2" stroke-linejoin="round"/>' +
       '<circle class="knob" cx="200" cy="56" r="16" fill="url(#gKnobM)" stroke="#fff" stroke-width="3" pointer-events="all"/></g>' +
       '<circle cx="200" cy="200" r="16" fill="url(#gCap)" stroke="#a86a0a" stroke-width="2"/><ellipse cx="195" cy="194" rx="6" ry="3" fill="rgba(255,255,255,.8)"/>' +
       '</g></svg>';
-    clockG = clockWrap.querySelector('.clock'); hourG = clockWrap.querySelector('.hour'); minG = clockWrap.querySelector('.minute');
+    clockG = clockWrap.querySelector('.clock'); hourG = clockWrap.querySelector('.hour'); minG = clockWrap.querySelector('.minute'); cuckoo = clockWrap.querySelector('.cuckoo');
     hourG.addEventListener('pointerdown', function (ev) { beginDrag(ev, 'h'); });
     minG.addEventListener('pointerdown', function (ev) { beginDrag(ev, 'm'); });
     stage.appendChild(clockWrap);
@@ -177,18 +243,41 @@ var game = KidsGame.init({ title: 'El reloj' });
     opts = el('div', 'opts'); side.appendChild(opts);
     stage.appendChild(side);
     game.appendChild(stage);
+    banner = el('div', 'rbanner'); game.appendChild(banner);
     window.addEventListener('resize', layout);
     layout();
   }
   function layout() {
     if (!stage) return;
     var W = stage.clientWidth, Hh = stage.clientHeight, land = W > Hh * 1.1;
-    var cs = land ? Math.min(Hh - 10, W - 440) : Math.min(W - 20, Hh - 250);
+    var cs = land ? Math.min(Hh - 30, W - 440) : Math.min(W - 20, Hh - 250);
     cs = Math.max(220, Math.min(470, cs));
     stage.style.setProperty('--cs', cs + 'px');
     var cw = Math.max(110, Math.min(170, Math.floor((Math.min(W, 900) - 90) / 4)));
     stage.style.setProperty('--cw', cw + 'px'); stage.style.setProperty('--ch', Math.round(cw * 1.05) + 'px');
   }
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++;
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 14, chars: streak >= 3 ? ['⭐', '✨', '🐦'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
+  // El cucú sale de su puertita (a la hora en punto, dos veces)
+  var cuckooT = null;
+  function cuckooPop(times) {
+    if (!cuckoo) return;
+    clearTimeout(cuckooT); cuckoo.classList.add('open');
+    KidsGame.sound.note(880); setTimeout(function () { KidsGame.sound.note(698); }, 220);
+    if (times > 1) setTimeout(function () { KidsGame.sound.note(880); setTimeout(function () { KidsGame.sound.note(698); }, 220); }, 700);
+    cuckooT = setTimeout(function () { cuckoo.classList.remove('open'); }, times > 1 ? 1700 : 1100);
+  }
+  function bellDing() { KidsGame.sound.note(1568); setTimeout(function () { KidsGame.sound.note(1319); }, 180); }
 
   function setHands(h, m) {
     H = h; M = m;
@@ -226,15 +315,15 @@ var game = KidsGame.init({ title: 'El reloj' });
   function showPicker() {
     running = false; lock = true;
     if (stage) { opts.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'reloj', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'reloj', labels: LABELS, howto: HOWTO, art: heroSVG(64), music: 'calma', onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; build(); newRound(true); }
 
   function randTime() {
     var step = STEP[nivel], h = KidsGame.rand(12), m = KidsGame.rand(60 / step) * step;
     if (nivel === 2 && Math.random() < 0.7) m = 30;
     if (nivel === 3 && m === 0 && Math.random() < 0.7) m = 15 + 30 * KidsGame.rand(2);
-    if (nivel === 4 && (m === 0 || m === 30) && Math.random() < 0.8) m = 5 * (1 + KidsGame.rand(11)); 
+    if (nivel === 4 && (m === 0 || m === 30) && Math.random() < 0.8) m = 5 * (1 + KidsGame.rand(11));
     return [h, m];
   }
   function distractors(h, m) {
@@ -248,7 +337,13 @@ var game = KidsGame.init({ title: 'El reloj' });
     return out.slice(0, 2);
   }
 
-  function newRound() {
+  // Entre rondas el escenario sale deslizando y la ronda nueva entra (nunca un cambio seco)
+  function newRound(first) {
+    if (!running) return;
+    if (!first) { lock = true; stage.classList.add('out'); setTimeout(function () { stage.classList.remove('out'); doRound(); }, 300); }
+    else doRound();
+  }
+  function doRound() {
     if (!running) return;
     lock = false;
     var mode = SCHED[nivel][round];
@@ -276,7 +371,7 @@ var game = KidsGame.init({ title: 'El reloj' });
       cur.th = t[0]; cur.tm = t[1];
       var sh = (t[0] + 2 + KidsGame.rand(8)) % 12; if (sh === 0) sh = 1; setHands(sh, 0);
       digital.textContent = fmt(t[0], t[1]); digital.classList.add('target');
-      clockG.classList.add('set'); clockG.classList.add(t[1] === 0 ? 'hh' : 'hh');
+      clockG.classList.add('set'); clockG.classList.add('hh');
       hintEl.textContent = nivel === 1 ? 'Mueve la manecilla corta' : 'Mueve las manecillas';
       cur.instr = 'Pon el reloj: ' + timeName(t[0], t[1]).replace('Es la', 'la').replace('Son las', 'las').replace('Es cuarto', 'cuarto');
       cur.say = 'Mueve las manecillas y pon el reloj. ' + timeName(t[0], t[1]) + '.';
@@ -286,13 +381,20 @@ var game = KidsGame.init({ title: 'El reloj' });
       cur.say = 'Ordena el día. ¿Qué pasa primero? Arrastra cada tarjeta a su lugar, mira la hora.';
     }
     instrTxt.textContent = cur.instr; sayText = cur.say;
+    stage.classList.add('in'); void stage.offsetWidth; stage.classList.remove('in');
+    showBanner('Ronda ' + (round + 1) + ' de ' + ROUNDS);
     KidsGame.say(sayText);
+    // Tutorial: en la primera ronda del nivel 1 la manita señala la hora correcta
+    if (nivel === 1 && round === 0 && !handShown && cur.mode === 'read') {
+      handShown = true;
+      setTimeout(function () { if (!running || lock) return; var cs = opts.querySelectorAll('.opt'); for (var i = 0; i < cs.length; i++) if (cs[i].textContent === cur.ans) KidsGame.hand({ el: cs[i] }); }, 1500);
+    }
   }
 
   function choose(c, o) {
     if (lock || !running) return;
     if (o !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(c);
       c.classList.remove('bad'); void c.offsetWidth; c.classList.add('bad');
       setTimeout(function () { c.classList.remove('bad'); }, 450);
       if (nivel <= 2) KidsGame.say(cur.mode === 'later' ? 'Una hora más.' : 'Mira la manecilla corta.');
@@ -316,7 +418,6 @@ var game = KidsGame.init({ title: 'El reloj' });
   function buildOrder() {
     clockWrap.style.display = 'none'; side.style.display = 'none';
     var pool = ACTS.slice(); var chosen = [];
-    // elegir 4 actividades en orden cronológico con huecos
     var idx = KidsGame.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 4).sort(function (a, b) { return a - b; });
     idx.forEach(function (i) { chosen.push(pool[i]); });
     cur.order = chosen; acts = []; slots = [];
@@ -361,32 +462,22 @@ var game = KidsGame.init({ title: 'El reloj' });
   function checkOrder() {
     var ok = true;
     slots.forEach(function (sl, i) { if (sl._card._a !== cur.order[i]) { ok = false; sl.classList.remove('bad'); void sl.offsetWidth; sl.classList.add('bad'); } });
-    if (!ok) { KidsGame.sound.wrong(); KidsGame.vibrate(20); KidsGame.say('Casi. Mira bien las horas: la mañana va primero.'); return; }
+    if (!ok) { KidsGame.sound.wrong(); KidsGame.vibrate(20); streak = 0; KidsGame.say('Casi. Mira bien las horas: la mañana va primero.'); return; }
     lock = true; slots.forEach(function (sl) { sl._card.classList.add('ok'); });
     win(orderEl.querySelector('.timeline'));
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 120;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
-    }
-  }
   function win(at) {
     lock = true;
     clockG.classList.add('win');
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-    var g = game.getBoundingClientRect(), r = at.getBoundingClientRect();
-    sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+    hit(at);
+    // A la hora en punto sale el cucú; si no, suena la campanita de la torre
+    if (cur.mode !== 'order' && M === 0) cuckooPop(2); else bellDing();
     if (cur.mode === 'order') KidsGame.say('¡Así es el día! ¡Muy bien!');
-    else KidsGame.say('¡Sí! ' + timeName(H, M));
+    else KidsGame.say('¡Sí! ' + timeName(H, M) + (M === 0 ? '. ¡Cucú, cucú!' : ''));
     dots.children[round].classList.add('on'); round++;
-    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1800);
+    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1900);
   }
   function finish() {
     running = false;
@@ -399,7 +490,7 @@ var game = KidsGame.init({ title: 'El reloj' });
   }
 
   window.__g3 = {
-    state: function () { return cur && { mode: cur.mode, h: H, m: M, target: cur.mode === 'set' ? [cur.th, cur.tm] : null, ans: cur.ans, round: round, nivel: nivel, lock: lock }; },
+    state: function () { return cur && { mode: cur.mode, h: H, m: M, target: cur.mode === 'set' ? [cur.th, cur.tm] : null, ans: cur.ans, round: round, nivel: nivel, lock: lock, streak: streak }; },
     solve: function () {
       if (!cur || lock) return false;
       if (cur.mode === 'read' || cur.mode === 'later') { var cs = opts.querySelectorAll('.opt'); for (var i = 0; i < cs.length; i++) if (cs[i].textContent === cur.ans) { choose(cs[i], cur.ans); return true; } return false; }
@@ -414,7 +505,7 @@ var game = KidsGame.init({ title: 'El reloj' });
       if (cur.mode === 'order') { var rev = cur.order.slice().reverse(); rev.forEach(function (a, i) { for (var k = 0; k < acts.length; k++) if (acts[k]._a === a) placeAct(acts[k], slots[i]); }); return true; }
       return false;
     },
-    drag: function (which, x, y) { // simula arrastre de una manecilla hasta el ángulo del punto (x,y) en px del cliente
+    drag: function (which, x, y) {
       beginDrag({ preventDefault: function () {}, clientX: x, clientY: y }, which); applyAngle(angleOf({ clientX: x, clientY: y })); dragHand = null; clockG.classList.add('anim'); checkSet();
     }
   };

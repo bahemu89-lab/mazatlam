@@ -94,9 +94,55 @@
   .chip.on { background: linear-gradient(180deg, #e9ffe9, #b9f0c4); border-color: #6fdc8c; box-shadow: 0 3px 0 #3fa864; }
   .chip.on::before { content: '✔'; color: #14784a; }
   .hintchip { font-size: 15px; color: #6b7a99; }
+  /* Caja de crayones (hero art) y galería de dibujos */
+  .cbox { display: flex; align-items: center; gap: 6px; flex: 1 1 100%; justify-content: center; margin: -2px 0 2px; }
+  .cbox svg { display: block; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); animation: float 3.6s ease-in-out infinite; }
+  .cb-eyes { transform-box: fill-box; transform-origin: center; animation: cbblink 4.4s infinite; }
+  @keyframes cbblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  .cbox.cheer svg { animation: cbcheer .6s ease-in-out; }
+  @keyframes cbcheer { 0%,100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-14px) rotate(-6deg); } 70% { transform: translateY(-4px) rotate(5deg); } }
+  .cbox .say { font-size: 15px; font-weight: 900; color: #1f2f6b; background: #fff; border-radius: 14px; padding: 6px 10px; box-shadow: 0 3px 0 #c9d2e6; max-width: 150px; line-height: 1.1; }
+  .tool.action.galb { --a: #ffe98a; --b: #ffb703; --d: #c47f00; }
+  .jk-streak { top: 80px; right: auto; left: 40px; }
+  @media (max-width: 820px) { .jk-streak { top: 80px; left: 40px; } }
+  .tool.lock { opacity: .55; font-size: 24px; }
+  .gal { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; z-index: 31; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.25), rgba(23,44,102,.65) 75%); }
+  .gal.show { display: flex; }
+  .gal .box { background: linear-gradient(180deg, #ffffff, #f3f6ff); border: 4px solid #fff; border-radius: 30px; padding: 16px 20px; text-align: center; animation: pop .3s ease-out; max-width: 94%; max-height: 92%; overflow: auto; box-shadow: 0 10px 0 #c9d2e6, 0 30px 50px rgba(0,0,0,.35), inset 0 2px 0 #fff; }
+  .gal .ttl { font-size: 28px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff; margin-bottom: 10px; }
+  .gal .grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 720px; }
+  .gal .it { width: 200px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .gal .it img { width: 200px; height: 150px; object-fit: cover; border-radius: 14px; border: 4px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.25); cursor: pointer; background: #fff; }
+  .gal .it .empty { width: 200px; height: 150px; border-radius: 14px; border: 4px dashed #c9d2e6; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #c9d2e6; }
+  .gal .it .btn { min-height: 56px; min-width: 64px; font-size: 22px; padding: 4px 14px; }
+  .gal .row { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+  @media (max-width: 820px) { .gal .it, .gal .it img, .gal .it .empty { width: 150px; } .gal .it img, .gal .it .empty { height: 112px; } }
+  /* ---- Kit de "juice" (racha, banner de ronda, transiciones) ---- */
+  .jk-banner { position: fixed; left: 50%; top: 70px; z-index: 44; transform: translate(-50%,0) scale(.6); opacity: 0; pointer-events: none;
+    padding: 8px 28px; border-radius: 40px; font-size: 28px; font-weight: 900; color: #fff; white-space: nowrap; border: 4px solid #fff;
+    background: linear-gradient(180deg, #ffb703, #ff8906); box-shadow: 0 7px 0 #b85a00, 0 16px 28px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.6);
+    text-shadow: 0 3px 0 #b85a00, 0 5px 8px rgba(0,0,0,.3); }
+  .jk-banner.in { animation: jkb 1.4s ease-in-out forwards; }
+  @keyframes jkb { 0% { transform: translate(-50%,0) scale(.6); opacity: 0 } 14% { transform: translate(-50%,0) scale(1.08); opacity: 1 } 24% { transform: translate(-50%,0) scale(1) } 78% { transform: translate(-50%,0) scale(1); opacity: 1 } 100% { transform: translate(-50%,-30px) scale(.9); opacity: 0 } }
+  .jk-streak { position: fixed; top: 78px; right: 240px; z-index: 40; padding: 5px 14px; border-radius: 30px; pointer-events: none;
+    background: linear-gradient(180deg,#fff7d6,#ffd166); box-shadow: 0 4px 0 #d9a520, 0 8px 14px rgba(0,0,0,.2), inset 0 1px 0 #fff; font-size: 20px; font-weight: 900; color: #7a4b00;
+    opacity: 0; transition: opacity .3s; }
+  .jk-streak.on { opacity: 1; }
+  .jk-streak.hot { animation: jkhot .45s ease-out; }
+  @keyframes jkhot { 0% { transform: scale(1) } 40% { transform: scale(1.3) rotate(-4deg) } 100% { transform: scale(1) } }
+  @media (max-width: 820px) { .jk-banner { top: 120px; } .jk-streak { top: 148px; left: 8px; right: auto; } }
+  .jk-in { animation: jkin .42s cubic-bezier(.2,.9,.3,1.15) both; }
+  .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
+  @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-press { animation: jkpress .28s ease-out; }
+  @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
+
   @media (orientation: landscape) {
     .wrap { flex-direction: row; }
-    .tools { width: 296px; order: 2; gap: 6px 8px; overflow-y: auto; touch-action: pan-y; box-shadow: inset 0 2px 0 #fff, inset 3px 0 0 rgba(31,47,107,.08), -6px 0 14px rgba(20,40,90,.18); }
+    .tools { width: 372px; order: 2; gap: 6px 8px; overflow-y: auto; touch-action: pan-y; align-content: flex-start; box-shadow: inset 0 2px 0 #fff, inset 3px 0 0 rgba(31,47,107,.08), -6px 0 14px rgba(20,40,90,.18); }
+    .cbox { flex: 0 0 auto; margin: 0; } .cbox svg { width: 58px; height: 54px; } .cbox .say { font-size: 13px; max-width: 120px; padding: 4px 8px; }
+    .hud { flex: 1 1 auto; }
     .tools::-webkit-scrollbar { display: none; }
   }
 </style>
@@ -107,6 +153,7 @@
     <div class="board" id="board"><canvas id="cv"></canvas><div class="grain"></div></div>
     <div class="tools" id="tools"></div>
   </div>
+  <div class="gal" id="gal"><div class="box"><div class="ttl">🖼️ Mi galería</div><div class="grid" id="galGrid"></div><div class="row"><button class="btn blue" id="galClose">Cerrar ✖</button></div></div></div>
   <div class="confirm" id="confirm">
     <div class="box">
       <div class="q"><span class="emoji">🗑️</span> ¿Borrar todo?</div>
@@ -121,11 +168,101 @@
 <script>
 var game = KidsGame.init({ title: 'Dibujar' });
 
+  /* ---- Kit de "juice": racha, banner de ronda, transición entre rondas, guardado ---- */
+  var JK = (function () {
+    var streak = 0, pill = null, bannerEl = null;
+    function pillEl() { if (!pill) { pill = document.createElement('div'); pill.className = 'jk-streak'; document.body.appendChild(pill); } return pill; }
+    function hit(el, txt) {
+      streak++; var p = pillEl();
+      if (streak >= 2) { p.textContent = '🔥 Racha ' + streak; p.classList.add('on'); p.classList.remove('hot'); void p.offsetWidth; p.classList.add('hot'); }
+      var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      var x = r ? r.left + r.width / 2 : window.innerWidth / 2, y = r ? r.top + 8 : window.innerHeight / 2;
+      if (el) { try { KidsGame.fx.ring(el); } catch (e) {} }
+      if (streak % 5 === 0) { KidsGame.addStar(); KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '! ⭐ extra', 'good'); KidsGame.fx.burst(x, y, { n: 22, r: 110, chars: ['⭐', '✨', '🔥', '💫'] }); }
+      else if (streak >= 3) { KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '!', 'good'); KidsGame.fx.burst(x, y, { n: 14, chars: ['✨', '⭐'] }); }
+      else { KidsGame.fx.floatText(x, y, txt || '+1', 'good'); KidsGame.fx.burst(x, y, { n: 12 }); }
+      return streak;
+    }
+    function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
+    function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    function banner(text) {
+      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
+      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+    }
+    function swap(el, fn) {
+      if (!el || !el.parentNode) { fn(); return; }
+      el.classList.remove('jk-in'); el.classList.add('jk-out');
+      setTimeout(function () { el.classList.remove('jk-out'); fn(); el.classList.add('jk-in'); setTimeout(function () { el.classList.remove('jk-in'); }, 480); }, 230);
+    }
+    function press(el) { if (!el) return; el.classList.remove('jk-press'); void el.offsetWidth; el.classList.add('jk-press'); }
+    function store(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+    function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    return { hit: hit, miss: miss, reset: reset, banner: banner, swap: swap, press: press, store: store, put: put, get streak() { return streak; } };
+  })();
+
 var board = document.getElementById('board'), cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 var tools = document.getElementById('tools');
 var COLORS = ['#222222', '#ff4d4d', '#ff9f1c', '#ffe14d', '#4cd964', '#2ec4b6', '#3da9fc', '#a06cd5', '#ff7eb6', '#a0522d'];
 var SIZES = [6, 14, 28];
 var STICKERS = ['🌟', '❤️', '🌈', '🦄', '🐱', '🌸', '🍎', '⚽'];
+// Desbloqueables (uno por nivel completado): crayones especiales y calcomanías nuevas
+var XCOLORS = ['#ffd700', '#c0c8d8', '#40e0d0', '#ff69b4'], XSTICK = ['🦋', '🐬', '🚀', '🍭'];
+function unlockedN() { return Math.min(XCOLORS.length, JK.store('kg-dibujar-extra', 0) || 0); }
+function unlockExtra() { var n = JK.store('kg-dibujar-extra', 0) || 0; if (n < XCOLORS.length) { JK.put('kg-dibujar-extra', n + 1); KidsGame.toast('🎁 ¡Nuevo crayón y calcomanía ' + XSTICK[n] + '!', 2400); } }
+// ---- Hero art: la caja de crayones con carita ----
+function cboxSVG(size, id) {
+  id = id || 'cb';
+  var cols = ['#ff4d4d', '#ff9f1c', '#ffe14d', '#4cd964', '#3da9fc', '#a06cd5'], cr = '';
+  cols.forEach(function (c, i) { var x = 22 + i * 15; cr += '<path d="M' + x + ' 46 L' + (x + 5) + ' 22 L' + (x + 10) + ' 46 Z" fill="' + c + '" stroke="rgba(0,0,0,.25)" stroke-width="1.2" stroke-linejoin="round"/><rect x="' + x + '" y="44" width="10" height="20" rx="2" fill="' + c + '" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/><rect x="' + (x + 2) + '" y="30" width="2" height="30" rx="1" fill="rgba(255,255,255,.5)"/>'; });
+  return '<svg viewBox="0 0 130 120" width="' + size + '" height="' + Math.round(size * 120 / 130) + '" aria-hidden="true"><defs>' +
+    '<linearGradient id="' + id + 'b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#f5a623"/></linearGradient>' +
+    '<linearGradient id="' + id + 'g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4cd964"/><stop offset="1" stop-color="#24b36c"/></linearGradient></defs>' +
+    '<ellipse cx="65" cy="114" rx="46" ry="5" fill="rgba(0,0,0,.2)"/>' + cr +
+    '<rect x="12" y="56" width="106" height="54" rx="10" fill="url(#' + id + 'b)" stroke="#c47f00" stroke-width="2.5"/>' +
+    '<path d="M12 70 Q65 58 118 70 L118 56 L12 56 Z" fill="url(#' + id + 'g)" stroke="#14784a" stroke-width="2"/>' +
+    '<rect x="20" y="64" width="90" height="8" rx="4" fill="rgba(255,255,255,.35)"/>' +
+    '<g class="cb-eyes"><ellipse cx="50" cy="86" rx="7" ry="8" fill="#fff"/><ellipse cx="80" cy="86" rx="7" ry="8" fill="#fff"/><circle cx="51" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="81" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="52.5" cy="86" r="1.5" fill="#fff"/><circle cx="82.5" cy="86" r="1.5" fill="#fff"/></g>' +
+    '<path d="M54 98 Q65 106 76 98" stroke="#9c3b12" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="38" cy="96" r="5" fill="#ff8aa8" opacity=".55"/><circle cx="92" cy="96" r="5" fill="#ff8aa8" opacity=".55"/>' +
+    '</svg>';
+}
+var cboxEl = null;
+function cboxCheer(txt) { if (!cboxEl) return; cboxEl.classList.remove('cheer'); void cboxEl.offsetWidth; cboxEl.classList.add('cheer'); if (txt) { var sb = cboxEl.querySelector('.say'); if (sb) sb.textContent = txt; } setTimeout(function () { cboxEl && cboxEl.classList.remove('cheer'); }, 700); }
+var HOWTO = [{ icon: '🖍️', text: 'Elige un crayón' }, { icon: '✍️', text: 'Dibuja con el dedo en la hoja' }, { icon: '📷', text: 'Guarda tu dibujo en la galería' }];
+// ---- Galería: hasta 6 dibujos guardados como miniaturas ----
+var GKEY = 'kg-dibujar-galeria';
+function gallery() { return JK.store(GKEY, []) || []; }
+function saveToGallery() {
+  try {
+    var tw = 320, th = Math.max(1, Math.round(320 * H / Math.max(1, W)));
+    var tmp = document.createElement('canvas'); tmp.width = tw; tmp.height = th; tmp.getContext('2d').drawImage(cv, 0, 0, tw, th);
+    var url = tmp.toDataURL('image/jpeg', 0.72);
+    var list = gallery(); list.unshift(url); if (list.length > 6) list.length = 6;
+    try { localStorage.setItem(GKEY, JSON.stringify(list)); } catch (e) { list.length = Math.max(1, list.length - 2); try { localStorage.setItem(GKEY, JSON.stringify(list)); } catch (e2) {} }
+    return true;
+  } catch (e) { return false; }
+}
+var galEl = document.getElementById('gal'), galGrid = document.getElementById('galGrid');
+function openGallery() {
+  var list = gallery(); galGrid.innerHTML = '';
+  for (var i = 0; i < 6; i++) (function (i) {
+    var it = document.createElement('div'); it.className = 'it';
+    if (list[i]) {
+      var img = document.createElement('img'); img.src = list[i]; img.alt = 'Dibujo ' + (i + 1);
+      img.addEventListener('pointerdown', function (e) { e.preventDefault(); loadFromGallery(list[i]); });
+      var del = document.createElement('button'); del.className = 'btn'; del.textContent = '🗑️'; del.setAttribute('aria-label', 'Borrar');
+      del.addEventListener('pointerdown', function (e) { e.preventDefault(); var l = gallery(); l.splice(i, 1); JK.put(GKEY, l); KidsGame.sound.pop(); openGallery(); });
+      it.appendChild(img); it.appendChild(del);
+    } else { var em = document.createElement('div'); em.className = 'empty'; em.textContent = '🖼️'; it.appendChild(em); }
+    galGrid.appendChild(it);
+  })(i);
+  galEl.classList.add('show'); KidsGame.sound.tap();
+}
+function closeGallery() { galEl.classList.remove('show'); }
+document.getElementById('galClose').onclick = function () { KidsGame.sound.tap(); closeGallery(); };
+function loadFromGallery(url) {
+  var img = new Image(); img.onload = function () { clearCanvas(); ctx.drawImage(img, 0, 0, W, H); closeGallery(); KidsGame.sound.ok(); KidsGame.toast('¡Tu dibujo volvió! 🖼️', 1200); cboxCheer('¡Sigue pintando!'); }; img.src = url;
+}
 var SHAPES = [['circ', '●'], ['sq', '■'], ['tri', '▲'], ['rect', '▬'], ['dia', '◆'], ['star', '★'], ['heart', '♥']];
 var mode = 'brush';       // brush | rainbow | eraser | sticker | shape
 var color = COLORS[1], size = SIZES[1], sticker = STICKERS[0], shape = 'circ', rot = 0, hue = 0, mirror = false;
@@ -136,7 +273,7 @@ var nivel = 1;
 function resize() {
   var r = cv.getBoundingClientRect();
   var nw = Math.max(1, Math.round(r.width)), nh = Math.max(1, Math.round(r.height));
-  var ndpr = Math.min(window.devicePixelRatio || 1, 3);
+  var ndpr = Math.min(window.devicePixelRatio || 1, 1.5);
   if (nw === W && nh === H && ndpr === dpr) return;
   var old = null;
   if (W && H) { old = document.createElement('canvas'); old.width = cv.width; old.height = cv.height; old.getContext('2d').drawImage(cv, 0, 0); }
@@ -409,23 +546,23 @@ function checkExpert() {
   if (!expert) return;
   if (expert.kind === 'prompt') {
     var missing = expert.done.filter(function (d) { return !d; }).length;
-    if (inkFraction() < 0.012) { KidsGame.sound.wrong(); KidsGame.toast('Dibuja primero ✏️'); KidsGame.say('Dibuja primero'); return; }
-    if (missing) { KidsGame.sound.wrong(); KidsGame.toast('Marca lo que ya dibujaste ✔ (' + missing + ')', 1800); KidsGame.say('Faltan cosas por dibujar o marcar'); return; }
+    if (inkFraction() < 0.012) { KidsGame.sound.wrong(); JK.miss(task); KidsGame.toast('Dibuja primero ✏️'); KidsGame.say('Dibuja primero'); return; }
+    if (missing) { KidsGame.sound.wrong(); JK.miss(task); KidsGame.toast('Marca lo que ya dibujaste ✔ (' + missing + ')', 1800); KidsGame.say('Faltan cosas por dibujar o marcar'); return; }
   } else {
     var b = box(), left = inkCount(b.x0, b.y0 - 14, W / 2 - 2, b.y0 + b.s + 14), right = inkCount(W / 2 + 2, b.y0 - 14, b.x0 + b.s, b.y0 + b.s + 14);
-    if (right < 150 || right < left * 0.45) { KidsGame.sound.wrong(); KidsGame.toast('Falta dibujar el otro lado 👉', 1800); KidsGame.say('Falta dibujar la otra mitad'); return; }
+    if (right < 150 || right < left * 0.45) { KidsGame.sound.wrong(); JK.miss(task); KidsGame.toast('Falta dibujar el otro lado 👉', 1800); KidsGame.say('Falta dibujar la otra mitad'); return; }
   }
-  KidsGame.sound.ok(); KidsGame.addStar(3); roundN++;
-  KidsGame.levelDone(4);
+  KidsGame.sound.ok(); KidsGame.addStar(3); roundN++; JK.hit(board, '¡Lo lograste!'); cboxCheer('¡Guau!');
+  KidsGame.levelDone(4); unlockExtra();
   KidsGame.celebrate({ msg: expert.kind === 'prompt' ? '¡Qué imaginación!' : '¡Está completo!', sub: expert.kind === 'prompt' ? '🗣️ ' + expert.p.t : HALVES[expert.key].e + ' ' + HALVES[expert.key].n,
     onNext: function () { startExpert(false); }, onAgain: function () { roundN--; startExpert(true); } });
 }
 function finishFree() {
   var f = inkFraction();
-  if (f < 0.01) { KidsGame.sound.wrong(); KidsGame.toast('Dibuja algo primero ✏️'); KidsGame.say('Dibuja algo primero'); return; }
-  KidsGame.sound.ok(); KidsGame.addStar(nivel);
-  KidsGame.levelDone(nivel);
-  KidsGame.celebrate({ msg: '¡Qué bonito!', sub: '🖼️ Tu dibujo está listo', onAgain: function () { clearCanvas(); KidsGame.sound.pop(); } });
+  if (f < 0.01) { KidsGame.sound.wrong(); JK.miss(cboxEl); KidsGame.toast('Dibuja algo primero ✏️'); KidsGame.say('Dibuja algo primero'); return; }
+  KidsGame.sound.ok(); KidsGame.addStar(nivel); JK.hit(board, '¡Qué bonito!'); cboxCheer('¡Precioso!'); saveToGallery();
+  KidsGame.levelDone(nivel); unlockExtra();
+  KidsGame.celebrate({ msg: '¡Qué bonito!', sub: '🖼️ Guardado en tu galería', onAgain: function () { clearCanvas(); KidsGame.sound.pop(); } });
 }
 
 // ---------- Herramientas (según nivel) ----------
@@ -461,8 +598,11 @@ function buildTools() {
   lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
   hud.appendChild(lb);
   tools.appendChild(hud);
+  cboxEl = document.createElement('div'); cboxEl.className = 'cbox'; cboxEl.innerHTML = cboxSVG(nivel === 1 ? 78 : 64, 'cb') + '<div class="say">' + (nivel === 1 ? '¡Hola! Toma un crayón y dibuja' : nivel === 4 ? 'Escucha el reto y dibújalo' : '¡Vamos a crear!') + '</div>';
+  tools.appendChild(cboxEl);
 
-  var colors = nivel === 1 ? COLORS.slice(0, 6) : COLORS;
+  var un = unlockedN();
+  var colors = (nivel === 1 ? COLORS.slice(0, 6) : COLORS).concat(XCOLORS.slice(0, un));
   if (colors.indexOf(color) < 0) color = COLORS[1];
   if (nivel === 1) size = SIZES[1];
   if (nivel < 3) { mirror = false; if (mode === 'sticker' || mode === 'rainbow') mode = 'brush'; }
@@ -471,8 +611,9 @@ function buildTools() {
   colors.forEach(function (c, i) {
     var el = mk('pick color', crayon(c, i)); el.setAttribute('aria-label', 'Color');
     if (c === color) { lastColorEl = el; if (mode === 'brush') el.classList.add('sel'); }
-    onTap(el, function () { color = c; lastColorEl = el; if (mode !== 'shape') { mode = 'brush'; selectTool(el); } else { var sh = tools.querySelector('.tool.shape.sel'); if (sh) sh.querySelector('.glyph').style.color = c; } KidsGame.sound.tap(); });
+    onTap(el, function () { color = c; lastColorEl = el; if (mode !== 'shape') { mode = 'brush'; selectTool(el); } else { var sh = tools.querySelector('.tool.shape.sel'); if (sh) sh.querySelector('.glyph').style.color = c; } KidsGame.sound.tap(); JK.press(el); });
   });
+  if (un < XCOLORS.length) { var le = mk('lock', '<span class="emoji">🔒</span>'); le.setAttribute('aria-label', 'Crayón bloqueado'); onTap(le, function () { KidsGame.sound.wrong(); KidsGame.toast('Completa un nivel para ganar crayones nuevos 🎁', 1600); }); }
   if (nivel >= 3) {
     var rb = mk('pick rainbow', ''); rb.id = 'rainbow'; if (mode === 'rainbow') rb.classList.add('sel');
     onTap(rb, function () { mode = 'rainbow'; selectTool(rb); KidsGame.sound.pop(); });
@@ -500,31 +641,24 @@ function buildTools() {
     }
   }
   if (nivel >= 3) {
-    STICKERS.forEach(function (st) {
+    STICKERS.concat(XSTICK.slice(0, un)).forEach(function (st) {
       var el = mk('pick sticker', '<span class="emoji">' + st + '</span>'); if (mode === 'sticker' && st === sticker) el.classList.add('sel');
-      onTap(el, function () { mode = 'sticker'; sticker = st; selectTool(el); KidsGame.sound.pop(); });
+      onTap(el, function () { mode = 'sticker'; sticker = st; selectTool(el); KidsGame.sound.pop(); JK.press(el); });
     });
     var mr = mk('toggle', '<span class="emoji">🪞</span>'); mr.id = 'mirror'; mr.setAttribute('aria-label', 'Espejo'); if (mirror) mr.classList.add('sel');
     onTap(mr, function () { mirror = !mirror; mr.classList.toggle('sel', mirror); KidsGame.sound.pop(); KidsGame.toast(mirror ? 'Espejo 🪞 ✔' : 'Espejo ✖'); });
   }
   var clr = mk('action', '<span class="emoji">🗑️</span>'); clr.id = 'clear';
   onTap(clr, function () { KidsGame.sound.tap(); confirmBox.classList.add('show'); KidsGame.say('¿Borrar todo?'); });
-  var sv = mk('action save', '<span class="emoji">📷</span>'); sv.id = 'save';
+  var sv = mk('action save', '<span class="emoji">📷</span>'); sv.id = 'save'; sv.setAttribute('aria-label', 'Guardar en la galería');
   onTap(sv, function () {
-    KidsGame.sound.ok(); KidsGame.addStar();
-    try {
-      var url = cv.toDataURL('image/png');
-      var w = window.open('', '_blank');
-      if (w && w.document) {
-        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mi dibujo</title></head><body style="margin:0;background:#fef6e4;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + url + '" style="max-width:100%;max-height:100vh"></body></html>');
-        w.document.close();
-      } else {
-        var a = document.createElement('a'); a.href = url; a.download = 'mi-dibujo.png'; a.target = '_blank';
-        document.body.appendChild(a); a.click(); a.remove();
-      }
-    } catch (e) {}
-    KidsGame.toast('¡Listo! 📷');
+    if (inkFraction() < 0.004) { KidsGame.sound.wrong(); KidsGame.toast('Dibuja algo primero ✏️'); return; }
+    KidsGame.sound.ok(); KidsGame.addStar(); var ok = saveToGallery();
+    KidsGame.fx.burstAt(sv, { n: 16, chars: ['📷', '✨', '⭐'] }); cboxCheer('¡Guardado!');
+    KidsGame.toast(ok ? '¡Guardado en tu galería! 🖼️' : 'No se pudo guardar', 1400); KidsGame.say('Guardado en tu galería');
   });
+  var gb = mk('action galb', '<span class="emoji">🖼️</span>'); gb.id = 'gallery'; gb.setAttribute('aria-label', 'Galería');
+  onTap(gb, openGallery);
   var ok = mk('action done', nivel === 4 ? '✔' : '✨'); ok.id = 'finish'; ok.setAttribute('aria-label', 'Listo');
   onTap(ok, function () { KidsGame.sound.tap(); if (nivel === 4) checkExpert(); else finishFree(); });
   if (!tools.querySelector('.tool.pick.sel') && lastColorEl) { mode = 'brush'; lastColorEl.classList.add('sel'); }
@@ -533,16 +667,27 @@ function buildTools() {
 
 // ---------- Niveles: herramientas desbloqueadas y retos ----------
 function start(n) {
-  nivel = n; buildTools();
+  nivel = n; JK.reset(); buildTools();
+  JK.banner(n === 4 ? '🏆 Reto de dibujo' : n === 3 ? '🪞 Espejo y calcomanías' : n === 2 ? '🔷 Figuras y tamaños' : '🖍️ Dibuja libre');
   if (n === 4) { setTimeout(function () { resize(); startExpert(false); }, 120); }
   else { expert = null; renderTask(); if (n === 3) { mirror = true; var mr = document.getElementById('mirror'); if (mr) mr.classList.add('sel'); KidsGame.say('Espejo: dibuja y se copia al otro lado'); } }
+  if (n === 1 && !JK.store('kg-dibujar-hand', 0)) {
+    setTimeout(function () { var r = cv.getBoundingClientRect(); var a = document.createElement('div'), b = document.createElement('div');
+      a.style.cssText = 'position:fixed;left:' + (r.left + r.width * .3) + 'px;top:' + (r.top + r.height * .35) + 'px;width:2px;height:2px'; b.style.cssText = 'position:fixed;left:' + (r.left + r.width * .7) + 'px;top:' + (r.top + r.height * .6) + 'px;width:2px;height:2px';
+      document.body.appendChild(a); document.body.appendChild(b); var h = KidsGame.hand({ from: a, to: b, timeout: 10000 }); setTimeout(function () { a.remove(); b.remove(); }, 10200); }, 800);
+  }
 }
+cv.addEventListener('pointerdown', function () { JK.put('kg-dibujar-hand', 1); });
 function pickLevel() {
   KidsGame.levelPicker({
     labels: { 1: '6 colores', 2: 'Tamaños y figuras', 3: 'Espejo, arcoíris, giro y calcomanías', 4: 'Dibuja lo que te digo y completa el dibujo' },
+    howto: HOWTO, art: cboxSVG(74, 'cbp'), music: 'calma',
     onPick: start
   });
 }
+// Ganchos para pruebas
+window.__dib = { gallery: gallery, closeGallery: closeGallery, openGallery: openGallery, get expert() { return expert; }, get streak() { return JK.streak; }, unlocked: unlockedN,
+  markAll: function () { if (expert && expert.kind === 'prompt') { expert.done = expert.done.map(function () { return true; }); renderTask(); } } };
 
 resize();
 setTimeout(resize, 100);

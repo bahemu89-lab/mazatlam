@@ -6,10 +6,13 @@
 <link rel="stylesheet" href="../common.css">
 <title>Mi mascota</title>
 <style>
+  /* ===== Mundo: "Mi casita" — cuarto acogedor que cambia de día a noche; la mascota es un SVG que respira, parpadea y mueve la cola ===== */
   .game { display: flex; flex-direction: column; touch-action: none; overflow: hidden; background: linear-gradient(180deg, #ffe9f2, #ffd6e6); }
   .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 4px; gap: 8px; z-index: 5; }
   .hud .name { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #c2427a, 0 4px 8px rgba(0,0,0,.25), -1px -1px 0 #c2427a, 1px -1px 0 #c2427a, -1px 1px 0 #c2427a, 1px 1px 0 #c2427a; }
-  .lvbtn { font-size: 30px; }
+  .hud .r { display: flex; gap: 8px; align-items: center; }
+  .lvbtn, .cosbtn { font-size: 30px; }
+  .cosbtn { font-size: 26px; }
   .meters { flex: 0 0 auto; margin: 2px 10px 6px; padding: 8px 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; z-index: 5; }
   .meter { display: flex; align-items: center; gap: 6px; }
   .meter .ic { font-size: 28px; }
@@ -20,65 +23,93 @@
   .meter .bar i.full::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.7), rgba(255,255,255,0)); width: 40%; animation: shine 1.6s linear infinite; }
   .meter.flash .ic { animation: pop .5s; }
   .room { flex: 1 1 auto; position: relative; margin: 0 10px 8px; border-radius: 28px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 8px 0 #d9a7be, 0 16px 28px rgba(90,20,60,.25), inset 0 2px 0 #fff;
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 22px, rgba(255,255,255,0) 22px 44px), linear-gradient(180deg, #ffd9e8 0%, #f4bfd8 100%); }
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 22px, rgba(255,255,255,0) 22px 44px), linear-gradient(180deg, #ffd9e8 0%, #f4bfd8 100%); transition: background .8s; }
+  .room.pm { background: repeating-linear-gradient(90deg, rgba(255,255,255,.06) 0 22px, rgba(255,255,255,0) 22px 44px), linear-gradient(180deg, #6a5a9e 0%, #4a3c7e 100%); }
   .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; box-shadow: 0 -6px 14px rgba(0,0,0,.18);
     background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, rgba(0,0,0,0) 2px 90px), linear-gradient(180deg, #d69a5c 0%, #b8763f 100%); }
   .board { position: absolute; left: 0; right: 0; bottom: 34%; height: 14px; background: linear-gradient(180deg, #fff, #e8d5dc); box-shadow: 0 3px 4px rgba(0,0,0,.2); }
   .rug { position: absolute; left: 50%; bottom: 3%; width: 62%; height: 22%; transform: translateX(-50%); border-radius: 50%;
     background: radial-gradient(ellipse at 50% 50%, #ffb3c7 0 38%, #ff7fa3 39% 56%, #ffb3c7 57% 78%, #e05a86 79%); box-shadow: 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 0 rgba(0,0,0,.08); }
+  .rug.azul { background: radial-gradient(ellipse at 50% 50%, #b3dcff 0 38%, #5fb0ff 39% 56%, #b3dcff 57% 78%, #2f7fd6 79%); }
   .window { position: absolute; left: 6%; top: 8%; width: 130px; height: 120px; border-radius: 16px; border: 8px solid #fff; overflow: hidden;
-    background: linear-gradient(180deg, #7fd0ff, #d9f2ff); box-shadow: 0 6px 0 #d9a7be, 0 10px 18px rgba(0,0,0,.2), inset 0 0 30px rgba(255,255,255,.4); }
-  .window::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 8px; margin-left: -4px; background: #fff; }
-  .window::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 8px; margin-top: -4px; background: #fff; }
-  .window .sun { position: absolute; right: 14px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff8c4, #ffd83d 70%); box-shadow: 0 0 20px 6px rgba(255,216,61,.6); }
+    background: linear-gradient(180deg, #7fd0ff, #d9f2ff); box-shadow: 0 6px 0 #d9a7be, 0 10px 18px rgba(0,0,0,.2), inset 0 0 30px rgba(255,255,255,.4); transition: background .8s; }
+  .room.pm .window { background: linear-gradient(180deg, #0f1a4a, #2a3a7e); }
+  .window::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 8px; margin-left: -4px; background: #fff; z-index: 2; }
+  .window::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 8px; margin-top: -4px; background: #fff; z-index: 2; }
+  .window .sun { position: absolute; right: 14px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff8c4, #ffd83d 70%); box-shadow: 0 0 20px 6px rgba(255,216,61,.6); transition: opacity .8s, transform .8s; }
+  .window .moon { position: absolute; right: 14px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fffdf0, #ffe9a8 70%); box-shadow: inset -9px -4px 0 #cbb57a, 0 0 18px 5px rgba(255,240,180,.5); opacity: 0; transform: translateY(20px); transition: opacity .8s, transform .8s; }
+  .window .st { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity .8s; }
+  .room.pm .sun { opacity: 0; transform: translateY(30px); } .room.pm .moon { opacity: 1; transform: none; } .room.pm .st { opacity: 1; }
   .window .cl { position: absolute; left: 10px; top: 30px; font-size: 30px; opacity: .95; animation: cloudmove 14s linear infinite; }
+  .room.pm .cl { opacity: .25; }
   @keyframes cloudmove { from { transform: translateX(-50px); } to { transform: translateX(140px); } }
   .curtain { position: absolute; left: calc(6% - 12px); top: calc(8% - 12px); width: 40px; height: 150px; border-radius: 10px 4px 20px 20px; z-index: 1;
     background: linear-gradient(90deg, #ff8fb1, #ffc3d6 60%, #ff8fb1); box-shadow: 0 6px 10px rgba(0,0,0,.2), inset 0 -20px 0 rgba(0,0,0,.05); }
-  .curtain.r { left: auto; left: calc(6% + 130px - 28px); transform: scaleX(-1); }
+  .curtain.r { left: calc(6% + 130px - 28px); transform: scaleX(-1); }
   .bed { position: absolute; right: 4%; bottom: 8%; width: 200px; height: 110px; }
   .bed .head { position: absolute; right: 0; bottom: 30px; width: 26px; height: 110px; border-radius: 12px 12px 4px 4px; background: linear-gradient(90deg, #8b5a2b, #c68a4b 60%, #8b5a2b); box-shadow: 0 6px 10px rgba(0,0,0,.25); }
   .bed .mat { position: absolute; left: 0; right: 14px; bottom: 30px; height: 44px; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #e9eef8); box-shadow: 0 6px 0 #c9d2e6, 0 10px 14px rgba(0,0,0,.22), inset 0 2px 0 #fff; }
   .bed .blanket { position: absolute; left: 0; right: 80px; bottom: 44px; height: 44px; border-radius: 14px 14px 6px 6px; background: linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: inset 0 3px 0 rgba(255,255,255,.4), 0 4px 8px rgba(0,0,0,.2); }
   .bed .pillow { position: absolute; right: 22px; bottom: 60px; width: 62px; height: 34px; border-radius: 14px; background: linear-gradient(180deg, #fff, #ffe9a8); box-shadow: 0 4px 6px rgba(0,0,0,.2), inset 0 2px 0 #fff; }
   .bed .leg { position: absolute; bottom: 12px; width: 14px; height: 24px; background: linear-gradient(90deg, #6b3a14, #a2622b); border-radius: 0 0 6px 6px; }
-  .bed .shadow { position: absolute; left: -10px; right: -10px; bottom: 4px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.2); filter: blur(4px); }
-  #lamp { position: absolute; right: 6%; top: 8%; z-index: 6; font-size: 36px; border-radius: 50%; width: 72px; height: 72px; padding: 0; --a: #ffe98a; --b: #ffb703; --d: #c47f00; }
-  #lamp.on { box-shadow: 0 6px 0 var(--d), 0 0 40px 14px rgba(255,220,80,.85), inset 0 2px 0 rgba(255,255,255,.6); }
-  #pet { position: absolute; left: 50%; top: 48%; width: var(--ps); height: var(--ps); margin: calc(var(--ps) / -2) 0 0 calc(var(--ps) / -2); border-radius: 50%; z-index: 2;
-    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 30%, #ffb703 100%);
-    box-shadow: 0 0 0 5px #fff, 0 0 0 9px #ffd166, 0 12px 24px rgba(0,0,0,.3), inset 0 -10px 16px rgba(0,0,0,.14);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
-  #pet::after { content: ""; position: absolute; left: 12%; right: 12%; top: 6%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0)); pointer-events: none; }
-  #pet .face { font-size: calc(var(--ps) * .58); animation: breathe 3s ease-in-out infinite; position: relative; z-index: 1; transform-origin: 50% 90%; }
-  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04) translateY(-3px); } }
-  #pet.munch .face { animation: munch .35s ease-in-out 3; }
-  @keyframes munch { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.12,.88) translateY(4px); } }
+  .bed .shadow { position: absolute; left: -10px; right: -10px; bottom: 4px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.2); }
+  /* Decoraciones desbloqueables */
+  .deco { position: absolute; z-index: 1; pointer-events: none; display: none; }
+  .deco.on { display: block; animation: pop .5s ease-out; }
+  .deco.poster { right: 30%; top: 9%; width: 86px; height: 70px; border: 7px solid #fff; border-radius: 8px; background: linear-gradient(180deg, #9fdcff 0 55%, #8fd25a 55%); box-shadow: 0 5px 0 #d9a7be, 0 8px 14px rgba(0,0,0,.2); }
+  .deco.poster::after { content: "🌈"; position: absolute; left: 10px; top: 4px; font-size: 32px; }
+  .deco.plant { left: 32%; bottom: 36%; font-size: 54px; filter: drop-shadow(0 6px 4px rgba(0,0,0,.25)); }
+  .deco.toybox { left: 4%; bottom: 10%; width: 96px; height: 60px; border-radius: 10px; background: linear-gradient(180deg, #ffd166, #f2a900); box-shadow: 0 6px 0 #b87a00, 0 10px 14px rgba(0,0,0,.25), inset 0 3px 0 rgba(255,255,255,.5); }
+  .deco.toybox::after { content: "🧸⚽"; position: absolute; left: 10px; top: -26px; font-size: 32px; }
+  .deco.garland { left: 0; right: 0; top: 0; height: 40px; background: radial-gradient(circle at 20px 18px, #ffd23f 0 8px, rgba(0,0,0,0) 9px) 0 0 / 60px 40px repeat-x, radial-gradient(circle at 50px 26px, #ff7eb6 0 8px, rgba(0,0,0,0) 9px) 0 0 / 60px 40px repeat-x; }
+  .deco.garland::before { content: ""; position: absolute; left: 0; right: 0; top: 14px; height: 3px; background: #8a5a2b; }
+  #lamp { position: absolute; right: 6%; top: 8%; z-index: 6; font-size: 36px; border-radius: 50%; width: 72px; height: 72px; padding: 0; --a: #ffe98a; --b: #ffb703; --d: #c47f00; transition: filter .4s; }
+  #lamp.off { filter: grayscale(.8) brightness(.7); }
+  .glow { position: absolute; right: calc(6% - 80px); top: calc(8% - 60px); width: 230px; height: 230px; border-radius: 50%; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .8s;
+    background: radial-gradient(circle, rgba(255,230,140,.55) 0, rgba(255,230,140,0) 70%); }
+  .room.pm .glow { opacity: 1; }
+  .room.pm.dark .glow { opacity: 0; }
+  #pet { position: absolute; left: 50%; top: 48%; width: var(--ps); height: var(--ps); margin: calc(var(--ps) / -2) 0 0 calc(var(--ps) / -2); z-index: 2; cursor: pointer; touch-action: none; }
+  #pet svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  #pet .breath { transform-box: fill-box; transform-origin: 50% 100%; animation: pbreath 3s ease-in-out infinite; }
+  @keyframes pbreath { 0%,100% { transform: scale(1,1); } 50% { transform: scale(1.025,.975); } }
+  #pet .tail { transform-box: fill-box; transform-origin: 10% 90%; animation: wag 1.1s ease-in-out infinite; }
+  @keyframes wag { 0%,100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+  #pet.mood-happy .tail, #pet.jump .tail, #pet.happy .tail { animation-duration: .35s; }
+  #pet.mood-sleep .tail { animation: none; }
+  #pet .e-open { transform-box: fill-box; transform-origin: 50% 50%; animation: pblink 4.3s infinite; }
+  @keyframes pblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  #pet .e-closed, #pet .e-sad, #pet .m-frown, #pet .m-open, #pet .m-o, #pet .tear, #pet .sweat { opacity: 0; }
+  #pet.mood-sleep .e-open, #pet.mood-sick .e-open { opacity: 0; } #pet.mood-sleep .e-closed, #pet.mood-sick .e-closed { opacity: 1; }
+  #pet.mood-sad .e-sad, #pet.mood-sick .e-sad { opacity: 1; }
+  #pet.mood-sad .m-smile, #pet.mood-sick .m-smile, #pet.mood-sleep .m-smile, #pet.mood-eat .m-smile { opacity: 0; }
+  #pet.mood-sad .m-frown, #pet.mood-sick .m-frown { opacity: 1; } #pet.mood-sad .tear { opacity: 1; } #pet.mood-sick .sweat { opacity: 1; }
+  #pet.mood-sleep .m-o { opacity: 1; } #pet.mood-eat .m-open { opacity: 1; }
+  #pet .tear { animation: tear 1.4s ease-in infinite; } @keyframes tear { 0% { transform: translateY(0); } 100% { transform: translateY(26px); } }
+  #pet .m-open { transform-box: fill-box; transform-origin: 50% 0; }
+  #pet.munch .m-open { animation: munch .3s ease-in-out 4; } @keyframes munch { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.25); } }
+  #pet.munch .head { animation: nod .3s ease-in-out 4; } @keyframes nod { 0%,100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+  #pet .head { transform-box: fill-box; transform-origin: 50% 100%; }
+  #pet.mood-sleep .head { animation: snooze 4.5s ease-in-out infinite; } @keyframes snooze { 0%,100% { transform: rotate(-4deg) translateY(4px); } 50% { transform: rotate(-6deg) translateY(8px); } }
   #pet.jump { animation: pjump .6s ease-out; }
   @keyframes pjump { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-50px) scale(.95,1.08); } 60% { transform: translateY(0) scale(1.08,.9); } 100% { transform: translateY(0) scale(1); } }
   #pet.happy { animation: pjump .5s ease-out 3; }
   #pet.hit { animation: shake .4s; }
-  #pet.sleeping { background: radial-gradient(circle at 35% 28%, #dbe6ff 0%, #9fb4ff 30%, #4a5fd0 100%); box-shadow: 0 0 0 5px #fff, 0 0 0 9px #8fa4ff, 0 12px 24px rgba(0,0,0,.4), inset 0 -10px 16px rgba(0,0,0,.2); }
-  #pet.sleeping .face { animation: breathe 4.5s ease-in-out infinite; filter: brightness(.8); }
-  .petshadow { position: absolute; left: 50%; top: calc(48% + var(--ps) * .5 + 6px); width: calc(var(--ps) * 1.05); height: calc(var(--ps) * .22); transform: translateX(-50%); border-radius: 50%; background: rgba(60,20,40,.28); filter: blur(3px); z-index: 1; }
-  .mood { position: absolute; left: calc(50% + var(--ps) * .32); top: calc(48% - var(--ps) * .62); z-index: 3; width: 74px; height: 74px; border-radius: 50% 50% 50% 8px; display: flex; align-items: center; justify-content: center; font-size: 42px;
+  .petshadow { position: absolute; left: 50%; top: calc(48% + var(--ps) * .46); width: calc(var(--ps) * .9); height: calc(var(--ps) * .18); transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(60,20,40,.32), rgba(60,20,40,0) 70%); z-index: 1; }
+  .mood { position: absolute; left: calc(50% + var(--ps) * .34); top: calc(48% - var(--ps) * .6); z-index: 3; width: 64px; height: 64px; border-radius: 50% 50% 50% 8px; display: flex; align-items: center; justify-content: center; font-size: 36px;
     background: linear-gradient(180deg, #fff, #f1f4fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 8px 14px rgba(0,0,0,.2); animation: float 3s ease-in-out infinite; }
   .mood.pop { animation: pop .4s ease-out; }
-  .dirt { position: absolute; width: 34px; height: 28px; border-radius: 50% 40% 55% 45%; z-index: 2; pointer-events: none;
+  .dirt { position: absolute; width: 34px; height: 28px; border-radius: 50% 40% 55% 45%; z-index: 3; pointer-events: none;
     background: radial-gradient(circle at 40% 35%, #a8734a, #6b4423); box-shadow: inset 0 -3px 0 rgba(0,0,0,.2), 0 2px 3px rgba(0,0,0,.25); opacity: .95; transition: transform .25s, opacity .25s; }
   .dirt.gone { transform: scale(0); opacity: 0; }
   .bub { position: absolute; width: 22px; height: 22px; border-radius: 50%; z-index: 6; pointer-events: none;
-    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,1), rgba(200,240,255,.6) 60%, rgba(255,255,255,.1)); border: 2px solid rgba(255,255,255,.8);
-    animation: bubup 1.1s ease-out forwards; }
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,1), rgba(200,240,255,.6) 60%, rgba(255,255,255,.1)); border: 2px solid rgba(255,255,255,.8); animation: bubup 1.1s ease-out forwards; }
   @keyframes bubup { 0% { transform: translate(0,0) scale(.4); opacity: 1; } 100% { transform: translate(var(--dx), -90px) scale(1.2); opacity: 0; } }
-  .heart { position: absolute; z-index: 6; pointer-events: none; font-size: 30px; animation: heartup 1.2s ease-out forwards; }
-  @keyframes heartup { 0% { transform: translate(0,0) scale(.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(var(--dx), -120px) scale(1.2); opacity: 0; } }
   .zz { position: absolute; z-index: 8; pointer-events: none; font-size: 34px; animation: zzup 2.4s ease-out forwards; }
   @keyframes zzup { 0% { transform: translate(0,0) scale(.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(40px,-140px) scale(1.3); opacity: 0; } }
-  .ftxt { position: absolute; left: 50%; top: 26%; transform: translateX(-50%); z-index: 9; pointer-events: none; font-size: 36px; font-weight: 900; color: #ff3d7f; text-shadow: 0 2px 0 #fff, 0 0 10px #fff; animation: up 1.3s ease-out forwards; white-space: nowrap; }
-  @keyframes up { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
   .night { position: absolute; inset: 0; z-index: 5; background: radial-gradient(circle at 50% 55%, rgba(20,30,90,.35), rgba(8,12,50,.78) 80%); opacity: 0; pointer-events: none; transition: opacity .8s; }
   .night.on { opacity: 1; }
+  .room.pm .night { opacity: .35; } .room.pm .night.on { opacity: 1; }
   .night i { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 2px #fff; animation: twinkle 2s ease-in-out infinite alternate; }
   @keyframes twinkle { from { opacity: .2; transform: scale(.7); } to { opacity: 1; transform: scale(1.2); } }
   .tray { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 7; display: flex; gap: 10px; padding: 8px 12px; animation: pop .3s ease-out; }
@@ -90,7 +121,7 @@
   #ball { position: absolute; left: 0; top: 0; width: 84px; height: 84px; z-index: 7; display: flex; align-items: center; justify-content: center; font-size: 64px; cursor: pointer; touch-action: none; will-change: transform; }
   #ball .emoji { display: block; animation: spin 1.2s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .ballshadow { position: absolute; width: 70px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.25); filter: blur(3px); z-index: 1; }
+  .ballshadow { position: absolute; width: 70px; height: 18px; border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,.3), rgba(0,0,0,0) 70%); z-index: 1; }
   .counter { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 7; display: flex; gap: 8px; padding: 8px 16px; border-radius: 30px; font-size: 22px; align-items: center; }
   .counter i { width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.12); display: block; box-shadow: inset 0 2px 3px rgba(0,0,0,.2); }
   .counter i.on { background: linear-gradient(180deg, #ffe98a, #ffb703); box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0,0,0,.25); }
@@ -103,14 +134,31 @@
   .picker .box { padding: 20px 26px; text-align: center; max-width: 94vw; }
   .picker .ttl { font-size: 32px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 4px 8px rgba(0,0,0,.15); margin-bottom: 14px; }
   .picker .row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-  .pet-btn { width: 132px; height: 148px; border-radius: 30px; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative;
+  .pet-btn { width: 132px; height: 156px; border-radius: 30px; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; position: relative;
     background: linear-gradient(180deg, #fff 0%, #e6ecfb 100%); font: inherit; font-weight: 900; font-size: 20px; color: #1f2f6b;
     box-shadow: 0 7px 0 #b9c4dc, 0 14px 22px rgba(20,40,90,.25), inset 0 2px 0 #fff; transition: transform .1s, box-shadow .1s; }
   .pet-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 #b9c4dc, 0 6px 10px rgba(20,40,90,.2); }
   .pet-btn.last { outline: 5px solid #ffb703; outline-offset: 2px; }
-  .pet-btn .med { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 58px; animation: float 3s ease-in-out infinite;
-    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #ffe9a8 35%, #ffb703 100%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #ffd166, 0 6px 12px rgba(0,0,0,.25), inset 0 -6px 10px rgba(0,0,0,.12); }
-  .pet-btn:nth-child(2) .med { animation-delay: -.7s; } .pet-btn:nth-child(3) .med { animation-delay: -1.4s; } .pet-btn:nth-child(4) .med { animation-delay: -2.1s; }
+  .pet-btn svg { width: 100px; height: 100px; overflow: visible; animation: float 3s ease-in-out infinite; }
+  .pet-btn:nth-child(2) svg { animation-delay: -.7s; } .pet-btn:nth-child(3) svg { animation-delay: -1.4s; } .pet-btn:nth-child(4) svg { animation-delay: -2.1s; }
+  /* Armario de cosméticos */
+  .cos { position: absolute; inset: 0; z-index: 31; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.3), rgba(60,10,40,.55) 75%); }
+  .cos .box { padding: 14px 18px; text-align: center; max-width: 96%; }
+  .cos .ttl { font-size: 26px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff; margin-bottom: 8px; }
+  .cos .sub { font-size: 16px; color: #6b7a99; margin: 6px 0 4px; font-weight: 900; }
+  .cos .items { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .cos .item { width: 92px; height: 100px; border-radius: 20px; border: 0; background: linear-gradient(180deg, #fff, #eef2ff); box-shadow: 0 5px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; font-weight: 900; font-size: 14px; color: #1f2f6b; cursor: pointer; position: relative; }
+  .cos .item .emoji { font-size: 40px; line-height: 1; }
+  .cos .item.sel { box-shadow: 0 5px 0 #3fa864, 0 0 0 4px #6fdc8c, 0 8px 12px rgba(0,0,0,.2); background: linear-gradient(180deg, #e9ffe9, #b9f0c4); }
+  .cos .item.lock { filter: grayscale(.9); opacity: .7; }
+  .cos .item .lk { position: absolute; right: -6px; top: -6px; font-size: 18px; background: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 #c9d2e6; }
+  .cos .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+  .banner { position: absolute; left: 50%; top: 30%; z-index: 12; pointer-events: none; padding: 10px 32px; border-radius: 40px; white-space: nowrap;
+    font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #b8306f, 0 4px 8px rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #ff9ccb, #f0569a); border: 3px solid #fff; box-shadow: 0 6px 0 #b8306f, 0 14px 24px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
+  .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
   /* Nivel Experto: horario con reloj, tienda con monedas y pedidos de la mascota */
   .day { flex: 0 0 auto; margin: 0 10px 6px; padding: 6px 12px; display: none; align-items: center; justify-content: center; gap: 8px 14px; flex-wrap: wrap; z-index: 5; }
   .day.show { display: flex; }
@@ -118,7 +166,7 @@
   .day .sched { display: flex; gap: 6px; }
   .day .tk { display: inline-flex; flex-direction: column; align-items: center; min-width: 56px; padding: 4px 8px; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #c9d2e6; font-size: 14px; font-weight: 900; color: #6b7a99; line-height: 1.05; }
   .day .tk .ic { font-size: 24px; }
-  .day .tk.now { background: linear-gradient(180deg, #fff4b0, #ffd166); color: #7a4b00; box-shadow: 0 3px 0 #d9a520, 0 0 0 3px #fff, 0 0 14px rgba(255,200,0,.8); animation: bounce .8s infinite; }
+  .day .tk.now { background: linear-gradient(180deg, #fff4b0, #ffd166); color: #7a4b00; box-shadow: 0 3px 0 #d9a520, 0 0 0 3px #fff; animation: bounce .8s infinite; }
   .day .tk.ok { background: linear-gradient(180deg, #e9ffe9, #b9f0c4); color: #14784a; box-shadow: 0 3px 0 #3fa864; }
   .day .tk.ok .ic::after { content: '✔'; font-size: 14px; margin-left: 2px; }
   .day .coins { font-size: 22px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 4px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520; white-space: nowrap; }
@@ -158,7 +206,74 @@
 <script>
 var game = KidsGame.init({ title: 'Mi mascota' });
 (function () {
-  var PETS = [['🐶', 'Perrito'], ['🐱', 'Gatito'], ['🐰', 'Conejito'], ['🐼', 'Pandita']];
+  // ---------- Mascotas en SVG: cuerpo, cabeza, orejas, cola y gestos ----------
+  var PETS = [
+    { e: '🐶', n: 'Perrito', b: '#e8b87a', l: '#ffe3b8', d: '#a8763a', ears: 'floppy', earc: '#8a5a2b', tail: 'dog', mark: 'patch', nose: '#2b2b2b' },
+    { e: '🐱', n: 'Gatito', b: '#ffb84d', l: '#ffe0a3', d: '#c47f1a', ears: 'pointy', earc: '#ffb3c7', tail: 'cat', mark: 'stripes', nose: '#ff7fa3' },
+    { e: '🐰', n: 'Conejito', b: '#f3ece6', l: '#ffffff', d: '#c9b8a8', ears: 'long', earc: '#ffb3c7', tail: 'puff', mark: 'none', nose: '#ff7fa3' },
+    { e: '🐼', n: 'Pandita', b: '#ffffff', l: '#ffffff', d: '#c9c9c9', ears: 'round', earc: '#2b2b2b', tail: 'puff', mark: 'panda', nose: '#2b2b2b' }
+  ];
+  // Cosméticos: decoración del cuarto y ropita de la mascota (se desbloquean al completar niveles; se guarda la elección)
+  var COS = [
+    { id: 'poster', t: 'deco', e: '🖼️', n: 'Cuadro', lv: 1 }, { id: 'bow', t: 'outfit', e: '🎀', n: 'Moño', lv: 1 },
+    { id: 'plant', t: 'deco', e: '🌵', n: 'Planta', lv: 2 }, { id: 'scarf', t: 'outfit', e: '🧣', n: 'Bufanda', lv: 2 },
+    { id: 'toybox', t: 'deco', e: '🧸', n: 'Juguetes', lv: 3 }, { id: 'hat', t: 'outfit', e: '🎉', n: 'Gorrito', lv: 3 },
+    { id: 'garland', t: 'deco', e: '🎊', n: 'Guirnalda', lv: 4 }, { id: 'glasses', t: 'outfit', e: '🕶️', n: 'Lentes', lv: 4 },
+    { id: 'rugblue', t: 'deco', e: '🟦', n: 'Tapete azul', lv: 2 }
+  ];
+  var cos = { deco: {}, outfit: null };
+  try { var c0 = JSON.parse(localStorage.getItem('kg-mascota-cos') || 'null'); if (c0 && c0.deco) cos = c0; } catch (e) {}
+  function saveCos() { try { localStorage.setItem('kg-mascota-cos', JSON.stringify(cos)); } catch (e) {} }
+  function doneLevels() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').mascota || {}; } catch (e) { return {}; } }
+  function unlocked(it) { return !!doneLevels()[it.lv]; }
+  function petSVG(P, outfit) {
+    var id = 'pt' + P.n, s = '';
+    s += '<svg viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="' + id + '" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="' + P.l + '"/><stop offset=".55" stop-color="' + P.b + '"/><stop offset="1" stop-color="' + P.d + '"/></radialGradient></defs>';
+    var F = 'url(#' + id + ')', st = ' stroke="' + P.d + '" stroke-width="3" stroke-linejoin="round"';
+    // cola
+    if (P.tail === 'dog') s += '<path class="tail" d="M146 140 Q 186 120 178 84" stroke="' + P.b + '" stroke-width="16" fill="none" stroke-linecap="round"/>';
+    if (P.tail === 'cat') s += '<path class="tail" d="M146 142 Q 196 140 184 92 Q 180 80 170 86" stroke="' + P.b + '" stroke-width="14" fill="none" stroke-linecap="round"/>';
+    if (P.tail === 'puff') s += '<circle class="tail" cx="152" cy="150" r="16" fill="' + P.l + '"' + st + '/>';
+    s += '<g class="breath">';
+    // orejas detrás de la cabeza (largas y caídas)
+    if (P.ears === 'long') s += '<ellipse cx="72" cy="30" rx="16" ry="40" fill="' + F + '"' + st + ' transform="rotate(-10 72 30)"/><ellipse cx="128" cy="30" rx="16" ry="40" fill="' + F + '"' + st + ' transform="rotate(10 128 30)"/><ellipse cx="72" cy="34" rx="7" ry="28" fill="' + P.earc + '" transform="rotate(-10 72 30)"/><ellipse cx="128" cy="34" rx="7" ry="28" fill="' + P.earc + '" transform="rotate(10 128 30)"/>';
+    // cuerpo
+    s += '<ellipse cx="100" cy="146" rx="54" ry="44" fill="' + F + '"' + st + '/><ellipse cx="100" cy="156" rx="30" ry="24" fill="' + P.l + '" opacity=".8"/>';
+    if (P.mark === 'panda') s += '<path d="M46 146 Q 60 110 100 118 Q 140 110 154 146 Q 150 128 100 134 Q 50 128 46 146 Z" fill="#2b2b2b"/>';
+    s += '<ellipse cx="70" cy="184" rx="18" ry="10" fill="' + P.l + '"' + st + '/><ellipse cx="130" cy="184" rx="18" ry="10" fill="' + P.l + '"' + st + '/>';
+    if (P.mark === 'panda') s += '<ellipse cx="70" cy="184" rx="18" ry="10" fill="#2b2b2b"/><ellipse cx="130" cy="184" rx="18" ry="10" fill="#2b2b2b"/>';
+    if (outfit === 'scarf') s += '<path d="M56 118 Q 100 140 144 118 L 146 134 Q 100 156 54 134 Z" fill="#e63946"/><path d="M60 124 Q 100 144 140 124" stroke="#fff" stroke-width="4" fill="none" opacity=".6"/><path d="M124 132 L 134 170 L 150 166 L 140 128 Z" fill="#e63946"/><path d="M130 150 L 146 146" stroke="#fff" stroke-width="3" opacity=".6"/>';
+    s += '<g class="head">';
+    if (P.ears === 'round') s += '<circle cx="56" cy="42" r="20" fill="' + P.earc + '"/><circle cx="144" cy="42" r="20" fill="' + P.earc + '"/>';
+    if (P.ears === 'pointy') s += '<polygon points="52,66 44,14 92,42" fill="' + F + '"' + st + '/><polygon points="148,66 156,14 108,42" fill="' + F + '"' + st + '/><polygon points="58,58 52,26 84,44" fill="' + P.earc + '"/><polygon points="142,58 148,26 116,44" fill="' + P.earc + '"/>';
+    s += '<circle cx="100" cy="82" r="52" fill="' + F + '"' + st + '/>';
+    if (P.ears === 'floppy') s += '<path d="M54 56 Q 30 90 44 126 Q 66 124 70 92 Z" fill="' + P.earc + '"' + st + '/><path d="M146 56 Q 170 90 156 126 Q 134 124 130 92 Z" fill="' + P.earc + '"' + st + '/>';
+    if (P.mark === 'patch') s += '<ellipse cx="124" cy="72" rx="18" ry="20" fill="#8a5a2b" opacity=".85"/>';
+    if (P.mark === 'stripes') s += '<path d="M86 36 L 90 54 M100 32 L 100 52 M114 36 L 110 54" stroke="' + P.d + '" stroke-width="5" stroke-linecap="round" opacity=".7"/>';
+    if (P.mark === 'panda') s += '<ellipse cx="78" cy="78" rx="17" ry="20" fill="#2b2b2b" transform="rotate(-14 78 78)"/><ellipse cx="122" cy="78" rx="17" ry="20" fill="#2b2b2b" transform="rotate(14 122 78)"/>';
+    // hocico
+    s += '<ellipse cx="100" cy="100" rx="26" ry="18" fill="' + P.l + '" opacity=".9"/>';
+    // ojos
+    s += '<g class="e-open"><ellipse cx="80" cy="76" rx="10" ry="11" fill="#fff"/><ellipse cx="120" cy="76" rx="10" ry="11" fill="#fff"/><circle cx="82" cy="78" r="6" fill="#2b2b2b"/><circle cx="122" cy="78" r="6" fill="#2b2b2b"/><circle cx="84.5" cy="75" r="2.3" fill="#fff"/><circle cx="124.5" cy="75" r="2.3" fill="#fff"/></g>';
+    s += '<g class="e-closed"><path d="M70 78 Q 80 86 90 78 M110 78 Q 120 86 130 78" stroke="#2b2b2b" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>';
+    s += '<g class="e-sad"><path d="M68 62 Q 80 68 92 66 M132 62 Q 120 68 108 66" stroke="' + P.d + '" stroke-width="4" fill="none" stroke-linecap="round"/></g>';
+    s += '<path class="tear" d="M66 84 q -5 8 0 12 q 5 -4 0 -12 Z" fill="#7dd0ff"/><path class="sweat" d="M140 56 q -6 10 0 14 q 6 -4 0 -14 Z" fill="#7dd0ff"/>';
+    // nariz y bocas
+    s += '<ellipse cx="100" cy="94" rx="7" ry="5" fill="' + P.nose + '"/><ellipse cx="98" cy="93" rx="2.5" ry="1.5" fill="#fff" opacity=".6"/>';
+    s += '<path class="m-smile" d="M88 104 Q 94 112 100 104 Q 106 112 112 104" stroke="' + P.d + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    s += '<path class="m-frown" d="M88 112 Q 100 102 112 112" stroke="' + P.d + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    s += '<ellipse class="m-o" cx="100" cy="108" rx="5" ry="6" fill="#8a2f3a"/>';
+    s += '<g class="m-open"><ellipse cx="100" cy="110" rx="13" ry="10" fill="#8a2f3a"/><ellipse cx="100" cy="115" rx="7" ry="5" fill="#ff7fa3"/></g>';
+    if (P.e === '🐰') s += '<rect x="94" y="102" width="5" height="8" rx="1.5" fill="#fff"/><rect x="101" y="102" width="5" height="8" rx="1.5" fill="#fff"/>';
+    s += '<circle cx="64" cy="96" r="7" fill="#ff8aa8" opacity=".5"/><circle cx="136" cy="96" r="7" fill="#ff8aa8" opacity=".5"/>';
+    // ropita en la cabeza
+    if (outfit === 'bow') s += '<g transform="translate(138 36) rotate(20)"><ellipse cx="-14" cy="0" rx="14" ry="9" fill="#ff5fa0"/><ellipse cx="14" cy="0" rx="14" ry="9" fill="#ff5fa0"/><circle cx="0" cy="0" r="6" fill="#fff"/></g>';
+    if (outfit === 'hat') s += '<polygon points="100,-6 76,46 124,46" fill="#7f5af0"/><path d="M80 32 L 120 32" stroke="#ffd23f" stroke-width="5"/><circle cx="100" cy="-6" r="7" fill="#ffd23f"/><circle cx="88" cy="40" r="3" fill="#fff"/><circle cx="110" cy="38" r="3" fill="#fff"/>';
+    if (outfit === 'glasses') s += '<rect x="64" y="66" width="32" height="22" rx="9" fill="#2e3040"/><rect x="104" y="66" width="32" height="22" rx="9" fill="#2e3040"/><path d="M96 76 L 104 76" stroke="#2e3040" stroke-width="4"/><path d="M70 72 L 82 72 M110 72 L 122 72" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round"/>';
+    s += '</g></g></svg>';
+    return s;
+  }
+
   var NEEDS = [
     { k: 'hambre',    ic: '🍎', mul: 1.2 },
     { k: 'limpieza',  ic: '🛁', mul: 0.8 },
@@ -167,28 +282,36 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     { k: 'salud',     ic: '🩹', mul: 0 }
   ];
   var RATE = [0, 0.17, 0.34, 0.5, 0.42];
-  var nivel = 1, pet = PETS[0], needs = {}, running = false, mode = null, happyShown = false;
-  var lastT = 0, eating = 0, sneezeT = 0, saveT = 0, ball = null, taps = 0, spots = [], sleepZ = 0;
+  var nivel = 1, pet = PETS[0], needs = {}, running = false, mode = null, happyShown = false, streak = 0, hand = null, handFood = false;
+  var lastT = 0, eating = 0, sneezeT = 0, saveT = 0, ball = null, taps = 0, spots = [], sleepZ = 0, renderT = 0;
   var saved = null; try { saved = JSON.parse(localStorage.getItem('kg-mascota') || 'null'); } catch (e) { saved = null; }
 
   game.innerHTML = '';
   var hud = document.createElement('div'); hud.className = 'hud';
   var badgeHolder = document.createElement('span'); var nameEl = document.createElement('div'); nameEl.className = 'name';
+  var right = document.createElement('div'); right.className = 'r';
+  var cosBtn = document.createElement('button'); cosBtn.className = 'btn round blue cosbtn'; cosBtn.textContent = '🎀'; cosBtn.setAttribute('aria-label', 'Armario');
   var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
-  hud.appendChild(badgeHolder); hud.appendChild(nameEl); hud.appendChild(lvBtn);
+  right.appendChild(cosBtn); right.appendChild(lvBtn);
+  hud.appendChild(badgeHolder); hud.appendChild(nameEl); hud.appendChild(right);
   var meters = document.createElement('div'); meters.className = 'meters panel';
   var room = document.createElement('div'); room.className = 'room';
-  room.innerHTML = '<div class="window"><div class="sun"></div><span class="cl">☁️</span></div><div class="curtain"></div><div class="curtain r"></div>' +
-    '<div class="board"></div><div class="floor"></div><div class="rug"></div>' +
+  room.innerHTML = '<div class="deco garland"></div><div class="window"><div class="sun"></div><div class="moon"></div><span class="cl">☁️</span></div><div class="curtain"></div><div class="curtain r"></div><div class="deco poster"></div>' +
+    '<div class="board"></div><div class="floor"></div><div class="rug"></div><div class="deco plant">🌵</div><div class="deco toybox"></div>' +
     '<div class="bed"><div class="shadow"></div><div class="leg" style="left:10px"></div><div class="leg" style="right:30px"></div><div class="head"></div><div class="mat"></div><div class="blanket"></div><div class="pillow"></div></div>' +
-    '<button id="lamp" class="btn" aria-label="Lámpara">💡</button>' +
-    '<div class="petshadow"></div><div id="pet"><span class="face emoji"></span></div><div class="mood"><span class="emoji">😊</span></div><div class="night"></div>';
+    '<div class="glow"></div><button id="lamp" class="btn" aria-label="Lámpara">💡</button>' +
+    '<div class="petshadow"></div><div id="pet"></div><div class="mood"><span class="emoji">😊</span></div><div class="night"></div>';
   var actions = document.createElement('div'); actions.className = 'actions';
   var dayBar = document.createElement('div'); dayBar.className = 'day panel';
-  game.appendChild(hud); game.appendChild(meters); game.appendChild(dayBar); game.appendChild(room); game.appendChild(actions);
-  var petEl = room.querySelector('#pet'), faceEl = petEl.querySelector('.face'), moodEl = room.querySelector('.mood'), night = room.querySelector('.night'), lamp = room.querySelector('#lamp');
+  var bannerEl = document.createElement('div'); bannerEl.className = 'banner';
+  game.appendChild(hud); game.appendChild(meters); game.appendChild(dayBar); game.appendChild(room); game.appendChild(actions); game.appendChild(bannerEl);
+  var petEl = room.querySelector('#pet'), moodEl = room.querySelector('.mood'), night = room.querySelector('.night'), lamp = room.querySelector('#lamp'), win = room.querySelector('.window');
   for (var si = 0; si < 14; si++) { var st = document.createElement('i'); st.style.left = (Math.random() * 100) + '%'; st.style.top = (Math.random() * 60) + '%'; st.style.animationDelay = (-Math.random() * 2) + 's'; night.appendChild(st); }
+  for (var wi = 0; wi < 7; wi++) { var ws = document.createElement('i'); ws.className = 'st'; ws.style.left = (8 + Math.random() * 84) + '%'; ws.style.top = (6 + Math.random() * 40) + '%'; win.appendChild(ws); }
   lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; setMode(null); save(); pickLevel(); });
+  cosBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); openCos(); });
+  var bannerT = null;
+  function banner(txt, gold, ms) { clearTimeout(bannerT); bannerEl.textContent = txt; bannerEl.className = 'banner show' + (gold ? ' gold' : ''); bannerT = setTimeout(function () { bannerEl.classList.remove('show'); }, ms || 1100); }
 
   function actBtn(id, em, txt, cls, fn) {
     var b = document.createElement('button'); b.className = 'btn ' + cls; b.id = id; b.innerHTML = '<span>' + em + '</span><small>' + txt + '</small>';
@@ -204,15 +327,23 @@ var game = KidsGame.init({ title: 'Mi mascota' });
 
   function layout() {
     var r = room.clientHeight, w = room.clientWidth;
-    var ps = Math.max(150, Math.min(240, Math.min(r * 0.44, w * 0.35)));
+    var ps = Math.max(170, Math.min(280, Math.min(r * 0.52, w * 0.4)));
     room.style.setProperty('--ps', ps + 'px');
   }
   window.addEventListener('resize', layout);
+  function renderPet() { petEl.innerHTML = petSVG(pet, cos.outfit); }
+  function applyDeco() {
+    var d = room.querySelectorAll('.deco'); for (var i = 0; i < d.length; i++) { var id = d[i].className.replace('deco ', '').replace(' on', ''); d[i].classList.toggle('on', !!cos.deco[id]); }
+    room.querySelector('.rug').classList.toggle('azul', !!cos.deco.rugblue);
+  }
+  // Día / noche: por el reloj del nivel Experto o por la hora real
+  function isNight() { var h = nivel === 4 && day ? day.hour : new Date().getHours(); return h >= 19 || h < 7; }
+  function applyDayNight() { var n = isNight(); room.classList.toggle('pm', n); room.classList.toggle('dark', mode === 'sleep'); lamp.classList.toggle('off', mode === 'sleep'); }
 
-  // ---------- medidores ----------
-  var meterEls = {};
+  // ---------- medidores (se repintan 4 veces por segundo, no en cada frame) ----------
+  var meterEls = {}, lastW = {};
   function buildMeters() {
-    meters.innerHTML = ''; meterEls = {};
+    meters.innerHTML = ''; meterEls = {}; lastW = {};
     activeNeeds().forEach(function (n) {
       var m = document.createElement('div'); m.className = 'meter'; m.innerHTML = '<span class="ic emoji">' + n.ic + '</span><div class="bar"><i></i></div>';
       meters.appendChild(m); meterEls[n.k] = m;
@@ -222,49 +353,53 @@ var game = KidsGame.init({ title: 'Mi mascota' });
   function activeNeeds() { return NEEDS.filter(function (n) { return n.k !== 'salud' || nivel >= 3; }); }
   function renderMeters() {
     activeNeeds().forEach(function (n) {
-      var v = needs[n.k], i = meterEls[n.k].querySelector('i');
-      i.style.width = Math.round(v) + '%'; i.className = v >= 80 ? 'full' : v >= 60 ? '' : v >= 35 ? 'mid' : 'low';
+      var v = Math.round(needs[n.k]), i = meterEls[n.k].querySelector('i');
+      var cls = v >= 80 ? 'full' : v >= 60 ? '' : v >= 35 ? 'mid' : 'low';
+      if (lastW[n.k] !== v) { lastW[n.k] = v; i.style.width = v + '%'; }
+      if (i.className !== cls) i.className = cls;
     });
     var vals = activeNeeds().map(function (n) { return needs[n.k]; });
     var mn = Math.min.apply(null, vals);
-    var face = mode === 'sleep' ? '😴' : eating > 0 ? '😋' : mn < 35 ? '🥲' : '😊';
+    var moodK = mode === 'sleep' ? 'sleep' : eating > 0 ? 'eat' : needs.salud < 45 ? 'sick' : mn < 35 ? 'sad' : 'happy';
+    var face = { sleep: '😴', eat: '😋', sick: '🤧', sad: '🥲', happy: '😊' }[moodK];
+    if (petEl._mood !== moodK) { petEl._mood = moodK; petEl.className = petEl.className.replace(/\bmood-\w+/g, '').trim() + ' mood-' + moodK; }
     var cur = moodEl.textContent.trim();
-    if (cur !== face) { moodEl.innerHTML = '<span class="emoji">' + face + '</span>'; moodEl.classList.remove('pop'); void moodEl.offsetWidth; moodEl.classList.add('pop'); }
+    if (cur !== face && !(day && day.req)) { moodEl.innerHTML = '<span class="emoji">' + face + '</span>'; moodEl.classList.remove('pop'); void moodEl.offsetWidth; moodEl.classList.add('pop'); }
+    applyDayNight();
     if (mn >= 80) { if (!happyShown) { happyShown = true; celebrateHappy(); } } else if (mn < 60) happyShown = false;
   }
   function fulfilled(k, txt) {
     needs[k] = 100; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
     meterEls[k].classList.remove('flash'); void meterEls[k].offsetWidth; meterEls[k].classList.add('flash');
-    floatText(txt); sparks(); save();
+    var c = petCenterAbs(); KidsGame.fx.floatText(c.x, c.y - c.r * 0.9, txt, 'good'); KidsGame.fx.ring(petEl); KidsGame.fx.burst(c.x, c.y, { n: 14, r: 90, chars: ['✨', '⭐', '💖'] });
+    streak++;
+    if (streak === 3 || (streak > 3 && streak % 5 === 0)) setTimeout(function () { KidsGame.fx.floatText(c.x, c.y - c.r * 1.3, '¡Racha x' + streak + '!'); }, 300);
+    if (streak % 5 === 0) setTimeout(function () { KidsGame.addStar(); banner('⭐ ¡Bonus de racha!', true, 1100); KidsGame.sound.win(); }, 600);
+    save();
     if (nivel === 4) taskDone(k);
   }
   function celebrateHappy() {
     running = false; setMode(null);
-    petEl.classList.add('happy');
+    petEl.classList.add('happy'); banner('💕 ¡Está feliz!', true, 1400);
     setTimeout(function () {
       petEl.classList.remove('happy');
-      if (nivel < 4) KidsGame.levelDone(nivel);
-      KidsGame.celebrate({ msg: '¡Está feliz!', sub: pet[0] + ' ' + pet[1] + ' 💕', stars: 3,
+      if (nivel < 4) { KidsGame.levelDone(nivel); checkUnlocks(); }
+      KidsGame.celebrate({ msg: '¡Está feliz!', sub: pet.e + ' ' + pet.n + ' 💕', stars: 3,
         onAgain: function () { activeNeeds().forEach(function (n) { needs[n.k] = 35 + Math.random() * 25; }); happyShown = false; running = true; renderMeters(); save(); KidsGame.say('¡Cuídalo otra vez!'); } });
     }, 900);
   }
+  function checkUnlocks() {
+    var fresh = COS.filter(function (it) { return unlocked(it) && !(cos.known || {})[it.id]; });
+    if (fresh.length) { cos.known = cos.known || {}; fresh.forEach(function (it) { cos.known[it.id] = 1; }); saveCos(); KidsGame.toast('🎁 ¡Nuevo en el armario: ' + fresh.map(function (it) { return it.e + ' ' + it.n; }).join(', ') + '!', 2800); cosBtn.classList.add('bounce'); setTimeout(function () { cosBtn.classList.remove('bounce'); }, 3000); }
+  }
 
   // ---------- efectos ----------
-  function floatText(t) { var d = document.createElement('div'); d.className = 'ftxt'; d.textContent = t; room.appendChild(d); setTimeout(function () { d.remove(); }, 1300); }
   function petCenter() { var pr = petEl.getBoundingClientRect(), rr = room.getBoundingClientRect(); return { x: pr.left - rr.left + pr.width / 2, y: pr.top - rr.top + pr.height / 2, r: pr.width / 2 }; }
-  function hearts(n) {
-    var c = petCenter();
-    for (var i = 0; i < (n || 6); i++) { var h = document.createElement('div'); h.className = 'heart'; h.textContent = KidsGame.pick(['❤️', '💖', '💕']);
-      h.style.left = (c.x - 15 + (Math.random() - 0.5) * c.r) + 'px'; h.style.top = (c.y - c.r * 0.5) + 'px'; h.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px'); h.style.animationDelay = (i * 0.08) + 's';
-      room.appendChild(h); (function (el) { setTimeout(function () { el.remove(); }, 1800); })(h); }
-  }
-  function sparks() {
-    var c = petCenter();
-    for (var i = 0; i < 10; i++) { var h = document.createElement('div'); h.className = 'heart'; h.textContent = KidsGame.pick(['✨', '⭐', '💫']);
-      var a = Math.random() * Math.PI * 2; h.style.left = (c.x + Math.cos(a) * c.r) + 'px'; h.style.top = (c.y + Math.sin(a) * c.r) + 'px'; h.style.setProperty('--dx', (Math.cos(a) * 80) + 'px');
-      room.appendChild(h); (function (el) { setTimeout(function () { el.remove(); }, 1300); })(h); }
-  }
+  function petCenterAbs() { var pr = petEl.getBoundingClientRect(); return { x: pr.left + pr.width / 2, y: pr.top + pr.height / 2, r: pr.width / 2 }; }
+  function floatText(t) { var c = petCenterAbs(); KidsGame.fx.floatText(c.x, c.y - c.r, t, 'good'); }
+  function hearts(n) { var c = petCenterAbs(); KidsGame.fx.burst(c.x, c.y - c.r * 0.4, { n: Math.min(n || 6, 10), r: 80, chars: ['❤️', '💖', '💕'] }); }
   function bubbles(x, y, n) {
+    if (room.querySelectorAll('.bub').length > 24) return;
     for (var i = 0; i < (n || 3); i++) { var b = document.createElement('div'); b.className = 'bub'; var s = 12 + Math.random() * 18; b.style.width = b.style.height = s + 'px';
       b.style.left = (x - s / 2 + (Math.random() - 0.5) * 30) + 'px'; b.style.top = (y - s / 2) + 'px'; b.style.setProperty('--dx', ((Math.random() - 0.5) * 60) + 'px');
       room.appendChild(b); (function (el) { setTimeout(function () { el.remove(); }, 1100); })(b); }
@@ -277,18 +412,20 @@ var game = KidsGame.init({ title: 'Mi mascota' });
   function setMode(m) {
     modeEls.forEach(function (e) { e.remove(); }); modeEls = []; ball = null; spots = [];
     [bFeed, bBath, bPlay, bSleep, bHeal].forEach(function (b) { b.classList.remove('on'); });
-    if (mode === 'sleep') { night.classList.remove('on'); lamp.classList.remove('on'); petEl.classList.remove('sleeping'); }
+    if (mode === 'sleep') { night.classList.remove('on'); }
+    if (hand) { hand.stop(); hand = null; }
     mode = m;
     if (m === 'feed') {
-      bFeed.classList.add('on');
+      bFeed.classList.add('on'); banner('🍎 ¡A comer!', false, 900);
       if (nivel === 4) { var pk = Object.keys(day.pantry); if (!pk.length) { mode = null; bFeed.classList.remove('on'); KidsGame.toast('Despensa vacía 🛒 compra comida', 1800); KidsGame.say('No hay comida. Compra en la tienda'); openShop(); return; } tray(pk, 'food', eat, day.pantry); }
       else tray(['🍎', '🥕', '🍌', '🍪'], 'food', eat);
       KidsGame.say('Dale de comer');
+      if (nivel === 1 && !handFood) { handFood = true; setTimeout(function () { var f = room.querySelector('.tray .food'); if (f && mode === 'feed') hand = KidsGame.hand({ from: f, to: petEl }); }, 400); }
     }
-    if (m === 'heal') { bHeal.classList.add('on'); bHeal.classList.remove('alert'); tray(['🩹', '💊', '🍵'], 'pill', heal); KidsGame.say('Cúralo'); }
-    if (m === 'bath') { bBath.classList.add('on'); startBath(); KidsGame.say('Frota con la esponja'); }
-    if (m === 'play') { bPlay.classList.add('on'); startPlay(); KidsGame.say('Toca la pelota'); }
-    if (m === 'sleep') { bSleep.classList.add('on'); night.classList.add('on'); lamp.classList.add('on'); petEl.classList.add('sleeping'); KidsGame.say('Shhh, a dormir'); }
+    if (m === 'heal') { bHeal.classList.add('on'); bHeal.classList.remove('alert'); banner('🩹 A curar', false, 900); tray(['🩹', '💊', '🍵'], 'pill', heal); KidsGame.say('Cúralo'); }
+    if (m === 'bath') { bBath.classList.add('on'); banner('🛁 ¡Al baño!', false, 900); startBath(); KidsGame.say('Frota con la esponja'); }
+    if (m === 'play') { bPlay.classList.add('on'); banner('🎾 ¡A jugar!', false, 900); startPlay(); KidsGame.say('Toca la pelota'); }
+    if (m === 'sleep') { bSleep.classList.add('on'); night.classList.add('on'); banner('💤 Shhh…', false, 900); KidsGame.say('Shhh, a dormir'); }
     renderMeters();
   }
   function tray(items, cls, onDrop, counts) {
@@ -297,11 +434,11 @@ var game = KidsGame.init({ title: 'Mi mascota' });
       var f = document.createElement('div'); f.className = cls; f.innerHTML = '<span class="emoji">' + em + '</span>' + (counts ? '<i class="cnt">' + counts[em] + '</i>' : '');
       var ghost = null;
       f.addEventListener('pointerdown', function (ev) {
-        ev.preventDefault(); f.setPointerCapture(ev.pointerId);
+        ev.preventDefault(); try { f.setPointerCapture(ev.pointerId); } catch (e) {}
         ghost = document.createElement('div'); ghost.className = 'ghost emoji'; ghost.textContent = em; room.appendChild(ghost);
         var p = roomXY(ev); ghost.style.left = p.x + 'px'; ghost.style.top = p.y + 'px'; KidsGame.sound.tap();
       });
-      f.addEventListener('pointermove', function (ev) { if (!ghost) return; var p = roomXY(ev); ghost.style.left = p.x + 'px'; ghost.style.top = p.y + 'px'; });
+      f.addEventListener('pointermove', function (ev) { if (!ghost) return; var p = roomXY(ev); ghost.style.left = p.x + 'px'; ghost.style.top = p.y + 'px'; if (cls === 'food') petEl.classList.toggle('mood-eat', overPet(p.x, p.y, 40)); });
       function drop(ev) {
         if (!ghost) return; var p = roomXY(ev); ghost.remove(); ghost = null;
         if (overPet(p.x, p.y, 40)) onDrop(em); else KidsGame.sound.tap();
@@ -327,13 +464,13 @@ var game = KidsGame.init({ title: 'Mi mascota' });
   function startBath() {
     var n = Math.max(2, Math.ceil((100 - needs.limpieza) / 18)); var c = petCenter();
     for (var i = 0; i < n; i++) {
-      var d = document.createElement('div'); d.className = 'dirt'; var a = Math.random() * Math.PI * 2, r = Math.random() * c.r * 0.7;
-      var x = c.x + Math.cos(a) * r, y = c.y + Math.sin(a) * r; d.style.left = (x - 17) + 'px'; d.style.top = (y - 14) + 'px'; d.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      var d = document.createElement('div'); d.className = 'dirt'; var a = Math.random() * Math.PI * 2, r = Math.random() * c.r * 0.6;
+      var x = c.x + Math.cos(a) * r, y = c.y + 10 + Math.sin(a) * r; d.style.left = (x - 17) + 'px'; d.style.top = (y - 14) + 'px'; d.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
       room.appendChild(d); spots.push({ el: d, x: x, y: y }); modeEls.push(d);
     }
     var sp = document.createElement('div'); sp.id = 'sponge'; sp.className = 'food'; sp.innerHTML = '<span class="emoji">🧽</span>';
     var dragging = false, lastBub = 0, step = (100 - needs.limpieza) / n, base = needs.limpieza;
-    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); sp.setPointerCapture(ev.pointerId); dragging = true; sp.classList.add('drag'); KidsGame.sound.tap(); });
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); try { sp.setPointerCapture(ev.pointerId); } catch (e) {} dragging = true; sp.classList.add('drag'); KidsGame.sound.tap(); });
     sp.addEventListener('pointermove', function (ev) {
       if (!dragging) return; var p = roomXY(ev);
       sp.style.left = (p.x - 42) + 'px'; sp.style.top = (p.y - 42) + 'px'; sp.style.bottom = 'auto';
@@ -346,6 +483,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     function stop() { dragging = false; sp.classList.remove('drag'); }
     sp.addEventListener('pointerup', stop); sp.addEventListener('pointercancel', stop);
     room.appendChild(sp); modeEls.push(sp);
+    if (nivel === 1 && spots.length) setTimeout(function () { if (mode === 'bath') hand = KidsGame.hand({ from: sp, to: spots[0] ? spots[0].el : petEl }); }, 400);
   }
   function startPlay() {
     taps = 0;
@@ -357,12 +495,14 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     b.addEventListener('pointerdown', function (ev) {
       ev.preventDefault(); if (!ball) return;
       taps++; KidsGame.sound.pop(); KidsGame.vibrate(15);
+      KidsGame.fx.burst(ev.clientX, ev.clientY, { n: 6, r: 50 });
       if (nivel === 4) addCoins(1, b);
       ball.vy = -Math.max(420, Math.min(700, room.clientHeight * 1.1)); ball.vx = (Math.random() - 0.5) * 400;
       petEl.classList.remove('jump'); void petEl.offsetWidth; petEl.classList.add('jump');
       var dots = cnt.querySelectorAll('i'); for (var i = 0; i < dots.length; i++) dots[i].className = i < taps ? 'on' : '';
       if (taps >= 5) { fulfilled('diversion', '¡Yupi! 🎉'); petEl.classList.add('happy'); setTimeout(function () { petEl.classList.remove('happy'); if (mode === 'play') setMode(null); }, 1500); ball = null; }
     });
+    if (nivel === 1) setTimeout(function () { if (mode === 'play' && ball) hand = KidsGame.hand({ el: b }); }, 400);
   }
   function updateBall(dt) {
     if (!ball) return;
@@ -384,7 +524,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     });
     if (mode === 'sleep') {
       var before = needs.sueno; needs.sueno = Math.min(100, needs.sueno + 9 * dt);
-      sleepZ -= dt; if (sleepZ <= 0) { sleepZ = 0.8; var c = petCenter(); var z = document.createElement('div'); z.className = 'zz'; z.textContent = '💤'; z.style.left = (c.x + c.r * 0.4) + 'px'; z.style.top = (c.y - c.r * 0.6) + 'px'; room.appendChild(z); setTimeout(function () { z.remove(); }, 2400); }
+      sleepZ -= dt; if (sleepZ <= 0) { sleepZ = 0.9; var c = petCenter(); var z = document.createElement('div'); z.className = 'zz'; z.textContent = '💤'; z.style.left = (c.x + c.r * 0.4) + 'px'; z.style.top = (c.y - c.r * 0.6) + 'px'; room.appendChild(z); setTimeout(function () { z.remove(); }, 2400); }
       if (before < 100 && needs.sueno >= 100) { fulfilled('sueno', '¡Buenos días! ☀️'); setTimeout(function () { if (mode === 'sleep') setMode(null); }, 1200); }
     }
     if (eating > 0) eating -= dt;
@@ -395,7 +535,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     updateBall(dt);
     if (nivel === 4) updateDay(dt);
     saveT += dt; if (saveT > 5) { saveT = 0; save(); }
-    renderMeters();
+    renderT += dt; if (renderT > 0.25) { renderT = 0; renderMeters(); }
   }
 
   // ---------- Nivel Experto ----------
@@ -408,10 +548,10 @@ var game = KidsGame.init({ title: 'Mi mascota' });
   ];
   var ANS = { agua: ['💧', 'Agua'], feed: ['🍎', 'Comer'], play: ['🎾', 'Jugar'], bath: ['🛁', 'Baño'], sleep: ['💤', 'Dormir'], hug: ['🤗', 'Abrazo'], blanket: ['🧣', 'Cobija'] };
   var SHOP = [['🍎', 2], ['🥕', 3], ['🍌', 4], ['🍪', 5]];
-  var day = null, reqT = 0, askEl = null, shopEl = null;
+  var day = null, reqT = 0, askEl = null, shopEl = null, cosEl = null;
   function newDay() {
     day = { hour: 7, t: 0, tasks: TASKS.map(function (t) { return { h: t.h, k: t.k, need: t.need, ic: t.ic, n: t.n, done: false }; }), pending: null, coins: (day && day.coins) || 6, pantry: (day && day.pantry) || { '🍎': 1 }, req: null, days: (day ? day.days + 1 : 0) };
-    reqT = 14; renderDay();
+    reqT = 14; renderDay(); banner('☀️ Día ' + (day.days + 1), true, 1300);
     KidsGame.say('Mira el horario: a las ocho come, a las diez juega, a las doce baño y a las ocho de la noche a dormir');
   }
   function renderDay() {
@@ -429,10 +569,10 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     if (day.t >= 10) {
       day.t = 0; day.hour++; if (day.hour > 23) day.hour = 0;
       var tk = null; for (var j = 0; j < day.tasks.length; j++) if (!day.tasks[j].done && day.tasks[j].h === day.hour) tk = day.tasks[j];
-      if (tk) { day.pending = tk; btnFor(tk.k).classList.add('alert'); floatText('⏰ ¡Hora de ' + tk.n.toLowerCase() + '!'); KidsGame.sound.pop(); KidsGame.say('Son las ' + hourTxt(day.hour) + '. ¡Hora de ' + tk.n.toLowerCase() + '!'); }
+      if (tk) { day.pending = tk; btnFor(tk.k).classList.add('alert'); banner('⏰ ¡Hora de ' + tk.n.toLowerCase() + '!', false, 1400); KidsGame.sound.pop(); KidsGame.say('Son las ' + hourTxt(day.hour) + '. ¡Hora de ' + tk.n.toLowerCase() + '!'); }
       renderDay();
     }
-    if (!day.pending && !day.req && !shopEl && mode === null) { reqT -= dt; if (reqT <= 0) askRequest(); }
+    if (!day.pending && !day.req && !shopEl && !cosEl && mode === null) { reqT -= dt; if (reqT <= 0) askRequest(); }
   }
   function hourTxt(h) { return h <= 12 ? h + (h === 1 ? ' de la mañana' : ' de la mañana').replace('12 de la mañana', '12 del día') : (h - 12) + ' de la tarde'; }
   function btnFor(k) { return { feed: bFeed, play: bPlay, bath: bBath, sleep: bSleep }[k]; }
@@ -443,7 +583,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
       addCoins(3); floatText('¡A tiempo! ⏰ +3 🪙'); KidsGame.addStar(2); renderDay();
       if (day.tasks.every(function (t) { return t.done; })) {
         running = false; setMode(null);
-        KidsGame.levelDone(4);
+        KidsGame.levelDone(4); checkUnlocks();
         setTimeout(function () { KidsGame.celebrate({ msg: '¡Cumpliste el horario!', sub: '⏰ Comer, jugar, baño y dormir a su hora', stars: 3, onAgain: function () { newDay(); running = true; } }); }, 800);
       }
     } else {
@@ -455,7 +595,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     var r = KidsGame.pick(REQS.filter(function (q) { return !day.last || q !== day.last; })); day.req = r; day.last = r;
     var opts = KidsGame.shuffle(Object.keys(ANS).filter(function (k) { return k !== r.ans; })).slice(0, 3).concat([r.ans]); opts = KidsGame.shuffle(opts);
     askEl = document.createElement('div'); askEl.className = 'ask panel';
-    askEl.innerHTML = '<div class="say"><button class="btn round yellow" id="resay">🔊</button><span>' + pet[0] + ' «' + r.say + '»</span></div><div class="tiles">' +
+    askEl.innerHTML = '<div class="say"><button class="btn round yellow" id="resay">🔊</button><span>' + pet.e + ' «' + r.say + '»</span></div><div class="tiles">' +
       opts.map(function (k) { return '<button class="tile" data-k="' + k + '"><span class="emoji">' + ANS[k][0] + '</span>' + ANS[k][1] + '</button>'; }).join('') + '</div>';
     room.appendChild(askEl);
     moodEl.innerHTML = '<span class="emoji">' + r.ic + '</span>';
@@ -466,11 +606,11 @@ var game = KidsGame.init({ title: 'Mi mascota' });
       b.addEventListener('pointerdown', function (ev) {
         ev.preventDefault(); ev.stopPropagation();
         if (b.getAttribute('data-k') === r.ans) {
-          KidsGame.sound.ok(); KidsGame.addStar(); hearts(8); addCoins(1); floatText('¡Sí! ' + ANS[r.ans][0]);
+          KidsGame.sound.ok(); KidsGame.addStar(); hearts(8); addCoins(1); floatText('¡Sí! ' + ANS[r.ans][0]); KidsGame.fx.ring(b);
           askEl.remove(); askEl = null; day.req = null; reqT = 22 + Math.random() * 10;
           if (btnFor(r.ans)) setTimeout(function () { if (running && mode === null) setMode(r.ans); }, 500);
           renderMeters();
-        } else { KidsGame.sound.wrong(); b.classList.add('bad'); setTimeout(function () { b.classList.remove('bad'); }, 500); KidsGame.say('Mmm, no. ' + r.say); }
+        } else { KidsGame.sound.wrong(); streak = 0; b.classList.add('bad'); setTimeout(function () { b.classList.remove('bad'); }, 500); KidsGame.say('Mmm, no. ' + r.say); }
       });
     })(tiles[i]);
   }
@@ -499,7 +639,7 @@ var game = KidsGame.init({ title: 'Mi mascota' });
         ev.preventDefault(); ev.stopPropagation();
         if (!sel) { KidsGame.toast('Primero elige qué comprar 👆'); return; }
         paid += +c.getAttribute('data-v'); KidsGame.sound.pop(); showPaid();
-        if (paid > sel.p) { paidEl.classList.add('over'); KidsGame.sound.wrong(); KidsGame.toast('¡Te pasaste! 😅 Otra vez', 1400); KidsGame.say('Te pasaste. Cuenta otra vez'); setTimeout(function () { paid = 0; showPaid(); paidEl.classList.remove('over'); }, 900); }
+        if (paid > sel.p) { paidEl.classList.add('over'); KidsGame.sound.wrong(); streak = 0; KidsGame.toast('¡Te pasaste! 😅 Otra vez', 1400); KidsGame.say('Te pasaste. Cuenta otra vez'); setTimeout(function () { paid = 0; showPaid(); paidEl.classList.remove('over'); }, 900); }
       });
     });
     shopEl.querySelector('#pay').addEventListener('pointerdown', function (ev) {
@@ -514,44 +654,71 @@ var game = KidsGame.init({ title: 'Mi mascota' });
     });
     shopEl.querySelector('#close').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); shopEl.remove(); shopEl = null; });
   }
+  // ---------- Armario: decoración y ropita ----------
+  function openCos() {
+    if (cosEl) return;
+    cosEl = document.createElement('div'); cosEl.className = 'cos';
+    function itemsHtml(t) { return COS.filter(function (it) { return it.t === t; }).map(function (it) { var un = unlocked(it), on = t === 'deco' ? !!cos.deco[it.id] : cos.outfit === it.id; return '<button class="item' + (on ? ' sel' : '') + (un ? '' : ' lock') + '" data-id="' + it.id + '"><span class="emoji">' + it.e + '</span>' + it.n + (un ? '' : '<span class="lk">🔒</span>') + '</button>'; }).join(''); }
+    cosEl.innerHTML = '<div class="box panel"><div class="ttl">🎀 Armario de ' + pet.n + '</div><div class="sub">Ropita</div><div class="items">' + itemsHtml('outfit') + '</div><div class="sub">Decora el cuarto</div><div class="items">' + itemsHtml('deco') + '</div><div class="row"><button class="btn blue" id="cclose">✔ Listo</button></div></div>';
+    game.appendChild(cosEl);
+    cosEl.querySelectorAll('.item').forEach(function (b) {
+      b.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        var it = COS.filter(function (x) { return x.id === b.getAttribute('data-id'); })[0];
+        if (!unlocked(it)) { KidsGame.sound.wrong(); KidsGame.fx.shake(b); KidsGame.toast('🔒 Completa el nivel ' + it.lv, 1500); KidsGame.say('Completa el nivel ' + it.lv); return; }
+        KidsGame.sound.pop(); KidsGame.fx.burstAt(b, { n: 6, chars: ['✨'] });
+        if (it.t === 'deco') { cos.deco[it.id] = !cos.deco[it.id]; b.classList.toggle('sel', !!cos.deco[it.id]); applyDeco(); }
+        else { cos.outfit = cos.outfit === it.id ? null : it.id; cosEl.querySelectorAll('.item').forEach(function (x) { var y = COS.filter(function (z) { return z.id === x.getAttribute('data-id'); })[0]; if (y.t === 'outfit') x.classList.toggle('sel', cos.outfit === y.id); }); renderPet(); petEl.classList.remove('jump'); void petEl.offsetWidth; petEl.classList.add('jump'); }
+        saveCos();
+      });
+    });
+    cosEl.querySelector('#cclose').addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); cosEl.remove(); cosEl = null; });
+  }
   function sneeze() {
     needs.salud = 30; petEl.classList.remove('hit'); void petEl.offsetWidth; petEl.classList.add('hit');
     floatText('¡Achís! 🤧'); KidsGame.sound.wrong(); bHeal.classList.add('alert'); KidsGame.say('¡Achís! Está malito');
-    moodEl.innerHTML = '<span class="emoji">🤧</span>';
+    moodEl.innerHTML = '<span class="emoji">🤧</span>'; renderMeters();
   }
   function frame(now) {
     if (!lastT) lastT = now; var dt = Math.min((now - lastT) / 1000, 0.1); lastT = now;
     if (running) update(dt);
     requestAnimationFrame(frame);
   }
-  function save() { try { localStorage.setItem('kg-mascota', JSON.stringify({ pet: pet[0], needs: needs, t: Date.now() })); } catch (e) {} }
+  function save() { try { localStorage.setItem('kg-mascota', JSON.stringify({ pet: pet.e, needs: needs, t: Date.now() })); } catch (e) {} }
 
   // ---------- inicio ----------
   function begin() {
-    faceEl.textContent = pet[0]; nameEl.textContent = pet[1];
-    if (saved && saved.needs && saved.pet === pet[0]) { activeNeeds().forEach(function (n) { needs[n.k] = typeof saved.needs[n.k] === 'number' ? saved.needs[n.k] : 60; }); }
+    renderPet(); nameEl.textContent = pet.n; applyDeco();
+    if (saved && saved.needs && saved.pet === pet.e) { activeNeeds().forEach(function (n) { needs[n.k] = typeof saved.needs[n.k] === 'number' ? saved.needs[n.k] : 60; }); }
     else activeNeeds().forEach(function (n) { needs[n.k] = 45 + Math.random() * 25; });
     if (typeof needs.salud !== 'number') needs.salud = 90;
     buildMeters(); layout(); happyShown = false; sneezeT = 20 + Math.random() * 15; setMode(null); running = true; renderMeters(); save();
     if (askEl) { askEl.remove(); askEl = null; } if (shopEl) { shopEl.remove(); shopEl = null; }
     dayBar.classList.toggle('show', nivel === 4);
-    if (nivel === 4) { day = null; newDay(); } else KidsGame.say('Cuida a tu ' + pet[1].toLowerCase());
+    if (nivel === 4) { day = null; newDay(); } else { day = null; KidsGame.say('Cuida a tu ' + pet.n.toLowerCase()); banner(pet.e + ' ¡Hola, ' + pet.n + '!', false, 1300); }
+    if (nivel === 1) setTimeout(function () { if (running && mode === null) hand = KidsGame.hand({ el: bFeed }); }, 1500);
   }
   function pickPet() {
     var pk = document.createElement('div'); pk.className = 'picker';
     pk.innerHTML = '<div class="box panel"><div class="ttl">¿Cuál es tu mascota?</div><div class="row"></div></div>';
     var row = pk.querySelector('.row');
     PETS.forEach(function (p) {
-      var b = document.createElement('button'); b.className = 'pet-btn' + (saved && saved.pet === p[0] ? ' last' : '');
-      b.innerHTML = '<span class="med"><span class="emoji">' + p[0] + '</span></span><span>' + p[1] + '</span>';
+      var b = document.createElement('button'); b.className = 'pet-btn' + (saved && saved.pet === p.e ? ' last' : '');
+      b.innerHTML = petSVG(p, null) + '<span>' + p.n + '</span>';
       b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.pop(); pet = p; pk.remove(); begin(); });
       row.appendChild(b);
     });
     game.appendChild(pk);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
-  function pickLevel() { KidsGame.levelPicker({ labels: { 1: 'Sin prisa', 2: 'Baja más rápido', 3: 'Rápido y se enferma 🩹', 4: 'Horario con reloj, tienda y pedidos' }, onPick: function (n) { nivel = n; setBadge(); pickPet(); } }); }
-  window.__kgTest = function () { return { day: day, needs: needs, mode: mode, setMode: setMode, fulfilled: fulfilled, askRequest: askRequest, updateDay: updateDay, renderDay: renderDay }; };
+  function pickLevel() {
+    if (hand) { hand.stop(); hand = null; }
+    KidsGame.levelPicker({ labels: { 1: 'Sin prisa', 2: 'Baja más rápido', 3: 'Rápido y se enferma 🩹', 4: 'Horario con reloj, tienda y pedidos' }, music: 'calma',
+      art: petSVG(PETS[0], 'bow').replace('<svg ', '<svg width="64" height="64" '),
+      howto: [{ icon: '🍎', text: 'Dale de comer y báñalo' }, { icon: '🎾', text: 'Juega a la pelota y duérmelo' }, { icon: '💕', text: 'Si está feliz, ¡ganas!' }],
+      onPick: function (n) { nivel = n; streak = 0; handFood = false; setBadge(); pickPet(); } });
+  }
+  window.__kgTest = function () { return { day: day, needs: needs, mode: mode, pet: pet.e, mood: petEl._mood, night: room.classList.contains('pm'), streak: streak, outfit: cos.outfit, setMode: setMode, fulfilled: fulfilled, askRequest: askRequest, updateDay: updateDay, renderDay: renderDay }; };
   setBadge(); buildMeters(); layout(); pickLevel(); requestAnimationFrame(frame);
 })();
 </script>

@@ -7,77 +7,97 @@
 <title>Pesca</title>
 <style>
   .game { touch-action: none; overflow: hidden; background: linear-gradient(180deg, #7fd0ff 0%, #c9ecff 100%); }
-  .sky { position: absolute; left: 0; right: 0; top: 0; height: 26%; background: linear-gradient(180deg, #62c4ff 0%, #b9e6ff 70%, #dff4ff 100%); }
-  .sky .cloud { position: absolute; font-size: 54px; opacity: .9; filter: drop-shadow(0 6px 6px rgba(0,60,120,.15)); animation: drift linear infinite; }
-  @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(110vw); } }
-  .sky .sun { position: absolute; right: 20%; top: 46%; width: 70px; height: 70px; border-radius: 50%;
+  .sky { position: absolute; left: 0; right: 0; top: 0; height: 26%; background: linear-gradient(180deg, #62c4ff 0%, #b9e6ff 70%, #dff4ff 100%); overflow: hidden; }
+  .sky .cloud { position: absolute; width: 120px; height: 40px; will-change: transform; animation: drift linear infinite; }
+  .sky .cloud svg { width: 100%; height: 100%; overflow: visible; }
+  @keyframes drift { from { transform: translateX(-160px); } to { transform: translateX(110vw); } }
+  .sky .sun { position: absolute; right: 18%; top: 40%; width: 70px; height: 70px; border-radius: 50%;
     background: radial-gradient(circle at 40% 35%, #fff9d0, #ffd83d 60%, #ffb703); box-shadow: 0 0 0 12px rgba(255,216,61,.28), 0 0 40px 10px rgba(255,216,61,.5); }
-  .water { position: absolute; left: 0; right: 0; top: 26%; bottom: 0;
-    background: linear-gradient(180deg, #4fc3f7 0%, #1e97dd 30%, #0f6fb8 70%, #0a4f8e 100%); }
-  .water::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35;
+  .deco { position: absolute; bottom: -2px; pointer-events: none; }
+  .deco svg { display: block; overflow: visible; }
+  .deco.light { right: 2%; width: 110px; height: 150px; }
+  .deco.isle { left: 3%; width: 150px; height: 70px; }
+  .water { position: absolute; left: 0; right: 0; top: 26%; bottom: 0; background: linear-gradient(180deg, #4fc3f7 0%, #1e97dd 30%, #0f6fb8 70%, #0a4f8e 100%); overflow: hidden; }
+  .water::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35; will-change: transform, opacity;
     background: repeating-linear-gradient(100deg, rgba(255,255,255,0) 0 60px, rgba(255,255,255,.35) 60px 90px, rgba(255,255,255,0) 90px 170px);
     animation: rays 6s ease-in-out infinite alternate; }
   @keyframes rays { from { opacity: .22; transform: translateX(-20px); } to { opacity: .45; transform: translateX(20px); } }
-  .surface { position: absolute; left: -5%; right: -5%; top: 26%; height: 22px; margin-top: -11px; z-index: 3; pointer-events: none;
+  .surface { position: absolute; left: 0; top: 26%; width: 200%; height: 22px; margin-top: -11px; z-index: 3; pointer-events: none; will-change: transform;
     background: radial-gradient(ellipse 40px 11px at 20px 50%, rgba(255,255,255,.9) 30%, rgba(255,255,255,0) 70%) 0 0/80px 22px repeat-x;
     animation: wave 2.4s ease-in-out infinite; opacity: .85; }
-  @keyframes wave { 0%,100% { background-position-x: 0; transform: translateY(0); } 50% { background-position-x: 40px; transform: translateY(3px); } }
+  @keyframes wave { 0%,100% { transform: translate(0, 0); } 50% { transform: translate(-40px, 3px); } }
   .sand { position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: linear-gradient(180deg, #d9b97a, #b8934f); box-shadow: 0 -10px 20px rgba(0,0,0,.2); border-radius: 50% 50% 0 0 / 30px 30px 0 0; }
-  .weed { position: absolute; bottom: 6%; width: 40px; height: 120px; transform-origin: 50% 100%; animation: sway 3s ease-in-out infinite alternate; pointer-events: none; }
+  .sand::after { content: ""; position: absolute; left: 10%; right: 10%; top: 30%; height: 8px; border-radius: 8px; background: rgba(255,255,255,.18); }
+  .weed { position: absolute; bottom: 6%; width: 40px; height: 120px; transform-origin: 50% 100%; animation: sway 3s ease-in-out infinite alternate; pointer-events: none; will-change: transform; }
   @keyframes sway { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
-  .bubble { position: absolute; bottom: 0; width: 14px; height: 14px; border-radius: 50%; pointer-events: none;
-    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(255,255,255,.25) 60%, rgba(255,255,255,0)); border: 1px solid rgba(255,255,255,.6);
-    animation: rise linear infinite; }
+  .shell { position: absolute; bottom: 2%; font-size: 26px; pointer-events: none; }
+  .bubble { position: absolute; bottom: 0; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; will-change: transform, opacity;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(255,255,255,.25) 60%, rgba(255,255,255,0)); border: 1px solid rgba(255,255,255,.6); animation: rise linear infinite; }
   @keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(-75vh) translateX(20px) scale(1.2); opacity: 0; } }
-  .boat { position: absolute; left: 50%; top: 26%; width: 260px; height: 130px; margin: -108px 0 0 -130px; z-index: 4; animation: bob 3s ease-in-out infinite; pointer-events: none; }
+  .boat { position: absolute; left: 50%; top: 26%; width: 260px; height: 150px; margin: -128px 0 0 -130px; z-index: 4; animation: bob 3s ease-in-out infinite; pointer-events: none; will-change: transform; }
   @keyframes bob { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(6px) rotate(1deg); } }
   .boat svg { width: 100%; height: 100%; overflow: visible; }
-  .bucket { position: absolute; right: 8px; top: 34px; width: 74px; height: 80px; }
+  .boat .rod { transform-origin: 206px 92px; transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+  .boat.bite .rod { animation: bend .35s ease-in-out infinite alternate; }
+  @keyframes bend { from { transform: rotate(16deg); } to { transform: rotate(24deg); } }
+  .boat .arm { transform-origin: 196px 96px; transition: transform .3s; }
+  .boat.cheer .arm { transform: rotate(-70deg); }
+  .boat.cheer .rod { transform: rotate(-40deg); }
+  .boat .cat-head { transform-origin: 196px 74px; }
+  .boat.cheer .cat-head { animation: nod .3s ease-in-out 3; }
+  @keyframes nod { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-12deg); } }
+  .hat { display: none; } .h-gorra .hat.gorra, .h-paja .hat.paja, .h-pirata .hat.pirata, .h-corona .hat.corona { display: block; }
+  .bucket { position: absolute; left: 14px; top: 50px; width: 74px; height: 80px; }
   .bucket svg { width: 100%; height: 100%; overflow: visible; }
   .bucket .n { position: absolute; left: 0; right: 0; top: 28px; text-align: center; font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #1f7fae, 0 0 6px rgba(0,0,0,.4); }
   .bucket.bump { animation: bump .35s ease-out; }
   @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.2) rotate(-6deg); } 100% { transform: scale(1); } }
   .line { position: absolute; width: 3px; background: linear-gradient(90deg, #d9dee8, #7c8494); z-index: 5; pointer-events: none; transform-origin: 50% 0; box-shadow: 1px 0 0 rgba(0,0,0,.15); }
-  .hook { position: absolute; width: 36px; height: 44px; margin-left: -18px; z-index: 6; pointer-events: none; }
-  .hook svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); }
+  .hook { position: absolute; width: 36px; height: 44px; margin-left: -18px; z-index: 6; pointer-events: none; will-change: transform; }
+  .hook svg { width: 100%; height: 100%; overflow: visible; }
   .hook.tickle svg { animation: tickle .18s infinite; }
   @keyframes tickle { 0%,100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
   .fish { position: absolute; left: 0; top: 0; z-index: 4; will-change: transform; pointer-events: none; }
-  .fish svg { width: 100%; height: 100%; overflow: visible; transition: transform .3s; filter: drop-shadow(0 6px 5px rgba(0,20,60,.35)); }
+  .fish svg { width: 100%; height: 100%; overflow: visible; will-change: transform; }
   .fish.l svg { animation: swim 1.1s ease-in-out infinite; }
   .fish.r svg { animation: swimr 1.1s ease-in-out infinite; }
   @keyframes swim { 0%,100% { transform: scaleX(1) rotate(-3deg); } 50% { transform: scaleX(1) rotate(3deg) translateY(-3px); } }
   @keyframes swimr { 0%,100% { transform: scaleX(-1) rotate(3deg); } 50% { transform: scaleX(-1) rotate(-3deg) translateY(-3px); } }
+  .fish .tail { transform-origin: 92px 35px; animation: tailf .4s ease-in-out infinite alternate; }
+  @keyframes tailf { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
   .fish.caught { z-index: 7; }
   .fish.caught svg { animation: wiggle .22s ease-in-out infinite; }
   @keyframes wiggle { 0%,100% { transform: rotate(78deg); } 50% { transform: rotate(104deg); } }
   .fish.tobucket { transition: transform .6s cubic-bezier(.4,-.2,.6,1), opacity .5s .2s; opacity: 0; }
-  .octo { position: absolute; z-index: 4; font-size: 84px; pointer-events: none; will-change: transform; }
-  .octo .emoji { display: inline-block; animation: float 2.4s ease-in-out infinite; }
-  .octo.laugh .emoji { animation: giggle .15s infinite; }
+  .octo { position: absolute; z-index: 4; pointer-events: none; will-change: transform; }
+  .octo svg { width: 100%; height: 100%; overflow: visible; animation: float 2.4s ease-in-out infinite; }
+  .octo.laugh svg { animation: giggle .15s infinite; }
   @keyframes giggle { 0%,100% { transform: rotate(-12deg) scale(1.05); } 50% { transform: rotate(12deg) scale(.95); } }
   .splash { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #bfe9ff); z-index: 8; pointer-events: none; animation: sp .7s ease-out forwards; }
   @keyframes sp { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; } }
-  .spark { position: absolute; width: 12px; height: 12px; z-index: 12; pointer-events: none; animation: sp .8s ease-out forwards; font-size: 16px; line-height: 1; }
   .ftxt { position: absolute; z-index: 12; pointer-events: none; font-size: 34px; font-weight: 900; color: #ff6f61; text-shadow: 0 2px 0 #fff, 0 0 8px #fff; animation: up 1s ease-out forwards; white-space: nowrap; }
+  .ftxt.good { color: #24b36c; }
   @keyframes up { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
   .hud { position: absolute; left: 0; right: 0; top: 0; z-index: 10; pointer-events: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; gap: 8px; }
   .hud > * { pointer-events: auto; }
+  .hud .right { display: flex; gap: 8px; align-items: center; }
   .prog { display: flex; align-items: center; gap: 10px; padding: 4px 18px 4px 8px; min-height: 64px; border-radius: 40px;
-    background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(241,246,255,.93)); border: 3px solid #fff;
-    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
+    background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(241,246,255,.93)); border: 3px solid #fff; box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
   .prog .tgt { width: 78px; height: 48px; display: flex; align-items: center; justify-content: center; }
-  .prog .tgt svg { width: 78px; height: 46px; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
+  .prog .tgt svg { width: 78px; height: 46px; overflow: visible; }
   .prog .tgt.pop svg { animation: pop .5s ease-out; }
   .prog .cnt { font-size: 26px; font-weight: 900; color: #1f4f8a; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
   .prog .cnt small { font-size: 16px; color: #6b7a99; margin-left: 4px; }
-  .lvbtn { font-size: 30px; }
-  .hint { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); z-index: 12; pointer-events: none;
+  .lvbtn, .hatbtn { font-size: 28px; }
+  .streak { position: absolute; left: 50%; top: 86px; transform: translateX(-50%) scale(0); z-index: 11; pointer-events: none; padding: 4px 18px; border-radius: 30px; font-size: 22px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #ff9f43, #ff6f61); box-shadow: 0 4px 0 #b8306f, 0 8px 14px rgba(0,0,0,.25); text-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.3,1.5,.5,1); white-space: nowrap; }
+  .streak.show { transform: translateX(-50%) scale(1); }
+  .hint { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%) scale(.6); opacity: 0; z-index: 12; pointer-events: none; color: #1f2f6b; font-weight: 900;
     background: linear-gradient(180deg, #fff, #eef2ff); border-radius: 30px; padding: 12px 26px; font-size: 30px; border: 3px solid #fff;
-    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: flex; align-items: center; gap: 12px; animation: pop .4s ease-out; white-space: nowrap; }
+    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,0,0,.25); display: flex; align-items: center; gap: 12px; white-space: nowrap; transition: transform .35s cubic-bezier(.3,1.4,.5,1), opacity .3s; max-width: 96vw; }
+  .hint.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   .hint .emoji { font-size: 40px; animation: bounce .7s infinite; }
-  .hint svg { width: 80px; height: 48px; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
-  /* Nivel Experto: peces con número, cubeta que se derrama, objetivo numérico */
+  .hint svg { width: 80px; height: 48px; overflow: visible; }
   .fish text { font-family: var(--font); font-weight: 900; font-size: 36px; fill: #fff; stroke: #1f2f6b; stroke-width: 3px; paint-order: stroke; text-anchor: middle; dominant-baseline: central; }
   .prog .tgt.math { flex-direction: column; width: auto; min-width: 78px; height: auto; line-height: 1; }
   .prog .tgt .num { font-size: 34px; font-weight: 900; color: #ff3d7f; text-shadow: 0 1px 0 #fff; }
@@ -88,6 +108,7 @@
   .drop { position: absolute; z-index: 9; pointer-events: none; font-size: 30px; animation: dropfall .9s ease-in forwards; }
   @keyframes dropfall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), 160px) rotate(200deg); opacity: 0; } }
   .hint .num { font-size: 40px; font-weight: 900; color: #ff3d7f; }
+  @media (max-width: 700px) { .deco.isle { display: none; } .prog .cnt { font-size: 22px; } }
 </style>
 </head>
 <body>
@@ -109,14 +130,20 @@ var game = KidsGame.init({ title: 'Pesca' });
     { size: 0.72, vmin: 115, vmax: 185, count: 7, mode: 'rotate', drop: 400, octo: true },
     { size: 0.9,  vmin: 70,  vmax: 125, count: 7, mode: 'math',   drop: 380, octo: false }
   ];
-  // Nivel Experto: rondas que rotan entre suma exacta, orden ascendente y solo pares
+  var LABELS = { 1: 'Cualquier pez', 2: 'Por color', 3: 'Color que cambia + pulpo', 4: 'Suma, orden y pares 🔢' };
+  var HOWTO = [{ icon: '👆', text: 'Toca el agua para lanzar el anzuelo' }, { icon: '🐟', text: 'Toca otra vez para subirlo con el pez' }, { icon: '🪣', text: 'Llena la cubeta con los peces que pide' }];
   var MATH = ['sum', 'asc', 'even'];
   var mround = 0, math = null;
   var NEED = 10;
-  var nivel = 1, cfg = CFG[1], running = false, target = null, caught = 0, sinceChange = 0;
-  var W = 0, H = 0, waterTop = 0, scale = 1, fishes = [], octo = null;
+  var nivel = 1, cfg = CFG[1], running = false, target = null, caught = 0, sinceChange = 0, streak = 0, firstRound = true;
+  var W = 0, H = 0, waterTop = 0, scale = 1, fishes = [], octo = null, rodBent = false;
   var hook = { state: 'idle', x: 0, y: 0, fish: null, vy: 0 };
-  var lastT = 0, seed = 0;
+  var lastT = 0, hintTimer = null, streakTimer = null;
+  var HATS = [{ id: 'none', n: 'Sin sombrero', e: '🐱', lv: 0 }, { id: 'gorra', n: 'Gorra marinera', e: '🧢', lv: 1 }, { id: 'paja', n: 'Sombrero de paja', e: '👒', lv: 2 }, { id: 'pirata', n: 'Pirata', e: '🏴‍☠️', lv: 3 }, { id: 'corona', n: 'Corona', e: '👑', lv: 4 }];
+  var hat = HATS[0];
+  try { var hid = localStorage.getItem('kg-pesca-hat'); HATS.forEach(function (h) { if (h.id === hid) hat = h; }); } catch (e) {}
+  function doneLv() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').pesca || {}; } catch (e) { return {}; } }
+  function hatOpen(h) { return !h.lv || !!doneLv()[h.lv]; }
 
   // ---------- escena ----------
   game.innerHTML = '';
@@ -131,14 +158,21 @@ var game = KidsGame.init({ title: 'Pesca' });
   gdefs += '<linearGradient id="g-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#b8c2d0"/><stop offset="1" stop-color="#5f6b7a"/></linearGradient>';
   gdefs += '<linearGradient id="g-bucket" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4dabf7"/><stop offset=".45" stop-color="#8fd3ff"/><stop offset="1" stop-color="#1c6fb5"/></linearGradient>';
   gdefs += '<linearGradient id="g-weed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd38a"/><stop offset="1" stop-color="#1e7d4f"/></linearGradient>';
+  gdefs += '<radialGradient id="g-cat" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffd27a"/><stop offset=".6" stop-color="#f6a33a"/><stop offset="1" stop-color="#c9731a"/></radialGradient>';
+  gdefs += '<radialGradient id="g-octo" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#ffb3d9"/><stop offset=".6" stop-color="#e85aa6"/><stop offset="1" stop-color="#a62c73"/></radialGradient>';
+  gdefs += '<linearGradient id="g-cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9ecfa"/></linearGradient>';
   gdefs += '</defs>';
   defs.innerHTML = gdefs; game.appendChild(defs);
 
+  var CLOUD = '<svg viewBox="0 0 120 40"><ellipse cx="60" cy="30" rx="56" ry="10" fill="url(#g-cloud)"/><circle cx="40" cy="22" r="18" fill="url(#g-cloud)"/><circle cx="66" cy="16" r="22" fill="url(#g-cloud)"/><circle cx="90" cy="24" r="14" fill="url(#g-cloud)"/></svg>';
   var sky = document.createElement('div'); sky.className = 'sky';
   sky.innerHTML = '<div class="sun"></div>' +
-    '<span class="cloud" style="left:5%;top:10%;animation-duration:70s">☁️</span>' +
-    '<span class="cloud" style="left:40%;top:35%;font-size:40px;animation-duration:95s;animation-delay:-30s">☁️</span>' +
-    '<span class="cloud" style="left:70%;top:15%;animation-duration:80s;animation-delay:-55s">☁️</span>';
+    '<span class="cloud" style="left:5%;top:10%;animation-duration:70s">' + CLOUD + '</span>' +
+    '<span class="cloud" style="left:40%;top:35%;width:80px;height:28px;animation-duration:95s;animation-delay:-30s">' + CLOUD + '</span>' +
+    '<span class="cloud" style="left:70%;top:15%;animation-duration:80s;animation-delay:-55s">' + CLOUD + '</span>' +
+    // faro sobre una roca y una islita con palmera: "La bahía"
+    '<div class="deco light"><svg viewBox="0 0 110 150"><ellipse cx="55" cy="142" rx="52" ry="10" fill="#6b7a99"/><path d="M12 142 Q 30 118 55 122 Q 82 116 100 142 Z" fill="#8a97b3"/><path d="M38 118 L 72 118 L 66 40 L 44 40 Z" fill="#fff"/><path d="M44 40 L 66 40 L 64 58 L 46 58 Z M 50 82 L 62 82 L 60 100 L 50 100 Z" fill="#e63946"/><rect x="40" y="26" width="30" height="16" rx="3" fill="#ffd166" stroke="#c47f00" stroke-width="2"/><path d="M38 26 L 72 26 L 55 12 Z" fill="#e63946"/><circle cx="55" cy="10" r="4" fill="#ffd166"/><path d="M70 30 L 108 18 L 108 44 Z" fill="#fff6b0" opacity=".7"/></svg></div>' +
+    '<div class="deco isle"><svg viewBox="0 0 150 70"><ellipse cx="75" cy="64" rx="70" ry="9" fill="#e7c98b"/><path d="M20 64 Q 75 30 130 64 Z" fill="#f2d79a"/><path d="M78 60 Q 84 30 96 16" stroke="#a46a2a" stroke-width="5" fill="none" stroke-linecap="round"/><g fill="#2cb67d"><path d="M96 16 Q 118 4 134 14 Q 116 14 100 22 Z"/><path d="M96 16 Q 72 2 56 12 Q 76 12 92 22 Z"/><path d="M96 16 Q 112 30 112 44 Q 102 32 94 22 Z"/><path d="M96 16 Q 80 32 76 44 Q 86 30 94 22 Z"/></g><circle cx="98" cy="22" r="4" fill="#8b5a2b"/><circle cx="92" cy="24" r="3.5" fill="#8b5a2b"/></svg></div>';
   var water = document.createElement('div'); water.className = 'water';
   var surface = document.createElement('div'); surface.className = 'surface';
   game.appendChild(sky); game.appendChild(water); game.appendChild(surface);
@@ -149,21 +183,46 @@ var game = KidsGame.init({ title: 'Pesca' });
     water.appendChild(wd);
   }
   var sand = document.createElement('div'); sand.className = 'sand'; water.appendChild(sand);
-  for (var bi = 0; bi < 14; bi++) {
+  ['🐚', '⭐', '🐚'].forEach(function (e, i) { var sh = document.createElement('span'); sh.className = 'shell emoji'; sh.textContent = e; sh.style.left = (15 + i * 35 + Math.random() * 10) + '%'; water.appendChild(sh); });
+  for (var bi = 0; bi < 12; bi++) {
     var bb = document.createElement('div'); bb.className = 'bubble';
     var sz = 8 + Math.random() * 14; bb.style.width = sz + 'px'; bb.style.height = sz + 'px';
     bb.style.left = (Math.random() * 100) + '%'; bb.style.bottom = (5 + Math.random() * 20) + '%';
     bb.style.animationDuration = (5 + Math.random() * 6) + 's'; bb.style.animationDelay = (-Math.random() * 10) + 's';
     water.appendChild(bb);
   }
-  var boat = document.createElement('div'); boat.className = 'boat';
-  boat.innerHTML = '<svg viewBox="0 0 260 130">' +
-    '<rect x="118" y="6" width="8" height="70" rx="3" fill="url(#g-wood)"/>' +
-    '<path d="M126 10 L 190 40 L 126 52 Z" fill="#fff" stroke="#e6ecf7" stroke-width="2"/><path d="M126 14 L 172 40 L 126 46 Z" fill="#ffe08a" opacity=".9"/>' +
-    '<rect x="60" y="48" width="70" height="36" rx="8" fill="#fff" stroke="#c9d2e6" stroke-width="3"/><rect x="72" y="56" width="18" height="16" rx="4" fill="#7dd0ff"/><rect x="100" y="56" width="18" height="16" rx="4" fill="#7dd0ff"/>' +
-    '<path d="M10 82 L 250 82 L 222 122 Q 130 130 38 122 Z" fill="url(#g-wood)" stroke="#6b3a14" stroke-width="3" stroke-linejoin="round"/>' +
-    '<path d="M18 92 L 242 92" stroke="rgba(255,255,255,.35)" stroke-width="4"/><path d="M26 104 L 234 104" stroke="rgba(0,0,0,.18)" stroke-width="4"/>' +
-    '<rect x="6" y="76" width="248" height="12" rx="6" fill="#e04a4a" stroke="#a52a2a" stroke-width="2"/><rect x="12" y="78" width="236" height="4" rx="2" fill="rgba(255,255,255,.45)"/>' +
+  // Gatita pescadora (SVG) sentada en la barca; su caña se dobla cuando pica un pez
+  function catSVG() {
+    return '<g class="cat">' +
+      '<path d="M176 108 C 150 110, 146 92, 160 86" stroke="#f6a33a" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="196" cy="100" rx="22" ry="17" fill="url(#g-cat)"/><ellipse cx="200" cy="104" rx="12" ry="10" fill="#ffe8c2"/>' +
+      '<g class="cat-head"><path d="M176 70 L 180 48 L 194 62 Z" fill="url(#g-cat)" stroke="#c9731a" stroke-width="1.5" stroke-linejoin="round"/><path d="M180 68 L 182 54 L 190 62 Z" fill="#ffc2d6"/>' +
+      '<path d="M202 60 L 212 44 L 218 66 Z" fill="url(#g-cat)" stroke="#c9731a" stroke-width="1.5" stroke-linejoin="round"/><path d="M205 60 L 211 50 L 214 63 Z" fill="#ffc2d6"/>' +
+      '<circle cx="196" cy="74" r="20" fill="url(#g-cat)"/><ellipse cx="204" cy="82" rx="10" ry="7" fill="#ffe8c2"/>' +
+      '<path d="M182 64 q 4 -6 8 0 M 198 60 q 4 -6 8 0" stroke="#c9731a" stroke-width="2" fill="none" opacity=".6"/>' +
+      '<circle cx="190" cy="72" r="4.5" fill="#fff"/><circle cx="191" cy="73" r="2.6" fill="#2b2b2b"/><circle cx="204" cy="72" r="4.5" fill="#fff"/><circle cx="205" cy="73" r="2.6" fill="#2b2b2b"/><circle cx="192" cy="71.5" r=".9" fill="#fff"/><circle cx="206" cy="71.5" r=".9" fill="#fff"/>' +
+      '<ellipse cx="198" cy="79" rx="2.6" ry="1.8" fill="#ff8aa8"/><path d="M194 82 q 4 4 8 0" stroke="#9c3b12" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+      '<g stroke="#c9731a" stroke-width="1.2" opacity=".7"><path d="M176 78 L 188 80 M 176 84 L 188 82"/><path d="M220 78 L 208 80 M 220 84 L 208 82"/></g>' +
+      '<circle cx="184" cy="80" r="3.5" fill="#ff8aa8" opacity=".45"/><circle cx="212" cy="80" r="3.5" fill="#ff8aa8" opacity=".45"/>' +
+      '<g class="hat gorra"><path d="M176 60 Q 196 42 216 60 Z" fill="#2f95e8"/><rect x="172" y="58" width="48" height="6" rx="3" fill="#1a63a8"/><circle cx="196" cy="48" r="4" fill="#ffd166"/></g>' +
+      '<g class="hat paja"><ellipse cx="196" cy="58" rx="32" ry="7" fill="#f2d79a" stroke="#c9a04a" stroke-width="1.5"/><path d="M178 58 Q 180 40 196 40 Q 212 40 214 58 Z" fill="#ffe8b0" stroke="#c9a04a" stroke-width="1.5"/><rect x="178" y="50" width="36" height="5" fill="#e63946"/></g>' +
+      '<g class="hat pirata"><path d="M172 60 Q 196 30 220 60 Q 196 52 172 60 Z" fill="#2b2b3b"/><path d="M168 60 Q 196 64 224 60 Q 196 70 168 60 Z" fill="#1b1b2b"/><circle cx="196" cy="50" r="4" fill="#fff"/><path d="M191 56 L 201 56 M 193 58 L 199 58" stroke="#fff" stroke-width="1.5"/></g>' +
+      '<g class="hat corona"><path d="M180 58 L 178 40 L 188 50 L 196 36 L 204 50 L 214 40 L 212 58 Z" fill="#ffd166" stroke="#c47f00" stroke-width="1.5" stroke-linejoin="round"/><circle cx="196" cy="52" r="2.5" fill="#e63946"/></g>' +
+      '</g>' +
+      '<g class="rod"><path d="M206 92 L 240 22" stroke="#8b4f22" stroke-width="4" stroke-linecap="round"/><path d="M206 92 L 240 22" stroke="#d9955a" stroke-width="1.5" stroke-linecap="round"/><circle cx="212" cy="86" r="4" fill="#5f6b7a"/><circle cx="212" cy="86" r="1.5" fill="#fff"/></g>' +
+      '<g class="arm"><path d="M196 96 L 208 92" stroke="#f6a33a" stroke-width="7" stroke-linecap="round"/><circle cx="208" cy="92" r="4.5" fill="#f6a33a"/></g>' +
+      '</g>';
+  }
+  var boat = document.createElement('div'); boat.className = 'boat h-' + hat.id;
+  boat.innerHTML = '<svg viewBox="0 0 260 150">' +
+    '<rect x="112" y="26" width="8" height="70" rx="3" fill="url(#g-wood)"/>' +
+    '<path d="M120 30 L 184 60 L 120 72 Z" fill="#fff" stroke="#e6ecf7" stroke-width="2"/><path d="M120 34 L 166 60 L 120 66 Z" fill="#ffe08a" opacity=".9"/><path d="M116 26 L 136 30 L 116 36 Z" fill="#e63946"/>' +
+    '<rect x="54" y="68" width="70" height="36" rx="8" fill="#fff" stroke="#c9d2e6" stroke-width="3"/><rect x="66" y="76" width="18" height="16" rx="4" fill="#7dd0ff"/><rect x="94" y="76" width="18" height="16" rx="4" fill="#7dd0ff"/>' +
+    catSVG() +
+    '<path d="M10 102 L 250 102 L 222 142 Q 130 150 38 142 Z" fill="url(#g-wood)" stroke="#6b3a14" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M18 112 L 242 112" stroke="rgba(255,255,255,.35)" stroke-width="4"/><path d="M26 124 L 234 124" stroke="rgba(0,0,0,.18)" stroke-width="4"/>' +
+    '<rect x="6" y="96" width="248" height="12" rx="6" fill="#e04a4a" stroke="#a52a2a" stroke-width="2"/><rect x="12" y="98" width="236" height="4" rx="2" fill="rgba(255,255,255,.45)"/>' +
+    '<circle cx="40" cy="120" r="7" fill="#fff" stroke="#e63946" stroke-width="3"/><circle cx="40" cy="120" r="2" fill="#e63946"/>' +
     '</svg>' +
     '<div class="bucket"><svg viewBox="0 0 74 80"><ellipse cx="37" cy="78" rx="30" ry="6" fill="rgba(0,0,0,.25)"/>' +
     '<path d="M8 22 L 14 74 Q 37 82 60 74 L 66 22 Z" fill="url(#g-bucket)" stroke="#155a94" stroke-width="3" stroke-linejoin="round"/>' +
@@ -173,7 +232,7 @@ var game = KidsGame.init({ title: 'Pesca' });
   var bucket = boat.querySelector('.bucket'), bucketN = bucket.querySelector('.n');
   var line = document.createElement('div'); line.className = 'line';
   var hookEl = document.createElement('div'); hookEl.className = 'hook';
-  hookEl.innerHTML = '<svg viewBox="0 0 36 44"><path d="M18 0 L 18 24 A 10 10 0 1 1 32 30" fill="none" stroke="url(#g-metal)" stroke-width="5" stroke-linecap="round"/><path d="M32 30 L 27 36" stroke="url(#g-metal)" stroke-width="5" stroke-linecap="round"/><circle cx="18" cy="4" r="5" fill="#e04a4a" stroke="#a52a2a" stroke-width="2"/></svg>';
+  hookEl.innerHTML = '<svg viewBox="0 0 36 44"><path d="M19 1 L 19 25 A 10 10 0 1 1 33 31" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="6" stroke-linecap="round"/><path d="M18 0 L 18 24 A 10 10 0 1 1 32 30" fill="none" stroke="url(#g-metal)" stroke-width="5" stroke-linecap="round"/><path d="M32 30 L 27 36" stroke="url(#g-metal)" stroke-width="5" stroke-linecap="round"/><circle cx="18" cy="4" r="5" fill="#e04a4a" stroke="#a52a2a" stroke-width="2"/><circle cx="16.5" cy="2.5" r="1.5" fill="#fff" opacity=".7"/></svg>';
   game.appendChild(line); game.appendChild(hookEl);
 
   // HUD
@@ -181,20 +240,38 @@ var game = KidsGame.init({ title: 'Pesca' });
   var badgeHolder = document.createElement('span');
   var prog = document.createElement('div'); prog.className = 'prog';
   prog.innerHTML = '<div class="tgt"></div><div class="cnt">0<small>/ ' + NEED + '</small></div>';
+  var right = document.createElement('div'); right.className = 'right';
+  var hatBtn = document.createElement('button'); hatBtn.className = 'btn round green hatbtn'; hatBtn.textContent = '👒'; hatBtn.setAttribute('aria-label', 'Sombrero');
   var lvBtn = document.createElement('button'); lvBtn.className = 'btn round purple lvbtn'; lvBtn.textContent = '🎚️'; lvBtn.setAttribute('aria-label', 'Nivel');
-  hud.appendChild(badgeHolder); hud.appendChild(prog); hud.appendChild(lvBtn); game.appendChild(hud);
+  right.appendChild(hatBtn); right.appendChild(lvBtn);
+  hud.appendChild(badgeHolder); hud.appendChild(prog); hud.appendChild(right); game.appendChild(hud);
+  var streakEl = document.createElement('div'); streakEl.className = 'streak'; game.appendChild(streakEl);
+  var hintEl = document.createElement('div'); hintEl.className = 'hint'; game.appendChild(hintEl);
   var tgtEl = prog.querySelector('.tgt'), cntEl = prog.querySelector('.cnt');
   lvBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); running = false; pickLevel(); });
+  hatBtn.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap();
+    var i = HATS.indexOf(hat), next = null;
+    for (var k = 1; k <= HATS.length; k++) { var h = HATS[(i + k) % HATS.length]; if (hatOpen(h)) { next = h; break; } }
+    var locked = HATS.filter(function (h) { return !hatOpen(h); })[0];
+    if (next === hat && locked) { KidsGame.toast('🔒 ' + locked.n + ': completa el nivel ' + locked.lv, 1500); return; }
+    hat = next; try { localStorage.setItem('kg-pesca-hat', hat.id); } catch (e) {}
+    boat.className = 'boat h-' + hat.id + (rodBent ? ' bite' : ''); KidsGame.toast(hat.e + ' ' + hat.n, 1000); KidsGame.fx.ring(hatBtn);
+  });
 
-  function fishSVG(col, stripes, num, mirrored) {
-    var g = 'url(#g-' + col.id + ')', d = col.d;
+  // peces: tres siluetas (normal, redondito, alargado) con degradado, brillo y sombra propia
+  function fishSVG(col, stripes, num, mirrored, kind) {
+    var g = 'url(#g-' + col.id + ')', d = col.d; kind = kind || 0;
     var numTxt = num != null ? '<text x="52" y="38"' + (mirrored ? ' transform="translate(104,0) scale(-1,1)"' : '') + '>' + num + '</text>' : '';
+    var body = kind === 1 ? '<ellipse cx="55" cy="35" rx="38" ry="32" fill="' + g + '"/><g fill="rgba(255,255,255,.35)"><circle cx="62" cy="22" r="4"/><circle cx="76" cy="40" r="3.5"/><circle cx="58" cy="52" r="3"/></g>'
+      : kind === 2 ? '<path d="M10 35 Q 40 6 100 24 Q 118 35 100 46 Q 40 64 10 35 Z" fill="' + g + '"/>'
+      : '<ellipse cx="55" cy="35" rx="46" ry="26" fill="' + g + '"/>';
+    var fin = kind === 2 ? '<path d="M40 20 Q 54 0 70 18 Z" fill="' + d + '"/><path d="M44 50 Q 56 68 70 52 Z" fill="' + d + '" opacity=".85"/>' : '<path d="M38 14 Q 56 -10 76 14 Z" fill="' + d + '"/><path d="M50 42 Q 66 62 42 58 Z" fill="' + d + '" opacity=".85"/>';
     return '<svg viewBox="-4 -8 130 86">' +
-      '<path d="M92 35 L 122 8 L 114 35 L 122 62 Z" fill="' + d + '"/><path d="M98 35 L 118 16 L 112 35 L 118 54 Z" fill="' + col.b + '" opacity=".5"/>' +
-      '<path d="M38 14 Q 56 -10 76 14 Z" fill="' + d + '"/>' +
-      '<ellipse cx="55" cy="35" rx="46" ry="26" fill="' + g + '"/>' +
+      '<ellipse cx="60" cy="68" rx="40" ry="6" fill="rgba(0,20,60,.22)"/>' +
+      '<g class="tail"><path d="M92 35 L 122 8 L 114 35 L 122 62 Z" fill="' + d + '"/><path d="M98 35 L 118 16 L 112 35 L 118 54 Z" fill="' + col.b + '" opacity=".5"/></g>' +
+      fin + body +
       (stripes ? '<path d="M60 12 Q 70 35 60 58 M 78 16 Q 86 35 78 54" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="6" stroke-linecap="round"/>' : '') +
-      '<path d="M50 42 Q 66 62 42 58 Z" fill="' + d + '" opacity=".85"/>' +
       '<ellipse cx="46" cy="21" rx="24" ry="8" fill="rgba(255,255,255,.45)"/>' +
       '<circle cx="26" cy="30" r="9" fill="#fff"/><circle cx="24" cy="31" r="4.5" fill="#222"/><circle cx="22" cy="28" r="1.8" fill="#fff"/>' +
       '<path d="M11 41 Q 15 46 20 42" fill="none" stroke="' + d + '" stroke-width="2.5" stroke-linecap="round"/>' +
@@ -203,26 +280,33 @@ var game = KidsGame.init({ title: 'Pesca' });
   function anySVG() {
     return '<svg viewBox="-4 -8 130 86"><path d="M92 35 L 122 8 L 114 35 L 122 62 Z" fill="#5232b3"/><path d="M38 14 Q 56 -10 76 14 Z" fill="#a4202c"/><ellipse cx="55" cy="35" rx="46" ry="26" fill="url(#g-any)"/><ellipse cx="46" cy="21" rx="24" ry="8" fill="rgba(255,255,255,.45)"/><circle cx="26" cy="30" r="9" fill="#fff"/><circle cx="24" cy="31" r="4.5" fill="#222"/><circle cx="22" cy="28" r="1.8" fill="#fff"/></svg>';
   }
+  function octoSVG() {
+    return '<svg viewBox="0 0 100 100"><g stroke="url(#g-octo)" stroke-width="12" fill="none" stroke-linecap="round"><path d="M28 62 Q 14 80 26 94"/><path d="M42 68 Q 36 86 46 96"/><path d="M58 68 Q 64 86 54 96"/><path d="M72 62 Q 86 80 74 94"/></g>' +
+      '<ellipse cx="50" cy="46" rx="36" ry="34" fill="url(#g-octo)"/><ellipse cx="38" cy="28" rx="12" ry="6" fill="#fff" opacity=".35"/>' +
+      '<circle cx="38" cy="46" r="8" fill="#fff"/><circle cx="40" cy="47" r="4.5" fill="#222"/><circle cx="62" cy="46" r="8" fill="#fff"/><circle cx="64" cy="47" r="4.5" fill="#222"/><circle cx="41.5" cy="45" r="1.5" fill="#fff"/><circle cx="65.5" cy="45" r="1.5" fill="#fff"/>' +
+      '<path d="M40 62 Q 50 72 60 62" stroke="#7a1b52" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="30" cy="58" r="5" fill="#ff8aa8" opacity=".5"/><circle cx="70" cy="58" r="5" fill="#ff8aa8" opacity=".5"/></svg>';
+  }
+  // Art del selector: la gatita con su caña
+  function heroArt() { return '<span class="h-' + hat.id + '"><svg viewBox="150 30 100 90" width="70" height="63">' + catSVG() + '</svg></span>'; }
 
   function layout() {
     W = game.clientWidth; H = game.clientHeight;
     waterTop = H * 0.26; scale = Math.max(0.7, Math.min(1.25, Math.min(W, H) / 700));
-    hook.x = W / 2;
-    boat.style.transform = ''; 
+    hook.x = W / 2 + 110; // bajo la punta de la caña
     fishes.forEach(function (f) { placeFish(f); });
     placeHook();
   }
   window.addEventListener('resize', layout);
 
+  function lineTop() { return waterTop - 128 + (rodBent ? 40 : 22); }
   function placeHook() {
-    var top = waterTop - 34;
+    var top = lineTop();
     line.style.left = (hook.x - 1) + 'px'; line.style.top = top + 'px'; line.style.height = Math.max(0, hook.y - top) + 'px';
-    hookEl.style.left = hook.x + 'px'; hookEl.style.top = hook.y + 'px';
-    if (hook.fish) {
-      var f = hook.fish; f.x = hook.x; f.y = hook.y + 34 + f.w / 2 - 6; placeFish(f);
-    }
+    hookEl.style.transform = 'translate(' + hook.x + 'px,' + hook.y + 'px)';
+    if (hook.fish) { var f = hook.fish; f.x = hook.x; f.y = hook.y + 34 + f.w / 2 - 6; placeFish(f); }
   }
   function placeFish(f) { f.el.style.transform = 'translate(' + (f.x - f.w / 2) + 'px,' + (f.y - f.h / 2) + 'px)'; }
+  function setBent(b) { if (rodBent === b) return; rodBent = b; boat.classList.toggle('bite', b); }
 
   function fishNumber() {
     if (math.kind === 'sum') { var rest = math.target - math.sum; if (rest >= 1 && rest <= 6 && Math.random() < 0.4) return rest; return 1 + KidsGame.rand(6); }
@@ -233,11 +317,13 @@ var game = KidsGame.init({ title: 'Pesca' });
     var col, num = null;
     if (cfg.mode !== 'any' && cfg.mode !== 'math' && target && Math.random() < 0.42) col = target; else col = KidsGame.pick(COLORS);
     if (cfg.mode === 'math' && math) num = fishNumber();
+    var kind = num != null ? KidsGame.rand(2) : KidsGame.rand(3);
     var w = 120 * cfg.size * scale * (0.85 + Math.random() * 0.3), h = w * 70 / 120;
     var dir = fromSide != null ? fromSide : (Math.random() < 0.5 ? 1 : -1);
     var el = document.createElement('div'); el.className = 'fish ' + (dir > 0 ? 'r' : 'l');
     el.style.width = w + 'px'; el.style.height = h + 'px';
-    el.innerHTML = fishSVG(col, num == null && Math.random() < 0.5, num, dir > 0);
+    el.innerHTML = fishSVG(col, num == null && Math.random() < 0.5, num, dir > 0, kind);
+    el.querySelector('.tail').style.animationDelay = (-Math.random()) + 's';
     var f = { el: el, col: col, num: num, w: w, h: h, dir: dir, v: (cfg.vmin + Math.random() * (cfg.vmax - cfg.vmin)) * scale,
       x: dir > 0 ? -w : W + w, y: waterTop + 60 * scale + Math.random() * (H - waterTop - 60 * scale - H * 0.12 - h), phase: Math.random() * 6, flee: 0 };
     game.appendChild(el); fishes.push(f); placeFish(f);
@@ -247,12 +333,12 @@ var game = KidsGame.init({ title: 'Pesca' });
   function clearFish() { fishes.forEach(function (f) { f.el.remove(); }); fishes = []; if (octo) { octo.el.remove(); octo = null; } }
 
   function spawnOcto() {
-    var el = document.createElement('div'); el.className = 'octo'; el.innerHTML = '<span class="emoji">🐙</span>';
-    el.style.fontSize = Math.round(84 * scale) + 'px';
-    octo = { el: el, x: W * 0.3, y: H - H * 0.12 - 70 * scale, dir: 1, v: 45 * scale, w: 84 * scale, h: 84 * scale, busy: false };
+    var el = document.createElement('div'); el.className = 'octo'; el.innerHTML = octoSVG();
+    var sz = Math.round(96 * scale); el.style.width = sz + 'px'; el.style.height = sz + 'px';
+    octo = { el: el, x: W * 0.3, y: H - H * 0.12 - 70 * scale, dir: 1, v: 45 * scale, w: sz, h: sz, busy: false };
     game.appendChild(el); placeOcto();
   }
-  function placeOcto() { octo.el.style.transform = 'translate(' + (octo.x - octo.w / 2) + 'px,' + (octo.y - octo.h / 2) + 'px)'; }
+  function placeOcto() { octo.el.style.transform = 'translate(' + (octo.x - octo.w / 2) + 'px,' + (octo.y - octo.h / 2) + 'px)' + (octo.dir < 0 ? ' scaleX(-1)' : ''); }
 
   // ---------- efectos ----------
   function splash(x, y, n) {
@@ -264,23 +350,24 @@ var game = KidsGame.init({ title: 'Pesca' });
       game.appendChild(d); (function (el) { setTimeout(function () { el.remove(); }, 800); })(d);
     }
   }
-  function sparks(x, y) {
-    for (var i = 0; i < 10; i++) {
-      var d = document.createElement('div'); d.className = 'spark'; d.textContent = KidsGame.pick(['✨', '⭐', '💫']);
-      var a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 60;
-      d.style.left = x + 'px'; d.style.top = y + 'px';
-      d.style.setProperty('--dx', Math.cos(a) * r + 'px'); d.style.setProperty('--dy', Math.sin(a) * r + 'px');
-      game.appendChild(d); (function (el) { setTimeout(function () { el.remove(); }, 900); })(d);
-    }
-  }
-  function floatText(txt, x, y) {
-    var d = document.createElement('div'); d.className = 'ftxt'; d.textContent = txt; d.style.left = x + 'px'; d.style.top = y + 'px';
+  function pageXY(x, y) { var r = game.getBoundingClientRect(); return [r.left + x, r.top + y]; }
+  function sparks(x, y) { var p = pageXY(x, y); KidsGame.fx.burst(p[0], p[1], { n: 12, chars: ['✨', '⭐', '💫', '🫧'] }); }
+  function floatText(txt, x, y, good) {
+    var d = document.createElement('div'); d.className = 'ftxt' + (good ? ' good' : ''); d.textContent = txt; d.style.left = x + 'px'; d.style.top = y + 'px';
     game.appendChild(d); setTimeout(function () { d.remove(); }, 1000);
   }
   function showHint(html, ms) {
-    var h = document.createElement('div'); h.className = 'hint'; h.innerHTML = html; game.appendChild(h);
-    setTimeout(function () { h.remove(); }, ms || 1800);
+    hintEl.innerHTML = html; hintEl.classList.add('show'); clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () { hintEl.classList.remove('show'); }, ms || 1800);
   }
+  function showStreak(txt) { streakEl.textContent = txt; streakEl.classList.add('show'); clearTimeout(streakTimer); streakTimer = setTimeout(function () { streakEl.classList.remove('show'); }, 1300); }
+  function goodCatch() {
+    streak++;
+    if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + '!  ⭐ +1'); floatText('⭐ +1', W / 2, waterTop + 60, true); }
+    else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + '!');
+    boat.classList.add('cheer'); setTimeout(function () { boat.classList.remove('cheer'); }, 900);
+  }
+  function badCatch() { streak = 0; }
 
   // ---------- control ----------
   game.addEventListener('pointerdown', function (ev) {
@@ -294,7 +381,6 @@ var game = KidsGame.init({ title: 'Pesca' });
   function isTarget(f) { return cfg.mode === 'any' || f.col === target; }
 
   function update(dt) {
-    // peces
     for (var i = fishes.length - 1; i >= 0; i--) {
       var f = fishes[i];
       if (f === hook.fish) continue;
@@ -310,17 +396,15 @@ var game = KidsGame.init({ title: 'Pesca' });
       if (octo.x > W - octo.w / 2) octo.dir = -1; if (octo.x < octo.w / 2) octo.dir = 1;
       placeOcto();
     }
-    // anzuelo
     var tipX = hook.x + 10, tipY = hook.y + 34;
     if (hook.state === 'idle') { hook.y = waterTop - 6 + Math.sin(performance.now() / 500) * 3; }
     else if (hook.state === 'drop') {
       hook.y += cfg.drop * dt;
       if (hook.y > H - H * 0.10 - 40) hook.state = 'reel';
-      // choque con pez
       for (var j = 0; j < fishes.length; j++) {
         var g = fishes[j];
         if (Math.abs(g.x - tipX) < g.w * 0.5 && Math.abs(g.y - tipY) < g.h * 0.55) {
-          hook.fish = g; hook.state = 'reel'; g.el.className = 'fish caught'; KidsGame.sound.tap(); KidsGame.vibrate(20);
+          hook.fish = g; hook.state = 'reel'; g.el.className = 'fish caught'; KidsGame.sound.tap(); KidsGame.vibrate(20); setBent(true);
           break;
         }
       }
@@ -352,9 +436,10 @@ var game = KidsGame.init({ title: 'Pesca' });
     fishes = fishes.filter(function (x) { return x !== f; });
     KidsGame.sound.pop(); KidsGame.vibrate(25);
     sparks(hook.x, hook.y); bucket.classList.remove('bump'); void bucket.offsetWidth; bucket.classList.add('bump');
+    KidsGame.fx.ring(bucket);
   }
   function release(f, txt, sayTxt) {
-    KidsGame.sound.wrong(); splash(hook.x, waterTop, 16);
+    KidsGame.sound.wrong(); splash(hook.x, waterTop, 16); badCatch(); KidsGame.fx.shake(prog);
     floatText(txt || '¡Ese no!', hook.x, waterTop - 30);
     if (sayTxt) KidsGame.say(sayTxt);
     f.el.className = 'fish ' + (f.dir > 0 ? 'r' : 'l'); f.y = waterTop + 50 * scale; f.flee = 1.6; placeFish(f);
@@ -374,48 +459,38 @@ var game = KidsGame.init({ title: 'Pesca' });
   function resolveMath(f) {
     var n = f.num;
     if (math.kind === 'sum') {
-      if (math.sum + n > math.target) { toBucket(f); math.sum = 0; bucketN.textContent = '0'; setTimeout(spillBucket, 500); renderHud(); return; }
-      toBucket(f); math.sum += n; caught++; bucketN.textContent = math.sum; KidsGame.addStar();
-      floatText('+' + n + ' = ' + math.sum, hook.x, waterTop - 30);
+      if (math.sum + n > math.target) { toBucket(f); math.sum = 0; bucketN.textContent = '0'; badCatch(); setTimeout(spillBucket, 500); renderHud(); return; }
+      toBucket(f); math.sum += n; caught++; bucketN.textContent = math.sum; KidsGame.addStar(); goodCatch();
+      floatText('+' + n + ' = ' + math.sum, hook.x, waterTop - 30, true);
       if (math.sum === math.target) {
-        math.sets++; KidsGame.sound.ok(); KidsGame.addStar(2); floatText('¡' + math.target + '! ⭐', W / 2, waterTop + 40);
+        math.sets++; KidsGame.sound.ok(); KidsGame.addStar(2); floatText('¡' + math.target + '! ⭐', W / 2, waterTop + 40, true);
         renderHud();
         if (math.sets >= 3) { finish(); return; }
         setTimeout(function () { math.sum = 0; bucketN.textContent = '0'; newSumTarget(true); }, 900);
       } else renderHud();
     } else if (math.kind === 'asc') {
       if (n !== math.next) { release(f, '¡Ese no! Busca el ' + math.next, 'Ese no. Busca el ' + math.next); return; }
-      toBucket(f); caught++; math.next++; KidsGame.addStar(); bucketN.textContent = caught; renderHud();
+      toBucket(f); caught++; math.next++; KidsGame.addStar(); bucketN.textContent = caught; goodCatch(); floatText('+1', hook.x, waterTop - 30, true); renderHud();
       if (math.next > 6) { finish(); return; }
       KidsGame.say('Ahora el ' + math.next);
     } else {
       if (n % 2 !== 0) { release(f, n + ' es impar ✖', 'El ' + n + ' es impar. Solo pares'); return; }
-      toBucket(f); caught++; KidsGame.addStar(); bucketN.textContent = caught; floatText(n + ' es par ✔', hook.x, waterTop - 30); renderHud();
+      toBucket(f); caught++; KidsGame.addStar(); bucketN.textContent = caught; goodCatch(); floatText(n + ' es par ✔', hook.x, waterTop - 30, true); renderHud();
       if (caught >= NEED) { finish(); return; }
     }
   }
   function resolve() {
-    var f = hook.fish; hook.fish = null; hook.state = 'idle';
+    var f = hook.fish; hook.fish = null; hook.state = 'idle'; setBent(false);
     if (!f) return;
     if (cfg.mode === 'math') { resolveMath(f); return; }
     if (isTarget(f)) {
-      var br = bucket.getBoundingClientRect(), gr = game.getBoundingClientRect();
-      var bx = br.left - gr.left + br.width / 2, by = br.top - gr.top + br.height / 2;
-      f.el.className = 'fish tobucket';
-      f.el.style.transform = 'translate(' + (bx - f.w / 2) + 'px,' + (by - f.h / 2) + 'px) scale(.3)';
-      (function (el) { setTimeout(function () { el.remove(); }, 700); })(f.el);
-      fishes = fishes.filter(function (x) { return x !== f; });
+      toBucket(f);
       caught++; sinceChange++;
-      KidsGame.sound.pop(); KidsGame.addStar(); KidsGame.vibrate(25);
-      sparks(hook.x, hook.y); bucket.classList.remove('bump'); void bucket.offsetWidth; bucket.classList.add('bump');
+      KidsGame.addStar(); goodCatch(); floatText('+1', hook.x, waterTop - 30, true);
       bucketN.textContent = caught; renderHud();
       if (caught >= NEED) { finish(); return; }
       if (cfg.mode === 'rotate' && sinceChange >= 4) { sinceChange = 0; setTarget(true); }
-    } else {
-      KidsGame.sound.wrong(); splash(hook.x, waterTop, 16);
-      floatText('¡Ese no!', hook.x, waterTop - 30);
-      f.el.className = 'fish ' + (f.dir > 0 ? 'r' : 'l'); f.y = waterTop + 50 * scale; f.flee = 1.6; placeFish(f);
-    }
+    } else release(f);
   }
 
   function renderHud() {
@@ -447,43 +522,44 @@ var game = KidsGame.init({ title: 'Pesca' });
   function setTarget(announce) {
     var others = COLORS.filter(function (c) { return c !== target; });
     target = KidsGame.pick(others); renderHud();
-    if (announce) {
-      showHint('Ahora los ' + fishSVG(target, false), 2000);
-      KidsGame.say('Ahora pesca los peces ' + target.say);
-    }
+    if (announce) { showHint('Ahora los ' + fishSVG(target, false), 2000); KidsGame.say('Ahora pesca los peces ' + target.say); }
   }
 
+  var roundN = 0;
   function startRound() {
-    clearFish(); caught = 0; sinceChange = 0; hook.fish = null; hook.state = 'idle'; bucketN.textContent = '0';
-    hookEl.classList.remove('tickle');
+    clearFish(); caught = 0; sinceChange = 0; streak = 0; hook.fish = null; hook.state = 'idle'; bucketN.textContent = '0'; setBent(false);
+    hookEl.classList.remove('tickle'); roundN++;
     layout();
-    if (cfg.mode === 'any') { target = null; renderHud(); showHint('<span class="emoji">👆</span> ¡Toca para pescar!', 2000); KidsGame.say('Toca para pescar'); }
+    if (cfg.mode === 'any') { target = null; renderHud(); showHint('<span class="emoji">🎣</span> ¡A pescar! <small>Ronda ' + roundN + '</small>', 1500); setTimeout(function () { if (running) showHint('<span class="emoji">👆</span> ¡Toca el agua para pescar!', 2000); }, 1600); KidsGame.say('Toca el agua para pescar'); }
     else if (cfg.mode === 'math') { target = null; startMath(); }
     else { target = null; setTarget(false); showHint('Pesca los ' + fishSVG(target, false), 2200); KidsGame.say('Pesca los peces ' + target.say); }
     for (var i = 0; i < cfg.count; i++) { var f = spawnFish(); f.x = Math.random() * W; placeFish(f); }
     if (cfg.octo) spawnOcto();
     running = true;
+    if (nivel === 1 && firstRound) { firstRound = false; setTimeout(function () { if (running && hook.state === 'idle') KidsGame.hand({ el: water, timeout: 5000 }); }, 1800); }
   }
   function finish() {
-    running = false;
+    running = false; setBent(false);
     KidsGame.levelDone(nivel);
+    boat.classList.add('cheer'); setTimeout(function () { boat.classList.remove('cheer'); }, 1500);
     var sub = '🐟 ' + NEED + ' peces', msg;
     if (cfg.mode === 'math') {
       msg = math.kind === 'sum' ? '¡Sumas de ' + math.target + '!' : math.kind === 'asc' ? '¡Del 1 al 6 en orden!' : '¡Solo pares!';
       sub = math.kind === 'sum' ? '🪣 3 cubetas exactas' : math.kind === 'asc' ? '🔢 1 2 3 4 5 6' : '✔ 2 4 6 8 · ' + caught + ' peces';
       mround++;
     }
+    var nh = HATS[nivel];
     setTimeout(function () {
-      KidsGame.celebrate({
-        msg: msg, sub: sub, stars: 3,
+      KidsGame.celebrate({ msg: msg, sub: sub, stars: 3,
         onAgain: function () { if (cfg.mode === 'math') mround--; startRound(); },
-        onNext: function () { if (nivel < 4) { nivel = nivel + 1; cfg = CFG[nivel]; setBadge(); } startRound(); }
-      });
+        onNext: function () { if (nivel < 4) { nivel = nivel + 1; cfg = CFG[nivel]; setBadge(); } startRound(); } });
+      if (nh) setTimeout(function () { KidsGame.toast('🎁 Sombrero nuevo: ' + nh.e + ' ' + nh.n + ' (botón 👒)', 2400); }, 900);
     }, 500);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }
-  function pickLevel() { KidsGame.levelPicker({ labels: { 1: 'Cualquier pez', 2: 'Por color', 3: 'Color que cambia + pulpo', 4: 'Suma, orden y pares 🔢' }, onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); startRound(); } }); }
-  window.__kgTest = function () { return { fishes: fishes, math: math, hook: hook, caught: function () { return caught; }, catchFish: function (f) { hook.fish = f; f.el.className = 'fish caught'; hook.state = 'reel'; hook.y = waterTop; resolve(); }, target: target, spawnFish: spawnFish }; };
+  function pickLevel() { KidsGame.levelPicker({ labels: LABELS, howto: HOWTO, art: heroArt(), music: 'calma', onPick: function (n) { nivel = n; cfg = CFG[n]; setBadge(); startRound(); } }); }
+  window.__kgTest = function () { return { fishes: fishes, math: math, hook: hook, caught: function () { return caught; }, streak: function () { return streak; }, running: function () { return running; }, bent: function () { return rodBent; },
+    catchFish: function (f) { hook.fish = f; f.el.className = 'fish caught'; hook.state = 'reel'; hook.y = waterTop; setBent(true); resolve(); }, target: target, spawnFish: spawnFish, finish: finish }; };
 
   function frame(now) {
     if (!lastT) lastT = now;
@@ -491,8 +567,7 @@ var game = KidsGame.init({ title: 'Pesca' });
     if (running) update(dt);
     requestAnimationFrame(frame);
   }
-  layout(); setBadge(); renderHudIdle(); pickLevel(); requestAnimationFrame(frame);
-  function renderHudIdle() { tgtEl.innerHTML = anySVG(); }
+  layout(); setBadge(); tgtEl.innerHTML = anySVG(); pickLevel(); requestAnimationFrame(frame);
 })();
 </script>
 </body>

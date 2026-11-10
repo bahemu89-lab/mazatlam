@@ -6,38 +6,51 @@
 <link rel="stylesheet" href="../common.css">
 <title>Alimenta</title>
 <style>
-  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; touch-action: none; }
-  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; }
-  .hud .lvl {
-    background: linear-gradient(180deg, #ffffff, #eef3ff); border-radius: 30px; padding: 6px 18px; border: 3px solid #fff; font-weight: 900; color: #1f2f6b;
-    box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22), inset 0 2px 0 #fff;
-  }
+  /* ===== Mundo: "El zoológico" — cielo, arbolitos, cerca y recintos con caritas de animales en SVG que abren la boca ===== */
+  .game { display: flex; flex-direction: column; padding: 8px; gap: 8px; touch-action: none;
+    background:
+      radial-gradient(ellipse 120% 70% at 50% 100%, rgba(0,80,0,.18), rgba(0,0,0,0) 60%),
+      radial-gradient(ellipse 30% 18% at 15% 36%, #5fbf5a 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 26% 16% at 85% 34%, #4fae4c 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 36% 20% at 50% 38%, #74cc68 0 60%, rgba(0,0,0,0) 61%),
+      linear-gradient(180deg, #9fdcff 0%, #d7f1ff 34%, #a8e07a 36%, #7cc95a 70%, #5fb04a 100%); }
+  .game::before { content: ""; position: absolute; left: 0; right: 0; top: 36%; height: 7%; z-index: 0; pointer-events: none; opacity: .9;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 28%, #e3b574 28%, #b9843f 44%, rgba(0,0,0,0) 44%, rgba(0,0,0,0) 62%, #e3b574 62%, #b9843f 78%, rgba(0,0,0,0) 78%),
+      linear-gradient(90deg, rgba(0,0,0,0) 0 10px, #d9a764 10px 22px, #b8853f 22px 28px, rgba(0,0,0,0) 28px 60px) 0 0 / 60px 100% repeat-x; }
+  .deco { position: absolute; z-index: 0; pointer-events: none; font-size: 40px; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); line-height: 1; font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; animation: float 3.6s ease-in-out infinite; }
+  .sign { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); z-index: 0; pointer-events: none; padding: 2px 16px 4px; border-radius: 10px; font-size: 18px; font-weight: 900; letter-spacing: 3px; color: #fff7d6;
+    background: linear-gradient(180deg, #a26b35, #6b4320); box-shadow: 0 3px 0 #3f2510, 0 6px 10px rgba(0,0,0,.3); text-shadow: 0 1px 0 #3f2510; display: none; }
+  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 22px; position: relative; z-index: 3; }
+  .hud .lvl { background: linear-gradient(180deg, #ffffff, #eef3ff); border-radius: 30px; padding: 6px 18px; border: 3px solid #fff; font-weight: 900; color: #1f2f6b; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.22), inset 0 2px 0 #fff; }
   .hud .lvbtn { width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 26px; border-radius: 50%; pointer-events: auto; }
   .hud .dish { font-size: 30px; }
-  .animals { flex: 1 1 0; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 14px; }
-  /* Tarjeta-medallón del animal: relieve, brillo y sombra en el suelo */
+  .animals { flex: 1 1 0; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 14px; position: relative; z-index: 1; transition: transform .35s cubic-bezier(.2,1.3,.4,1), opacity .3s; }
+  .game.sw .animals, .game.sw .tray { transform: scale(.92); opacity: 0; }
+  /* Recinto del animal: tarjeta con marco de madera y pasto */
   .animal {
-    position: relative; width: var(--as); height: var(--as); flex-direction: column; gap: 0; border-radius: 28px;
-    background: linear-gradient(160deg, #ffffff 0%, #f3f6fc 60%, #e6ebf7 100%);
+    position: relative; width: var(--as); height: var(--as); flex-direction: column; gap: 0; border-radius: 28px; border: 4px solid #e2b06a;
+    background: radial-gradient(ellipse 80% 40% at 50% 100%, #8fd25a 0, #b9ec84 60%, rgba(185,236,132,0) 61%), linear-gradient(170deg, #ffffff 0%, #f6f1e6 60%, #ead9bf 100%);
+    box-shadow: 0 7px 0 #9c6b35, 0 14px 22px rgba(40,60,20,.28), inset 0 2px 0 #fff;
     transition: transform .18s, background .25s, box-shadow .25s;
   }
-  .animal .gs { position: absolute; left: 10%; right: 10%; bottom: -22px; height: 26px; border-radius: 50%; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.28), rgba(0,0,0,0) 70%); }
+  .animal::after { display: none; }
+  .animal .gs { position: absolute; left: 10%; right: 10%; bottom: -22px; height: 26px; border-radius: 50%; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.28), rgba(0,0,0,0) 70%); }
   .animal .medal {
     position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
-    width: calc(var(--as) * .62); height: calc(var(--as) * .62); border-radius: 50%; margin-top: calc(var(--as) * .06);
-    background: radial-gradient(circle at 35% 28%, #ffffff 0, #fff2c2 40%, #ffd166 78%, #f2a900 100%);
-    box-shadow: 0 6px 0 #d18f00, 0 12px 16px rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.9), 0 0 0 4px #fff, 0 0 0 7px rgba(255,209,102,.5);
+    width: calc(var(--as) * .66); height: calc(var(--as) * .66); border-radius: 50%; margin-top: calc(var(--as) * .05);
+    background: radial-gradient(circle at 35% 28%, #ffffff 0, #fff7df 40%, #ffe3a3 78%, #f2bf5a 100%);
+    box-shadow: 0 6px 0 #c98f2a, 0 12px 16px rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.9), 0 0 0 4px #fff, 0 0 0 7px rgba(242,191,90,.45);
   }
-  .animal .medal::after { content: ""; position: absolute; left: 14%; right: 14%; top: 6%; height: 34%; border-radius: 50%; pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0)); }
-  .animal .face { font-size: calc(var(--as) * .4); position: relative; z-index: 1; }
-  .animal:not(.fed) .medal { animation: breathe 2.6s ease-in-out infinite; }
+  .animal:not(.fed) .medal { animation: breathe 2.8s ease-in-out infinite; }
   .animal:nth-child(2) .medal { animation-delay: -.7s; } .animal:nth-child(3) .medal { animation-delay: -1.4s; }
   .animal:nth-child(4) .medal { animation-delay: -2.1s; } .animal:nth-child(5) .medal { animation-delay: -.35s; }
-  @keyframes breathe { 0%,100%{transform:scale(1,1) translateY(0)} 50%{transform:scale(1.04,.97) translateY(2px)} }
-  .animal .hint { font-size: calc(var(--as) * .2); position: relative; z-index: 1; margin-top: calc(var(--as) * .03); }
-  /* Burbuja de "quiero..." con brillo y colita */
+  @keyframes breathe { 0%,100%{transform:scale(1,1) translateY(0)} 50%{transform:scale(1.03,.98) translateY(2px)} }
+  .animal .face { width: 84%; height: 84%; display: block; position: relative; z-index: 1; overflow: visible; }
+  .animal .face .mo { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); transition: transform .12s; }
+  .animal .face .sm { transition: opacity .12s; }
+  .animal .face .eyes { transform-box: fill-box; transform-origin: 50% 50%; animation: ablink 4.6s infinite; }
+  @keyframes ablink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+  .animal .hint { font-size: calc(var(--as) * .16); position: relative; z-index: 1; margin-top: calc(var(--as) * .02); }
   .animal .want {
     position: absolute; top: -10px; right: -10px; z-index: 3; display: flex; align-items: center; justify-content: center; gap: 4px;
     min-width: calc(var(--as) * .34); height: calc(var(--as) * .34); padding: 0 6px; border-radius: 40px;
@@ -45,8 +58,7 @@
     box-shadow: 0 4px 0 #d9a520, 0 8px 12px rgba(0,0,0,.2), inset 0 2px 0 #fff;
     font-size: calc(var(--as) * .2); animation: wantbob 2s ease-in-out infinite;
   }
-  .animal .want::after { content: ""; position: absolute; left: 10px; bottom: -12px; width: 12px; height: 12px; border-radius: 50%;
-    background: #fff4c9; border: 3px solid #ffb703; box-shadow: -6px 8px 0 -3px #fff4c9, -6px 8px 0 0 #ffb703; }
+  .animal .want::after { content: ""; position: absolute; left: 10px; bottom: -12px; width: 12px; height: 12px; border-radius: 50%; background: #fff4c9; border: 3px solid #ffb703; box-shadow: -6px 8px 0 -3px #fff4c9, -6px 8px 0 0 #ffb703; }
   @keyframes wantbob { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-4px) rotate(3deg)} }
   .animal .want .w { position: relative; transition: transform .25s, opacity .25s; }
   .animal .want .w.done { opacity: .35; filter: grayscale(.8); transform: scale(.75); }
@@ -54,49 +66,41 @@
   .animal .want .w.now { transform: scale(1.15); }
   .animal .want .sep { font-size: 60%; color: #b48200; }
   .animal.two .want { top: -22px; right: -6px; font-size: calc(var(--as) * .17); height: calc(var(--as) * .3); }
-  .animal.two .medal { margin-top: calc(var(--as) * .13); width: calc(var(--as) * .56); height: calc(var(--as) * .56); }
-  .animal.two .face { font-size: calc(var(--as) * .36); }
-  /* Nivel Experto: menú de 3 comidas en orden, comida prohibida y menú que se esconde */
+  .animal.two .medal { margin-top: calc(var(--as) * .12); width: calc(var(--as) * .58); height: calc(var(--as) * .58); }
   .animal.three .want { top: -24px; left: -6px; right: -6px; height: calc(var(--as) * .27); font-size: calc(var(--as) * .15); padding: 0 4px; gap: 2px; }
   .animal.three .want .sep { font-size: 55%; }
-  .animal.three .medal { margin-top: calc(var(--as) * .12); width: calc(var(--as) * .54); height: calc(var(--as) * .54); }
-  .animal.three .face { font-size: calc(var(--as) * .34); }
+  .animal.three .medal { margin-top: calc(var(--as) * .12); width: calc(var(--as) * .56); height: calc(var(--as) * .56); }
   .animal .want .cnt { font-size: 70%; color: #b48200; font-weight: 900; }
-  .animal .nope { position: absolute; left: -8px; bottom: -8px; z-index: 3; display: none; align-items: center; font-size: calc(var(--as) * .15); padding: 2px 8px; border-radius: 30px;
-    background: #fff; border: 3px solid #e63946; box-shadow: 0 4px 0 #8f1a24, 0 8px 12px rgba(0,0,0,.2); }
+  .animal .nope { position: absolute; left: -8px; bottom: -8px; z-index: 3; display: none; align-items: center; font-size: calc(var(--as) * .15); padding: 2px 8px; border-radius: 30px; background: #fff; border: 3px solid #e63946; box-shadow: 0 4px 0 #8f1a24, 0 8px 12px rgba(0,0,0,.2); }
   .animal.three .nope { display: inline-flex; }
   .animal.three.fed .nope { display: none; }
   .animal .nope.shake { animation: shake .4s; }
   .hud .hintbtn { display: none; }
   .hud .hintbtn.show { display: inline-flex; }
   .hud .hintbtn.off { opacity: .5; filter: grayscale(.6); }
-  .hud .budget { display: none; align-items: center; gap: 4px; font-size: 22px; font-weight: 900; color: #7a4b00; padding: 4px 12px; border-radius: 20px;
-    background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
+  .hud .budget { display: none; align-items: center; gap: 4px; font-size: 22px; font-weight: 900; color: #7a4b00; padding: 4px 12px; border-radius: 20px; background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
   .hud .budget.show { display: inline-flex; }
-  .animal.over { transform: scale(1.1); background: linear-gradient(160deg, #fffdf1, #fff2bd); box-shadow: 0 6px 0 #d9a520, 0 14px 24px rgba(0,0,0,.25), 0 0 0 6px rgba(255,209,102,.6), inset 0 2px 0 #fff; }
-  .animal.fed { background: linear-gradient(160deg, #eefff0, #b9f0c4); border-color: #6fdc8c; box-shadow: 0 6px 0 #3fa864, 0 12px 20px rgba(20,120,60,.28), 0 0 0 5px rgba(111,220,140,.5), inset 0 2px 0 #fff; }
+  .animal.over { transform: scale(1.08); box-shadow: 0 7px 0 #9c6b35, 0 14px 24px rgba(0,0,0,.25), 0 0 0 6px rgba(255,209,102,.7), inset 0 2px 0 #fff; }
+  .animal.fed { background: radial-gradient(ellipse 80% 40% at 50% 100%, #8fd25a 0, #b9ec84 60%, rgba(185,236,132,0) 61%), linear-gradient(160deg, #eefff0, #c9f3d0); border-color: #6fdc8c; box-shadow: 0 7px 0 #3fa864, 0 12px 20px rgba(20,120,60,.28), 0 0 0 5px rgba(111,220,140,.5), inset 0 2px 0 #fff; }
   .animal.fed .medal { background: radial-gradient(circle at 35% 28%, #ffffff 0, #dfffe6 40%, #8ee6a5 78%, #2cb67d 100%); box-shadow: 0 6px 0 #1c8a53, 0 12px 16px rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.9), 0 0 0 4px #fff; }
   .animal.fed .want { display: none; }
-  .animal .ok { display: none; position: absolute; top: -12px; right: -12px; z-index: 3; width: calc(var(--as) * .3); height: calc(var(--as) * .3); border-radius: 50%;
-    align-items: center; justify-content: center; font-size: calc(var(--as) * .16); color: #fff;
+  .animal .ok { display: none; position: absolute; top: -12px; right: -12px; z-index: 3; width: calc(var(--as) * .3); height: calc(var(--as) * .3); border-radius: 50%; align-items: center; justify-content: center; font-size: calc(var(--as) * .16); color: #fff;
     background: radial-gradient(circle at 35% 28%, #a8f0c0, #2cb67d 70%); box-shadow: 0 4px 0 #1c8a53, 0 8px 12px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.7), 0 0 0 4px #fff; }
   .animal.fed .ok { display: flex; animation: pop .45s ease-out; }
   .animal.nam .face { animation: nam .7s ease-out; }
   .animal.no { animation: nono .5s ease-in-out; }
-  @keyframes nam { 0%{transform:scale(1)} 30%{transform:scale(1.35,1.2) rotate(-8deg)} 60%{transform:scale(1.2,1.3) rotate(8deg)} 100%{transform:scale(1)} }
+  @keyframes nam { 0%{transform:scale(1)} 30%{transform:scale(1.3,1.15) rotate(-8deg)} 60%{transform:scale(1.15,1.25) rotate(8deg)} 100%{transform:scale(1)} }
   @keyframes nono { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-14deg)} 40%{transform:rotate(12deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(8deg)} }
-  /* Bandeja de madera tipo picnic con veta, borde claro y grosor */
+  /* Carrito de comida del cuidador */
   .tray {
-    position: relative; flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; align-content: center; gap: 12px;
-    padding: 12px 14px; min-height: calc(var(--fs) + 28px); border-radius: 26px; border: 4px solid #efcf8f;
+    position: relative; flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; align-content: center; gap: 12px; z-index: 2;
+    padding: 12px 14px; min-height: calc(var(--fs) + 28px); border-radius: 26px; border: 4px solid #efcf8f; transition: transform .35s cubic-bezier(.2,1.3,.4,1), opacity .3s;
     background:
       repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 5px, rgba(0,0,0,0) 5px 9px, rgba(60,30,0,.07) 9px 14px, rgba(0,0,0,0) 14px 22px),
       linear-gradient(180deg, #e0ab66 0%, #c68542 55%, #a6652c 100%);
     box-shadow: 0 9px 0 #7a4418, 0 18px 26px rgba(0,0,0,.32), inset 0 5px 12px rgba(60,30,0,.35), inset 0 -2px 0 rgba(255,255,255,.25);
   }
-  .tray::before { content: ""; position: absolute; left: 6px; right: 6px; top: 4px; height: 18px; border-radius: 20px; pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0)); }
-  /* Cada comida sobre un platito brillante */
+  .tray::before { content: ""; position: absolute; left: 6px; right: 6px; top: 4px; height: 18px; border-radius: 20px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0)); }
   .food {
     width: var(--fs); height: var(--fs); font-size: calc(var(--fs) * .58); border-radius: 50%; border: 0;
     background: radial-gradient(circle at 50% 42%, #ffffff 0 52%, #e9eef7 53% 66%, #ffffff 67% 100%);
@@ -111,11 +115,15 @@
   .drag.back { transition: transform .3s ease-in, opacity .3s; }
   .heart { position: fixed; z-index: 35; pointer-events: none; font-size: 34px; animation: heart 1.1s ease-out forwards; }
   @keyframes heart { 0%{transform:translate(-50%,0) scale(.6);opacity:1} 100%{transform:translate(-50%,-150px) scale(1.4) rotate(15deg);opacity:0} }
-  .spark { position: fixed; left: 0; top: 0; z-index: 36; pointer-events: none; font-size: 24px; animation: sparkfly .9s ease-out forwards; }
-  @keyframes sparkfly { 0%{transform:translate(-50%,-50%) scale(.4);opacity:1} 100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.3) rotate(180deg);opacity:0} }
+  .banner { position: absolute; left: 50%; top: 42%; z-index: 12; pointer-events: none; padding: 10px 32px; border-radius: 40px; white-space: nowrap;
+    font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #1b8a4c, 0 4px 8px rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #8ef0b0, #24b36c); border: 3px solid #fff; box-shadow: 0 6px 0 #14784a, 0 14px 24px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
+  .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
   @media (orientation: landscape) {
     .game { flex-direction: row; }
-    .hud { position: absolute; left: 0; right: 0; top: 4px; z-index: 2; pointer-events: none; }
+    .hud { position: absolute; left: 0; right: 0; top: 4px; z-index: 3; pointer-events: none; }
     .animals { padding-top: 44px; }
     .tray { flex-direction: column; flex-wrap: wrap; max-height: 100%; min-width: calc(var(--fs) + 32px); min-height: 0; padding: 12px;
       background:
@@ -129,26 +137,104 @@
 <script>
 var game = KidsGame.init({ title: 'Alimenta' });
 (function () {
+  // ---------- Caritas de animales en SVG (la boca se abre cuando la comida se acerca) ----------
+  var FACES = {
+    '🐰': { b: '#f3ece6', l: '#ffffff', d: '#c9b8a8', ears: 'long', inner: '#ffb3c7', nose: 'pink', x: 'teeth' },
+    '🐵': { b: '#9c6b3c', l: '#c9955f', d: '#5e3c1a', ears: 'side', inner: '#f2d4b0', nose: 'dots', x: 'monkey' },
+    '🐱': { b: '#ffb84d', l: '#ffe0a3', d: '#c47f1a', ears: 'pointy', inner: '#ffb3c7', nose: 'pink', x: 'whiskers' },
+    '🐶': { b: '#d9a066', l: '#f2cfa3', d: '#8a5a2b', ears: 'floppy', inner: '#8a5a2b', nose: 'black', x: 'muzzle' },
+    '🐼': { b: '#ffffff', l: '#ffffff', d: '#c9c9c9', ears: 'round', inner: '#2b2b2b', earc: '#2b2b2b', nose: 'black', x: 'panda' },
+    '🐨': { b: '#a9aeb8', l: '#dde0e8', d: '#6c7180', ears: 'bigfluff', inner: '#e9c4c9', nose: 'koala', x: '' },
+    '🐘': { b: '#a9b4c4', l: '#d4dce8', d: '#6c7a92', ears: 'elephant', inner: '#d9b8c0', nose: 'trunk', x: '' },
+    '🐿️': { b: '#e08a3c', l: '#ffc48a', d: '#9c5a1a', ears: 'pointy', inner: '#ffd9b3', nose: 'black', x: 'teeth' },
+    '🐝': { b: '#ffd23f', l: '#fff0a0', d: '#b8860b', ears: 'none', inner: '#fff', nose: 'none', x: 'bee' },
+    '🐮': { b: '#ffffff', l: '#ffffff', d: '#c9c9c9', ears: 'side', inner: '#ffc7d1', nose: 'snout', x: 'cow' },
+    '🐧': { b: '#2b2f3a', l: '#5a6070', d: '#12141c', ears: 'none', inner: '#fff', nose: 'beak', x: 'penguin' },
+    '🦒': { b: '#ffcf5a', l: '#ffe9a8', d: '#c9962a', ears: 'side', inner: '#f2c97a', nose: 'dots', x: 'giraffe' },
+    '🐷': { b: '#ffb3c7', l: '#ffd6e0', d: '#d9768f', ears: 'pointy', inner: '#ff8fb1', nose: 'snout', x: '' },
+    '🐭': { b: '#b8bdd1', l: '#e3e6f0', d: '#7a8099', ears: 'round', inner: '#ffb3c7', nose: 'pink', x: 'whiskers' },
+    '🐻': { b: '#a86b3c', l: '#d9a06c', d: '#6b3f1e', ears: 'round', inner: '#e8b98f', nose: 'black', x: 'muzzle' },
+    '🦁': { b: '#e0a040', l: '#ffd080', d: '#a86a14', ears: 'round', inner: '#f2c97a', nose: 'black', x: 'lion' },
+    '🐢': { b: '#7fc26a', l: '#b8e8a3', d: '#4a8a3a', ears: 'none', inner: '#fff', nose: 'dots', x: 'turtle' },
+    '🦜': { b: '#e63946', l: '#ff8a90', d: '#9c1f2a', ears: 'none', inner: '#fff', nose: 'hook', x: 'parrot' },
+    '🦊': { b: '#ff8a3c', l: '#ffc89a', d: '#b8541a', ears: 'pointy', inner: '#fff', nose: 'black', x: 'muzzlew' },
+    '🐸': { b: '#7fd25a', l: '#c6f5a8', d: '#3f8f2a', ears: 'none', inner: '#fff', nose: 'none', x: 'frog' },
+    '🐑': { b: '#f2e6d6', l: '#fff', d: '#bfae9f', ears: 'side', inner: '#e9c4c9', nose: 'pink', x: 'wool' },
+    '🐹': { b: '#f2c88a', l: '#ffe8c4', d: '#c48a46', ears: 'round', inner: '#ffb3c7', nose: 'pink', x: 'cheeks' }
+  };
+  function faceSVG(em) {
+    var K = FACES[em], id = 'fa' + Math.abs(em.charCodeAt(0) * 31 + (em.charCodeAt(1) || 0)), s = '';
+    s += '<svg class="face" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="' + id + '" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="' + K.l + '"/><stop offset=".55" stop-color="' + K.b + '"/><stop offset="1" stop-color="' + K.d + '"/></radialGradient></defs>';
+    var F = 'url(#' + id + ')', st = ' stroke="' + K.d + '" stroke-width="2.5" stroke-linejoin="round"';
+    if (K.x === 'lion') { s += '<g fill="#b8651a">'; for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6; s += '<circle cx="' + (50 + Math.cos(a) * 38) + '" cy="' + (50 + Math.sin(a) * 38) + '" r="13"/>'; } s += '</g>'; }
+    if (K.x === 'wool') { s += '<g fill="#fff" stroke="#d9cdbf" stroke-width="2">'; for (var j = 0; j < 10; j++) { var aa = j * Math.PI / 5; s += '<circle cx="' + (50 + Math.cos(aa) * 36) + '" cy="' + (50 + Math.sin(aa) * 36) + '" r="13"/>'; } s += '</g>'; }
+    if (K.x === 'turtle') s += '<path d="M12 70 Q 50 100 88 70 Q 88 92 50 98 Q 12 92 12 70 Z" fill="#8a6a3a" stroke="#5a4320" stroke-width="2"/>';
+    if (K.x === 'parrot') s += '<path d="M44 20 Q 50 -4 56 18 M50 18 Q 62 -2 66 18 M38 22 Q 36 2 48 16" stroke="#2f95e8" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M50 18 Q 62 -2 66 18" stroke="#ffd23f" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    if (K.ears === 'long') s += '<ellipse cx="36" cy="16" rx="10" ry="24" fill="' + F + '"' + st + ' transform="rotate(-8 36 16)"/><ellipse cx="64" cy="16" rx="10" ry="24" fill="' + F + '"' + st + ' transform="rotate(8 64 16)"/><ellipse cx="36" cy="18" rx="4.5" ry="16" fill="' + K.inner + '" transform="rotate(-8 36 16)"/><ellipse cx="64" cy="18" rx="4.5" ry="16" fill="' + K.inner + '" transform="rotate(8 64 16)"/>';
+    if (K.ears === 'round') s += '<circle cx="22" cy="26" r="13" fill="' + (K.earc || F) + '"' + st + '/><circle cx="78" cy="26" r="13" fill="' + (K.earc || F) + '"' + st + '/><circle cx="22" cy="26" r="6.5" fill="' + K.inner + '"/><circle cx="78" cy="26" r="6.5" fill="' + K.inner + '"/>';
+    if (K.ears === 'bigfluff') s += '<circle cx="18" cy="40" r="19" fill="' + F + '"' + st + '/><circle cx="82" cy="40" r="19" fill="' + F + '"' + st + '/><circle cx="18" cy="40" r="10" fill="' + K.inner + '"/><circle cx="82" cy="40" r="10" fill="' + K.inner + '"/>';
+    if (K.ears === 'elephant') s += '<ellipse cx="16" cy="50" rx="16" ry="26" fill="' + F + '"' + st + '/><ellipse cx="84" cy="50" rx="16" ry="26" fill="' + F + '"' + st + '/><ellipse cx="16" cy="50" rx="8" ry="17" fill="' + K.inner + '"/><ellipse cx="84" cy="50" rx="8" ry="17" fill="' + K.inner + '"/>';
+    if (K.ears === 'pointy') s += '<polygon points="22,42 18,6 48,26" fill="' + F + '"' + st + '/><polygon points="78,42 82,6 52,26" fill="' + F + '"' + st + '/><polygon points="26,36 24,14 42,26" fill="' + K.inner + '"/><polygon points="74,36 76,14 58,26" fill="' + K.inner + '"/>';
+    if (K.ears === 'side') s += '<ellipse cx="14" cy="48" rx="11" ry="8" fill="' + F + '"' + st + '/><ellipse cx="86" cy="48" rx="11" ry="8" fill="' + F + '"' + st + '/><ellipse cx="14" cy="48" rx="5" ry="3.5" fill="' + K.inner + '"/><ellipse cx="86" cy="48" rx="5" ry="3.5" fill="' + K.inner + '"/>';
+    if (K.ears === 'floppy') s += '<path d="M20 30 Q 6 60 18 80 Q 32 78 34 56 Z" fill="' + K.inner + '"' + st + '/><path d="M80 30 Q 94 60 82 80 Q 68 78 66 56 Z" fill="' + K.inner + '"' + st + '/>';
+    if (K.x === 'cow') s += '<path d="M24 22 Q 14 6 26 4 Q 30 14 34 22 Z M76 22 Q 86 6 74 4 Q 70 14 66 22 Z" fill="#e9c9a0" stroke="#b08a56" stroke-width="2"/>';
+    if (K.x === 'giraffe') s += '<path d="M36 20 L 34 6 M64 20 L 66 6" stroke="#c9962a" stroke-width="5" stroke-linecap="round"/><circle cx="34" cy="5" r="4.5" fill="#8a5a2b"/><circle cx="66" cy="5" r="4.5" fill="#8a5a2b"/>';
+    if (K.x === 'bee') s += '<path d="M40 20 Q 30 4 22 8 M60 20 Q 70 4 78 8" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="22" cy="8" r="4" fill="#2b2b2b"/><circle cx="78" cy="8" r="4" fill="#2b2b2b"/>';
+    s += '<circle cx="50" cy="52" r="34" fill="' + F + '"' + st + '/>';
+    if (K.x === 'panda') s += '<ellipse cx="36" cy="46" rx="11" ry="13" fill="#2b2b2b" transform="rotate(-15 36 46)"/><ellipse cx="64" cy="46" rx="11" ry="13" fill="#2b2b2b" transform="rotate(15 64 46)"/>';
+    if (K.x === 'penguin') s += '<ellipse cx="50" cy="56" rx="24" ry="26" fill="#fff"/>';
+    if (K.x === 'monkey') s += '<ellipse cx="50" cy="58" rx="24" ry="20" fill="#f2d4b0"/><circle cx="36" cy="40" r="12" fill="#f2d4b0"/><circle cx="64" cy="40" r="12" fill="#f2d4b0"/>';
+    if (K.x === 'cow') s += '<ellipse cx="30" cy="34" rx="10" ry="8" fill="#2b2b2b" opacity=".85"/><ellipse cx="70" cy="70" rx="8" ry="6" fill="#2b2b2b" opacity=".85"/>';
+    if (K.x === 'giraffe') s += '<g fill="#b8782a" opacity=".8"><circle cx="28" cy="40" r="6"/><circle cx="72" cy="36" r="5"/><circle cx="34" cy="74" r="5"/><circle cx="68" cy="76" r="6"/></g>';
+    if (K.x === 'bee') s += '<path d="M18 40 Q 50 30 82 40" stroke="#2b2b2b" stroke-width="7" fill="none"/>';
+    if (K.x === 'muzzle') s += '<ellipse cx="50" cy="66" rx="17" ry="12" fill="' + K.l + '"/>';
+    if (K.x === 'muzzlew') s += '<ellipse cx="50" cy="66" rx="17" ry="12" fill="#fff"/>';
+    if (K.x === 'whiskers') s += '<path d="M10 58 L 32 60 M10 68 L 32 64 M90 58 L 68 60 M90 68 L 68 64" stroke="' + K.d + '" stroke-width="2" stroke-linecap="round" opacity=".7"/>';
+    if (K.x === 'cheeks') s += '<ellipse cx="26" cy="64" rx="12" ry="10" fill="' + K.l + '"/><ellipse cx="74" cy="64" rx="12" ry="10" fill="' + K.l + '"/>';
+    // ojos
+    var ey = 46;
+    if (K.x === 'frog') s += '<circle cx="34" cy="24" r="12" fill="' + F + '"' + st + '/><circle cx="66" cy="24" r="12" fill="' + F + '"' + st + '/><circle cx="34" cy="24" r="8" fill="#fff"/><circle cx="66" cy="24" r="8" fill="#fff"/><g class="eyes"><circle cx="35" cy="25" r="4" fill="#222"/><circle cx="67" cy="25" r="4" fill="#222"/></g>';
+    else s += '<g class="eyes"><ellipse cx="38" cy="' + ey + '" rx="6.5" ry="7.5" fill="#fff"/><ellipse cx="62" cy="' + ey + '" rx="6.5" ry="7.5" fill="#fff"/><circle cx="39" cy="' + (ey + 1) + '" r="4" fill="#222"/><circle cx="63" cy="' + (ey + 1) + '" r="4" fill="#222"/><circle cx="40.5" cy="' + (ey - 1) + '" r="1.6" fill="#fff"/><circle cx="64.5" cy="' + (ey - 1) + '" r="1.6" fill="#fff"/></g>';
+    // nariz
+    if (K.nose === 'pink') s += '<path d="M45 58 L 55 58 L 50 64 Z" fill="#ff7fa3"/>';
+    if (K.nose === 'black') s += '<ellipse cx="50" cy="60" rx="5.5" ry="4" fill="#2b2b2b"/><ellipse cx="48.5" cy="59" rx="2" ry="1.2" fill="#fff" opacity=".6"/>';
+    if (K.nose === 'koala') s += '<ellipse cx="50" cy="62" rx="10" ry="8" fill="#2b2b2b"/><ellipse cx="47" cy="59" rx="3" ry="2" fill="#fff" opacity=".5"/>';
+    if (K.nose === 'dots') s += '<circle cx="47" cy="60" r="1.8" fill="' + K.d + '"/><circle cx="53" cy="60" r="1.8" fill="' + K.d + '"/>';
+    if (K.nose === 'snout') s += '<ellipse cx="50" cy="64" rx="13" ry="9" fill="' + (em === '🐮' ? '#ffc7d1' : '#ff8fb1') + '" stroke="' + K.d + '" stroke-width="2"/><circle cx="45" cy="64" r="2.2" fill="' + K.d + '"/><circle cx="55" cy="64" r="2.2" fill="' + K.d + '"/>';
+    if (K.nose === 'beak') s += '<path d="M42 58 L 58 58 L 50 68 Z" fill="#ffa21a" stroke="#c97700" stroke-width="1.5" stroke-linejoin="round"/>';
+    if (K.nose === 'hook') s += '<path d="M40 56 Q 50 52 60 56 Q 60 72 50 76 Q 44 70 40 56 Z" fill="#c9c9c9" stroke="#777" stroke-width="2"/>';
+    if (K.nose === 'trunk') s += '<path d="M50 58 Q 44 76 52 92 Q 60 96 60 88" stroke="' + F + '" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M50 58 Q 44 76 52 92 Q 60 96 60 88" stroke="' + K.d + '" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/>';
+    // boca: sonrisa cerrada + boca abierta que crece con la comida
+    var my = K.nose === 'snout' ? 78 : (K.nose === 'trunk' ? 70 : (K.nose === 'hook' ? 80 : 70)), mx = K.nose === 'trunk' ? 36 : 50;
+    s += '<path class="sm" d="M' + (mx - 8) + ' ' + (my - 2) + ' Q ' + mx + ' ' + (my + 6) + ' ' + (mx + 8) + ' ' + (my - 2) + '" stroke="' + K.d + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    s += '<g class="mo"><ellipse cx="' + mx + '" cy="' + (my + 6) + '" rx="12" ry="10" fill="#8a2f3a"/><ellipse cx="' + mx + '" cy="' + (my + 11) + '" rx="7" ry="5" fill="#ff7fa3"/></g>';
+    if (K.x === 'teeth') s += '<rect x="45" y="' + (my - 2) + '" width="4.5" height="6" rx="1.5" fill="#fff"/><rect x="50.5" y="' + (my - 2) + '" width="4.5" height="6" rx="1.5" fill="#fff"/>';
+    if (K.x !== 'frog') s += '<circle cx="26" cy="58" r="5" fill="#ff8aa8" opacity=".45"/><circle cx="74" cy="58" r="5" fill="#ff8aa8" opacity=".45"/>';
+    return s + '</svg>';
+  }
   // [animal, comida favorita, segunda comida, tercera comida (menú Experto)]
   var PAIRS = [
     ['🐰', '🥕', '🥬', '🍎'], ['🐵', '🍌', '🍑', '🥭'], ['🐱', '🐟', '🥛', '🍗'], ['🐶', '🦴', '🍖', '🥩'], ['🐼', '🎋', '🍃', '🥦'], ['🐨', '🌿', '🍀', '🌱'],
     ['🐘', '🥜', '🍉', '🌾'], ['🐿️', '🌰', '🍇', '🍐'], ['🐝', '🌸', '🌻', '🌷'], ['🐮', '🌾', '🍎', '🥬'], ['🐧', '🐠', '🦐', '🦑'], ['🦒', '🌳', '🍋', '🌴'],
-    ['🐷', '🌽', '🍅', '🥔'], ['🐭', '🧀', '🍪', '🥖'], ['🐻', '🍯', '🫐', '🥧'], ['🦁', '🥩', '🍗', '🥓'], ['🐢', '🥦', '🍓', '🥒'], ['🦜', '🍊', '🍒', '🥝']
+    ['🐷', '🌽', '🍅', '🥔'], ['🐭', '🧀', '🍪', '🥖'], ['🐻', '🍯', '🍓', '🥧'], ['🦁', '🥩', '🍗', '🥓'], ['🐢', '🥦', '🍓', '🥒'], ['🦜', '🍊', '🍒', '🥝'],
+    ['🦊', '🍇', '🍗', '🐟'], ['🐸', '🐛', '🦗', '🍓'], ['🐑', '🌿', '🌾', '🥬'], ['🐹', '🌻', '🥜', '🥕']
   ];
   var LABELS = { 1: '2 animales', 2: '4 animales, 3 señuelos', 3: '2 comidas en orden', 4: 'Menú de 3 y memoria' };
   var MEMO_MS = 5000;
-  // Comidas parecidas (distractores del nivel 3)
-  var SIMILAR = { '🍊': '🍋', '🍋': '🍊', '🥕': '🌶️', '🍎': '🍅', '🍅': '🍎', '🍇': '🫐', '🫐': '🍇', '🍓': '🍒', '🍒': '🍓', '🥜': '🌰', '🌰': '🥜',
+  var SIMILAR = { '🍊': '🍋', '🍋': '🍊', '🥕': '🌶️', '🍎': '🍅', '🍅': '🍎', '🍇': '🍒', '🍓': '🍒', '🍒': '🍓', '🥜': '🌰', '🌰': '🥜',
     '🐟': '🐠', '🐠': '🐟', '🌿': '🍀', '🍀': '🌿', '🍃': '🌿', '🍌': '🌽', '🌽': '🍌', '🦴': '🍖', '🍖': '🥩', '🥩': '🍖', '🍗': '🍖', '🧀': '🍕', '🍯': '🥞',
-    '🥬': '🥦', '🥦': '🥬', '🌸': '🌼', '🌻': '🌼', '🎋': '🎍', '🌾': '🌱', '🌳': '🌲', '🥛': '🍶', '🍑': '🍊', '🍉': '🍈', '🦐': '🦀', '🍪': '🍩', '🥕': '🌶️' };
-  var nivel = 1, round = 0, animals = [], foods = [], fedCount = 0, menuHidden = false, hintLeft = 0, memoTimer = null, budget = 0;
-  var hud, lvlEl, animalsEl, tray, badgeEl, hintBtn, budgetEl;
+    '🥬': '🥦', '🥦': '🥬', '🌸': '🌼', '🌻': '🌼', '🎋': '🎍', '🌾': '🌱', '🌳': '🌲', '🥛': '🍶', '🍑': '🍊', '🍉': '🍈', '🦐': '🦀', '🍪': '🍩', '🐛': '🐌' };
+  // Decoración del zoológico que se gana al completar niveles (se guarda)
+  var DECOS = [{ lv: 1, e: '🎈', n: 'Globos', st: 'left:2%;top:14%' }, { lv: 2, e: '⛲', n: 'Fuente', st: 'right:3%;top:12%' }, { lv: 3, e: '🍦', n: 'Carrito de helados', st: 'left:3%;bottom:4%' }, { lv: 4, e: '🦩', n: 'Flamenco', st: 'right:4%;bottom:5%' }];
+  function readDeco() { try { return JSON.parse(localStorage.getItem('kg-alimenta-deco') || '[]'); } catch (e) { return []; } }
+  function doneLevels() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').alimenta || {}; } catch (e) { return {}; } }
+  var nivel = 1, round = 0, animals = [], foods = [], fedCount = 0, menuHidden = false, hintLeft = 0, memoTimer = null, budget = 0, streak = 0, hand = null;
+  var hud, lvlEl, animalsEl, tray, badgeEl, hintBtn, budgetEl, bannerEl;
 
-  game.innerHTML = '';
+  game.innerHTML = '<div class="sign">ZOO</div>';
   hud = document.createElement('div'); hud.className = 'hud';
   hud.innerHTML = '<span class="lvl">Ronda <b>1</b></span><span class="dish emoji">🍽️</span><span class="budget"><span class="emoji">🍽️</span><b>0</b></span><button class="btn purple lvbtn hintbtn" aria-label="Pista">💡</button><button class="btn yellow lvbtn" aria-label="Nivel">🎚️</button>';
   lvlEl = hud.querySelector('b'); hintBtn = hud.querySelector('.hintbtn'); budgetEl = hud.querySelector('.budget');
-  // Pista única del nivel Experto: vuelve a mostrar los menús 3 segundos
   hintBtn.addEventListener('pointerdown', function (ev) {
     ev.preventDefault();
     if (hintLeft <= 0 || !menuHidden) { KidsGame.sound.wrong(); return; }
@@ -158,24 +244,38 @@ var game = KidsGame.init({ title: 'Alimenta' });
   badgeEl = KidsGame.levelBadge(nivel); hud.insertBefore(badgeEl, hud.firstChild);
   animalsEl = document.createElement('div'); animalsEl.className = 'animals';
   tray = document.createElement('div'); tray.className = 'tray';
-  game.appendChild(hud); game.appendChild(animalsEl); game.appendChild(tray);
+  bannerEl = document.createElement('div'); bannerEl.className = 'banner';
+  game.appendChild(hud); game.appendChild(animalsEl); game.appendChild(tray); game.appendChild(bannerEl);
   hud.querySelector('.lvbtn:not(.hintbtn)').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
+  var bannerT = null;
+  function banner(txt, gold, ms) { clearTimeout(bannerT); bannerEl.textContent = txt; bannerEl.className = 'banner show' + (gold ? ' gold' : ''); bannerT = setTimeout(function () { bannerEl.classList.remove('show'); }, ms || 1100); }
+  function renderDeco() {
+    var old = game.querySelectorAll('.deco'); for (var i = 0; i < old.length; i++) old[i].remove();
+    var have = readDeco();
+    DECOS.forEach(function (d, i) { if (have.indexOf(d.e) < 0) return; var el = document.createElement('span'); el.className = 'deco'; el.setAttribute('style', d.st + ';animation-delay:' + (-i * 0.9) + 's'); el.textContent = d.e; game.appendChild(el); });
+  }
+  function syncDeco() {
+    var dl = doneLevels(), have = readDeco(), added = null;
+    DECOS.forEach(function (d) { if (dl[d.lv] && have.indexOf(d.e) < 0) { have.push(d.e); added = d; } });
+    try { localStorage.setItem('kg-alimenta-deco', JSON.stringify(have)); } catch (e) {}
+    renderDeco();
+    if (added) KidsGame.toast('🎪 ¡' + added.n + ' ' + added.e + ' nuevo en el zoo!', 2600);
+  }
+  syncDeco();
 
   function showPicker() {
     animalsEl.innerHTML = ''; tray.innerHTML = ''; animals = []; foods = [];
-    clearTimeout(memoTimer);
-    KidsGame.levelPicker({ key: 'alimenta', labels: LABELS, onPick: function (n) {
-      nivel = n; round = 0;
+    clearTimeout(memoTimer); if (hand) { hand.stop(); hand = null; }
+    KidsGame.levelPicker({ key: 'alimenta', labels: LABELS, music: 'alegre', art: faceSVG('🐵').replace('class="face"', 'width="60" height="60"'),
+      howto: [{ icon: '🐵', text: 'Cada animalito pide una comida' }, { icon: '👆', text: 'Arrastra la comida hasta su boca' }, { icon: '😋', text: '¡Ñam! Dales de comer a todos' }],
+      onPick: function (n) {
+      nivel = n; round = 0; streak = 0;
       var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
       newRound();
     } });
   }
 
   function newRound() {
-    // Nivel 1: 2 animales, 1 distractor. Nivel 2: 3-4 animales, 3 distractores (1 parecido).
-    // Nivel 3: 4-5 animales, cada uno quiere DOS comidas en orden, 4 distractores parecidos.
-    // Nivel 4 (Experto): 3-4 animales con menú de TRES comidas en orden, una comida PROHIBIDA (que otro animal sí quiere),
-    //   la bandeja trae exactamente lo necesario, y el menú se esconde a los 5 segundos (1 pista).
     var expert = nivel === 4;
     var n = nivel === 1 ? 2 : nivel === 2 ? (round === 0 ? 3 : 4) : nivel === 3 ? Math.min(4 + Math.floor(round / 2), 5) : (round === 0 ? 3 : 4);
     var nd = nivel === 1 ? 1 : nivel === 2 ? 3 : nivel === 3 ? 4 : 0, two = nivel === 3, per = expert ? 3 : two ? 2 : 1;
@@ -206,13 +306,13 @@ var game = KidsGame.init({ title: 'Alimenta' });
     animalsEl.innerHTML = ''; tray.innerHTML = '';
     chosen.forEach(function (p, idx) {
       var a = document.createElement('div');
-      a.className = 'animal card pop' + (two ? ' two' : expert ? ' three' : ''); a.dataset.food = p[1];
-      a._wants = p.slice(1, per + 1); a._idx = 0; a._miss = 0;
-      // Prohibida: una comida del menú de OTRO animal de esta ronda
+      a.className = 'animal card pop' + (two ? ' two' : expert ? ' three' : ''); a.dataset.food = p[1]; a.dataset.animal = p[0];
+      a._wants = p.slice(1, per + 1); a._idx = 0; a._miss = 0; a._t = 0;
       a._no = expert ? KidsGame.pick(chosen[(idx + 1) % chosen.length].slice(1, per + 1)) : null;
       a.style.animationDelay = (idx * 0.08) + 's';
-      a.innerHTML = '<i class="gs"></i><span class="medal"><span class="face emoji">' + p[0] + '</span></span><span class="hint emoji">😋</span><span class="want"></span><span class="ok">✔</span>' +
+      a.innerHTML = '<i class="gs"></i><span class="medal">' + faceSVG(p[0]) + '</span><span class="hint emoji">😋</span><span class="want"></span><span class="ok">✔</span>' +
         (expert ? '<span class="nope"><span class="emoji">🚫' + a._no + '</span></span>' : '');
+      a._mo = a.querySelector('.mo'); a._sm = a.querySelector('.sm');
       renderWant(a);
       animalsEl.appendChild(a);
     });
@@ -223,11 +323,15 @@ var game = KidsGame.init({ title: 'Alimenta' });
       d.innerHTML = '<span class="emoji">' + f + '</span>';
       tray.appendChild(d);
     });
-    layout();
+    layout(); game.classList.remove('sw');
+    banner('Ronda ' + (round + 1) + ' · ' + chosen.map(function (p) { return p[0]; }).join(' '), false, 1200);
     if (expert) {
       KidsGame.say('Mira bien el menú de cada animalito: tres comidas en orden y una prohibida. En cinco segundos se esconde');
       memoTimer = setTimeout(function () { setHidden(true); KidsGame.sound.pop(); KidsGame.toast('¿Quién come qué? 🤔', 1400); }, MEMO_MS);
     } else KidsGame.say(two ? 'Cada animalito quiere dos comidas, en orden' : '¿Qué quiere comer cada animalito?');
+    if (nivel === 1 && round === 0) {
+      setTimeout(function () { var a = animalsEl.children[0], f = a && tray.querySelector('.food[data-food="' + a._wants[0] + '"]'); if (a && f) hand = KidsGame.hand({ from: f, to: a }); }, 1000);
+    }
   }
   function renderBudget() { budgetEl.querySelector('b').textContent = String(budget); }
   function setHidden(on) { menuHidden = on; animals.forEach(function (p, i) { var a = animalsEl.children[i]; if (a) renderWant(a); }); }
@@ -241,6 +345,26 @@ var game = KidsGame.init({ title: 'Alimenta' });
     });
     w.innerHTML = html;
   }
+  // Boca abierta en proporción t (0 cerrada, 1 abierta)
+  function setMouth(a, t) {
+    if (Math.abs((a._t || 0) - t) < 0.04 && t !== 0 && t !== 1) return;
+    a._t = t; if (!a._mo) return;
+    a._mo.style.transform = 'scaleY(' + t.toFixed(2) + ')'; a._sm.style.opacity = String(1 - Math.min(1, t * 1.6));
+  }
+  function updateMouths(x, y) {
+    var best = null, bd = 1e9;
+    for (var i = 0; i < animalsEl.children.length; i++) {
+      var a = animalsEl.children[i]; if (a.classList.contains('fed')) { setMouth(a, 0); continue; }
+      var r = a.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * 0.45, d = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+      a._d = d; a._R = r.width * 0.5; if (d < bd) { bd = d; best = a; }
+    }
+    for (var k = 0; k < animalsEl.children.length; k++) {
+      var b = animalsEl.children[k]; if (b.classList.contains('fed')) continue;
+      var t = b === best ? Math.max(0, Math.min(1, 1 - (b._d - b._R * 0.6) / (b._R * 1.6))) : 0;
+      setMouth(b, t);
+    }
+  }
+  function closeMouths() { for (var i = 0; i < animalsEl.children.length; i++) setMouth(animalsEl.children[i], 0); }
 
   function layout() {
     var land = window.innerWidth > window.innerHeight;
@@ -293,20 +417,25 @@ var game = KidsGame.init({ title: 'Alimenta' });
     var t = targetAt(p.x, p.y);
     if (t && t.classList.contains('fed')) t = null;
     if (t !== drag.over) { if (drag.over) drag.over.classList.remove('over'); drag.over = t; if (t) t.classList.add('over'); }
+    updateMouths(p.x, p.y);
   }
   tray.addEventListener('pointermove', function (ev) { if (drag) { ev.preventDefault(); move(ev); } });
   function drop(ev) {
     if (!drag || ev.pointerId !== drag.id) return;
     var d = drag; drag = null;
     if (d.over) d.over.classList.remove('over');
+    closeMouths();
     var t = d.over, food = d.src.dataset.food;
     if (t && t._wants && t._wants[t._idx] === food) {
-      // ¡Ñam ñam!
       d.el.remove(); d.src.classList.remove('ghost'); d.src.classList.add('gone');
       t._idx++; t._miss = 0; budget--; renderBudget();
       t.classList.remove('nam'); void t.offsetWidth; t.classList.add('nam');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
-      hearts(t); sparkles(t);
+      hearts(t); KidsGame.fx.ring(t.querySelector('.medal')); KidsGame.fx.burstAt(t.querySelector('.medal'), { n: 12, chars: ['✨', '⭐', '🌟'] });
+      var r = t.getBoundingClientRect(); KidsGame.fx.floatText(r.left + r.width / 2, r.top + 10, '+1 ¡Ñam!', 'good');
+      streak++;
+      if (streak === 3 || (streak > 3 && streak % 5 === 0)) setTimeout(function () { KidsGame.fx.floatText(r.left + r.width / 2, r.top - 40, '¡Racha x' + streak + '!'); }, 250);
+      if (streak % 5 === 0) setTimeout(function () { KidsGame.addStar(); banner('⭐ ¡Bonus de racha!', true, 1100); KidsGame.sound.win(); }, 500);
       if (t._idx >= t._wants.length) {
         t.classList.add('fed'); t.querySelector('.hint').textContent = '😊'; fedCount++;
         renderWant(t);
@@ -314,17 +443,15 @@ var game = KidsGame.init({ title: 'Alimenta' });
         if (fedCount === animals.length) setTimeout(finish, 900);
       } else { renderWant(t); KidsGame.say('¡Ñam! ¿Y ahora?'); }
     } else {
+      if (t) streak = 0;
       if (t && t._no === food) {
-        // Comida prohibida para este animalito
         var np = t.querySelector('.nope'); if (np) { np.classList.remove('shake'); void np.offsetWidth; np.classList.add('shake'); }
         t.classList.remove('no'); void t.offsetWidth; t.classList.add('no');
         KidsGame.sound.wrong(); KidsGame.say('¡No! Eso no lo come'); KidsGame.toast('🚫 ¡Eso no lo come!', 1200);
       } else if (t) {
         t.classList.remove('no'); void t.offsetWidth; t.classList.add('no'); KidsGame.sound.wrong();
-        // Experto con menú escondido: al segundo error seguido se asoma el menú de ese animalito un momento
         if (menuHidden) { t._miss++; if (t._miss >= 2) { t._miss = 0; renderWant(t, true); (function (a) { setTimeout(function () { renderWant(a); }, 1200); })(t); } }
       }
-      // La comida regresa a la bandeja
       d.el.classList.add('back');
       d.el.style.transform = 'translate(' + d.home.x + 'px,' + d.home.y + 'px) translate(-50%,-50%) scale(1)';
       d.el.style.opacity = '0';
@@ -343,33 +470,34 @@ var game = KidsGame.init({ title: 'Alimenta' });
       (function (el) { setTimeout(function () { el.remove(); }, 1800); })(h);
     }
   }
-  function sparkles(t) {
-    var r = t.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * .4;
-    for (var i = 0; i < 12; i++) {
-      var d = document.createElement('div'); d.className = 'spark emoji'; d.textContent = KidsGame.pick(['✨', '⭐', '🌟']);
-      var a = Math.random() * Math.PI * 2, dist = 50 + Math.random() * 70;
-      d.style.left = cx + 'px'; d.style.top = cy + 'px';
-      d.style.setProperty('--dx', Math.cos(a) * dist + 'px'); d.style.setProperty('--dy', Math.sin(a) * dist - 20 + 'px');
-      d.style.animationDelay = (Math.random() * .2) + 's';
-      document.body.appendChild(d);
-      (function (el) { setTimeout(function () { el.remove(); }, 1300); })(d);
-    }
-  }
   function finish() {
     clearTimeout(memoTimer);
-    KidsGame.levelDone(nivel);
-    KidsGame.celebrate({
-      sub: '¡Todos comieron! ' + animals.map(function (p) { return p[0]; }).join(' '),
-      onNext: function () { round++; newRound(); },
-      onAgain: function () { newRound(); }
-    });
+    KidsGame.levelDone(nivel); syncDeco();
+    banner('🎉 ¡Todos comieron!', true, 1200);
+    setTimeout(function () {
+      KidsGame.celebrate({
+        sub: '¡Todos comieron! ' + animals.map(function (p) { return p[0]; }).join(' '),
+        onNext: function () { round++; game.classList.add('sw'); setTimeout(newRound, 320); },
+        onAgain: function () { game.classList.add('sw'); setTimeout(newRound, 320); }
+      });
+    }, 500);
   }
 
   window.addEventListener('resize', layout);
-  // Estado para pruebas
-  window.__alimenta = function () { return { nivel: nivel, round: round, hidden: menuHidden, budget: budget, hints: hintLeft,
-    animals: Array.prototype.map.call(animalsEl.children, function (a) { return { face: a.querySelector('.face').textContent, wants: a._wants, idx: a._idx, no: a._no, fed: a.classList.contains('fed') }; }),
+  // Estado y acciones para pruebas
+  window.__alimenta = function () { return { nivel: nivel, round: round, hidden: menuHidden, budget: budget, hints: hintLeft, streak: streak,
+    animals: Array.prototype.map.call(animalsEl.children, function (a) { return { face: a.dataset.animal, wants: a._wants, idx: a._idx, no: a._no, fed: a.classList.contains('fed'), mouth: a._t }; }),
     tray: Array.prototype.map.call(tray.children, function (f) { return { food: f.dataset.food, gone: f.classList.contains('gone') }; }) }; };
+  window.__alimentaDrop = function (food, idx) {
+    var f = tray.querySelector('.food[data-food="' + food + '"]:not(.gone)'), a = animalsEl.children[idx]; if (!f || !a) return null;
+    var fr = f.getBoundingClientRect(), ar = a.getBoundingClientRect();
+    function ev(t, x, y) { return new PointerEvent(t, { bubbles: true, pointerId: 11, clientX: x, clientY: y, pointerType: 'touch', isPrimary: true }); }
+    f.dispatchEvent(ev('pointerdown', fr.left + fr.width / 2, fr.top + fr.height / 2));
+    var tx = ar.left + ar.width / 2, ty = ar.top + ar.height * 0.45;
+    f.dispatchEvent(ev('pointermove', (fr.left + tx) / 2, (fr.top + ty) / 2)); f.dispatchEvent(ev('pointermove', tx, ty));
+    var open = a._t; f.dispatchEvent(ev('pointerup', tx, ty));
+    return { fed: a.classList.contains('fed'), idx: a._idx, mouth: open };
+  };
   showPicker();
 })();
 </script>

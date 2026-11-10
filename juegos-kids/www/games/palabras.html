@@ -520,7 +520,7 @@
     }
     s.val = item.v; s.block = item; item.el.classList.add('used');
     s.el.textContent = item.v; s.el.classList.add('full'); paint(s.el, item.pal);
-    if (level <= 2) { s.el.classList.add('good'); replay(s.el, 'good'); KidsGame.sound.pop(); sparks(s.el, '#7dffb0'); JK.hit(s.el); if (firstEmpty() == null) complete(); }
+    if (level <= 2) { s.el.classList.add('good'); replay(s.el, 'good'); KidsGame.sound.pop(); sparks(s.el, '#7dffb0'); KidsGame.fx.ring(s.el); JK.press(s.el); if (firstEmpty() == null) complete(); }
     else { KidsGame.sound.pop(); JK.press(s.el); if (firstEmpty() == null) checkBtn.classList.remove('off'); }
   }
   function peek() { misses = 0; wordEl.classList.remove('hidden'); tipEl.textContent = ''; later(function () { wordEl.classList.add('hidden'); tipEl.innerHTML = '<span class="emoji eye">🙈</span>'; }, 1200); }
@@ -572,6 +572,7 @@
 
   function complete() {
     lock = true; round++; updateProgress(); JK.put('kg-palabras-hand', 1);
+    if (level <= 2) { if (misses === 0) JK.hit(medal, '¡Bien!'); else KidsGame.fx.floatText(window.innerWidth / 2, window.innerHeight * .3, '¡Bien!', 'good'); }
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); sparks(medal, '#ffe066'); replay(picEl, 'bounce');
     wordEl.className = 'word'; wordEl.textContent = cur[1]; tipEl.textContent = '';
     slots.forEach(function (s, i) { setTimeout(function () { replay(s.el, 'good'); }, i * 70); });

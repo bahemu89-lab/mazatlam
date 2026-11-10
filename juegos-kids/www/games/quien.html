@@ -41,7 +41,7 @@
   .boardwrap { position: relative; flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; border-radius: 22px; padding: 10px;
     background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 70% 60%, rgba(0,0,0,.08) 0 2px, rgba(0,0,0,0) 3px), linear-gradient(180deg, #d9a86a, #c08a4c);
     background-size: 37px 41px, 53px 47px, auto; border: 10px solid #6b4a2a; box-shadow: inset 0 0 30px rgba(0,0,0,.25), 0 10px 0 #3e2a14, 0 18px 30px rgba(0,0,0,.4); }
-  .boardwrap::before { content: "SOSPECHOSOS"; position: absolute; left: 50%; top: -22px; transform: translateX(-50%) rotate(-2deg); padding: 2px 16px; border-radius: 6px; font-size: 15px; font-weight: 900; letter-spacing: 2px; color: #7a4b00;
+  .boardwrap::before { content: "SOSPECHOSOS"; position: absolute; left: 50%; top: 4px; transform: translateX(-50%) rotate(-2deg); padding: 2px 16px; border-radius: 6px; font-size: 15px; font-weight: 900; letter-spacing: 2px; color: #7a4b00;
     background: linear-gradient(180deg, #fff6d0, #ffe08a); box-shadow: 0 3px 0 #c47f00, 0 5px 8px rgba(0,0,0,.3); z-index: 3; }
   .grid { display: grid; gap: var(--gap); }
   .card3d { position: relative; width: var(--s); height: var(--s); cursor: pointer; perspective: 600px; transform: rotate(var(--rot, 0deg)); }
@@ -359,9 +359,9 @@ var game = KidsGame.init({ title: 'Agencia de detectives' });
   function start(lv) {
     nivel = lv; cfg = CFG[lv]; running = true; round = 0; wrongs = 0; streak = 0; session++; next = null;
     build();
-    // generar el primer caso tras pintar (en Experto puede tardar en tablets lentas)
-    var close = lv >= 3 ? KidsGame.loading('Buscando sospechosos…') : null, ss = session;
-    KidsGame.defer(function () { if (close) close(); if (ss !== session || !running) return; newRound(true); setTimeout(explain, 700); });
+    // el primer caso se genera después de pintar la pantalla (medido: ~2 ms por caso, incluso con CPU lenta)
+    var ss = session;
+    KidsGame.defer(function () { if (ss !== session || !running) return; newRound(true); setTimeout(explain, 700); });
   }
   function newRound(first) {
     if (!running) return;
