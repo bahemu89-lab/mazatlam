@@ -21,15 +21,16 @@
     clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); }
   .conv { position: absolute; left: 4%; right: 4%; bottom: 10px; height: 14%; min-height: 44px; border-radius: 40px; overflow: hidden; z-index: 0;
     background: #2b3445; box-shadow: 0 8px 0 #141a26, 0 16px 22px rgba(0,30,90,.4), inset 0 3px 0 rgba(255,255,255,.2); }
-  .conv .band { position: absolute; left: 0; top: 8px; bottom: 8px; width: 200%; animation: band 2.6s linear infinite;
+  .conv .band { position: absolute; left: 0; top: 8px; bottom: 8px; width: 200%; animation: band 2.6s linear infinite; animation-play-state: paused;
     background: repeating-linear-gradient(90deg, #3a4557 0 36px, #56637a 36px 44px, #3a4557 44px 48px, #1f2733 48px 56px); }
   @keyframes band { to { transform: translateX(-50%); } }
-  .conv.stop .band { animation-play-state: paused; }
+  .stage.work .conv .band { animation-play-state: running; }
   .conv::before, .conv::after { content: ""; position: absolute; top: 50%; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #c9d2e6, #56637a 55%, #2b3445); box-shadow: inset 0 0 0 4px #141a26, 0 2px 4px rgba(0,0,0,.4); }
   .conv::before { left: 8px; } .conv::after { right: 8px; }
-  .gear { position: absolute; z-index: 1; width: 64px; height: 64px; border-radius: 50%; pointer-events: none; animation: spin 7s linear infinite;
+  .stage.work .gear { animation-play-state: running; }
+  .gear { position: absolute; z-index: 1; width: 64px; height: 64px; border-radius: 50%; pointer-events: none; animation: spin 4s linear infinite; animation-play-state: paused;
     background: radial-gradient(circle, #c9d2e6 0 18%, #2b3445 19% 26%, #7d8ca6 27% 68%, rgba(0,0,0,0) 69%), repeating-conic-gradient(#7d8ca6 0 22deg, rgba(0,0,0,0) 22deg 45deg); box-shadow: 0 4px 6px rgba(0,0,0,.25); }
-  .gear.b { width: 44px; height: 44px; animation-direction: reverse; animation-duration: 5s; }
+  .gear.b { width: 44px; height: 44px; animation-direction: reverse; animation-duration: 3s; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .pipe { position: absolute; z-index: 1; pointer-events: none; height: 22px; border-radius: 11px; background: linear-gradient(180deg, #c9d2e6, #7d8ca6 50%, #56637a); box-shadow: 0 3px 4px rgba(0,0,0,.25); }
   .pipe::before, .pipe::after { content: ""; position: absolute; top: -4px; width: 14px; height: 30px; border-radius: 5px; background: linear-gradient(180deg, #e4ebf7, #7d8ca6); }
@@ -71,18 +72,18 @@
   .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
   @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-blink { transform-box: fill-box; transform-origin: center; }
+  .jk-blink.on { transform: scaleY(.12); }
   .jk-press { animation: jkpress .28s ease-out; }
   @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
   .stage .mwrap { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-  .stage svg { height: 100%; width: 100%; max-height: 100%; overflow: visible; filter: drop-shadow(0 10px 8px rgba(0,30,90,.25)); }
+  .stage svg { height: 100%; width: 100%; max-height: 100%; overflow: visible; }
   .stage .mwrap { padding: 78px 0 7%; }
   .stage .mon { transform-origin: 150px 300px; transform-box: view-box; animation: breathe 2.8s ease-in-out infinite; }
   .stage .mon.dance { animation: dance .6s ease-in-out 4; }
   .stage .mon.popin { animation: monpop .4s ease-out, breathe 2.8s ease-in-out .4s infinite; }
-  .stage .eyesg { animation: blink 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
   @keyframes breathe { 0%,100%{transform:scale(1,1)} 50%{transform:scale(1.02,.98)} }
-  @keyframes blink { 0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.08)} }
   @keyframes dance { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-30px) rotate(-10deg) scale(1.05,.95)} 50%{transform:translateY(0) rotate(0) scale(.95,1.08)} 75%{transform:translateY(-30px) rotate(10deg) scale(1.05,.95)} }
   @keyframes monpop { 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   /* HUD del escenario: nivel + botón de niveles */
@@ -198,10 +199,21 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     }
     function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
     function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    // El banner se crea tras pintar la pantalla (sin reflow síncrono) y se reemplaza el nodo para reiniciar la animación
+    var bannerT = null;
     function banner(text) {
-      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
-      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+      clearTimeout(bannerT);
+      bannerT = setTimeout(function () {
+        if (bannerEl) bannerEl.remove();
+        bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner in'; bannerEl.textContent = text; document.body.appendChild(bannerEl);
+      }, 90);
     }
+    // Parpadeo de ojos sin animación continua: cada ~4 s se cierran 130 ms (clase .jk-blink)
+    setInterval(function () {
+      var eyes = document.querySelectorAll('.jk-blink'); if (!eyes.length) return;
+      for (var i = 0; i < eyes.length; i++) eyes[i].classList.add('on');
+      setTimeout(function () { for (var j = 0; j < eyes.length; j++) eyes[j].classList.remove('on'); }, 130);
+    }, 4200);
     function swap(el, fn) {
       if (!el || !el.parentNode) { fn(); return; }
       el.classList.remove('jk-in'); el.classList.add('jk-out');
@@ -393,7 +405,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     return '<g class="mon">' +
       '<ellipse cx="150" cy="' + shadowY + '" rx="' + rx + '" ry="14" fill="url(#' + id + 'g)"/>' +
       legs(lg, col, id) + body(BODIES[s.body], col, id) + mouth(MOUTHS[s.mouth]) +
-      '<g class="eyesg">' + eyes(EYES[s.eyes], id) + '</g>' +
+      '<g class="jk-blink">' + eyes(EYES[s.eyes], id) + '</g>' +
       '<g filter="url(#' + id + 's)">' + hat(HATS[s.hat], id) + '</g></g>';
   }
   function svgOpen(id, col) { uid++; return '<svg viewBox="0 0 300 325" xmlns="http://www.w3.org/2000/svg">' + defs(id, col); }
@@ -421,7 +433,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     var m = mwrap.querySelector('.mon'), svg = mwrap.querySelector('svg'); if (!m) { cb && cb(); return; }
     var r = mwrap.getBoundingClientRect(), sr = stage.getBoundingClientRect(), mr = m.getBoundingClientRect();
     press.style.setProperty('--dy', Math.max(30, mr.top - sr.top - 74) + 'px');
-    conv.classList.add('stop'); press.classList.remove('up'); press.classList.add('down');
+    machineWork(2200); press.classList.remove('up'); press.classList.add('down');
     [0, 90].forEach(function (t, i) { setTimeout(function () { KidsGame.sound.note(i ? 110 : 160); }, 240 + t); });
     setTimeout(function () {
       m.classList.remove('popin', 'ride'); m.classList.add('squash'); KidsGame.vibrate(50);
@@ -429,7 +441,7 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
       g.innerHTML = '<circle cx="232" cy="92" r="34" fill="#ff6f61" stroke="#fff" stroke-width="5"/><circle cx="232" cy="92" r="26" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 4"/><text x="232" y="104" text-anchor="middle" font-size="34" font-weight="900" fill="#fff">✔</text>';
       svg.appendChild(g);
       KidsGame.fx.burst(r.left + r.width / 2, mr.top + 20, { n: 22, r: 120, chars: ['⭐', '✨', '💥', '⚙️'] }); KidsGame.sound.pop();
-      setTimeout(function () { press.classList.remove('down'); press.classList.add('up'); conv.classList.remove('stop'); }, 300);
+      setTimeout(function () { press.classList.remove('down'); press.classList.add('up'); }, 300);
       setTimeout(function () { m.classList.remove('squash'); m.classList.add('dance'); cb && cb(); }, 450);
     }, 360);
   }
@@ -461,9 +473,11 @@ var game = KidsGame.init({ title: 'Crea tu monstruo' });
     acts.querySelector('[data-a="dance"]').classList.toggle('off', describing);
   }
 
+  var workT = null;
+  function machineWork(ms) { clearTimeout(workT); stage.classList.add('work'); workT = setTimeout(function () { stage.classList.remove('work'); }, ms || 1500); }
   function renderMonster(pop) {
     mwrap.innerHTML = monsterSvg(view || state);
-    if (pop) mwrap.querySelector('.mon').classList.add('ride');
+    if (pop) { mwrap.querySelector('.mon').classList.add('ride'); machineWork(1300); }
     renderTarget();
   }
   function optBtn(key, idx, inner, cls) {

@@ -39,7 +39,7 @@
   .deco.new { animation: pop .6s ease-out; }
   /* Espantapájaros (SVG): levanta los brazos cuando atrapas */
   .scare { position: absolute; right: 1%; top: 2%; width: 150px; height: 190px; z-index: 0; pointer-events: none; }
-  .scare svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 6px rgba(0,0,0,.3)); }
+  .scare svg { width: 100%; height: 100%; overflow: visible; }
   .scare .armL, .scare .armR { transform-box: fill-box; transition: transform .25s cubic-bezier(.2,1.5,.4,1); }
   .scare .armL { transform-origin: 100% 50%; } .scare .armR { transform-origin: 0 50%; }
   .scare.cheer .armL { transform: rotate(-70deg); } .scare.cheer .armR { transform: rotate(70deg); }
@@ -138,7 +138,7 @@
     transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
   .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
   .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
-  @media (max-width: 700px) { .scare { width: 110px; height: 140px; top: 7%; } }
+  @media (max-width: 800px) { .scare { width: 110px; height: 140px; top: 7%; } .hud { position: static; margin-bottom: 8px; z-index: 1; } }
 </style>
 </head>
 <body>
@@ -208,7 +208,7 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
   function hatSVG() { return '<svg class="hat" viewBox="0 0 60 50" aria-hidden="true"><ellipse cx="30" cy="42" rx="28" ry="7" fill="#222"/><rect x="12" y="8" width="36" height="36" rx="4" fill="#333"/><rect x="12" y="30" width="36" height="7" fill="#e63946"/><path d="M14 10 Q 30 4 46 10 L 46 20 Q 30 14 14 20 Z" fill="#555"/></svg>'; }
   function scarecrowSVG() {
     return '<svg viewBox="0 0 150 190" aria-hidden="true"><defs><linearGradient id="scsh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a80"/><stop offset="1" stop-color="#d84343"/></linearGradient><linearGradient id="schat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#c99a3a"/></linearGradient></defs>' +
-      '<rect x="71" y="90" width="8" height="100" rx="3" fill="#8a5a2b"/>' +
+      '<ellipse cx="75" cy="186" rx="40" ry="6" fill="rgba(0,0,0,.25)"/><rect x="71" y="90" width="8" height="100" rx="3" fill="#8a5a2b"/>' +
       '<g class="top">' +
       '<g class="armL"><path d="M18 84 L 68 92" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M8 88 L 20 78 L 24 90 Z" fill="#f2c94c"/><path d="M26 86 L 62 92 L 60 104 L 28 98 Z" fill="url(#scsh)"/></g>' +
       '<g class="armR"><path d="M132 84 L 82 92" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M142 88 L 130 78 L 126 90 Z" fill="#f2c94c"/><path d="M124 86 L 88 92 L 90 104 L 122 98 Z" fill="url(#scsh)"/></g>' +
@@ -281,7 +281,8 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
 
   function layout() {
     var cols = cfg.cols, rows = cfg.rows;
-    var W = game.clientWidth - 16, H = game.clientHeight - prog.offsetHeight - ruleEl.offsetHeight - (ruleEl.offsetHeight ? 10 : 0) - 26;
+    var hudH = getComputedStyle(hud).position === 'static' ? hud.offsetHeight + 8 : 0;
+    var W = game.clientWidth - 16, H = game.clientHeight - prog.offsetHeight - ruleEl.offsetHeight - (ruleEl.offsetHeight ? 10 : 0) - 26 - hudH;
     if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
     var gap = 8;
     var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));

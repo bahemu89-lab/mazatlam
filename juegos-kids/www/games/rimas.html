@@ -23,8 +23,6 @@
   /* La rana poeta (hero art) */
   .frog { position: absolute; right: calc(9% + 2px); top: 150px; z-index: 3; cursor: pointer; filter: drop-shadow(0 8px 8px rgba(0,0,0,.35)); animation: float 3.4s ease-in-out infinite; }
   .frog svg { display: block; overflow: visible; }
-  .fg-eyes { transform-box: fill-box; transform-origin: center; animation: fgblink 4.8s infinite; }
-  @keyframes fgblink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
   .fg-mouth { transform-box: fill-box; transform-origin: 50% 0; transition: transform .2s; }
   .frog.sing .fg-mouth { transform: scaleY(1.9); }
   .frog.sing { animation: fgsing .5s ease-in-out 3; }
@@ -116,6 +114,8 @@
   .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
   @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-blink { transform-box: fill-box; transform-origin: center; }
+  .jk-blink.on { transform: scaleY(.12); }
   .jk-press { animation: jkpress .28s ease-out; }
   @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
@@ -250,10 +250,21 @@
     }
     function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
     function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    // El banner se crea tras pintar la pantalla (sin reflow síncrono) y se reemplaza el nodo para reiniciar la animación
+    var bannerT = null;
     function banner(text) {
-      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
-      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+      clearTimeout(bannerT);
+      bannerT = setTimeout(function () {
+        if (bannerEl) bannerEl.remove();
+        bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner in'; bannerEl.textContent = text; document.body.appendChild(bannerEl);
+      }, 90);
     }
+    // Parpadeo de ojos sin animación continua: cada ~4 s se cierran 130 ms (clase .jk-blink)
+    setInterval(function () {
+      var eyes = document.querySelectorAll('.jk-blink'); if (!eyes.length) return;
+      for (var i = 0; i < eyes.length; i++) eyes[i].classList.add('on');
+      setTimeout(function () { for (var j = 0; j < eyes.length; j++) eyes[j].classList.remove('on'); }, 130);
+    }, 4200);
     function swap(el, fn) {
       if (!el || !el.parentNode) { fn(); return; }
       el.classList.remove('jk-in'); el.classList.add('jk-out');
@@ -288,7 +299,7 @@
       '<ellipse cx="65" cy="82" rx="44" ry="38" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/>' +
       '<ellipse cx="65" cy="96" rx="26" ry="20" fill="url(#' + id + 'w)"/>' +
       '<circle cx="46" cy="40" r="17" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/><circle cx="84" cy="40" r="17" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/>' +
-      '<g class="fg-eyes"><circle cx="46" cy="40" r="11" fill="#fff"/><circle cx="84" cy="40" r="11" fill="#fff"/><circle cx="48" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="82" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="50" cy="40" r="2" fill="#fff"/><circle cx="84" cy="40" r="2" fill="#fff"/></g>' +
+      '<g class="jk-blink"><circle cx="46" cy="40" r="11" fill="#fff"/><circle cx="84" cy="40" r="11" fill="#fff"/><circle cx="48" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="82" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="50" cy="40" r="2" fill="#fff"/><circle cx="84" cy="40" r="2" fill="#fff"/></g>' +
       '<path class="fg-mouth" d="M42 78 Q65 100 88 78 Q65 90 42 78 Z" fill="#8d1f3d" stroke="#2e7d32" stroke-width="2" stroke-linejoin="round"/>' +
       '<circle cx="36" cy="72" r="6" fill="#ff8aa8" opacity=".55"/><circle cx="94" cy="72" r="6" fill="#ff8aa8" opacity=".55"/>' +
       '<path d="M98 92 Q110 90 114 80" stroke="#4a9d40" stroke-width="10" stroke-linecap="round" fill="none"/>' +

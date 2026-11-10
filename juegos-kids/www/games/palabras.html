@@ -69,8 +69,6 @@
   @keyframes wspin { to { transform: rotate(360deg); } }
   .loco { flex: 0 0 auto; width: calc(var(--s, 86px) * 1.55); margin-left: 4px; margin-bottom: -4px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); cursor: pointer; position: relative; }
   .loco svg { width: 100%; height: auto; display: block; overflow: visible; }
-  .lc-eyes { transform-box: fill-box; transform-origin: center; animation: lcblink 4.6s infinite; }
-  @keyframes lcblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
   .puff { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #dfe7f2); pointer-events: none; opacity: 0; animation: puff 1.3s ease-out forwards; }
   @keyframes puff { 0% { transform: translate(0,0) scale(.4); opacity: .95; } 100% { transform: translate(-50px,-90px) scale(2.4); opacity: 0; } }
   .slots { display: flex; gap: min(1.2vw, 8px); justify-content: center; flex-wrap: wrap; flex: 0 0 auto; max-width: 78vw; padding: 0 0 14px; }
@@ -115,6 +113,8 @@
   .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
   @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-blink { transform-box: fill-box; transform-origin: center; }
+  .jk-blink.on { transform: scaleY(.12); }
   .jk-press { animation: jkpress .28s ease-out; }
   @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
@@ -215,10 +215,21 @@
     }
     function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
     function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    // El banner se crea tras pintar la pantalla (sin reflow síncrono) y se reemplaza el nodo para reiniciar la animación
+    var bannerT = null;
     function banner(text) {
-      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
-      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+      clearTimeout(bannerT);
+      bannerT = setTimeout(function () {
+        if (bannerEl) bannerEl.remove();
+        bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner in'; bannerEl.textContent = text; document.body.appendChild(bannerEl);
+      }, 90);
     }
+    // Parpadeo de ojos sin animación continua: cada ~4 s se cierran 130 ms (clase .jk-blink)
+    setInterval(function () {
+      var eyes = document.querySelectorAll('.jk-blink'); if (!eyes.length) return;
+      for (var i = 0; i < eyes.length; i++) eyes[i].classList.add('on');
+      setTimeout(function () { for (var j = 0; j < eyes.length; j++) eyes[j].classList.remove('on'); }, 130);
+    }, 4200);
     function swap(el, fn) {
       if (!el || !el.parentNode) { fn(); return; }
       el.classList.remove('jk-in'); el.classList.add('jk-out');
@@ -256,7 +267,7 @@
       '<rect x="70" y="56" width="70" height="7" rx="3" fill="rgba(255,255,255,.4)"/>' +
       '<ellipse cx="80" cy="50" rx="11" ry="8" fill="#ffd166" stroke="#c47f00" stroke-width="2"/>' +
       '<circle cx="140" cy="74" r="22" fill="#fff6dc" stroke="' + col.d + '" stroke-width="3"/>' +
-      '<g class="lc-eyes"><circle cx="132" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="148" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="133.6" cy="68.3" r="1.9" fill="#fff"/><circle cx="149.6" cy="68.3" r="1.9" fill="#fff"/></g>' +
+      '<g class="jk-blink"><circle cx="132" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="148" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="133.6" cy="68.3" r="1.9" fill="#fff"/><circle cx="149.6" cy="68.3" r="1.9" fill="#fff"/></g>' +
       '<path d="M130 80 Q140 90 150 80" stroke="#c8601a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
       '<circle cx="125" cy="78" r="3.5" fill="#ff8aa8" opacity=".6"/><circle cx="155" cy="78" r="3.5" fill="#ff8aa8" opacity=".6"/>' +
       '<path d="M148 98 L170 112 L148 112 Z" fill="#ffd166" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/>' +

@@ -4,82 +4,96 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="stylesheet" href="../common.css">
-<title>Diferencias</title>
+<title>Galería de arte</title>
 <style>
+  /* ===== Mundo: "La galería de arte" — dos cuadros casi iguales colgados en un museo; el telón se abre en cada sala ===== */
   .game {
+    --f1: #fff3b0; --f2: #e0a020; --f3: #8a5a00; /* marco (cosmético) */
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse 100% 50% at 50% 110%, rgba(120,40,0,.35), rgba(0,0,0,0) 60%),
-      linear-gradient(180deg, #ffd08a 0%, #ff9f43 55%, #ee7a2a 100%);
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #f6e7cf 0%, #e9d2b0 70%, #d9bd95 100%);
   }
-  .game::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
-    background:
-      radial-gradient(circle at 8% 30%, rgba(255,255,255,.4) 0 26px, rgba(255,255,255,0) 27px),
-      radial-gradient(circle at 93% 26%, rgba(255,255,255,.35) 0 34px, rgba(255,255,255,0) 35px),
-      radial-gradient(circle at 90% 78%, rgba(255,255,255,.3) 0 20px, rgba(255,255,255,0) 21px),
-      radial-gradient(circle at 6% 82%, rgba(255,255,255,.3) 0 30px, rgba(255,255,255,0) 31px);
-  }
+  .game.madera { --f1: #e0b070; --f2: #a86a30; --f3: #5a3a14; } .game.rosa { --f1: #ffd6e8; --f2: #f0569a; --f3: #b8306f; }
+  .game.azul { --f1: #d4f0ff; --f2: #2f95e8; --f3: #1a63a8; } .game.plata { --f1: #ffffff; --f2: #b9c3d8; --f3: #6b7a8a; }
+  /* lambrín y piso del museo */
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, #8a6240 0 110px, #6e4a2a 110px 114px), linear-gradient(180deg, #a07040, #6e4a2a); background-blend-mode: multiply; border-top: 8px solid #fff8e6; box-shadow: 0 -4px 10px rgba(0,0,0,.2); }
+  .game::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 26px; z-index: 0; pointer-events: none; background: linear-gradient(180deg, #fff8e6, #efe0c4); box-shadow: 0 3px 6px rgba(0,0,0,.12); }
   .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 14px; border-radius: 40px; max-width: 100%; }
-  .hud .scene { font-size: 22px; font-weight: 900; color: #b8500a; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
+  .hud .hero { width: 52px; height: 52px; flex: 0 0 auto; } .hud .hero svg { width: 100%; height: 100%; overflow: visible; }
+  .hud .scene { font-size: 22px; font-weight: 900; color: #8a5a00; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
   .hud .scene .emoji { font-size: 26px; vertical-align: middle; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #ffb3d1, #ff3d7f 70%); box-shadow: 0 2px 0 #b8306f, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round { width: 64px; height: 64px; font-size: 28px; }
   #hint { position: relative; }
-  #hint .n { position: absolute; right: -6px; top: -6px; min-width: 26px; height: 26px; border-radius: 13px; font-size: 16px; line-height: 26px; padding: 0 6px;
-             background: linear-gradient(180deg, #ff8fb1, #e53170); color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); box-shadow: 0 2px 0 #a11f4e, 0 3px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.5); }
+  #hint .n { position: absolute; right: -6px; top: -6px; min-width: 26px; height: 26px; border-radius: 13px; font-size: 16px; line-height: 26px; padding: 0 6px; background: linear-gradient(180deg, #ff8fb1, #e53170); color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3); box-shadow: 0 2px 0 #a11f4e, 0 3px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.5); }
   #hint.off { opacity: .45; filter: saturate(.3); }
   .hud .timer { font-size: 20px; font-weight: 900; color: #fff; padding: 4px 14px; border-radius: 20px; white-space: nowrap; background: linear-gradient(180deg, #7dd0ff, #2f95e8); text-shadow: 0 2px 0 #1a63a8; box-shadow: 0 4px 0 #1a63a8, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.6); }
   .hud .timer.low { background: linear-gradient(180deg, #ffc077, #ff7a1a); text-shadow: 0 2px 0 #b8500a; box-shadow: 0 4px 0 #b8500a, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.6); }
   .hud .timer.over { background: linear-gradient(180deg, #e8ecf5, #c9d2e6); color: #6b7a99; text-shadow: none; box-shadow: 0 4px 0 #9aa7c7; }
   #hint.wiggle { animation: wiggle .5s; }
   @keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+  .hud .streak { display: none; font-size: 18px; font-weight: 900; color: #fff; padding: 4px 12px; border-radius: 20px; white-space: nowrap; background: linear-gradient(180deg, #ff9f43, #ff5e3a); box-shadow: 0 3px 0 #b8300a, 0 5px 10px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.3); animation: pop .4s ease-out; }
+  .hud .streak.on { display: inline-block; }
 
   .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; }
-  .instr .txt { font-size: 28px; font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #b8500a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .instr .txt { font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #8a5a00; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
   .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
 
-  .pics { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .pics { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 18px; }
+  /* marco dorado tallado */
   .frame {
-    position: relative; flex: 0 0 auto; padding: 9px; border-radius: 22px;
-    background: linear-gradient(180deg, #ffffff, #eef2fa); border: 3px solid #fff;
-    box-shadow: 0 8px 0 #c9d2e6, 0 18px 28px rgba(80,30,0,.35), inset 0 2px 0 #fff;
+    position: relative; flex: 0 0 auto; padding: 14px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--f1) 0%, var(--f2) 30%, var(--f1) 50%, var(--f2) 70%, var(--f3) 100%);
+    box-shadow: 0 10px 0 var(--f3), 0 22px 34px rgba(80,40,0,.4), inset 0 0 0 3px rgba(255,255,255,.55), inset 0 0 0 6px var(--f2);
   }
+  .frame::before { content: ""; position: absolute; inset: 7px; border-radius: 6px; pointer-events: none; z-index: 2; box-shadow: inset 0 0 0 2px var(--f3), inset 0 0 0 5px #fff8e6, inset 0 0 12px rgba(0,0,0,.4); }
+  .frame .orn { position: absolute; width: 22px; height: 22px; border-radius: 50%; z-index: 3; pointer-events: none; background: radial-gradient(circle at 35% 30%, var(--f1), var(--f2) 55%, var(--f3)); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+  .frame .orn.a { left: -4px; top: -4px; } .frame .orn.b { right: -4px; top: -4px; } .frame .orn.c { left: -4px; bottom: -4px; } .frame .orn.d { right: -4px; bottom: -4px; }
   .frame.pop { animation: pop .4s ease-out backwards; }
   .frame.r.pop { animation-delay: .12s; }
-  .frame svg { display: block; width: 100%; height: 100%; border-radius: 14px; overflow: hidden; touch-action: none; cursor: pointer;
-               box-shadow: inset 0 0 0 2px rgba(0,0,0,.08); }
-  .frame .tag { position: absolute; left: 50%; top: -12px; transform: translateX(-50%); padding: 2px 14px; border-radius: 14px; font-size: 16px; font-weight: 900; color: #fff;
-                background: linear-gradient(180deg, #ff9ccb, #f0569a); box-shadow: 0 3px 0 #b8306f, 0 4px 8px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.25); }
-  .frame.r .tag { background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 3px 0 #1a63a8, 0 4px 8px rgba(0,0,0,.25); }
+  .frame svg { display: block; width: 100%; height: 100%; border-radius: 4px; overflow: hidden; touch-action: none; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(0,0,0,.08); }
+  .frame .tag { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); padding: 2px 14px; border-radius: 6px; font-size: 15px; font-weight: 900; color: #5a3a14; white-space: nowrap; z-index: 4;
+    background: linear-gradient(180deg, #fff8e6, #e9d2b0); box-shadow: 0 3px 0 #a07040, 0 4px 8px rgba(0,0,0,.25); border: 2px solid #fff; }
+  /* ganchito y cordón del cuadro */
+  .frame .wire { position: absolute; left: 50%; top: -22px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #b9c3d8 60%, #6b7a8a); box-shadow: 0 2px 3px rgba(0,0,0,.35); z-index: 3; }
+  .frame .wire::before, .frame .wire::after { content: ""; position: absolute; top: 8px; width: 2px; height: 20px; background: #6b4a2a; transform-origin: 50% 0; }
+  .frame .wire::before { left: 4px; transform: rotate(-58deg); } .frame .wire::after { left: 4px; transform: rotate(58deg); }
   .em { font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; filter: drop-shadow(0 2px 1.5px rgba(0,0,0,.3)); }
-  .ring { fill: none; stroke: #ff3d7f; stroke-width: 5; transform-box: fill-box; transform-origin: center; animation: ringin .5s cubic-bezier(.3,1.5,.5,1) backwards;
-          filter: drop-shadow(0 0 3px #fff) drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+  .ring { fill: none; stroke: #ff3d7f; stroke-width: 5; transform-box: fill-box; transform-origin: center; animation: ringin .5s cubic-bezier(.3,1.5,.5,1) backwards; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
   .ring.w { stroke: #fff; stroke-width: 9; opacity: .8; filter: none; }
   @keyframes ringin { 0% { transform: scale(2.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   .ripple { fill: rgba(255,255,255,.35); stroke: #fff; stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: rip .5s ease-out forwards; pointer-events: none; }
   @keyframes rip { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
-  .hintp { fill: rgba(255,230,0,.12); stroke: #ffd400; stroke-width: 6; transform-box: fill-box; transform-origin: center; animation: hp .7s ease-in-out 3; pointer-events: none;
-           filter: drop-shadow(0 0 4px #fff); }
+  .hintp { fill: rgba(255,230,0,.12); stroke: #ffd400; stroke-width: 6; transform-box: fill-box; transform-origin: center; animation: hp .7s ease-in-out 3; pointer-events: none; filter: drop-shadow(0 0 4px #fff); }
   @keyframes hp { 0%,100% { transform: scale(.8); opacity: .4; } 50% { transform: scale(1.25); opacity: 1; } }
   .marks { pointer-events: none; }
-
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
-           box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  /* telón de la sala */
+  .curtain { position: absolute; inset: -10px; z-index: 8; pointer-events: none; overflow: hidden; border-radius: 20px; }
+  .curtain .c { position: absolute; top: 0; bottom: 0; width: 52%; transition: transform .6s cubic-bezier(.5,0,.3,1); background: repeating-linear-gradient(90deg, #ff6b6b 0 12px, #c62828 12px 30px, #7a0f0f 30px 36px); box-shadow: 0 0 30px rgba(0,0,0,.5); }
+  .curtain .c.l { left: 0; transform: translateX(-102%); border-radius: 0 20px 20px 0 / 0 50% 50% 0; } .curtain .c.r { right: 0; transform: translateX(102%); border-radius: 20px 0 0 20px / 50% 0 0 50%; }
+  .curtain.closed .c { transform: translateX(0); }
+  .curtain .rod { position: absolute; left: 0; right: 0; top: 0; height: 12px; background: linear-gradient(180deg, #fff3b0, #c47f00); opacity: 0; transition: opacity .3s; }
+  .curtain.closed .rod { opacity: 1; }
+  .tutdot { position: fixed; width: 2px; height: 2px; pointer-events: none; z-index: 1; }
+  .banner { position: absolute; left: 50%; top: 42%; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.5); padding: 12px 36px; border-radius: 40px; white-space: nowrap;
+    font-size: clamp(24px, 4.2vw, 38px); font-weight: 900; color: #6a3f00; background: linear-gradient(180deg, #ffe98a, #ffb703); text-shadow: 0 2px 0 rgba(255,255,255,.6);
+    box-shadow: 0 8px 0 #c47f00, 0 18px 30px rgba(0,0,0,.4), inset 0 2px 0 #fff; }
+  .banner.show { animation: bannerin 1.7s cubic-bezier(.3,1.4,.4,1) forwards; }
+  @keyframes bannerin { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } 14% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); } 24% { transform: translate(-50%,-50%) scale(1); } 78% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-100%) scale(.9); } }
   #defs { position: absolute; width: 0; height: 0; }
+  @media (max-width: 800px) { .hud { gap: 6px; padding: 6px 8px; } .hud .scene { font-size: 18px; } }
 </style>
 </head>
 <body>
 <script src="../common.js"></script>
 <script>
-var game = KidsGame.init({ title: 'Diferencias' });
+var game = KidsGame.init({ title: 'Galería de arte' });
 (function () {
-  // ---------- Degradados compartidos (un solo <defs> para todo el documento) ----------
+  // ---------- Degradados compartidos ----------
   function LG(id, stops, horiz) {
     var s = '<linearGradient id="' + id + '" x1="0" y1="0" x2="' + (horiz ? 1 : 0) + '" y2="' + (horiz ? 0 : 1) + '">';
     stops.forEach(function (c, i) { s += '<stop offset="' + (i / (stops.length - 1)) + '" stop-color="' + c + '"/>'; });
@@ -91,16 +105,16 @@ var game = KidsGame.init({ title: 'Diferencias' });
     return s + '</radialGradient>';
   }
   var DEFS = '<svg id="defs" aria-hidden="true"><defs>' +
-    LG('gSky', ['#4fb3ff', '#9fdcff', '#e3f6ff']) + LG('gNight', ['#141c55', '#3b44a8', '#6c6fd0']) +
+    LG('gSky', ['#4fb3ff', '#9fdcff', '#e3f6ff']) + LG('gNight', ['#141c55', '#3b44a8', '#6c6fd0']) + LG('gSpace', ['#0b1038', '#232a6e', '#4a3f9a']) +
     RG('gSun', ['#fffbd0', '#ffd23a', '#ffa500']) + RG('gMoon', ['#ffffff', '#f2f4fa', '#c9d2e6']) +
     LG('gGrass', ['#b5f07a', '#63c74d', '#3e9a3a']) + LG('gHill', ['#cdf59a', '#7ccf5a']) +
     RG('gLeaf', ['#b7ef8a', '#4fae43', '#2a6e2a'], .35, .3) + LG('gTrunk', ['#b07a4a', '#7a4a24', '#4e2e14'], true) +
-    LG('gSea', ['#8ee0ff', '#2a9be0', '#0c5fa0']) + LG('gSand', ['#fff3c4', '#f3d38a', '#dbb060']) +
+    LG('gSea', ['#8ee0ff', '#2a9be0', '#0c5fa0']) + LG('gDeep', ['#1aa0e0', '#0c5fa0', '#073d6e']) + LG('gSand', ['#fff3c4', '#f3d38a', '#dbb060']) +
     LG('gWood', ['#e2ad64', '#b77a36', '#8a5522']) + LG('gWood2', ['#f1c687', '#d49a52', '#a86a30']) + LG('gWall', ['#ffe9f2', '#ffc9dd']) + LG('gWallK', ['#fff8dc', '#ffe6a8']) +
     LG('gFloor', ['#edcb95', '#c99358', '#a8733c']) + LG('gTile', ['#e9f0f7', '#bfd0e0']) +
     RG('gRed', ['#ffc2c2', '#ff4d4d', '#a30000']) + RG('gBlue', ['#c9e9ff', '#2f95e8', '#155b9e']) + RG('gYellow', ['#fff9c4', '#ffc800', '#c47f00']) + RG('gYellow2', ['#fffbe0', '#ffe066', '#d9a520']) +
     RG('gGreen', ['#d2ffdf', '#2fc56d', '#14784a']) + RG('gPurple', ['#e6dcff', '#8a5cf6', '#4b2aa8']) + RG('gPink', ['#ffdcec', '#ff5fa2', '#b8306f']) + RG('gPink2', ['#ffe6f1', '#ff8fc0', '#c94a85']) +
-    RG('gOrange', ['#ffe3bd', '#ff8a1a', '#b8500a']) + RG('gWhite', ['#ffffff', '#e6ecf5', '#b3bfd0']) + RG('gBrown', ['#e0b487', '#9c6a3a', '#5e3a17']) +
+    RG('gOrange', ['#ffe3bd', '#ff8a1a', '#b8500a']) + RG('gWhite', ['#ffffff', '#e6ecf5', '#b3bfd0']) + RG('gBrown', ['#e0b487', '#9c6a3a', '#5e3a17']) + RG('gTeal', ['#c4fbf7', '#12b5b0', '#00706f']) +
     LG('gBarn', ['#ff7f70', '#d9483a', '#a12e22']) + LG('gRoof', ['#9c5a3c', '#5a2e1a']) + LG('gMetal', ['#ffffff', '#c9d4e0', '#8b98a8']) +
     LG('gCastle', ['#f9dfa0', '#d9ad5a', '#b98a3f']) + LG('gGlass', ['rgba(255,255,255,.75)', 'rgba(255,255,255,.1)']) + LG('gDark', ['#3a2a1a', '#1a110a']) +
     '<filter id="ds" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".3"/></filter>' +
@@ -118,9 +132,7 @@ var game = KidsGame.init({ title: 'Diferencias' });
   function ball(cx, cy, r, g) { return shadow(cx, cy + r * .95, r * .9, r * .28) + C(cx, cy, r, 'url(#' + g + ')', ' stroke="rgba(0,0,0,.18)" stroke-width="1.5"') + hi(cx - r * .3, cy - r * .35, r * .35, r * .2); }
   function cloud(x, y, s) {
     s = s || 1;
-    return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" filter="url(#ds)">' +
-      C(0, 0, 18, 'url(#gWhite)') + C(20, -8, 22, 'url(#gWhite)') + C(42, 0, 17, 'url(#gWhite)') + R(-8, 0, 60, 16, 8, 'url(#gWhite)') +
-      EL(12, -12, 12, 5, 'rgba(255,255,255,.8)') + '</g>';
+    return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" filter="url(#ds)">' + C(0, 0, 18, 'url(#gWhite)') + C(20, -8, 22, 'url(#gWhite)') + C(42, 0, 17, 'url(#gWhite)') + R(-8, 0, 60, 16, 8, 'url(#gWhite)') + EL(12, -12, 12, 5, 'rgba(255,255,255,.8)') + '</g>';
   }
   function sun(x, y, r, rays) {
     var s = '<g>', n = rays || 12;
@@ -128,19 +140,15 @@ var game = KidsGame.init({ title: 'Diferencias' });
     return s + C(x, y, r + 8, 'rgba(255,220,80,.35)') + C(x, y, r, 'url(#gSun)') + hi(x - r * .3, y - r * .35, r * .35, r * .2) + '</g>';
   }
   function tree(x, y, s, apples) {
-    // x,y = base del tronco; apples = número de manzanas (0-3)
-    var g = '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' + shadow(0, 2, 36, 7) +
-      P('M-8 0 L-6 -50 L6 -50 L8 0 Z', 'url(#gTrunk)') +
-      '<g filter="url(#ds)">' + C(-22, -62, 24, 'url(#gLeaf)') + C(22, -62, 24, 'url(#gLeaf)') + C(0, -84, 28, 'url(#gLeaf)') + C(0, -60, 30, 'url(#gLeaf)') + '</g>' +
-      hi(-10, -96, 12, 5);
+    var g = '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' + shadow(0, 2, 36, 7) + P('M-8 0 L-6 -50 L6 -50 L8 0 Z', 'url(#gTrunk)') +
+      '<g filter="url(#ds)">' + C(-22, -62, 24, 'url(#gLeaf)') + C(22, -62, 24, 'url(#gLeaf)') + C(0, -84, 28, 'url(#gLeaf)') + C(0, -60, 30, 'url(#gLeaf)') + '</g>' + hi(-10, -96, 12, 5);
     var ap = [[-16, -56], [14, -70], [4, -44]];
     for (var i = 0; i < apples; i++) g += C(ap[i][0], ap[i][1], 5.5, 'url(#gRed)') + hi(ap[i][0] - 1.5, ap[i][1] - 2, 1.8, 1);
     return g + '</g>';
   }
   function flower(x, y, g, s, petals) {
     s = s || 1; var n = petals || 6;
-    var o = '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' + P('M0 0 L0 -18', 'none', ' stroke="#3e9a3a" stroke-width="3"') +
-      EL(4, -8, 6, 3, 'url(#gLeaf)', ' transform="rotate(-30 4 -8)"');
+    var o = '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' + P('M0 0 L0 -18', 'none', ' stroke="#3e9a3a" stroke-width="3"') + EL(4, -8, 6, 3, 'url(#gLeaf)', ' transform="rotate(-30 4 -8)"');
     for (var i = 0; i < n; i++) o += C(Math.cos(i * Math.PI * 2 / n) * 7, -22 + Math.sin(i * Math.PI * 2 / n) * 7, 5, 'url(#' + g + ')');
     return o + C(0, -22, 4.5, 'url(#gYellow)') + '</g>';
   }
@@ -154,13 +162,15 @@ var game = KidsGame.init({ title: 'Diferencias' });
     return '<g filter="url(#ds)">' + C(cx, cy, r, 'url(#gWhite)', ' stroke="#8b98a8" stroke-width="2"') +
       C(cx, cy - r * .7, 1.8, '#556') + C(cx, cy + r * .7, 1.8, '#556') + C(cx - r * .7, cy, 1.8, '#556') + C(cx + r * .7, cy, 1.8, '#556') +
       '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.sin(a1 * Math.PI / 180) * r * .45) + '" y2="' + (cy - Math.cos(a1 * Math.PI / 180) * r * .45) + '" stroke="#334" stroke-width="3" stroke-linecap="round"/>' +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.sin(a2 * Math.PI / 180) * r * .7) + '" y2="' + (cy - Math.cos(a2 * Math.PI / 180) * r * .7) + '" stroke="#e53170" stroke-width="2.5" stroke-linecap="round"/>' +
-      C(cx, cy, 2.5, '#334') + '</g>';
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.sin(a2 * Math.PI / 180) * r * .7) + '" y2="' + (cy - Math.cos(a2 * Math.PI / 180) * r * .7) + '" stroke="#e53170" stroke-width="2.5" stroke-linecap="round"/>' + C(cx, cy, 2.5, '#334') + '</g>';
   }
   function bird(x, y, s) { return P('M' + (x - 14) + ' ' + y + ' q7 -10 14 0 q7 -10 14 0', 'none', ' stroke="#334" stroke-width="' + (2.5 * (s || 1)) + '" fill="none"'); }
+  function seaweed(x, y, h, g, sway) { return P('M' + x + ' ' + y + ' q' + (sway || 8) + ' ' + (-h * .3) + ' 0 ' + (-h * .55) + ' q' + (-(sway || 8)) + ' ' + (-h * .25) + ' 2 ' + (-h), 'none', ' stroke="url(#' + g + ')" stroke-width="7" stroke-linecap="round"'); }
+  function bubble(x, y, r) { return C(x, y, r, 'rgba(255,255,255,.18)', ' stroke="rgba(255,255,255,.7)" stroke-width="1.5"') + hi(x - r * .35, y - r * .35, r * .3, r * .2); }
 
   // ---------- Escenas (400x300). f = diferencias activas ----------
   var SCENES = [
+
     { name: 'Parque', icon: '🌳',
       diffs: [
         { id: 'pelota', x: 210, y: 252, r: 30, big: true }, { id: 'globo', x: 330, y: 150, r: 30, big: true },
@@ -342,28 +352,111 @@ var game = KidsGame.init({ title: 'Diferencias' });
           '<g filter="url(#ds)">' + P('M12 160 L38 160 L34 188 L16 188 Z', 'url(#gOrange)') + P('M25 160 v-24', 'none', ' stroke="#3e9a3a" stroke-width="3"') +
           EL(16, 148, 9, 4, 'url(#gLeaf)', ' transform="rotate(-35 16 148)"') + EL(34, 150, 9, 4, 'url(#gLeaf)', ' transform="rotate(35 34 150)"') +
           C(25, 133, 7, f.planta ? 'url(#gPink)' : 'url(#gRed)') + C(25, 133, 3, 'url(#gYellow)') + '</g>';
+      } },
+    { name: 'Espacio', icon: '🚀',
+      diffs: [
+        { id: 'cohete', x: 110, y: 150, r: 40, big: true }, { id: 'planeta', x: 300, y: 90, r: 44, big: true },
+        { id: 'luna', x: 70, y: 60, r: 32, big: true }, { id: 'alien', x: 330, y: 235, r: 30, big: true },
+        { id: 'estrella', x: 200, y: 50, r: 26 }, { id: 'cometa', x: 215, y: 120, r: 30 }, { id: 'satelite', x: 352, y: 170, r: 28 },
+        { id: 'bandera', x: 236, y: 232, r: 26 }, { id: 'crater', x: 150, y: 266, r: 22 },
+        { id: 'ventana', x: 110, y: 128, r: 18, sub: true }, { id: 'anillo', x: 300, y: 92, r: 20, sub: true }, { id: 'estrellita', x: 44, y: 130, r: 18, sub: true, alt: { x: 80, y: 190 } }
+      ],
+      draw: function (f) {
+        var stars = '';
+        [[30, 30], [120, 24], [160, 80], [250, 28], [370, 40], [390, 120], [20, 200], [300, 150], [180, 190], [380, 200]].forEach(function (p) { stars += C(p[0], p[1], 1.8, '#fff', ' opacity=".9"'); });
+        var rk = f.cohete ? 'gBlue' : 'gRed';
+        return R(0, 0, 400, 300, 0, 'url(#gSpace)') + stars + C(f.estrellita ? 80 : 44, f.estrellita ? 190 : 130, 2.6, '#fff') +
+          (f.estrella ? '' : star(200, 50, 12, 'gYellow')) +
+          // luna llena o creciente
+          '<g filter="url(#ds)">' + C(70, 60, 24, 'url(#gMoon)') + (f.luna ? C(82, 52, 22, 'url(#gSpace)') : (C(62, 52, 5, 'rgba(0,0,0,.12)') + C(78, 68, 4, 'rgba(0,0,0,.12)') + C(74, 50, 2.5, 'rgba(0,0,0,.12)'))) + '</g>' +
+          // planeta con anillo
+          '<g filter="url(#ds)">' + EL(300, 92, 56, 12, 'none', ' stroke="url(#gYellow)" stroke-width="7" transform="rotate(-18 300 92)"') + C(300, 90, 30, 'url(#gPurple)') + C(290, 80, 6, 'rgba(255,255,255,.25)') + C(310, 98, 4, 'rgba(255,255,255,.2)') +
+          P('M244 94 A56 12 0 0 0 356 94', 'none', ' stroke="url(#gYellow)" stroke-width="7" transform="rotate(-18 300 92)"') + (f.anillo ? P('M250 100 A56 12 0 0 0 350 100', 'none', ' stroke="#fff" stroke-width="2" opacity=".6" transform="rotate(-18 300 92)"') : '') + (f.planeta ? C(300, 90, 30, 'url(#gTeal)') : '') + '</g>' +
+          (f.cometa ? '' : ('<g>' + P('M215 120 L176 96 L190 124 Z', 'rgba(255,255,255,.5)') + C(215, 120, 7, 'url(#gYellow2)') + '</g>')) +
+          // superficie lunar
+          P('M0 250 Q60 232 120 246 T260 240 T400 248 V300 H0 Z', 'url(#gWhite)') + EL(150, 266, 14, 6, 'rgba(0,0,0,.14)') + EL(60, 282, 10, 4, 'rgba(0,0,0,.12)') + (f.crater ? EL(290, 280, 12, 5, 'rgba(0,0,0,.14)') : '') +
+          // cohete
+          '<g filter="url(#ds)">' + P('M110 108 Q130 140 130 190 L90 190 Q90 140 110 108 Z', 'url(#' + rk + ')') + P('M90 170 L74 196 L92 190 Z', 'url(#gYellow)') + P('M130 170 L146 196 L128 190 Z', 'url(#gYellow)') +
+          C(110, 142, 8, 'url(#gGlass)', ' stroke="#1a63a8" stroke-width="2"') + (f.ventana ? C(110, 166, 5, 'url(#gGlass)', ' stroke="#1a63a8" stroke-width="2"') : '') + P('M98 190 L122 190 L116 204 L104 204 Z', '#556') +
+          P('M104 206 q6 18 12 0 q-6 28 -12 0', 'url(#gOrange)') + P('M107 206 q3 10 6 0', 'url(#gYellow)') + '</g>' +
+          // bandera en la luna
+          '<line x1="236" y1="252" x2="236" y2="218" stroke="#556" stroke-width="2"/>' + P('M237 218 L258 224 L237 230 Z', f.bandera ? 'url(#gGreen)' : 'url(#gRed)') +
+          (f.satelite ? '' : ('<g filter="url(#ds)" transform="rotate(-20 352 170)">' + R(340, 164, 24, 12, 3, 'url(#gMetal)') + R(318, 166, 20, 8, 1, 'url(#gBlue)') + R(366, 166, 20, 8, 1, 'url(#gBlue)') + '<line x1="352" y1="164" x2="352" y2="150" stroke="#8b98a8" stroke-width="2"/>' + C(352, 149, 3, 'url(#gRed)') + '</g>')) +
+          shadow(330, 252, 16, 4) + em(330, 235, 32, f.alien ? '🤖' : '👽');
+      } },
+    { name: 'Océano', icon: '🐠',
+      diffs: [
+        { id: 'submarino', x: 120, y: 90, r: 44, big: true }, { id: 'pez', x: 290, y: 120, r: 30, big: true },
+        { id: 'pulpo', x: 80, y: 220, r: 32, big: true }, { id: 'cofre', x: 300, y: 240, r: 34, big: true },
+        { id: 'estrella', x: 190, y: 270, r: 24 }, { id: 'burbujas', x: 250, y: 60, r: 24 }, { id: 'alga', x: 360, y: 200, r: 26 },
+        { id: 'cangrejo', x: 230, y: 240, r: 24 }, { id: 'concha', x: 130, y: 275, r: 22 },
+        { id: 'coral', x: 30, y: 262, r: 22, sub: true }, { id: 'periscopio', x: 130, y: 60, r: 16, sub: true, alt: { x: 150, y: 60 } }, { id: 'medusa', x: 210, y: 150, r: 24, sub: true }
+      ],
+      draw: function (f) {
+        var sb = f.submarino ? 'gRed' : 'gYellow';
+        var rays = P('M60 0 L20 300 L120 300 Z M240 0 L210 300 L330 300 Z', 'rgba(255,255,255,.07)');
+        return R(0, 0, 400, 300, 0, 'url(#gDeep)') + rays +
+          bubble(250, 60, 6) + bubble(262, 44, 4) + (f.burbujas ? bubble(240, 40, 5) : '') + bubble(380, 90, 5) + bubble(30, 120, 4) +
+          // submarino
+          '<g filter="url(#ds)">' + EL(120, 95, 50, 24, 'url(#' + sb + ')') + R(100, 62, 30, 20, 6, 'url(#' + sb + ')') + R(f.periscopio ? 148 : 128, 50, 4, 20, 1, '#556') + R(f.periscopio ? 148 : 124, 48, 10, 5, 2, '#556') +
+          C(100, 95, 7, 'url(#gGlass)', ' stroke="#1a63a8" stroke-width="2"') + C(122, 95, 7, 'url(#gGlass)', ' stroke="#1a63a8" stroke-width="2"') + C(144, 95, 7, 'url(#gGlass)', ' stroke="#1a63a8" stroke-width="2"') +
+          P('M70 88 L56 78 L56 112 L70 102 Z', 'url(#gMetal)') + '</g>' +
+          // medusa
+          '<g>' + P('M196 140 A14 14 0 0 1 224 140 L224 148 L196 148 Z', 'url(#gPink2)', ' opacity=".9"') + P('M198 150 q2 12 0 24 M206 150 q-2 14 1 26 M214 150 q2 14 -1 26 M222 150 q-2 12 0 24' + (f.medusa ? '' : ' M210 150 q0 16 2 30'), 'none', ' stroke="#ff8fc0" stroke-width="2" opacity=".9"') + '</g>' +
+          shadow(290, 142, 20, 5) + em(290, 120, 36, f.pez ? '🐡' : '🐠') + em(340, 70, 22, '🐟') + em(60, 160, 20, '🐟') +
+          // arena y plantas
+          P('M0 262 Q100 248 200 260 T400 256 V300 H0 Z', 'url(#gSand)') +
+          seaweed(350, 266, 70, 'gLeaf', 10) + seaweed(372, 268, 56, 'gGreen', -8) + (f.alga ? '' : seaweed(388, 266, 80, 'gLeaf', 8)) + seaweed(20, 268, 40, 'gGreen', 6) +
+          '<g filter="url(#ds)">' + P('M20 264 q-8 -16 4 -24 q4 -8 10 2 q10 -12 14 2 q6 -8 8 6 q0 12 -10 16 Z', f.coral ? 'url(#gPink2)' : 'url(#gPink)') + '</g>' +
+          // cofre
+          '<g filter="url(#ds)">' + R(276, 236, 50, 28, 4, 'url(#gWood)') + (f.cofre ? (P('M276 236 L276 222 Q301 208 326 222 L326 236 Z', 'url(#gWood2)', ' transform="rotate(-30 276 236)"') + C(292, 232, 4, 'url(#gYellow)') + C(304, 228, 4, 'url(#gYellow)') + C(314, 233, 4, 'url(#gYellow)') + em(300, 222, 14, '💎')) : P('M276 236 L276 224 Q301 210 326 224 L326 236 Z', 'url(#gWood2)')) + R(297, 236, 8, 10, 2, 'url(#gYellow)') + '</g>' +
+          (f.pulpo ? '' : (shadow(80, 244, 24, 5) + em(80, 222, 40, '🐙'))) +
+          (f.cangrejo ? '' : em(230, 242, 24, '🦀')) +
+          (f.estrella ? star(190, 270, 13, 'gPink') : star(190, 270, 13, 'gOrange')) +
+          (f.concha ? '' : em(130, 275, 20, '🐚'));
       } }
   ];
   var NDIFF = { 1: 3, 2: 5, 3: 7, 4: 9 };
   var HINTS = { 1: 3, 2: 2, 3: 2, 4: 1 };
   var LABELS = { 1: '3 diferencias', 2: '5 · menos pistas', 3: '7 · pequeñas', 4: '9 sutiles · 1 pista · ⏱ bono' };
-  var TIME = 60; // Experto: segundos para la estrella extra (sin castigo)
+  var TIME = 60;
+  var SKINS = [{ id: 'dorado', n: 'Marco dorado', e: '🖼️' }, { id: 'madera', n: 'Marco de madera', e: '🪵' }, { id: 'rosa', n: 'Marco rosa', e: '🌸' }, { id: 'azul', n: 'Marco azul', e: '💙' }, { id: 'plata', n: 'Marco de plata', e: '🥈' }];
+  var cos = { unlocked: ['dorado'], sel: 'dorado' };
+  try { var sv = JSON.parse(localStorage.getItem('kg-cos-diferencias')); if (sv && sv.unlocked) cos = sv; } catch (e) {}
+  function saveCos() { try { localStorage.setItem('kg-cos-diferencias', JSON.stringify(cos)); } catch (e) {} }
+
+  function heroSVG(size) {
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<linearGradient id="hf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#e0a020"/><stop offset="1" stop-color="#8a5a00"/></linearGradient>' +
+      '<linearGradient id="hs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fb3ff"/><stop offset="1" stop-color="#c9ecff"/></linearGradient></defs>' +
+      '<rect x="8" y="14" width="70" height="60" rx="4" fill="url(#hf)" stroke="#8a5a00" stroke-width="2"/><rect x="16" y="22" width="54" height="44" fill="url(#hs)"/>' +
+      '<circle cx="56" cy="34" r="6" fill="#ffd23a"/><path d="M16 66 Q35 44 54 60 T70 56 L70 66 Z" fill="#63c74d"/><path d="M16 66 Q28 56 40 64 L16 66 Z" fill="#3e9a3a"/>' +
+      '<circle cx="12" cy="18" r="4" fill="#ffe98a" stroke="#8a5a00"/><circle cx="74" cy="18" r="4" fill="#ffe98a" stroke="#8a5a00"/><circle cx="12" cy="70" r="4" fill="#ffe98a" stroke="#8a5a00"/><circle cx="74" cy="70" r="4" fill="#ffe98a" stroke="#8a5a00"/>' +
+      '<path d="M66 70 L88 92" stroke="#5a3a14" stroke-width="9" stroke-linecap="round"/><circle cx="60" cy="62" r="18" fill="rgba(255,255,255,.35)" stroke="#e0a020" stroke-width="6"/><path d="M50 54 q4 -8 12 -8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+  }
 
   // ---------- Estado / UI ----------
-  var nivel = 0, running = false, order = [], sceneIdx = 0, scene = null, active = [], found = {}, hints = 0, timeLeft = 0, timer = null;
-  var hud, dots, sceneLbl, hintBtn, timerEl, pics, frames = [], svgs = [];
+  var nivel = 0, running = false, order = [], sceneIdx = 0, scene = null, active = [], found = {}, hints = 0, timeLeft = 0, timer = null, streak = 0, handShown = false, tutHand = null, session = 0;
+  var hud, dots, sceneLbl, hintBtn, timerEl, pics, frames = [], svgs = [], streakEl, skinBtn, curtain;
 
   function build() {
     game.innerHTML = '';
+    game.className = 'game ' + cos.sel;
     hud = document.createElement('div'); hud.className = 'hud panel';
+    hud.insertAdjacentHTML('beforeend', '<div class="hero">' + heroSVG(52) + '</div>');
     hud.appendChild(KidsGame.levelBadge(nivel));
     sceneLbl = document.createElement('span'); sceneLbl.className = 'scene'; hud.appendChild(sceneLbl);
     dots = document.createElement('div'); dots.className = 'dots'; hud.appendChild(dots);
+    streakEl = document.createElement('span'); streakEl.className = 'streak'; hud.appendChild(streakEl);
     hintBtn = document.createElement('button'); hintBtn.className = 'btn round purple'; hintBtn.id = 'hint';
     hintBtn.innerHTML = '💡<span class="n">3</span>'; hintBtn.setAttribute('aria-label', 'Pista');
     hintBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); hint(); });
     hud.appendChild(hintBtn);
     if (nivel === 4) { timerEl = document.createElement('span'); timerEl.className = 'timer'; hud.appendChild(timerEl); }
+    skinBtn = document.createElement('button'); skinBtn.className = 'btn round blue'; skinBtn.textContent = '🎨'; skinBtn.setAttribute('aria-label', 'Cambiar marco');
+    skinBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); cycleSkin(); });
+    skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
+    hud.appendChild(skinBtn);
     var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
@@ -372,7 +465,7 @@ var game = KidsGame.init({ title: 'Diferencias' });
     var instr = document.createElement('div'); instr.className = 'instr panel';
     instr.innerHTML = '<span class="ico emoji">🔎</span><span class="txt">Encuentra las diferencias</span>';
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
-    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say('Encuentra las diferencias entre los dos dibujos'); });
+    sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say('Encuentra las diferencias entre los dos cuadros'); });
     instr.appendChild(sp);
     game.appendChild(instr);
 
@@ -380,26 +473,41 @@ var game = KidsGame.init({ title: 'Diferencias' });
     frames = []; svgs = [];
     for (var i = 0; i < 2; i++) {
       var fr = document.createElement('div'); fr.className = 'frame pop' + (i ? ' r' : '');
-      fr.innerHTML = '<span class="tag">' + (i ? '2' : '1') + '</span><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>';
+      fr.innerHTML = '<span class="wire"></span><span class="orn a"></span><span class="orn b"></span><span class="orn c"></span><span class="orn d"></span><span class="tag">' + (i ? 'Cuadro 2' : 'Cuadro 1') + '</span><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>';
       pics.appendChild(fr); frames.push(fr); svgs.push(fr.querySelector('svg'));
       (function (side) { svgs[side].addEventListener('pointerdown', function (ev) { ev.preventDefault(); tapAt(side, ev); }); })(i);
     }
+    curtain = document.createElement('div'); curtain.className = 'curtain closed'; curtain.innerHTML = '<div class="c l"></div><div class="c r"></div><div class="rod"></div>';
+    pics.appendChild(curtain);
     game.appendChild(pics);
+    var b = document.createElement('div'); b.className = 'banner'; game.appendChild(b);
   }
+  function cycleSkin() {
+    KidsGame.sound.tap();
+    var i = cos.unlocked.indexOf(cos.sel); cos.sel = cos.unlocked[(i + 1) % cos.unlocked.length]; saveCos();
+    game.className = 'game ' + cos.sel;
+    var s = SKINS.filter(function (k) { return k.id === cos.sel; })[0]; KidsGame.toast(s.e + ' ' + s.n, 1200);
+  }
+  function unlockSkin(lv) { var s = SKINS[Math.min(lv, SKINS.length - 1)]; if (cos.unlocked.indexOf(s.id) >= 0) return null; cos.unlocked.push(s.id); cos.sel = s.id; saveCos(); return s; }
+  function banner(txt) { var b = game.querySelector('.banner'); if (!b) return; b.textContent = txt; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+  function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); }
 
   function showPicker() {
-    running = false;
+    running = false; session++;
+    if (tutHand) { tutHand.stop(); tutHand = null; }
     if (pics) pics.innerHTML = '';
     stopTimer();
-    KidsGame.levelPicker({ key: 'diferencias', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'diferencias', labels: LABELS, art: heroSVG(64), music: 'calma',
+      howto: [{ icon: '🖼️', text: 'Dos cuadros casi iguales' }, { icon: '🔎', text: 'Busca lo que cambió' }, { icon: '👆', text: 'Tócalo en cualquiera de los dos' }],
+      onPick: function (lv) { start(lv); } });
   }
   function start(lv) {
-    nivel = lv; running = true;
+    nivel = lv; running = true; streak = 0; session++;
     order = KidsGame.shuffle(SCENES.map(function (s, i) { return i; })); sceneIdx = 0;
-    build(); loadScene();
+    build(); loadScene(true);
   }
 
-  function loadScene() {
+  function loadScene(first) {
     if (!running) return;
     scene = SCENES[order[sceneIdx % order.length]];
     var n = NDIFF[nivel];
@@ -407,7 +515,6 @@ var game = KidsGame.init({ title: 'Diferencias' });
     var small = KidsGame.shuffle(scene.diffs.filter(function (d) { return !d.big && !d.sub; }));
     var subtle = KidsGame.shuffle(scene.diffs.filter(function (d) { return d.sub; }));
     if (nivel === 4) {
-      // Experto: todas las sutiles + el resto al azar, sin pares incompatibles (p. ej. color y pétalos de la misma flor)
       active = subtle.slice();
       KidsGame.shuffle(big.concat(small)).forEach(function (d) {
         if (active.length >= n) return;
@@ -417,18 +524,30 @@ var game = KidsGame.init({ title: 'Diferencias' });
       active = KidsGame.shuffle(active);
     } else active = (nivel === 3 ? KidsGame.shuffle(big.concat(small)) : big.concat(small)).slice(0, n);
     found = {}; hints = HINTS[nivel];
-    startTimer();
     var flags = {}; active.forEach(function (d) { flags[d.id] = true; });
     svgs[0].innerHTML = scene.draw({}) + '<g class="marks"></g>';
     svgs[1].innerHTML = scene.draw(flags) + '<g class="marks"></g>';
-    frames.forEach(function (fr) { fr.classList.remove('pop'); void fr.offsetWidth; fr.classList.add('pop'); });
     sceneLbl.innerHTML = '<span class="emoji">' + scene.icon + '</span> ' + scene.name;
     dots.innerHTML = ''; for (var i = 0; i < n; i++) dots.appendChild(document.createElement('span'));
-    updateHint();
+    updateHint(); setStreak();
     layout();
-    KidsGame.say('Encuentra ' + n + ' diferencias' + (nivel === 4 ? '. Algunas son muy pequeñas. Si terminas antes de un minuto, ganas una estrella extra' : ''));
+    // telón: se abre al entrar a la sala
+    curtain.classList.add('closed');
+    var ss = session;
+    banner('🖼️ Sala ' + (sceneIdx + 1) + ': ' + scene.name);
+    setTimeout(function () { if (ss !== session || !running) return; curtain.classList.remove('closed'); KidsGame.sound.pop(); frames.forEach(function (fr) { fr.classList.remove('pop'); void fr.offsetWidth; fr.classList.add('pop'); }); startTimer(); }, first ? 900 : 500);
+    setTimeout(function () { if (ss === session && running) KidsGame.say('Encuentra ' + n + ' diferencias' + (nivel === 4 ? '. Algunas son muy pequeñas. Si terminas antes de un minuto, ganas una estrella extra' : '')); }, first ? 1200 : 800);
+    if (nivel === 1 && !handShown) {
+      handShown = true;
+      setTimeout(function () {
+        if (ss !== session || !running) return;
+        var d = active[0]; if (!d || found[d.id]) return;
+        var m = svgs[1].getScreenCTM(); if (!m) return; var pt = svgs[1].createSVGPoint(); pt.x = d.x; pt.y = d.y; var q = pt.matrixTransform(m);
+        var dot = document.createElement('div'); dot.className = 'tutdot'; dot.style.left = q.x + 'px'; dot.style.top = q.y + 'px'; document.body.appendChild(dot);
+        tutHand = KidsGame.hand({ el: dot, timeout: 12000 }); setTimeout(function () { dot.remove(); }, 12500);
+      }, 4000);
+    }
   }
-  // Reloj suave (solo Experto): cuenta hacia atrás; al llegar a 0 no pasa nada, solo se pierde el bono
   function startTimer() {
     stopTimer();
     if (nivel !== 4 || !timerEl) return;
@@ -440,41 +559,22 @@ var game = KidsGame.init({ title: 'Diferencias' });
     }, 1000);
   }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
-  function renderTimer() {
-    if (!timerEl) return;
-    timerEl.textContent = '⏱ ' + timeLeft;
-    timerEl.className = 'timer' + (timeLeft === 0 ? ' over' : (timeLeft <= 15 ? ' low' : ''));
-  }
+  function renderTimer() { if (!timerEl) return; timerEl.textContent = '⏱ ' + timeLeft; timerEl.className = 'timer' + (timeLeft === 0 ? ' over' : (timeLeft <= 15 ? ' low' : '')); }
 
   function layout() {
     if (!pics || !frames.length) return;
-    var W = pics.clientWidth, H = pics.clientHeight, gap = 14, pad = 24, w, h;
+    var W = pics.clientWidth - 8, H = pics.clientHeight - 30, gap = 18, pad = 34, w, h;
     var stack = H > W * 0.95;
     pics.style.flexDirection = stack ? 'column' : 'row';
     if (!stack) { w = Math.min((W - gap) / 2, (H - pad) * 4 / 3 + pad); }
-    else { h = (H - gap) / 2; w = Math.min(W, (h - pad) * 4 / 3 + pad); }
+    else { h = (H - gap - 16) / 2; w = Math.min(W, (h - pad) * 4 / 3 + pad); }
     w = Math.floor(w); h = Math.floor((w - pad) * 3 / 4 + pad);
     frames.forEach(function (fr) { fr.style.width = w + 'px'; fr.style.height = h + 'px'; });
   }
-
   function svgPoint(svg, ev) {
     var pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
     var m = svg.getScreenCTM(); if (!m) return null;
     return pt.matrixTransform(m.inverse());
-  }
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 16); i++) {
-      var s = document.createElement('div');
-      s.className = 'spark' + (i % 3 === 0 ? ' star' : '');
-      var a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 90;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 20) + 'px');
-      s.style.background = KidsGame.pick(colors);
-      s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s);
-      (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
-    }
   }
   function mark(side, cls, x, y, r, ttl) {
     var ns = 'http://www.w3.org/2000/svg';
@@ -486,35 +586,36 @@ var game = KidsGame.init({ title: 'Diferencias' });
   }
 
   function tapAt(side, ev) {
-    if (!running) return;
+    if (!running || curtain.classList.contains('closed')) return;
     var p = svgPoint(svgs[side], ev); if (!p) return;
     var best = null, bd = 1e9;
     active.forEach(function (d) {
       var dx = p.x - d.x, dy = p.y - d.y, dist = Math.sqrt(dx * dx + dy * dy);
-      if (d.alt) { var ax = p.x - d.alt.x, ay = p.y - d.alt.y; dist = Math.min(dist, Math.sqrt(ax * ax + ay * ay)); } // objetos que cambian de lugar: vale tocar cualquiera de los dos
+      if (d.alt) { var ax = p.x - d.alt.x, ay = p.y - d.alt.y; dist = Math.min(dist, Math.sqrt(ax * ax + ay * ay)); }
       if (dist <= d.r + 4 && dist < bd) { best = d; bd = dist; }
     });
     if (best && !found[best.id]) {
       found[best.id] = true;
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       for (var s = 0; s < 2; s++) { mark(s, 'ring w', best.x, best.y, best.r); mark(s, 'ring', best.x, best.y, best.r); }
-      var g = game.getBoundingClientRect();
-      sparkle(ev.clientX - g.left, ev.clientY - g.top, 18);
+      streak++; setStreak();
+      KidsGame.fx.burst(ev.clientX, ev.clientY, { n: 14 });
+      if (streak >= 3) KidsGame.fx.floatText(ev.clientX, ev.clientY - 30, '¡Racha x' + streak + '!', 'good'); else KidsGame.fx.floatText(ev.clientX, ev.clientY - 30, '+1', 'good');
+      if (streak % 5 === 0) { KidsGame.addStar(1); KidsGame.fx.burst(ev.clientX, ev.clientY - 50, { n: 10, chars: ['⭐', '✨'] }); KidsGame.toast('⭐ ¡Bonus de racha!', 1200); }
       var nf = Object.keys(found).length;
       dots.children[nf - 1].classList.add('on');
-      if (nf === active.length) { running = false; stopTimer(); setTimeout(finish, 900); }
+      if (nf === active.length) { running = false; stopTimer(); banner('🎉 ¡Cuadro completo!'); KidsGame.music.duck(1800); setTimeout(finish, 1100); }
     } else if (best && found[best.id]) {
       KidsGame.sound.tap();
     } else {
+      streak = 0; setStreak();
       KidsGame.sound.wrong();
       mark(side, 'ripple', p.x, p.y, 22, 600);
+      KidsGame.fx.shake(frames[side]);
     }
   }
 
-  function updateHint() {
-    hintBtn.querySelector('.n').textContent = hints;
-    hintBtn.classList.toggle('off', hints <= 0);
-  }
+  function updateHint() { hintBtn.querySelector('.n').textContent = hints; hintBtn.classList.toggle('off', hints <= 0); }
   function hint() {
     if (!running) return;
     var rem = active.filter(function (d) { return !found[d.id]; });
@@ -530,20 +631,21 @@ var game = KidsGame.init({ title: 'Diferencias' });
     var bonus = nivel === 4 && timeLeft > 0;
     if (bonus) KidsGame.addStar();
     KidsGame.levelDone(nivel);
+    var s = unlockSkin(nivel);
+    if (skinBtn) skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
     KidsGame.celebrate({
-      sub: bonus ? '¡Las ' + active.length + ' a tiempo! ⭐ extra' : '¡Encontraste las ' + active.length + ' diferencias!',
+      sub: (bonus ? '¡Las ' + active.length + ' a tiempo! ⭐ extra' : '¡Encontraste las ' + active.length + ' diferencias!') + (s ? ' · 🎨 Nuevo: ' + s.n : ''),
       stars: bonus ? 4 : 3,
-      onNext: function () { sceneIdx++; running = true; loadScene(); },
-      onAgain: function () { running = true; loadScene(); }
+      onNext: function () { sceneIdx++; running = true; session++; curtain.classList.add('closed'); setTimeout(function () { loadScene(false); }, 300); },
+      onAgain: function () { running = true; session++; curtain.classList.add('closed'); setTimeout(function () { loadScene(false); }, 300); }
     });
   }
 
-  // posiciones en pantalla de las diferencias activas (para pruebas automáticas)
   window.__diffs = function () {
     var m = svgs[1].getScreenCTM();
     return active.map(function (d) { var pt = svgs[1].createSVGPoint(); pt.x = d.x; pt.y = d.y; var q = pt.matrixTransform(m); return { id: d.id, x: q.x, y: q.y, sub: !!d.sub }; });
   };
-  window.__dif = { get timeLeft() { return timeLeft; }, get hints() { return hints; }, get scene() { return scene && scene.name; }, get active() { return active.map(function (d) { return d.id; }); }, setTime: function (t) { timeLeft = t; renderTimer(); } };
+  window.__dif = { get timeLeft() { return timeLeft; }, get hints() { return hints; }, get scene() { return scene && scene.name; }, get active() { return active.map(function (d) { return d.id; }); }, get found() { return found; }, get running() { return running && !curtain.classList.contains('closed'); }, get streak() { return streak; }, setTime: function (t) { timeLeft = t; renderTimer(); }, scenes: SCENES };
 
   window.addEventListener('resize', layout);
   showPicker();

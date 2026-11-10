@@ -20,8 +20,6 @@
   body.jk-hide .jk-streak { display: none; }
   .owl { position: absolute; left: 10px; bottom: 6px; z-index: 2; pointer-events: none; filter: drop-shadow(0 8px 8px rgba(0,0,0,.3)); animation: float 3.6s ease-in-out infinite; }
   .owl svg { display: block; overflow: visible; }
-  .ow-eyes { transform-origin: 60px 52px; animation: owblink 5s infinite; }
-  @keyframes owblink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
   .owl.cheer { animation: owcheer .7s ease-in-out; }
   @keyframes owcheer { 0%,100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-26px) rotate(-8deg); } 60% { transform: translateY(-10px) rotate(6deg); } }
   .menu .owl { position: static; margin: 0 0 -10px; animation: float 3.6s ease-in-out infinite; }
@@ -33,12 +31,11 @@
   /* Bloques con carita */
   .choices .block .l { position: relative; z-index: 1; transform: translateY(-14%); font-size: .82em; }
   .face { position: absolute; left: 0; right: 0; bottom: 9%; height: 30%; pointer-events: none; z-index: 1; }
-  .face i { position: absolute; top: 0; width: 19%; height: 44%; border-radius: 50%; background: #fff; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); transform-origin: 50% 50%; animation: fblink 4.4s infinite; }
+  .face i { position: absolute; top: 0; width: 19%; height: 44%; border-radius: 50%; background: #fff; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); transform-origin: 50% 50%; }
   .face i::after { content: ""; position: absolute; left: 32%; top: 30%; width: 46%; height: 46%; border-radius: 50%; background: #1f2f6b; }
-  .face i:first-child { left: 28%; } .face i:nth-child(2) { right: 28%; animation-delay: .1s; }
+  .face i:first-child { left: 28%; } .face i:nth-child(2) { right: 28%; }
   .face u { position: absolute; left: 40%; right: 40%; bottom: 4%; height: 38%; border-bottom: 4px solid rgba(40,20,60,.65); border-radius: 0 0 50% 50% / 0 0 100% 100%; }
-  @keyframes fblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.15); } }
-  .choices .block.ok .face i { height: 16%; top: 14%; border-radius: 50% 50% 0 0; background: #1f2f6b; animation: none; }
+  .choices .block.ok .face i { height: 16%; top: 14%; border-radius: 50% 50% 0 0; background: #1f2f6b; transform: none !important; }
   .choices .block.ok .face i::after { display: none; }
   .choices .block.ok .face u { left: 32%; right: 32%; height: 50%; border-bottom-width: 6px; }
   .choices .block.bad .face u { border-bottom: 0; border-top: 4px solid rgba(40,20,60,.65); border-radius: 50% 50% 0 0 / 100% 100% 0 0; bottom: -8%; }
@@ -67,6 +64,8 @@
   .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
   @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-blink { transform-box: fill-box; transform-origin: center; }
+  .jk-blink.on { transform: scaleY(.12); }
   .jk-press { animation: jkpress .28s ease-out; }
   @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
@@ -182,10 +181,21 @@
     }
     function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
     function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    // El banner se crea tras pintar la pantalla (sin reflow síncrono) y se reemplaza el nodo para reiniciar la animación
+    var bannerT = null;
     function banner(text) {
-      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
-      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+      clearTimeout(bannerT);
+      bannerT = setTimeout(function () {
+        if (bannerEl) bannerEl.remove();
+        bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner in'; bannerEl.textContent = text; document.body.appendChild(bannerEl);
+      }, 90);
     }
+    // Parpadeo de ojos sin animación continua: cada ~4 s se cierran 130 ms (clase .jk-blink)
+    setInterval(function () {
+      var eyes = document.querySelectorAll('.jk-blink'); if (!eyes.length) return;
+      for (var i = 0; i < eyes.length; i++) eyes[i].classList.add('on');
+      setTimeout(function () { for (var j = 0; j < eyes.length; j++) eyes[j].classList.remove('on'); }, 130);
+    }, 4200);
     function swap(el, fn) {
       if (!el || !el.parentNode) { fn(); return; }
       el.classList.remove('jk-in'); el.classList.add('jk-out');
@@ -210,7 +220,7 @@
       '<ellipse cx="60" cy="90" rx="26" ry="26" fill="url(#' + id + 'w)"/>' +
       '<path d="M46 86 q7 6 14 0 q7 6 14 0 M48 98 q6 6 12 0 q6 6 12 0 M52 109 q8 6 16 0" fill="none" stroke="#d6a86f" stroke-width="2" stroke-linecap="round"/>' +
       '<ellipse cx="60" cy="54" rx="34" ry="24" fill="url(#' + id + 'w)"/>' +
-      '<g class="ow-eyes"><circle cx="44" cy="54" r="13" fill="#fff" stroke="#1f2f6b" stroke-width="3"/><circle cx="76" cy="54" r="13" fill="#fff" stroke="#1f2f6b" stroke-width="3"/>' +
+      '<g class="jk-blink"><circle cx="44" cy="54" r="13" fill="#fff" stroke="#1f2f6b" stroke-width="3"/><circle cx="76" cy="54" r="13" fill="#fff" stroke="#1f2f6b" stroke-width="3"/>' +
       '<circle cx="45" cy="56" r="6" fill="#2b2b2b"/><circle cx="77" cy="56" r="6" fill="#2b2b2b"/><circle cx="47.5" cy="53.5" r="2.2" fill="#fff"/><circle cx="79.5" cy="53.5" r="2.2" fill="#fff"/></g>' +
       '<path d="M57 54 L63 54 M31 52 L23 48 M89 52 L97 48" stroke="#1f2f6b" stroke-width="3" stroke-linecap="round"/>' +
       '<path d="M54 64 L66 64 L60 76 Z" fill="#ffb703" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/>' +
@@ -360,7 +370,7 @@
     choices.className = 'choices ' + cls; choices.innerHTML = '';
     var pal = KidsGame.shuffle(BLOCKS);
     opts.forEach(function (l, i) {
-      var c = el('div', 'block'); c.innerHTML = '<span class="l"></span><span class="face"><i></i><i></i><u></u></span>'; c.firstChild.textContent = l;
+      var c = el('div', 'block'); c.innerHTML = '<span class="l"></span><span class="face"><i class="jk-blink"></i><i class="jk-blink"></i><u></u></span>'; c.firstChild.textContent = l;
       c.style.animationDelay = (i * 80) + 'ms, ' + (-i * 1.1) + 's';
       c.style.setProperty('--a', pal[i % pal.length][0]); c.style.setProperty('--b', pal[i % pal.length][1]); c.style.setProperty('--d', pal[i % pal.length][2]);
       onTap(c, function () { onPick(c, l); });

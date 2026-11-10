@@ -97,8 +97,6 @@
   /* Caja de crayones (hero art) y galería de dibujos */
   .cbox { display: flex; align-items: center; gap: 6px; flex: 1 1 100%; justify-content: center; margin: -2px 0 2px; }
   .cbox svg { display: block; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); animation: float 3.6s ease-in-out infinite; }
-  .cb-eyes { transform-box: fill-box; transform-origin: center; animation: cbblink 4.4s infinite; }
-  @keyframes cbblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
   .cbox.cheer svg { animation: cbcheer .6s ease-in-out; }
   @keyframes cbcheer { 0%,100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-14px) rotate(-6deg); } 70% { transform: translateY(-4px) rotate(5deg); } }
   .cbox .say { font-size: 15px; font-weight: 900; color: #1f2f6b; background: #fff; border-radius: 14px; padding: 6px 10px; box-shadow: 0 3px 0 #c9d2e6; max-width: 150px; line-height: 1.1; }
@@ -135,6 +133,8 @@
   .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
   @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-blink { transform-box: fill-box; transform-origin: center; }
+  .jk-blink.on { transform: scaleY(.12); }
   .jk-press { animation: jkpress .28s ease-out; }
   @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
@@ -185,10 +185,21 @@ var game = KidsGame.init({ title: 'Dibujar' });
     }
     function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
     function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    // El banner se crea tras pintar la pantalla (sin reflow síncrono) y se reemplaza el nodo para reiniciar la animación
+    var bannerT = null;
     function banner(text) {
-      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
-      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+      clearTimeout(bannerT);
+      bannerT = setTimeout(function () {
+        if (bannerEl) bannerEl.remove();
+        bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner in'; bannerEl.textContent = text; document.body.appendChild(bannerEl);
+      }, 90);
     }
+    // Parpadeo de ojos sin animación continua: cada ~4 s se cierran 130 ms (clase .jk-blink)
+    setInterval(function () {
+      var eyes = document.querySelectorAll('.jk-blink'); if (!eyes.length) return;
+      for (var i = 0; i < eyes.length; i++) eyes[i].classList.add('on');
+      setTimeout(function () { for (var j = 0; j < eyes.length; j++) eyes[j].classList.remove('on'); }, 130);
+    }, 4200);
     function swap(el, fn) {
       if (!el || !el.parentNode) { fn(); return; }
       el.classList.remove('jk-in'); el.classList.add('jk-out');
@@ -221,7 +232,7 @@ function cboxSVG(size, id) {
     '<rect x="12" y="56" width="106" height="54" rx="10" fill="url(#' + id + 'b)" stroke="#c47f00" stroke-width="2.5"/>' +
     '<path d="M12 70 Q65 58 118 70 L118 56 L12 56 Z" fill="url(#' + id + 'g)" stroke="#14784a" stroke-width="2"/>' +
     '<rect x="20" y="64" width="90" height="8" rx="4" fill="rgba(255,255,255,.35)"/>' +
-    '<g class="cb-eyes"><ellipse cx="50" cy="86" rx="7" ry="8" fill="#fff"/><ellipse cx="80" cy="86" rx="7" ry="8" fill="#fff"/><circle cx="51" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="81" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="52.5" cy="86" r="1.5" fill="#fff"/><circle cx="82.5" cy="86" r="1.5" fill="#fff"/></g>' +
+    '<g class="jk-blink"><ellipse cx="50" cy="86" rx="7" ry="8" fill="#fff"/><ellipse cx="80" cy="86" rx="7" ry="8" fill="#fff"/><circle cx="51" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="81" cy="88" r="4.2" fill="#2b2b2b"/><circle cx="52.5" cy="86" r="1.5" fill="#fff"/><circle cx="82.5" cy="86" r="1.5" fill="#fff"/></g>' +
     '<path d="M54 98 Q65 106 76 98" stroke="#9c3b12" stroke-width="3" fill="none" stroke-linecap="round"/>' +
     '<circle cx="38" cy="96" r="5" fill="#ff8aa8" opacity=".55"/><circle cx="92" cy="96" r="5" fill="#ff8aa8" opacity=".55"/>' +
     '</svg>';

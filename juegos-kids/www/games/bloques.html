@@ -6,9 +6,38 @@
 <link rel="stylesheet" href="../common.css">
 <title>Construye</title>
 <style>
+  /* La ciudad de bloques: cielo, edificios de colores al fondo y suelo de obra */
   .game { background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%), linear-gradient(180deg, #7ed6ff 0%, #bfeeff 50%, #ffe9a8 100%); }
   .game::before { content: ""; position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(ellipse 200px 70px at 20% 20%, rgba(255,255,255,.9), rgba(255,255,255,0) 70%), radial-gradient(ellipse 240px 80px at 80% 28%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%); }
+  .city { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; pointer-events: none; z-index: 0; }
+  .city svg { width: 100%; height: 100%; display: block; }
+  .beaver { position: absolute; left: 10px; bottom: 6px; width: 130px; height: 150px; pointer-events: none; z-index: 2; }
+  .beaver svg { width: 100%; height: 100%; overflow: visible; animation: float 3.4s ease-in-out infinite; }
+  .beaver .hammer { transform-origin: 96px 92px; transition: transform .3s; }
+  .beaver.cheer .hammer { animation: hammer .3s ease-in-out 4; }
+  @keyframes hammer { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-60deg); } }
+  .beaver .beyes { animation: mzblink 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+  .beaver.cheer .bhead { animation: nodB .3s ease-in-out 3; transform-origin: 60px 70px; }
+  @keyframes nodB { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-10deg); } }
+  .wrap.portrait ~ .beaver, .beaver.small { width: 90px; height: 104px; }
+  .gallery { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 22px; width: 220px; overflow-x: auto; overflow-y: hidden; }
+  .wrap.portrait .gallery { width: auto; max-width: 480px; }
+  .gallery .th { width: 60px; height: 60px; flex: 0 0 auto; border-radius: 14px; background: linear-gradient(180deg,#fff,#eef2ff); box-shadow: 0 4px 0 #c9d2e6, 0 8px 12px rgba(0,0,0,.2); display: flex; align-items: center; justify-content: center; cursor: pointer; animation: pop .35s; }
+  .gallery .th svg { width: 52px; height: 52px; }
+  .gallery .lbl { font-size: 15px; color: #1f2f6b; white-space: nowrap; }
+  .rbanner { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.6); opacity: 0; z-index: 30; pointer-events: none; padding: 14px 34px; border-radius: 40px;
+    background: linear-gradient(180deg, #fff, #eef2ff); border: 4px solid #fff; box-shadow: 0 8px 0 #c9d2e6, 0 18px 30px rgba(0,0,0,.3); font-size: 32px; font-weight: 900; color: #1f2f6b; text-align: center; white-space: nowrap;
+    transition: transform .35s cubic-bezier(.3,1.4,.5,1), opacity .3s; display: flex; align-items: center; gap: 12px; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .rbanner small { display: block; font-size: 18px; color: #6b7a99; }
+  .rbanner .emoji { font-size: 44px; }
+  .streak { position: fixed; left: 50%; top: 80px; transform: translateX(-50%) scale(0); z-index: 31; pointer-events: none; padding: 4px 18px; border-radius: 30px; font-size: 22px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #ff9f43, #ff6f61); box-shadow: 0 4px 0 #b8306f, 0 8px 14px rgba(0,0,0,.25); text-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.3,1.5,.5,1); white-space: nowrap; }
+  .streak.show { transform: translateX(-50%) scale(1); }
+  .stagebox.enter svg { animation: stageIn .45s cubic-bezier(.3,1.3,.5,1); }
+  @keyframes stageIn { from { transform: scale(.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .target.enter { animation: pop .4s ease-out; }
   .hud { position: absolute; left: 8px; right: 8px; top: 8px; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 8px; z-index: 3; }
   .hud .grp { display: flex; align-items: center; gap: 8px; }
   .hud .btn { font-size: 24px; }
@@ -52,7 +81,7 @@
   .floor polygon:active { fill: #fff; }
   .cloud { position: absolute; width: 140px; height: 50px; border-radius: 40px; background: #fff; opacity: .8; z-index: 0; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 6px 6px rgba(0,60,120,.15)); }
   .cloud::before { content: ""; position: absolute; left: 30px; top: -24px; width: 60px; height: 60px; border-radius: 50%; background: #fff; }
-  @media (max-width: 820px) { .hud .btn.chk { padding: 8px 12px; font-size: 22px; } }
+  @media (max-width: 820px) { .hud .btn.chk { padding: 6px 10px; font-size: 19px; min-height: 56px; } .hud .btn.round { width: 56px; height: 56px; min-width: 56px; min-height: 56px; font-size: 22px; } .hud .grp { gap: 5px; } .hud .cnt { font-size: 15px; padding: 4px 8px; } .hud { gap: 6px; } }
 </style>
 </head>
 <body>
@@ -69,6 +98,36 @@
     { n: 'naranja', t: '#ffd2a8', l: '#ff8906', r: '#b85a00', e: '#fff0e0' }
   ];
   var TW = 34, TH = 17, HZ = 34, HMAX = 4;
+  var SETS = [
+    { id: 'clasico', n: 'Clásico', e: '🧱', lv: 0, c: COLORS.map(function (c) { return { t: c.t, l: c.l, r: c.r, e: c.e }; }) },
+    { id: 'pastel', n: 'Pastel', e: '🍥', lv: 1, c: [{ t: '#ffd6e0', l: '#ff9fb6', r: '#d16b85', e: '#fff0f4' }, { t: '#fff6c2', l: '#ffe08a', r: '#d1ab45', e: '#fffbe6' }, { t: '#d7f7df', l: '#9fe3b1', r: '#5fb37a', e: '#eefcf2' }, { t: '#d6ecff', l: '#9fcdff', r: '#5f92d1', e: '#eef6ff' }, { t: '#ead9ff', l: '#c4a6ff', r: '#8b6bd1', e: '#f5eeff' }, { t: '#ffe3cc', l: '#ffbd8a', r: '#d18a52', e: '#fff3e8' }] },
+    { id: 'neon', n: 'Neón', e: '✨', lv: 2, c: [{ t: '#ff9fe5', l: '#ff2bd6', r: '#9c0a80', e: '#ffd6f5' }, { t: '#fff59f', l: '#ffe812', r: '#998a09', e: '#fffbd6' }, { t: '#c6ff9f', l: '#7bff12', r: '#3e9909', e: '#e8ffd6' }, { t: '#9ff5ff', l: '#12d6ff', r: '#0a7f99', e: '#d6fbff' }, { t: '#d49fff', l: '#a812ff', r: '#5f0999', e: '#eed6ff' }, { t: '#ffc59f', l: '#ff7a12', r: '#994509', e: '#ffe6d6' }] },
+    { id: 'tierra', n: 'Tierra', e: '🪵', lv: 3, c: [{ t: '#e6b8a2', l: '#b86f55', r: '#733f2c', e: '#f5e0d6' }, { t: '#f0dcae', l: '#c9a35e', r: '#7d6232', e: '#f9efd6' }, { t: '#c9d9a8', l: '#8aa35a', r: '#4f6330', e: '#e8f0d6' }, { t: '#b8c9d9', l: '#6f8aa3', r: '#3f5366', e: '#dde8f0' }, { t: '#d9c4d9', l: '#a37fa3', r: '#664566', e: '#f0e5f0' }, { t: '#e0c9a8', l: '#b8905a', r: '#735a33', e: '#f3e8d6' }] },
+    { id: 'joyas', n: 'Joyas', e: '💎', lv: 4, c: [{ t: '#ff8a8a', l: '#d61f1f', r: '#7a0c0c', e: '#ffd1d1' }, { t: '#ffe88a', l: '#e6b800', r: '#8f7100', e: '#fff6cc' }, { t: '#8af0a8', l: '#0f9d58', r: '#06582f', e: '#d1f7dc' }, { t: '#8ad4ff', l: '#0e7bbf', r: '#064a78', e: '#d1edff' }, { t: '#d1a3ff', l: '#7a1fd1', r: '#4a0c87', e: '#ecd9ff' }, { t: '#ffc48a', l: '#e06a00', r: '#8a3f00', e: '#ffe6cc' }] }
+  ];
+  var cset = SETS[0];
+  try { var sid = localStorage.getItem('kg-bloques-set'); SETS.forEach(function (q) { if (q.id === sid) cset = q; }); } catch (e) {}
+  function doneLv() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').bloques || {}; } catch (e) { return {}; } }
+  function setOpen(q) { return !q.lv || !!doneLv()[q.lv]; }
+  function applySet() { cset.c.forEach(function (c, i) { COLORS[i].t = c.t; COLORS[i].l = c.l; COLORS[i].r = c.r; COLORS[i].e = c.e; }); }
+  applySet();
+  var HOWTO = [{ icon: '👀', text: 'Mira el modelo de la tarjeta' }, { icon: '👆', text: 'Toca el suelo para poner bloques' }, { icon: '✔', text: 'Toca Comparar' }];
+  // Castor constructor (hero art): casco, martillo y dientes
+  function beaverSVG(size) {
+    return '<svg viewBox="0 0 130 150"' + (size ? ' width="' + size + '" height="' + Math.round(size * 1.15) + '"' : '') + '><defs><radialGradient id="bvf" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#c9875a"/><stop offset=".6" stop-color="#9c5a2e"/><stop offset="1" stop-color="#5e3410"/></radialGradient><linearGradient id="bvh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe98a"/><stop offset="1" stop-color="#ffb703"/></linearGradient></defs>' +
+      '<ellipse cx="62" cy="144" rx="44" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M28 126 C 6 128, 4 112, 18 106 C 30 102, 40 112, 36 124 Z" fill="#5e3410"/><path d="M14 112 L 32 110 M 12 120 L 30 118" stroke="#3f2208" stroke-width="2"/>' +
+      '<ellipse cx="62" cy="108" rx="34" ry="34" fill="url(#bvf)"/><ellipse cx="62" cy="114" rx="20" ry="22" fill="#e8b98a"/>' +
+      '<ellipse cx="38" cy="140" rx="12" ry="6" fill="#5e3410"/><ellipse cx="86" cy="140" rx="12" ry="6" fill="#5e3410"/>' +
+      '<g class="hammer"><rect x="92" y="60" width="8" height="40" rx="3" fill="#b8783a"/><rect x="80" y="50" width="32" height="16" rx="4" fill="#7c8494"/><rect x="80" y="50" width="32" height="5" rx="2" fill="#b8c2d0"/></g>' +
+      '<circle cx="90" cy="98" r="8" fill="url(#bvf)"/><circle cx="34" cy="98" r="8" fill="url(#bvf)"/>' +
+      '<g class="bhead"><circle cx="62" cy="62" r="30" fill="url(#bvf)"/><circle cx="36" cy="46" r="8" fill="url(#bvf)"/><circle cx="88" cy="46" r="8" fill="url(#bvf)"/>' +
+      '<ellipse cx="62" cy="74" rx="16" ry="12" fill="#e8b98a"/><ellipse cx="62" cy="66" rx="6" ry="4.5" fill="#2b2b2b"/><ellipse cx="60" cy="65" rx="2" ry="1.2" fill="#fff" opacity=".7"/>' +
+      '<rect x="56" y="76" width="6" height="9" rx="1.5" fill="#fff" stroke="#c9d2e6" stroke-width="1"/><rect x="62" y="76" width="6" height="9" rx="1.5" fill="#fff" stroke="#c9d2e6" stroke-width="1"/>' +
+      '<g class="beyes"><ellipse cx="50" cy="56" rx="5.5" ry="6.5" fill="#fff"/><ellipse cx="74" cy="56" rx="5.5" ry="6.5" fill="#fff"/><circle cx="51" cy="57" r="3.2" fill="#2b2b2b"/><circle cx="75" cy="57" r="3.2" fill="#2b2b2b"/><circle cx="52.5" cy="55.5" r="1.2" fill="#fff"/><circle cx="76.5" cy="55.5" r="1.2" fill="#fff"/></g>' +
+      '<circle cx="42" cy="68" r="4.5" fill="#ff8aa8" opacity=".45"/><circle cx="82" cy="68" r="4.5" fill="#ff8aa8" opacity=".45"/>' +
+      '<path d="M30 42 Q 62 8 94 42 Z" fill="url(#bvh)" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/><rect x="26" y="40" width="72" height="9" rx="4.5" fill="#ffb703" stroke="#c47f00" stroke-width="2"/><rect x="58" y="16" width="8" height="26" rx="3" fill="#fff" opacity=".5"/></g></svg>';
+  }
   var LABELS = { 1: '3-4 bloques', 2: '5-7 · apilar', 3: '8-12 · girado', 4: '12-16 · memoria' };
   var PER_LEVEL = 5;
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -183,30 +242,44 @@
   var eraseBtn = el('button', 'btn round', '🧹'); eraseBtn.setAttribute('aria-label', 'Quitar');
   var freeBtn = el('button', 'btn round', '🎨'); freeBtn.setAttribute('aria-label', 'Libre');
   var chkBtn = el('button', 'btn green chk', '✔ Comparar');
+  var setBtn = el('button', 'btn round yellow', '🌈'); setBtn.setAttribute('aria-label', 'Colores');
+  var saveBtn = el('button', 'btn round yellow', '💾'); saveBtn.setAttribute('aria-label', 'Guardar');
   left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(cntEl);
-  right.appendChild(peekBtn); right.appendChild(freeBtn); right.appendChild(eraseBtn); right.appendChild(rotBtn); right.appendChild(chkBtn);
+  right.appendChild(peekBtn); right.appendChild(setBtn); right.appendChild(freeBtn); right.appendChild(saveBtn); right.appendChild(eraseBtn); right.appendChild(rotBtn); right.appendChild(chkBtn);
   hud.appendChild(left); hud.appendChild(right);
   var wrap = el('div', 'wrap'), stageBox = el('div', 'stagebox'), side = el('div', 'side');
   var svg = svgEl('svg', { 'class': 'stage' }); stageBox.appendChild(svg);
   var target = el('div', 'target panel'); target.appendChild(el('div', 'ttl', 'Construye esto:')); var tsvg = svgEl('svg', {}); target.appendChild(tsvg); target.appendChild(el('div', 'q', '❓'));
-  var palette = el('div', 'palette panel'), slots = el('div', 'slots panel');
+  var palette = el('div', 'palette panel'), slots = el('div', 'gallery panel');
   side.appendChild(target); side.appendChild(palette); side.appendChild(slots);
   wrap.appendChild(stageBox); wrap.appendChild(side);
   var timer = el('div', 'timer'); timer.appendChild(el('i'));
   var cl1 = el('div', 'cloud'), cl2 = el('div', 'cloud'); cl1.style.cssText = 'left:6%;top:90px;animation-delay:-2s'; cl2.style.cssText = 'right:8%;top:120px;width:100px;animation-delay:-4s';
-  game.appendChild(cl1); game.appendChild(cl2); game.appendChild(hud); game.appendChild(wrap); game.appendChild(timer);
+  var city = el('div', 'city');
+  city.innerHTML = '<svg viewBox="0 0 1000 260" preserveAspectRatio="none"><defs><linearGradient id="cty" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".1"/></linearGradient></defs>' +
+    '<g fill="url(#cty)"><rect x="20" y="120" width="70" height="140" rx="4"/><rect x="100" y="60" width="60" height="200" rx="4"/><rect x="170" y="140" width="90" height="120" rx="4"/><rect x="280" y="90" width="50" height="170" rx="4"/><rect x="360" y="150" width="110" height="110" rx="4"/><rect x="500" y="70" width="70" height="190" rx="4"/><rect x="590" y="130" width="80" height="130" rx="4"/><rect x="690" y="100" width="60" height="160" rx="4"/><rect x="770" y="150" width="100" height="110" rx="4"/><rect x="890" y="80" width="80" height="180" rx="4"/><polygon points="100,60 130,20 160,60"/><polygon points="500,70 535,30 570,70"/></g>' +
+    '<g fill="#fff" opacity=".55"><rect x="35" y="135" width="12" height="14"/><rect x="60" y="135" width="12" height="14"/><rect x="35" y="165" width="12" height="14"/><rect x="115" y="80" width="12" height="14"/><rect x="135" y="80" width="12" height="14"/><rect x="115" y="110" width="12" height="14"/><rect x="295" y="110" width="10" height="12"/><rect x="310" y="110" width="10" height="12"/><rect x="515" y="90" width="12" height="14"/><rect x="540" y="90" width="12" height="14"/><rect x="515" y="120" width="12" height="14"/><rect x="705" y="120" width="12" height="14"/><rect x="725" y="120" width="12" height="14"/><rect x="905" y="100" width="12" height="14"/><rect x="930" y="100" width="12" height="14"/><rect x="905" y="130" width="12" height="14"/></g>' +
+    '<rect x="0" y="236" width="1000" height="24" fill="rgba(255,255,255,.35)"/><g fill="#ffb703" opacity=".9"><polygon points="640,236 652,210 664,236"/><polygon points="820,236 832,210 844,236"/></g><g stroke="#fff" stroke-width="3"><line x1="640" y1="228" x2="664" y2="228"/><line x1="820" y1="228" x2="844" y2="228"/></g></svg>';
+  var beaver = el('div', 'beaver'); beaver.innerHTML = beaverSVG();
+  game.appendChild(city); game.appendChild(cl1); game.appendChild(cl2); game.appendChild(hud); game.appendChild(wrap); game.appendChild(beaver); game.appendChild(timer);
+  var banner = el('div', 'rbanner'), streakEl = el('div', 'streak'); document.body.appendChild(banner); document.body.appendChild(streakEl);
+  var bannerT = null, streakT = null, streak = 0, fails = 0, firstRound = true, handRef = null, cheerT = null;
+  function showBanner(html, ms) { banner.innerHTML = html; banner.classList.add('show'); clearTimeout(bannerT); bannerT = setTimeout(function () { banner.classList.remove('show'); }, ms || 1500); }
+  function showStreak(txt) { streakEl.textContent = txt; streakEl.classList.add('show'); clearTimeout(streakT); streakT = setTimeout(function () { streakEl.classList.remove('show'); }, 1400); }
+  function cheer(ms) { beaver.classList.add('cheer'); clearTimeout(cheerT); cheerT = setTimeout(function () { beaver.classList.remove('cheer'); }, ms || 1200); }
 
   var level = 1, G = 5, vox = {}, tgt = {}, tgtView = {}, round = 0, color = 0, erase = false, free = false, busy = false;
   var peeks = 2, hidden = false, hideTimer = null, peekTimer = null, raf = null, press = null;
 
   function pickLevel() {
     clearTimers(); busy = true;
-    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; G = n >= 3 ? 6 : 5; round = 0; free = false; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, howto: HOWTO, art: beaverSVG(58), music: 'alegre', onPick: function (n) { level = n; G = n >= 3 ? 6 : 5; round = 0; streak = 0; free = false; start(); } });
   }
   function clearTimers() { clearTimeout(hideTimer); clearTimeout(peekTimer); cancelAnimationFrame(raf); timer.style.display = 'none'; }
   function layout() {
     var W = game.clientWidth, Hh = game.clientHeight;
     wrap.className = 'wrap' + (Hh > W ? ' portrait' : '');
+    beaver.classList.toggle('small', Hh > W || W < 900);
   }
   function setHud() {
     badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level));
@@ -216,7 +289,7 @@
     eraseBtn.classList.toggle('on', erase);
     freeBtn.classList.toggle('on', free);
     chkBtn.textContent = free ? '📷 Listo' : '✔ Comparar';
-    target.style.display = free ? 'none' : ''; slots.style.display = free ? '' : 'none';
+    target.style.display = free ? 'none' : ''; slots.style.display = free ? '' : 'none'; saveBtn.style.display = free ? '' : 'none';
   }
   function buildPalette() {
     palette.innerHTML = '';
@@ -226,14 +299,26 @@
   function draw() { render(svg, vox, G, true); setHud(); }
   function drawTarget() { render(tsvg, tgtView, G, false, true); }
   function start() {
-    clearTimers(); busy = false; hidden = false; peeks = 2; erase = false; vox = {}; layout(); buildPalette();
-    if (free) { setColor(KidsGame.rand(6)); draw(); renderSlots(); KidsGame.say('Construye lo que quieras'); return; }
+    clearTimers(); busy = false; hidden = false; peeks = 2; erase = false; vox = {}; fails = 0; layout(); buildPalette();
+    stageBox.classList.remove('enter'); void stageBox.offsetWidth; stageBox.classList.add('enter');
+    target.classList.remove('enter'); void target.offsetWidth; target.classList.add('enter');
+    if (handRef) { handRef.stop(); handRef = null; }
+    if (free) { setColor(KidsGame.rand(6)); draw(); renderSlots(); showBanner('<span class="emoji">🎨</span><span>Modo libre<small>Construye lo que quieras y guárdalo 💾</small></span>', 1600); KidsGame.say('Construye lo que quieras'); return; }
+    showBanner('<span class="emoji">🏗️</span><span>Construcción ' + (round + 1) + ' de ' + PER_LEVEL + '<small>' + LABELS[level] + '</small></span>', 1500);
     tgt = genTarget(level, G);
     // Nivel 3-4: el modelo se muestra girado
     tgtView = tgt; if (level >= 3) { var r = 1 + KidsGame.rand(3); for (var i = 0; i < r; i++) tgtView = rotateVox(tgtView, G); }
     target.classList.remove('hid'); drawTarget();
     setColor(+Object.keys(tgt).map(function (k) { return tgt[k]; })[0]);
     draw();
+    if (level === 1 && firstRound) {
+      firstRound = false;
+      setTimeout(function () {
+        if (busy || free) return;
+        var ks = Object.keys(tgtView).filter(function (k) { return k.split(',')[2] === '0'; }).sort(function (a, b) { var A = a.split(',').map(Number), B = b.split(',').map(Number); return (A[0] + A[1]) - (B[0] + B[1]); });
+        if (!ks.length) return; var a = ks[0].split(','); var poly = svg.querySelector('[data-f="' + a[0] + ',' + a[1] + '"]'); if (poly) handRef = KidsGame.hand({ el: poly, timeout: 10000 });
+      }, 1700);
+    }
     if (level === 4) {
       timer.style.display = 'block'; animTimer(8000);
       hideTimer = setTimeout(function () { setHidden(true); }, 8000);
@@ -256,7 +341,7 @@
     var z = topOf(x, y) + 1;
     if (z >= HMAX) { KidsGame.sound.wrong(); KidsGame.toast('¡Muy alto!', 800); return false; }
     vox[key(x, y, z)] = color; draw();
-    var g = svg.querySelector('[data-k="' + key(x, y, z) + '"]'); if (g) g.classList.add('new');
+    var g = svg.querySelector('[data-k="' + key(x, y, z) + '"]'); if (g) { g.classList.add('new'); var r = g.getBoundingClientRect(); KidsGame.fx.burst(r.left + r.width / 2, r.top + r.height * 0.6, { n: 6, r: 30, colors: ['#fff', '#e8dcc8', '#d9c9a8'] }); }
     KidsGame.sound.pop(); KidsGame.vibrate(15);
     return true;
   }
@@ -300,57 +385,67 @@
     var n = Object.keys(vox).length, sr = svg.getBoundingClientRect();
     if (free) {
       if (n < 2) { KidsGame.toast('Pon más bloques', 1000); KidsGame.sound.wrong(); return; }
-      KidsGame.addStar(); KidsGame.sound.win(); KidsGame.confetti(30); sparkle(sr.left + sr.width / 2, sr.top + sr.height / 2, 30); KidsGame.say('¡Qué construcción tan bonita!'); return;
+      KidsGame.addStar(); KidsGame.sound.win(); KidsGame.confetti(30); cheer(1500); sparkle(sr.left + sr.width / 2, sr.top + sr.height / 2, 30); KidsGame.say('¡Qué construcción tan bonita! Guárdala con el disquete'); return;
     }
     if (equalAnyRot(vox, tgt, G)) { win(); return; }
-    KidsGame.sound.wrong(); KidsGame.vibrate(60);
+    KidsGame.sound.wrong(); KidsGame.vibrate(60); fails++; streak = 0; KidsGame.fx.shake(target);
     var m = Object.keys(tgt).length;
     if (level <= 2) { KidsGame.toast(n < m ? 'Faltan ' + (m - n) + ' bloques' : n > m ? 'Sobran ' + (n - m) : 'Mira los colores y el lugar', 1600); KidsGame.say(n < m ? 'Faltan bloques' : n > m ? 'Sobran bloques' : 'Mira los colores y el lugar'); }
     else { KidsGame.toast('Todavía no es igual', 1400); KidsGame.say('Todavía no es igual. Mira bien.'); }
   }
   function win() {
     busy = true; clearTimers(); setHidden(false);
-    KidsGame.addStar(); KidsGame.sound.win();
+    KidsGame.addStar(); KidsGame.sound.win(); cheer(1800); KidsGame.fx.ring(target);
     var sr = svg.getBoundingClientRect(); sparkle(sr.left + sr.width / 2, sr.top + sr.height / 2, 30);
+    KidsGame.fx.burst(sr.left + sr.width / 2, sr.top + sr.height / 2, { n: 14, chars: ['⭐', '✨', '🧱', '🔨'] });
+    if (fails === 0) { streak++; if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + ' a la primera!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + ' a la primera!'); else KidsGame.fx.floatText(sr.left + sr.width / 2, sr.top + 40, '¡A la primera!', 'good'); }
     var last = round + 1 >= PER_LEVEL;
     if (last) KidsGame.levelDone(level);
+    var ns = SETS[level]; if (last && ns) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + ns.e + ' ' + ns.n + ' (botón 🌈)', 2400); }, 1800);
     setTimeout(function () {
       KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡Igualito!', sub: last ? 'Cinco construcciones' : 'Construcción ' + (round + 1) + ' de ' + PER_LEVEL,
         onNext: function () { round = (round + 1) % PER_LEVEL; start(); }, onAgain: function () { start(); } });
     }, 900);
   }
-  // ---------- libre: guardar / cargar 3 espacios ----------
-  function loadSlots() { try { return JSON.parse(localStorage.getItem('kg-bloques-slots') || '[null,null,null]'); } catch (e) { return [null, null, null]; } }
-  function saveSlot(i) {
-    if (!Object.keys(vox).length) { KidsGame.toast('Pon bloques primero', 1000); KidsGame.sound.wrong(); return; }
-    var s = loadSlots(); s[i] = { G: G, v: vox };
-    try { localStorage.setItem('kg-bloques-slots', JSON.stringify(s)); } catch (e) {}
-    KidsGame.sound.ok(); KidsGame.toast('Guardado ' + (i + 1), 900); renderSlots();
+  // ---------- libre: galería de construcciones guardadas ----------
+  function loadGallery() { try { return JSON.parse(localStorage.getItem('kg-bloques-gallery') || '[]'); } catch (e) { return []; } }
+  function saveBuild() {
+    if (Object.keys(vox).length < 2) { KidsGame.toast('Pon bloques primero', 1000); KidsGame.sound.wrong(); return; }
+    var list = loadGallery(); list.unshift({ G: G, v: vox }); if (list.length > 8) list.length = 8;
+    try { localStorage.setItem('kg-bloques-gallery', JSON.stringify(list)); } catch (e) {}
+    KidsGame.sound.ok(); KidsGame.addStar(); cheer(1200); KidsGame.toast('🖼️ ¡Guardada en tu galería!', 1200); KidsGame.fx.ring(saveBtn); renderSlots(); KidsGame.confetti(24);
   }
-  function loadSlot(i) {
-    var s = loadSlots()[i]; if (!s) { KidsGame.toast('Vacío. Toca 💾 para guardar', 1200); return; }
-    vox = s.v; G = s.G || G; draw(); KidsGame.sound.pop(); KidsGame.say('Aquí está');
-  }
+  function loadBuild(i) { var s = loadGallery()[i]; if (!s) return; vox = s.v; G = s.G || G; draw(); KidsGame.sound.pop(); KidsGame.say('Aquí está'); }
   function renderSlots() {
-    slots.innerHTML = ''; var s = loadSlots();
-    for (var i = 0; i < 3; i++) (function (i) {
-      var d = el('div', 'slot'), th = el('div', 'th'), sv = el('button', 'btn yellow sv', '💾');
-      if (s[i]) { var m = svgEl('svg', {}); render(m, s[i].v, s[i].G || G, false, true); th.appendChild(m); } else th.textContent = (i + 1);
-      onTap(th, function () { loadSlot(i); }); onTap(sv, function () { saveSlot(i); });
-      d.appendChild(th); d.appendChild(sv); slots.appendChild(d);
-    })(i);
+    slots.innerHTML = ''; var list = loadGallery();
+    slots.appendChild(el('span', 'lbl', list.length ? '🖼️ Mi galería:' : '🖼️ Guarda con 💾'));
+    list.forEach(function (sv, i) { var th = el('div', 'th'); var m = svgEl('svg', {}); render(m, sv.v, sv.G || G, false, true); th.appendChild(m); onTap(th, function () { loadBuild(i); }); slots.appendChild(th); });
   }
+  function saveSlot(i) { saveBuild(); }
+  function loadSlot(i) { loadBuild(i); }
   function startFree() { free = true; G = 6; clearTimers(); start(); }
 
   onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
   onTap(chkBtn, check);
   onTap(peekBtn, peek);
   onTap(rotBtn, rotateMine);
+  onTap(saveBtn, saveBuild);
+  onTap(setBtn, function () {
+    KidsGame.sound.tap();
+    var i = SETS.indexOf(cset), next = cset;
+    for (var k = 1; k <= SETS.length; k++) { var q = SETS[(i + k) % SETS.length]; if (setOpen(q)) { next = q; break; } }
+    var locked = SETS.filter(function (q) { return !setOpen(q); })[0];
+    if (next === cset && locked) { KidsGame.toast('🔒 ' + locked.n + ': completa el nivel ' + locked.lv, 1500); return; }
+    cset = next; try { localStorage.setItem('kg-bloques-set', cset.id); } catch (e) {}
+    applySet(); buildPalette(); setColor(color); draw(); if (!free) drawTarget(); if (free) renderSlots();
+    KidsGame.toast(cset.e + ' Bloques: ' + cset.n, 1000); KidsGame.fx.ring(setBtn);
+  });
   onTap(eraseBtn, function () { erase = !erase; setHud(); KidsGame.sound.tap(); KidsGame.say(erase ? 'Toca un bloque para quitarlo' : 'Construir'); });
   onTap(freeBtn, function () { KidsGame.sound.tap(); if (free) { free = false; G = level >= 3 ? 6 : 5; start(); } else startFree(); });
   window.addEventListener('resize', layout);
 
   window.__bl = {
+    get streak() { return streak; }, get set() { return cset.id; },
     get vox() { return vox; }, get tgt() { return tgt; }, get G() { return G; }, get level() { return level; }, get free() { return free; }, get hidden() { return hidden; }, get erase() { return erase; },
     svg: svg, add: addAt, remove: removeAt, rotate: rotateMine, check: check, setColor: setColor, startFree: startFree, save: saveSlot, load: loadSlot,
     copyTarget: function () { vox = JSON.parse(JSON.stringify(tgtView)); draw(); },
@@ -358,7 +453,7 @@
     floorPx: function (x, y) { var p = svg.querySelector('[data-f="' + x + ',' + y + '"]'); var r = p.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; },
     cubePx: function (k) { var p = svg.querySelector('[data-k="' + k + '"] polygon:nth-child(3)'); var r = p.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
   };
-  pickLevel();
+  layout(); buildPalette(); draw(); setHud(); pickLevel();
 })();
 </script>
 </body>

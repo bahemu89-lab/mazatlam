@@ -65,7 +65,7 @@
   }
   /* Conejito director de orquesta (SVG) sobre su podio, en el hueco sobre las teclas agudas */
   .conductor { position: absolute; right: 2%; top: 2%; z-index: 0; pointer-events: none; width: 150px; height: 150px; overflow: visible; }
-  .conductor svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 6px rgba(0,0,0,.45)); }
+  .conductor svg { width: 100%; height: 100%; overflow: visible; }
   .conductor .arm { transform-box: fill-box; transform-origin: 18% 18%; transition: transform .16s cubic-bezier(.2,1.4,.4,1); transform: rotate(0deg); }
   .conductor.b1 .arm { transform: rotate(-55deg); }
   .conductor.b2 .arm { transform: rotate(10deg); }
@@ -269,7 +269,7 @@ function conductorSVG() {
     '<radialGradient id="cbf" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e6dcd2"/></radialGradient>' +
     '<linearGradient id="cbt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4f6a"/><stop offset="1" stop-color="#1f2238"/></linearGradient>' +
     '<linearGradient id="cbp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98a46"/><stop offset="1" stop-color="#7a4418"/></linearGradient></defs>' +
-    '<rect x="30" y="146" width="100" height="22" rx="6" fill="url(#cbp)"/><rect x="38" y="140" width="84" height="10" rx="4" fill="#e2ad68"/>' +
+    '<ellipse cx="80" cy="168" rx="60" ry="7" fill="rgba(0,0,0,.35)"/><rect x="30" y="146" width="100" height="22" rx="6" fill="url(#cbp)"/><rect x="38" y="140" width="84" height="10" rx="4" fill="#e2ad68"/>' +
     '<g class="body">' +
     '<g class="earL"><path d="M58 60 Q 44 10 62 6 Q 78 14 70 60 Z" fill="url(#cbf)" stroke="#c9b8a8" stroke-width="2"/><path d="M60 54 Q 54 20 62 14 Q 68 22 66 54 Z" fill="#ffb3c7"/></g>' +
     '<g class="earR"><path d="M102 60 Q 116 10 98 6 Q 82 14 90 60 Z" fill="url(#cbf)" stroke="#c9b8a8" stroke-width="2"/><path d="M100 54 Q 106 20 98 14 Q 92 22 94 54 Z" fill="#ffb3c7"/></g>' +

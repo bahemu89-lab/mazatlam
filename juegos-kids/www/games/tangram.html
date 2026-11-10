@@ -6,9 +6,29 @@
 <link rel="stylesheet" href="../common.css">
 <title>Tangram</title>
 <style>
-  .game { background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%), linear-gradient(180deg, #ffe4b8 0%, #f7b97f 60%, #e59a5c 100%); }
-  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 34px, rgba(120,60,0,.06) 34px 68px); }
+  /* El templo de las formas: piedra cálida, bloques y un sol detrás de las columnas */
+  .game { background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,245,200,.9), rgba(255,255,255,0) 70%), linear-gradient(180deg, #ffe4b8 0%, #f3b57b 55%, #d98f52 100%); }
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .55;
+    background: repeating-linear-gradient(0deg, rgba(120,60,0,0) 0 38px, rgba(120,60,0,.12) 38px 41px), repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 76px, rgba(255,255,255,.18) 76px 80px); }
+  .mat { fill: rgba(255,250,235,.55); stroke: #d9a540; stroke-width: .08; }
+  .mat2 { fill: none; stroke: rgba(255,255,255,.9); stroke-width: .04; stroke-dasharray: .3 .15; }
+  .turtle { transform-box: fill-box; transform-origin: 50% 100%; animation: tbreathe 3s ease-in-out infinite; }
+  @keyframes tbreathe { 0%,100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .97); } }
+  .turtle .teyes { transform-box: fill-box; transform-origin: center; animation: mzblink 4.5s infinite; }
+  .turtle .thead { transform-box: fill-box; transform-origin: 20% 90%; }
+  .turtle.nod .thead { animation: tnod .45s ease-in-out 3; }
+  @keyframes tnod { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-14deg); } }
+  .rbanner { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.6); opacity: 0; z-index: 30; pointer-events: none; padding: 14px 34px; border-radius: 40px;
+    background: linear-gradient(180deg, #fff, #eef2ff); border: 4px solid #fff; box-shadow: 0 8px 0 #c9d2e6, 0 18px 30px rgba(0,0,0,.3); font-size: 32px; font-weight: 900; color: #1f2f6b; text-align: center; white-space: nowrap;
+    transition: transform .35s cubic-bezier(.3,1.4,.5,1), opacity .3s; display: flex; align-items: center; gap: 12px; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .rbanner small { display: block; font-size: 18px; color: #6b7a99; }
+  .rbanner .emoji { font-size: 44px; }
+  .streak { position: fixed; left: 50%; top: 80px; transform: translateX(-50%) scale(0); z-index: 31; pointer-events: none; padding: 4px 18px; border-radius: 30px; font-size: 22px; font-weight: 900; color: #fff;
+    background: linear-gradient(180deg, #ff9f43, #ff6f61); box-shadow: 0 4px 0 #b8306f, 0 8px 14px rgba(0,0,0,.25); text-shadow: 0 2px 0 rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.3,1.5,.5,1); white-space: nowrap; }
+  .streak.show { transform: translateX(-50%) scale(1); }
+  .stage.enter { animation: stageIn .45s cubic-bezier(.3,1.3,.5,1); }
+  @keyframes stageIn { from { transform: scale(.9) translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
   .hud { position: absolute; left: 8px; right: 8px; top: 8px; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 8px; z-index: 3; }
   .hud .grp { display: flex; align-items: center; gap: 8px; }
   .hud .btn { font-size: 26px; }
@@ -19,7 +39,6 @@
   .stage { position: absolute; left: 8px; right: 8px; top: 78px; bottom: 8px; z-index: 1; }
   svg.board { width: 100%; height: 100%; display: block; touch-action: none; overflow: visible; }
   .tray-bg { fill: rgba(255,255,255,.55); stroke: #fff; stroke-width: .06; }
-  .mat { fill: rgba(255,255,255,.35); stroke: rgba(255,255,255,.8); stroke-width: .05; }
   .sil polygon { fill: #2a2d4e; stroke: #2a2d4e; stroke-width: .05; stroke-linejoin: round; }
   .sil.hidden { opacity: 0; transition: opacity .5s; }
   .sil { transition: opacity .5s; }
@@ -76,14 +95,19 @@
       { n: 'Triángulo', e: '🔺', p: [pl('Q', 0, 0, 0), pl('S', 1, 0, 0), pl('S', 0, 1, 0)] },
       { n: 'Barco', e: '⛵', p: [pl('B', R, R, 225), pl('M', R, 0, 270), pl('S', R, 0, 180)] },
       { n: 'Casa', e: '🏠', p: [pl('M', 1, 0, 45), pl('Q', 0.5, 1, 0), pl('S', 1.5, 0.5, 270)] },
-      { n: 'Flecha', e: '➡️', p: [pl('M', 3, 0, 135), pl('Q', 1, -0.5, 0), pl('S', 1, -0.5, 90)] }
+      { n: 'Flecha', e: '➡️', p: [pl('M', 3, 0, 135), pl('Q', 1, -0.5, 0), pl('S', 1, -0.5, 90)] },
+      { n: 'Helado', e: '🍦', p: [pl('M', 1, 2, 225), pl('Q', 0.5, 0, 0), pl('S', 1, -0.707, 45)] },
+      { n: 'Velero', e: '⛵', p: [pl('M', 1, 0, 45), pl('Q', 1, 1, 0), pl('S', 1, 1, 90)] },
+      { n: 'Sombrero', e: '🎩', p: [pl('P', 0, 0, 0), pl('Q', 0.5, -1, 0), pl('S', 1.5, -1, 0)] }
     ],
     2: [
       { n: 'Cohete', e: '🚀', p: [pl('M', 1, 0, 45), pl('Q', 0, 1, 0), pl('S', 1, 1, 0), pl('S', 2, 2, 180), pl('P', 0, 2, 0)] },
       { n: 'Árbol', e: '🌳', p: [pl('B', R, 0, 45), pl('Q', 0.414, R, 0), pl('S', R, R, 0), pl('S', 2.414, 2.414, 180), pl('M', R, 3.414, 225)] },
       { n: 'Barco', e: '⛵', p: [pl('B', R, R, 225), pl('S', 0, 0, 45), pl('S', 2 * R, 0, 45), pl('M', R, 0, 270), pl('Q', 0.414, -1, 0)] },
       { n: 'Flecha', e: '➡️', p: [pl('B', 4.414, 0, 135), pl('Q', 1, -0.5, 0), pl('S', 2, -0.5, 0), pl('S', 3, 0.5, 180), pl('M', 0, 0, 315)] },
-      { n: 'Helado', e: '🍦', p: [pl('B', R, 2 * R, 225), pl('Q', 0.414, 0.414, 0), pl('S', R, 0.414, 0), pl('S', 2.414, R, 180), pl('M', R, -0.586, 45)] }
+      { n: 'Helado', e: '🍦', p: [pl('B', R, 2 * R, 225), pl('Q', 0.414, 0.414, 0), pl('S', R, 0.414, 0), pl('S', 2.414, R, 180), pl('M', R, -0.586, 45)] },
+      { n: 'Pino', e: '🌲', p: [pl('S', 1, 0, 45), pl('M', 1, 0.707, 45), pl('B', 1, 1.707, 45), pl('Q', 0.5, 3.121, 0), pl('P', 0, 4.121, 0)] },
+      { n: 'Casita', e: '🏡', p: [pl('B', 1, 0, 45), pl('Q', 0, 1.414, 0), pl('S', 1, 1.414, 0), pl('S', 2, 2.414, 180), pl('P', -1, 2.414, 0)] }
     ],
     3: [
       { n: 'Gato', e: '🐱', p: [pl('Q', 1, 0, 45), pl('S', 1, 0, 135), pl('S', 1, 0, 315), pl('B', 2.707, R, 90), pl('B', 0.707, 3.414, 270), pl('M', 0.707, 3.414, 90), pl('P', 2.707, 3.414, 270)] },
@@ -98,6 +122,34 @@
   };
   FIGS[4] = FIGS[3];
   var LABELS = { 1: '3 piezas · guía', 2: '5 piezas · bordes', 3: '7 piezas · silueta', 4: '7 piezas · memoria' };
+  var HOWTO = [{ icon: '👆', text: 'Arrastra una pieza hasta el dibujo' }, { icon: '↻', text: 'Tócala para girarla' }, { icon: '⭐', text: 'Completa toda la figura' }];
+  // Temas de color de las piezas (se desbloquean al completar niveles)
+  var THEMES = [
+    { id: 'clasico', n: 'Clásico', e: '🎨', lv: 0, c: [['#ff9db0', '#e8365f', '#9c1d40'], ['#8dd3ff', '#2f8fe8', '#17569c'], ['#a5f0b8', '#2cb67d', '#166b45'], ['#ffe98a', '#ffb703', '#b57700'], ['#ffc48a', '#ff8906', '#b85a00'], ['#c9b3ff', '#7f5af0', '#4b2fb0'], ['#9ff0ea', '#1fb7b0', '#0f7a75']] },
+    { id: 'caramelo', n: 'Caramelo', e: '🍬', lv: 1, c: [['#ffd1dc', '#ff8fb1', '#d1557f'], ['#ffe0b3', '#ffb86b', '#d17e2a'], ['#d9f7d0', '#9be17a', '#5aa83d'], ['#fff6b3', '#ffe066', '#d1b230'], ['#e0d4ff', '#b79cff', '#7f5ad1'], ['#cdeeff', '#7fcaff', '#3a8fd1'], ['#ffe8f5', '#ffb3e6', '#d16bb5']] },
+    { id: 'joyas', n: 'Joyas', e: '💎', lv: 2, c: [['#ff6b6b', '#c81d25', '#7a0c12'], ['#7ad7ff', '#0e7bbf', '#064a78'], ['#7cf29a', '#0f9d58', '#06582f'], ['#fff07a', '#e6b800', '#8f7100'], ['#ffb27a', '#e06a00', '#8a3f00'], ['#d1a3ff', '#7a1fd1', '#4a0c87'], ['#9afff0', '#00a896', '#005f55']] },
+    { id: 'neon', n: 'Neón', e: '✨', lv: 3, c: [['#ff9fe5', '#ff2bd6', '#9c0a80'], ['#9ff5ff', '#12d6ff', '#0a7f99'], ['#c6ff9f', '#7bff12', '#3e9909'], ['#fff59f', '#ffe812', '#998a09'], ['#ffc59f', '#ff7a12', '#994509'], ['#d49fff', '#a812ff', '#5f0999'], ['#9fffe3', '#12ffb8', '#099968']] },
+    { id: 'madera', n: 'Madera', e: '🪵', lv: 4, c: [['#f2d2a8', '#c98a4b', '#7a4a1e'], ['#f7e0b8', '#d9a35e', '#8a5a26'], ['#ead3b0', '#b8824a', '#6b4320'], ['#fbe8c5', '#e0b26b', '#94672c'], ['#e6c9a8', '#ad7a45', '#5e3a18'], ['#f0d6b0', '#c48f55', '#7a4f22'], ['#efdcc0', '#cfa06a', '#85592a']] }
+  ];
+  var theme = THEMES[0];
+  try { var tid = localStorage.getItem('kg-tangram-theme'); THEMES.forEach(function (t) { if (t.id === tid) theme = t; }); } catch (e) {}
+  function doneLv() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').tangram || {}; } catch (e) { return {}; } }
+  function themeOpen(t) { return !t.lv || !!doneLv()[t.lv]; }
+  function applyThemeColors() { PIECES.forEach(function (p, i) { p.c = theme.c[i]; }); }
+  applyThemeColors();
+  // Tortuga sabia del templo (hero art): caparazón con teselas de tangram y lentes
+  function turtleInner() {
+    return '<ellipse cx="66" cy="84" rx="54" ry="6" fill="rgba(0,0,0,.18)"/>' +
+      '<g fill="#5bb36a"><ellipse cx="30" cy="74" rx="11" ry="8"/><ellipse cx="92" cy="76" rx="11" ry="8"/><ellipse cx="44" cy="80" rx="10" ry="7"/><ellipse cx="80" cy="81" rx="10" ry="7"/></g><path d="M14 62 Q 2 58 6 50" stroke="#5bb36a" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="60" cy="52" rx="46" ry="30" fill="#2e8b57"/><ellipse cx="60" cy="48" rx="42" ry="26" fill="#3fa86a"/>' +
+      '<g opacity=".9"><polygon points="60,24 80,44 40,44" fill="#e8365f"/><polygon points="40,44 60,44 50,54" fill="#ffb703"/><polygon points="60,44 80,44 70,54" fill="#2f8fe8"/><rect x="50" y="54" width="20" height="14" fill="#7f5af0"/><polygon points="26,46 40,44 30,60" fill="#1fb7b0"/><polygon points="94,46 80,44 90,60" fill="#ff8906"/></g>' +
+      '<ellipse cx="46" cy="34" rx="14" ry="6" fill="#fff" opacity=".25" transform="rotate(-18 46 34)"/>' +
+      '<g class="thead"><circle cx="112" cy="44" r="17" fill="#5bb36a"/><circle cx="110" cy="38" r="6" fill="#fff" opacity=".25"/>' +
+      '<g class="teyes"><circle cx="108" cy="42" r="5" fill="#fff"/><circle cx="118" cy="42" r="5" fill="#fff"/><circle cx="109" cy="43" r="2.8" fill="#2b2b2b"/><circle cx="119" cy="43" r="2.8" fill="#2b2b2b"/><circle cx="110" cy="42" r="1" fill="#fff"/><circle cx="120" cy="42" r="1" fill="#fff"/></g>' +
+      '<g fill="none" stroke="#5c3a1e" stroke-width="1.8"><circle cx="108" cy="42" r="6.5"/><circle cx="118" cy="42" r="6.5"/><path d="M114.5 42 h 2 M 101 40 l -6 -4"/></g>' +
+      '<path d="M108 52 Q 114 57 120 52" stroke="#2d5e3a" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="104" cy="50" r="3" fill="#ff8aa8" opacity=".5"/><circle cx="124" cy="50" r="3" fill="#ff8aa8" opacity=".5"/></g>';
+  }
+  function turtleArt() { return '<svg viewBox="0 0 140 92" width="84" height="55"><g class="turtle">' + turtleInner() + '</g></svg>'; }
 
   // ---------- geometría ----------
   function rot(p, deg) { var a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c]; }
@@ -125,8 +177,9 @@
   var flipBtn = el('button', 'btn round green', '⇄'); flipBtn.setAttribute('aria-label', 'Voltear');
   var freeBtn = el('button', 'btn round', '🎨'); freeBtn.setAttribute('aria-label', 'Libre');
   var saveBtn = el('button', 'btn round yellow', '💾'); saveBtn.setAttribute('aria-label', 'Guardar');
+  var themeBtn = el('button', 'btn round purple', '✨'); themeBtn.setAttribute('aria-label', 'Colores');
   left.appendChild(lvlBtn); left.appendChild(badge); left.appendChild(nameEl); left.appendChild(cntEl);
-  right.appendChild(peekBtn); right.appendChild(freeBtn); right.appendChild(saveBtn); right.appendChild(flipBtn); right.appendChild(rotBtn);
+  right.appendChild(peekBtn); right.appendChild(themeBtn); right.appendChild(freeBtn); right.appendChild(saveBtn); right.appendChild(flipBtn); right.appendChild(rotBtn);
   hud.appendChild(left); hud.appendChild(right);
   var stage = el('div', 'stage');
   var svg = svgEl('svg', { 'class': 'board', preserveAspectRatio: 'xMidYMid meet' });
@@ -134,6 +187,11 @@
   var msg = el('div', 'msg'), timer = el('div', 'timer'); timer.appendChild(el('i'));
   var gallery = el('div', 'gallery panel'); gallery.style.display = 'none';
   game.appendChild(hud); game.appendChild(stage); game.appendChild(msg); game.appendChild(timer); game.appendChild(gallery);
+  var banner = el('div', 'rbanner'), streakEl = el('div', 'streak'); document.body.appendChild(banner); document.body.appendChild(streakEl);
+  var bannerT = null, streakT = null, streak = 0, firstFig = true, handRef = null;
+  function showBanner(html, ms) { banner.innerHTML = html; banner.classList.add('show'); clearTimeout(bannerT); bannerT = setTimeout(function () { banner.classList.remove('show'); }, ms || 1500); }
+  function showStreak(txt) { streakEl.textContent = txt; streakEl.classList.add('show'); clearTimeout(streakT); streakT = setTimeout(function () { streakEl.classList.remove('show'); }, 1400); }
+  function turtleNod() { var t = svg.querySelector('.turtle'); if (!t) return; t.classList.remove('nod'); void t.getBoundingClientRect(); t.classList.add('nod'); }
 
   // ---------- estado ----------
   var level = 1, figIdx = 0, order = [], fig = null, slots = [], pieces = [], K = 1.6, VW = 16, VH = 10, boardBox = null, trayBox = null;
@@ -141,18 +199,18 @@
   var silG = null, guideG = null, piecesG = null, bgG = null;
 
   function pickLevel() {
-    clearTimers(); svg.innerHTML = ''; pieces = []; slots = []; free = false; done = true; gallery.style.display = 'none';
-    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; figIdx = 0; order = KidsGame.shuffle(FIGS[level]); startFig(); } });
+    clearTimers(); svg.innerHTML = ''; pieces = []; slots = []; free = false; done = true; gallery.style.display = 'none'; fig = null;
+    layoutBox(); svg.appendChild(defs()); bgRender(); setHud();
+    KidsGame.levelPicker({ labels: LABELS, howto: HOWTO, art: turtleArt(), music: 'calma', onPick: function (n) { level = n; figIdx = 0; streak = 0; order = KidsGame.shuffle(FIGS[level]); startFig(); } });
   }
   function clearTimers() { clearTimeout(hideTimer); clearTimeout(peekTimer); timer.style.display = 'none'; }
   function setHud() {
     badge.innerHTML = ''; badge.appendChild(KidsGame.levelBadge(level));
     nameEl.textContent = free ? 'Libre 🎨' : (fig ? fig.e + ' ' + fig.n : '');
-    cntEl.textContent = free ? '✨' : (figIdx + 1) + '/' + order.length;
+    cntEl.textContent = free ? '✨' : order.length ? (figIdx % order.length + 1) + '/' + order.length : '';
     peekBtn.style.display = (level === 4 && !free) ? '' : 'none';
     peekBtn.textContent = '👀' + (peeks > 0 ? peeks : '');
     peekBtn.classList.toggle('off', peeks <= 0);
-    freeBtn.style.display = level === 4 ? '' : 'none';
     freeBtn.classList.toggle('on', free);
     saveBtn.style.display = free ? '' : 'none';
   }
@@ -161,7 +219,7 @@
     VW = portrait ? 10 : 16; VH = portrait ? 16 : 10;
     svg.setAttribute('viewBox', '0 0 ' + VW + ' ' + VH);
     boardBox = { x: 0, y: 0, w: 10, h: 10 };
-    trayBox = portrait ? { x: 0.2, y: 10.2, w: 9.6, h: 5.6 } : { x: 10.2, y: 0.2, w: 5.6, h: 9.6 };
+    trayBox = portrait ? { x: 0.2, y: 10.2, w: 7.2, h: 5.6 } : { x: 10.2, y: 0.2, w: 5.6, h: 7.9 };
   }
   // conversión píxeles <-> unidades
   function metrics() {
@@ -181,14 +239,18 @@
   function bgRender() {
     bgG = svgEl('g', {});
     bgG.appendChild(svgEl('rect', { 'class': 'mat', x: 0.2, y: 0.2, width: 9.6, height: 9.6, rx: 0.4 }));
+    bgG.appendChild(svgEl('rect', { 'class': 'mat2', x: 0.45, y: 0.45, width: 9.1, height: 9.1, rx: 0.3 }));
+    [[0.5, 0.5], [9.5, 0.5], [0.5, 9.5], [9.5, 9.5]].forEach(function (c) { var o = svgEl('polygon', { points: [[c[0], c[1] - 0.22], [c[0] + 0.22, c[1]], [c[0], c[1] + 0.22], [c[0] - 0.22, c[1]]].map(function (q) { return q.join(','); }).join(' '), fill: '#d9a540', opacity: .8 }); bgG.appendChild(o); });
     bgG.appendChild(svgEl('rect', { 'class': 'tray-bg', x: trayBox.x, y: trayBox.y, width: trayBox.w, height: trayBox.h, rx: 0.4 }));
+    var portrait = VH > VW, tk = portrait ? 1.45 / 92 : 1.7 / 92, tg = svgEl('g', { transform: portrait ? 'translate(7.55 14.3) scale(' + tk.toFixed(4) + ')' : 'translate(11.7 8.2) scale(' + tk.toFixed(4) + ')' });
+    tg.innerHTML = '<g class="turtle">' + turtleInner() + '</g>'; bgG.appendChild(tg);
     svg.appendChild(bgG);
   }
   // Silueta y guías del nivel
   function renderTarget() {
     silG = svgEl('g', { 'class': 'sil', filter: 'url(#ssh)' }); guideG = svgEl('g', { 'class': level === 1 ? 'guide' : 'faint' });
     slots.forEach(function (sl) {
-      silG.appendChild(svgEl('polygon', { points: ptsStr(sl.pts) }));
+      sl.el = svgEl('polygon', { points: ptsStr(sl.pts) }); silG.appendChild(sl.el);
       if (level === 1) guideG.appendChild(svgEl('polygon', { points: ptsStr(sl.pts), fill: sl.col[1], 'fill-opacity': .45, stroke: sl.col[0] }));
       else if (level === 2) guideG.appendChild(svgEl('polygon', { points: ptsStr(sl.pts) }));
     });
@@ -247,6 +309,18 @@
     });
     trayLayout();
     setHud();
+    stage.classList.remove('enter'); void stage.offsetWidth; stage.classList.add('enter');
+    showBanner('<span class="emoji">' + fig.e + '</span><span>' + fig.n + '<small>Figura ' + (figIdx % order.length + 1) + ' de ' + order.length + '</small></span>', 1500);
+    if (handRef) { handRef.stop(); handRef = null; }
+    if (level === 1 && firstFig) {
+      firstFig = false;
+      setTimeout(function () {
+        if (done || free || !pieces.length) return;
+        var p0 = pieces.filter(function (q) { return !q.locked; })[0]; if (!p0) return;
+        var sl = slots.filter(function (x) { return !x.filled && x.t === p0.t; })[0]; if (!sl || !sl.el) return;
+        handRef = KidsGame.hand({ from: p0.el, to: sl.el, timeout: 12000 });
+      }, 1700);
+    }
     if (level === 4) {
       msg.textContent = '¡Mira bien! 👀'; timer.style.display = 'block'; animTimer(5000);
       hideTimer = setTimeout(function () { silG.classList.add('hidden'); msg.textContent = ''; timer.style.display = 'none'; }, 5000);
@@ -297,8 +371,9 @@
       p.lastTap = Date.now(); rotatePiece(p); return;
     }
     if (inTray(p.x, p.y)) { p.inTray = true; tween(p, 's', TRAY_S, 180); KidsGame.sound.pop(); return; }
-    if (!free) trySnap(p);
+    if (!free && !trySnap(p)) { streak = 0; wiggle(p); }
   }
+  function wiggle(p) { var x0 = p.x, t0 = Date.now(); (function st() { var f = (Date.now() - t0) / 320; if (f >= 1) { p.x = x0; applyT(p); return; } p.x = x0 + Math.sin(f * Math.PI * 4) * 0.12 * (1 - f); applyT(p); requestAnimationFrame(st); })(); }
   function inTray(x, y) { return x >= trayBox.x && x <= trayBox.x + trayBox.w && y >= trayBox.y && y <= trayBox.y + trayBox.h; }
   function trySnap(p) {
     var m = metrics(), tol = SNAP / m.s, sym = SHAPES[p.t].sym, rr = p.rotTarget != null ? p.rotTarget : p.rot;
@@ -310,7 +385,9 @@
       sl.filled = true; p.locked = true; p.x = sl.cx; p.y = sl.cy; p.rot = sl.rot; p.rotTarget = null; p.s = 1; applyT(p);
       p.el.classList.add('locked'); select(null); piecesG.insertBefore(p.el, piecesG.firstChild);
       KidsGame.sound.ok(); KidsGame.vibrate(30);
-      var px = toPx(p.x, p.y); sparkle(px[0], px[1]);
+      var px = toPx(p.x, p.y); sparkle(px[0], px[1]); KidsGame.fx.ring(p.el); KidsGame.fx.floatText(px[0], px[1] - 20, '+1', 'good');
+      streak++;
+      if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + '!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + '!');
       if (slots.every(function (s) { return s.filled; })) finish();
       return true;
     }
@@ -329,8 +406,9 @@
     done = true; clearTimers(); silG.classList.remove('hidden'); silG.style.opacity = 0;
     KidsGame.addStar(); KidsGame.sound.win();
     var c = toPx(5, 5); sparkle(c[0], c[1], 30);
-    var last = (figIdx + 1) >= order.length;
+    var last = (figIdx + 1) >= order.length; turtleNod(); KidsGame.say('¡' + fig.n + '!');
     if (last) KidsGame.levelDone(level);
+    var nt = THEMES[level]; if (last && nt) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + nt.e + ' ' + nt.n + ' (botón ✨)', 2400); }, 1800);
     setTimeout(function () {
       KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡' + fig.n + '!', sub: last ? 'Todas las figuras' : 'Figura ' + (figIdx + 1) + ' de ' + order.length,
         onNext: function () { figIdx = (figIdx + 1) % order.length; if (figIdx === 0) order = KidsGame.shuffle(FIGS[level]); startFig(); },
@@ -384,10 +462,24 @@
   onTap(peekBtn, peek);
   onTap(freeBtn, function () { KidsGame.sound.tap(); if (free) startFig(); else startFree(); });
   onTap(saveBtn, saveSticker);
+  onTap(themeBtn, function () {
+    KidsGame.sound.tap();
+    var i = THEMES.indexOf(theme), next = theme;
+    for (var k = 1; k <= THEMES.length; k++) { var t = THEMES[(i + k) % THEMES.length]; if (themeOpen(t)) { next = t; break; } }
+    var locked = THEMES.filter(function (t) { return !themeOpen(t); })[0];
+    if (next === theme && locked) { KidsGame.toast('🔒 ' + locked.n + ': completa el nivel ' + locked.lv, 1500); return; }
+    theme = next; try { localStorage.setItem('kg-tangram-theme', theme.id); } catch (e) {}
+    applyThemeColors();
+    // actualiza degradados y bordes sin reiniciar la figura
+    PIECES.forEach(function (pc, i) { var g = svg.querySelector('#tg' + i); if (g) { var st = g.querySelectorAll('stop'); st[0].setAttribute('stop-color', pc.c[0]); st[1].setAttribute('stop-color', pc.c[1]); st[2].setAttribute('stop-color', pc.c[2]); } });
+    pieces.forEach(function (p) { p.col = PIECES[p.i].c; p.el.querySelector('.body').setAttribute('stroke', p.col[2]); });
+    KidsGame.toast(theme.e + ' ' + theme.n, 1000); KidsGame.fx.ring(themeBtn);
+  });
   window.addEventListener('resize', function () { if (!pieces.length) return; if (free) startFree(); else startFig(); });
 
   // Ganchos para pruebas automáticas
   window.__tg = {
+    get streak() { return streak; }, get theme() { return theme.id; },
     get level() { return level; }, get pieces() { return pieces; }, get slots() { return slots; }, get fig() { return fig; }, get free() { return free; },
     px: toPx, units: toUnits,
     solveAll: function () { pieces.forEach(function (p) { if (p.locked) return; var sl = slots.filter(function (s) { return !s.filled && s.t === p.t; })[0]; if (!sl) return; p.inTray = false; p.x = sl.cx; p.y = sl.cy; p.rot = sl.rot; p.rotTarget = null; p.flip = !!sl.flip; p.s = 1; applyT(p); trySnap(p); }); },
