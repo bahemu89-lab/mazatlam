@@ -225,7 +225,7 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
   }
 
   // ---------- Estado ----------
-  var nivel = 0, cfg = null, running = false, lock = false, streak = 0, handShown = false, tutCell = null, tutHand = null;
+  var nivel = 0, cfg = null, running = false, lock = false, streak = 0, handShown = false, tutCell = null, tutHand = null, gen = 0;
   var sol, grid, fixed, syms, setIdx = 0, selR = -1, selC = -1, selSym = null, hintsLeft = 0, hintsUsed = 0, errors = 0;
   var hud, stage, board, pal, leftEl, hintBtn, checkBtn, streakEl, setBtn, cellEls = [], symEls = [];
 
@@ -267,6 +267,7 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
   function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); }
   function curSet() { var av = SETS.filter(function (x) { return cos.unlocked.indexOf(x.id) >= 0; }); return av[setIdx % av.length]; }
   function cycleSet() {
+    if (!grid) return;
     KidsGame.sound.tap(); setIdx++;
     var st = curSet(); syms = st.s.slice(0, cfg.n); cos.sel = st.id; saveCos();
     for (var r = 0; r < cfg.n; r++) for (var c = 0; c < cfg.n; c++) if (grid[r][c] >= 0) cellEls[r][c].innerHTML = '<span class="emoji">' + syms[grid[r][c]] + '</span>';
@@ -275,7 +276,7 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
   }
 
   function showPicker() {
-    running = false; lock = true;
+    running = false; lock = true; gen++;
     if (tutHand) { tutHand.stop(); tutHand = null; }
     if (board) { board.innerHTML = ''; pal.innerHTML = ''; }
     KidsGame.levelPicker({ key: 'sudoku', labels: LABELS, art: heroSVG(64), music: 'calma',
@@ -284,13 +285,17 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
   }
   function start(lv) {
     nivel = lv; cfg = CFG[lv]; running = true; lock = false; streak = 0;
-    hintsLeft = cfg.hints; hintsUsed = 0; errors = 0; selR = -1; selC = -1; selSym = null;
+    hintsLeft = cfg.hints; hintsUsed = 0; errors = 0; selR = -1; selC = -1; selSym = null; grid = null;
+    build();
+    var g = ++gen; // el puzzle se genera y pinta después del primer cuadro (respuesta inmediata al toque)
+    KidsGame.defer(function () {
+    if (g !== gen || !running) return;
     var p = makePuzzle(cfg);
     sol = p.sol; grid = copy(p.puz);
     fixed = grid.map(function (row) { return row.map(function (v) { return v >= 0; }); });
     var av = SETS.filter(function (x) { return cos.unlocked.indexOf(x.id) >= 0; });
     setIdx = KidsGame.rand(av.length); syms = curSet().s.slice(0, cfg.n);
-    build(); renderBoard(); renderPal(); layout(); updateLeft(); setStreak();
+    renderBoard(); renderPal(); layout(); updateLeft(); setStreak();
     stage.classList.add('in'); setTimeout(function () { stage.classList.remove('in'); }, 600);
     banner('🧺 Caja de ' + cfg.n + '×' + cfg.n);
     setTimeout(explain, 700);
@@ -303,6 +308,7 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
         if (tutCell) tutHand = KidsGame.hand({ el: symEls[sol[tutCell[0]][tutCell[1]]], timeout: 12000 });
       }, 4500);
     }
+    });
   }
 
   function renderBoard() {

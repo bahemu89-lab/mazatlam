@@ -504,7 +504,8 @@ var game = KidsGame.init({ title: 'Galería de arte' });
   function start(lv) {
     nivel = lv; running = true; streak = 0; session++;
     order = KidsGame.shuffle(SCENES.map(function (s, i) { return i; })); sceneIdx = 0;
-    build(); loadScene(true);
+    build(); var ss = session;
+    KidsGame.defer(function () { if (ss === session && running) loadScene(true); });
   }
 
   function loadScene(first) {

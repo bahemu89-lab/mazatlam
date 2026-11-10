@@ -302,13 +302,13 @@ var game = KidsGame.init({ title: 'Laberinto' });
     keysGot = 0; gemGot = false; keys.forEach(function (k) { k[2] = false; }); doors.forEach(function (d) { d.open = false; });
     keyEls.forEach(function (el) { el.classList.remove('got'); }); if (gemEl) gemEl.classList.remove('got');
     renderKeys();
-    whoEl.firstChild.innerHTML = charSVG(ch, 40);
-    charEl.innerHTML = charSVG(ch); goalEl.innerHTML = chestSVG(ch.treat) + '<span class="lock emoji">🔒</span>';
+    charEl.innerHTML = charSVG(ch);
+    setTimeout(function () { whoEl.firstChild.innerHTML = charSVG(ch, 40); applyHat(); }, 160); goalEl.innerHTML = chestSVG(ch.treat) + '<span class="lock emoji">🔒</span>';
     charEl.classList.remove('hop'); charEl.classList.remove('flip'); goalEl.classList.remove('open'); applyHat();
     bumps = 0;
     layout();
     wrap.classList.remove('enter'); void wrap.offsetWidth; wrap.classList.add('enter');
-    showBanner(charSVG(ch, 54) + '<span>Ronda ' + (level + 1) + '<small>' + ch.n + ' busca el cofre</small></span>', 1600);
+    setTimeout(function () { if (!done) showBanner(charSVG(ch, 54) + '<span>Ronda ' + (level + 1) + '<small>' + ch.n + ' busca el cofre</small></span>', 1600); }, 120);
     if (handMarker) { handMarker.remove(); handMarker = null; }
     if (nivel === 1 && level === 0 && firstRound && newMaze) {
       firstRound = false;
@@ -349,7 +349,8 @@ var game = KidsGame.init({ title: 'Laberinto' });
       howto: [{ icon: '👆', text: 'Toca el camino o usa las flechas' }, { icon: '🔑', text: 'Junta las llaves para abrir' }, { icon: '🧰', text: 'Llega al cofre del tesoro' }], onPick: function (n) {
       nivel = n; level = 0;
       var nb = KidsGame.levelBadge(nivel); hud.replaceChild(nb, badgeEl); badgeEl = nb;
-      start(true);
+      // Los laberintos grandes tardan en generarse: aviso de carga y cálculo diferido para no congelar el toque
+      if (nivel >= 3) { var cerrar = KidsGame.loading('Dibujando el laberinto…'); KidsGame.defer(function () { start(true); cerrar(); }); } else start(true);
       KidsGame.say(nivel === 4 ? 'Hay niebla. Cada llave abre la puerta de su color. Busca el diamante escondido' :
         nivel === 3 ? 'Junta las tres llaves y lleva al animalito hasta su comida' : 'Lleva al animalito hasta su comida');
     } });
@@ -424,7 +425,10 @@ var game = KidsGame.init({ title: 'Laberinto' });
         var sc = reg[k] + (deadEnd(x, y) ? 40 : 0) + Math.random() * 6;
         if (sc > bestScore) { bestScore = sc; best = [x, y]; }
       });
-      if (!best) best = [s0.x, s0.y];
+      if (!best) { // sin callejones libres: cualquier celda de la zona que no sea la salida (una llave en la salida nunca se recoge)
+        var altScore = -1; Object.keys(reg).forEach(function (k) { var xy = k.split(','), x = +xy[0], y = +xy[1]; if ((x === 0 && y === 0) || used[k]) return; if (reg[k] > altScore) { altScore = reg[k]; best = [x, y]; } });
+        if (!best) best = [path[1].x, path[1].y];
+      }
       used[best[0] + ',' + best[1]] = true;
       keys.push([best[0], best[1], false, i]);
     }
@@ -700,8 +704,9 @@ var game = KidsGame.init({ title: 'Laberinto' });
     KidsGame.sound.win(); KidsGame.addStar(); KidsGame.vibrate(60);
     if (bumps === 0) { streak++; if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + ' sin chocar!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + ' sin chocar!'); else if (streak >= 1) KidsGame.fx.floatText(gr.left + gr.width / 2, gr.top, '¡Sin chocar!', 'good'); } else streak = 0;
     setTimeout(function () {
+      var wasDone = !!doneLv()[nivel];
       if (level >= LEVELS[nivel].length - 1) KidsGame.levelDone(nivel);
-      var nh = HATS[nivel]; if (level >= LEVELS[nivel].length - 1 && nh) setTimeout(function () { KidsGame.toast('🎁 Gorro nuevo: ' + nh.e + ' ' + nh.n + ' (botón 🎩)', 2400); }, 900);
+      var nh = HATS[nivel]; if (level >= LEVELS[nivel].length - 1 && nh && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Gorro nuevo: ' + nh.e + ' ' + nh.n + ' (botón 🎩)', 2400); }, 900);
       KidsGame.celebrate({
         sub: ch.n + ' abrió el cofre ' + ch.treat + (gem ? (gemGot ? ' · ¡y el 💎!' : ' · el 💎 sigue escondido') : ''),
         stars: gem && !gemGot ? 2 : 3,

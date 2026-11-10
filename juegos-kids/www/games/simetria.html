@@ -374,8 +374,8 @@
     KidsGame.fx.burst(br.left + br.width / 2, br.top + br.height / 2, { n: 14, chars: ['✨', '⭐', '💧', '🦢'] });
     if (fails === 0) { streak++; if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + ' a la primera!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + ' a la primera!'); else KidsGame.fx.floatText(br.left + br.width / 2, br.top, '¡A la primera!', 'good'); }
     var last = round + 1 >= PER_LEVEL;
-    if (last) KidsGame.levelDone(level);
-    var nf = FRAMES[level]; if (last && nf) setTimeout(function () { KidsGame.toast('🎁 Marco nuevo: ' + nf.e + ' ' + nf.n + ' (botón 🖼️)', 2400); }, 1800);
+    var wasDone = !!doneLv()[level]; if (last) KidsGame.levelDone(level);
+    var nf = FRAMES[level]; if (last && nf && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Marco nuevo: ' + nf.e + ' ' + nf.n + ' (botón 🖼️)', 2400); }, 1800);
     setTimeout(function () {
       KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡' + pic.n + '!', sub: last ? 'Cinco dibujos reflejados' : 'Dibujo ' + (round + 1) + ' de ' + PER_LEVEL,
         onNext: function () { round = (round + 1) % PER_LEVEL; if (round === 0) order = KidsGame.shuffle(PICS[N]); start(); }, onAgain: function () { start(); } });

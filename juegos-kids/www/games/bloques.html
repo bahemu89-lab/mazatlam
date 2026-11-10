@@ -400,8 +400,8 @@
     KidsGame.fx.burst(sr.left + sr.width / 2, sr.top + sr.height / 2, { n: 14, chars: ['⭐', '✨', '🧱', '🔨'] });
     if (fails === 0) { streak++; if (streak % 5 === 0) { KidsGame.addStar(); showStreak('🔥 ¡Racha x' + streak + ' a la primera!  ⭐ +1'); } else if (streak >= 3) showStreak('🔥 ¡Racha x' + streak + ' a la primera!'); else KidsGame.fx.floatText(sr.left + sr.width / 2, sr.top + 40, '¡A la primera!', 'good'); }
     var last = round + 1 >= PER_LEVEL;
-    if (last) KidsGame.levelDone(level);
-    var ns = SETS[level]; if (last && ns) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + ns.e + ' ' + ns.n + ' (botón 🌈)', 2400); }, 1800);
+    var wasDone = !!doneLv()[level]; if (last) KidsGame.levelDone(level);
+    var ns = SETS[level]; if (last && ns && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + ns.e + ' ' + ns.n + ' (botón 🌈)', 2400); }, 1800);
     setTimeout(function () {
       KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡Igualito!', sub: last ? 'Cinco construcciones' : 'Construcción ' + (round + 1) + ' de ' + PER_LEVEL,
         onNext: function () { round = (round + 1) % PER_LEVEL; start(); }, onAgain: function () { start(); } });

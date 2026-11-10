@@ -55,7 +55,7 @@
   .zone { position: absolute; top: 0; bottom: 0; }
   .zone .flag { position: absolute; left: 50%; width: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
   .zone.target .flag { opacity: 1; }
-  .zone .flag svg { position: absolute; left: -6px; bottom: 0; width: 64px; height: 60px; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); }
+  .zone .flag svg { position: absolute; left: -6px; bottom: 0; width: 64px; height: 60px; overflow: visible; }
   .zone .flag .cloth { transform-origin: 0 50%; animation: wave 1.6s ease-in-out infinite; }
   @keyframes wave { 0%,100% { transform: skewY(0) scaleX(1); } 50% { transform: skewY(-6deg) scaleX(.94); } }
   .zone.over .glow { opacity: 1; }
@@ -122,7 +122,7 @@ var game = KidsGame.init({ title: 'Torre de pasteles' });
   try { var sv = JSON.parse(localStorage.getItem('kg-cos-hanoi')); if (sv && sv.unlocked) cos = sv; } catch (e) {}
   function saveCos() { try { localStorage.setItem('kg-cos-hanoi', JSON.stringify(cos)); } catch (e) {} }
 
-  var nivel = 0, cfg = null, running = false, lock = false, streak = 0, handShown = false, tutHand = null;
+  var nivel = 0, cfg = null, running = false, lock = false, streak = 0, handShown = false, tutHand = null, gen = 0;
   var n = 3, pegs = [[], [], []], target = 2, moves = 0, opt = 0, hintsLeft = 0, hintsUsed = 0;
   var hud, mvEl, hintBtn, targetBtn, stage, world, zones = [], discEls = {}, hand, streakEl, skinBtn;
   var geo = { W: 0, H: 0, bh: 0, h: 0, zone: 0 };
@@ -202,7 +202,7 @@ var game = KidsGame.init({ title: 'Torre de pasteles' });
   function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); }
   function explain() { KidsGame.say('Pasa todo el pastel al plato con la banderita. Mueve un piso a la vez y nunca pongas un piso grande sobre uno pequeño.'); }
   function showPicker() {
-    running = false; lock = true;
+    running = false; lock = true; gen++;
     if (tutHand) { tutHand.stop(); tutHand = null; }
     if (world) world.innerHTML = '';
     KidsGame.levelPicker({ key: 'hanoi', labels: LABELS, art: heroSVG(64), music: 'calma',
@@ -212,8 +212,9 @@ var game = KidsGame.init({ title: 'Torre de pasteles' });
   function start(lv) {
     nivel = lv; cfg = CFG[lv]; n = cfg.n; target = 2; running = true; streak = 0;
     hintsLeft = cfg.hints; hintsUsed = 0;
-    build(); reset(true);
-    setTimeout(explain, 700);
+    build();
+    var g = ++gen; // la torre se arma después de pintar la pantalla (respuesta inmediata al toque)
+    KidsGame.defer(function () { if (g !== gen || !running) return; reset(true); setTimeout(explain, 700); });
   }
   function reset(first) {
     moves = 0; opt = Math.pow(2, n) - 1; lock = false; lifted = null; dragging = false; streak = 0;
@@ -248,7 +249,7 @@ var game = KidsGame.init({ title: 'Torre de pasteles' });
     hand = document.createElement('div'); hand.className = 'hand emoji'; hand.textContent = '👆'; world.appendChild(hand);
   }
   function layout() {
-    if (!world || !stage) return;
+    if (!world || !stage || !discEls[1]) return;
     var W = Math.min(stage.clientWidth - 8, 980), H = stage.clientHeight - 10;
     var bh = Math.max(26, Math.min(44, H * 0.08));
     var h = Math.floor(Math.min(62, (H - bh - 90) / (n + 1)));

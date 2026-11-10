@@ -546,8 +546,8 @@
     KidsGame.confetti(30);
     setTimeout(function () {
       var lastStep = step >= GRIDS[level].length - 1;
-      if (lastStep) KidsGame.levelDone(level);
-      var nf = FRAMES[level]; if (lastStep && nf) setTimeout(function () { KidsGame.toast('🎁 Marco nuevo: ' + nf.e + ' ' + nf.n + ' (botón 🖼️)', 2400); }, 900);
+      var wasDone = !!doneLv()[level]; if (lastStep) KidsGame.levelDone(level);
+      var nf = FRAMES[level]; if (lastStep && nf && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Marco nuevo: ' + nf.e + ' ' + nf.n + ' (botón 🖼️)', 2400); }, 900);
       KidsGame.celebrate({
         sub: NAMES[scene % SCENES.length] + ' · ' + cols + '×' + rows + ' completo',
         onNext: function () { scene++; step++; if (step >= GRIDS[level].length) { step = 0; level = Math.min(level + 1, 4); } start(); },

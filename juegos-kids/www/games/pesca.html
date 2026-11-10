@@ -539,7 +539,7 @@ var game = KidsGame.init({ title: 'Pesca' });
     if (nivel === 1 && firstRound) { firstRound = false; setTimeout(function () { if (running && hook.state === 'idle') KidsGame.hand({ el: water, timeout: 5000 }); }, 1800); }
   }
   function finish() {
-    running = false; setBent(false);
+    running = false; setBent(false); var wasDone = !!doneLv()[nivel];
     KidsGame.levelDone(nivel);
     boat.classList.add('cheer'); setTimeout(function () { boat.classList.remove('cheer'); }, 1500);
     var sub = '🐟 ' + NEED + ' peces', msg;
@@ -553,7 +553,7 @@ var game = KidsGame.init({ title: 'Pesca' });
       KidsGame.celebrate({ msg: msg, sub: sub, stars: 3,
         onAgain: function () { if (cfg.mode === 'math') mround--; startRound(); },
         onNext: function () { if (nivel < 4) { nivel = nivel + 1; cfg = CFG[nivel]; setBadge(); } startRound(); } });
-      if (nh) setTimeout(function () { KidsGame.toast('🎁 Sombrero nuevo: ' + nh.e + ' ' + nh.n + ' (botón 👒)', 2400); }, 900);
+      if (nh && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Sombrero nuevo: ' + nh.e + ' ' + nh.n + ' (botón 👒)', 2400); }, 900);
     }, 500);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }

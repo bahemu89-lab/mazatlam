@@ -407,8 +407,8 @@
     KidsGame.addStar(); KidsGame.sound.win();
     var c = toPx(5, 5); sparkle(c[0], c[1], 30);
     var last = (figIdx + 1) >= order.length; turtleNod(); KidsGame.say('¡' + fig.n + '!');
-    if (last) KidsGame.levelDone(level);
-    var nt = THEMES[level]; if (last && nt) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + nt.e + ' ' + nt.n + ' (botón ✨)', 2400); }, 1800);
+    var wasDone = !!doneLv()[level]; if (last) KidsGame.levelDone(level);
+    var nt = THEMES[level]; if (last && nt && !wasDone) setTimeout(function () { KidsGame.toast('🎁 Colores nuevos: ' + nt.e + ' ' + nt.n + ' (botón ✨)', 2400); }, 1800);
     setTimeout(function () {
       KidsGame.celebrate({ msg: last ? '¡Nivel completado!' : '¡' + fig.n + '!', sub: last ? 'Todas las figuras' : 'Figura ' + (figIdx + 1) + ' de ' + order.length,
         onNext: function () { figIdx = (figIdx + 1) % order.length; if (figIdx === 0) order = KidsGame.shuffle(FIGS[level]); startFig(); },

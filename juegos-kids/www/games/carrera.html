@@ -627,13 +627,13 @@ var game = KidsGame.init({ title: 'Carrera' });
       }, 500);
       return;
     }
-    var n = stars >= GOAL ? 3 : stars >= 10 ? 2 : 1;
+    var n = stars >= GOAL ? 3 : stars >= 10 ? 2 : 1, wasDone = !!doneLevels()[nivel];
     if (stars >= GOAL) KidsGame.levelDone(nivel);
     setTimeout(function () {
-      KidsGame.celebrate({ msg: stars >= GOAL ? '¡20 estrellas!' : undefined, sub: '⭐ ' + stars + ' estrellas' + (stars >= GOAL && nivel < 4 && !outfitOpen(OUTFITS[nivel]) ? '' : ''), stars: n,
+      KidsGame.celebrate({ msg: stars >= GOAL ? '¡20 estrellas!' : undefined, sub: '⭐ ' + stars + ' estrellas', stars: n,
         onAgain: function () { startRound(); },
         onNext: function () { nivel = Math.min(4, nivel + 1); cfg = CFG[nivel]; setBadge(); startRound(); } });
-      if (stars >= GOAL) { var o = OUTFITS[nivel]; if (o) { setTimeout(function () { KidsGame.toast('🎁 Nuevo atuendo: ' + o.e + ' ' + o.n, 2200); }, 900); } }
+      if (stars >= GOAL && !wasDone) { var o = OUTFITS[nivel]; if (o) { setTimeout(function () { KidsGame.toast('🎁 Nuevo atuendo: ' + o.e + ' ' + o.n, 2200); }, 900); } }
     }, 500);
   }
   function setBadge() { badgeHolder.innerHTML = ''; badgeHolder.appendChild(KidsGame.levelBadge(nivel)); }

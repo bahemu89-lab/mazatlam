@@ -71,7 +71,7 @@
   .robot { position: absolute; left: var(--pad); top: var(--pad); width: var(--ts); height: var(--ts); z-index: 5; pointer-events: none; transition: transform .42s cubic-bezier(.4,.1,.3,1.2); }
   .robot.nojump { transition: none; }
   .robot .bot { position: absolute; inset: 0; transition: transform .36s cubic-bezier(.4,.1,.3,1.35); }
-  .robot .bot svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 5px 5px rgba(0,0,0,.4)); }
+  .robot .bot svg { width: 100%; height: 100%; overflow: visible; }
   .robot .body { transform-origin: 50px 52px; }
   .robot.moving .body { animation: rbob .42s ease-in-out; }
   @keyframes rbob { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06, .94) translateY(2px); } }
@@ -173,7 +173,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
       '<linearGradient id="rb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--r1, #9fdcff)"/><stop offset=".55" stop-color="var(--r2, #2f95e8)"/><stop offset="1" stop-color="var(--r3, #1a63a8)"/></linearGradient>' +
       '<linearGradient id="rm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a4252"/><stop offset=".5" stop-color="#8a95a8"/><stop offset="1" stop-color="#2b3140"/></linearGradient>' +
       '<radialGradient id="rv" cx="40%" cy="30%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#bfe9ff"/></radialGradient></defs>' +
-      '<g class="wheel"><rect x="8" y="30" width="16" height="52" rx="7" fill="url(#rm)"/><clipPath id="cw1"><rect x="8" y="30" width="16" height="52" rx="7"/></clipPath><g class="tread" clip-path="url(#cw1)"><path d="M8 34 h16 M8 46 h16 M8 58 h16 M8 70 h16 M8 82 h16 M8 94 h16" stroke="#fff" stroke-width="3" opacity=".55"/></g></g>' +
+      '<ellipse cx="52" cy="90" rx="38" ry="8" fill="rgba(0,0,0,.28)"/><g class="wheel"><rect x="8" y="30" width="16" height="52" rx="7" fill="url(#rm)"/><clipPath id="cw1"><rect x="8" y="30" width="16" height="52" rx="7"/></clipPath><g class="tread" clip-path="url(#cw1)"><path d="M8 34 h16 M8 46 h16 M8 58 h16 M8 70 h16 M8 82 h16 M8 94 h16" stroke="#fff" stroke-width="3" opacity=".55"/></g></g>' +
       '<g class="wheel"><rect x="76" y="30" width="16" height="52" rx="7" fill="url(#rm)"/><clipPath id="cw2"><rect x="76" y="30" width="16" height="52" rx="7"/></clipPath><g class="tread" clip-path="url(#cw2)"><path d="M76 34 h16 M76 46 h16 M76 58 h16 M76 70 h16 M76 82 h16 M76 94 h16" stroke="#fff" stroke-width="3" opacity=".55"/></g></g>' +
       '<g class="body">' +
       '<path d="M28 22 Q28 10 50 10 Q72 10 72 22 L72 76 Q72 86 62 86 L38 86 Q28 86 28 76 Z" fill="url(#rb)" stroke="var(--r3, #1a63a8)" stroke-width="2.5"/>' +

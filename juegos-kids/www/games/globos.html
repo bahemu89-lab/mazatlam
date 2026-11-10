@@ -436,7 +436,7 @@ var game = KidsGame.init({ title: 'Globos' });
 
   function finish() {
     clearBalloons(); cheer(2500);
-    var np = PATS[nivel]; if (np && mode !== 'free') setTimeout(function () { KidsGame.toast('🎁 Patrón nuevo: ' + np.e + ' ' + np.n + ' (botón 🎀)', 2400); }, 900);
+    var np = PATS[nivel], wasDoneG = !!doneLv()[nivel]; if (np && mode !== 'free' && !wasDoneG) setTimeout(function () { KidsGame.toast('🎁 Patrón nuevo: ' + np.e + ' ' + np.n + ' (botón 🎀)', 2400); }, 900);
     if (mode === 'expert') {
       colorRounds++; KidsGame.levelDone(nivel);
       KidsGame.celebrate({

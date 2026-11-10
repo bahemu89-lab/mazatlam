@@ -46,7 +46,7 @@
   /* ---- Lula la llama ---- */
   .lula { position: absolute; right: 2%; top: 0; width: var(--lw); height: calc(var(--lw) * 1.05); z-index: 3; pointer-events: none; transition: transform .3s; }
   .lula.beside { right: 1%; }
-  .lula svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 8px rgba(0,0,0,.25)); }
+  .lula svg { width: 100%; height: 100%; overflow: visible; }
   .lula .collar { opacity: 0; transition: opacity .4s; }
   .lula.wears .collar { opacity: 1; }
   .lula.happy { animation: lulajump .9s ease-in-out; }
@@ -159,7 +159,7 @@ var game = KidsGame.init({ title: 'El collar de Lula' });
 
   function shapeSVG(shape, color) {
     var c = COLORS[color];
-    return '<svg viewBox="0 0 100 100"><g filter="url(#sh)" fill="url(#g-' + color + ')" stroke="' + c[2] + '" stroke-width="3">' + SHAPES[shape] + '</g><g fill="#fff" opacity=".55">' + HILITE[shape] + '</g></svg>';
+    return '<svg viewBox="0 0 100 100"><g transform="translate(0 5)" fill="rgba(0,0,0,.28)">' + SHAPES[shape] + '</g><g fill="url(#g-' + color + ')" stroke="' + c[2] + '" stroke-width="3">' + SHAPES[shape] + '</g><g fill="#fff" opacity=".55">' + HILITE[shape] + '</g></svg>';
   }
   function render(el) {
     if (el.t === 'shape') return el.size === 's' ? '<div class="sm">' + shapeSVG(el.shape, el.color) + '</div>' : shapeSVG(el.shape, el.color);
@@ -365,7 +365,7 @@ var game = KidsGame.init({ title: 'El collar de Lula' });
       howto: [{ icon: '📿', text: 'Mira las cuentas del collar' }, { icon: '🤔', text: 'El patrón se repite: ¿cuál sigue?' }, { icon: '🦙', text: '¡Lula se pone el collar!' }],
       onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; session++; plan = KidsGame.shuffle(MODES[lv]); build(); newRound(true); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; session++; plan = KidsGame.shuffle(MODES[lv]); build(); var ss = session; KidsGame.defer(function () { if (ss === session && running) newRound(true); }); }
 
   function slotEl(el, i, cls) {
     var s = document.createElement('div'); s.className = 'slot' + (cls ? ' ' + cls : '');
