@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bobinas Tesla y Triángulo para Sanar</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --surface: #141b33;
+    --border: #26304f;
+    --text: #e6ebff;
+    --muted: #9aa5c8;
+    --arc: #8fd3ff;
+    --gold: #f2c14e;
+    --ok: #5fd39a;
+    --warn: #f0a35e;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 16px 40px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 50% 0, #1a2450 0, var(--bg) 60%);
+    color: var(--text); font-size: 15px; line-height: 1.55;
+    min-height: 100vh;
+  }
+  header { max-width: 1100px; margin: 0 auto; padding: 24px 0 8px; }
+  header h1 { margin: 0; font-size: 1.5rem; }
+  header .sub { color: var(--muted); font-size: .9rem; }
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .card h2 { margin: 0 0 8px; font-size: 1.1rem; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .stage { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 20px; }
+  @media (max-width: 780px) { .stage { grid-template-columns: 1fr; } }
+  canvas { width: 100%; aspect-ratio: 1 / 1; max-height: 560px; display: block; border-radius: var(--radius); background: #070a16; border: 1px solid var(--border); }
+  .controls { display: grid; gap: 14px; align-content: start; }
+  label { font-size: .8rem; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; }
+  input[type=range] { width: 100%; accent-color: var(--arc); }
+  select, button { font: inherit; }
+  select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0e1428; color: var(--text); }
+  .btn { border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-weight: 700; background: var(--arc); color: #0b1020; }
+  .btn.secondary { background: #26304f; color: var(--text); }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .timer { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
+  .phase { text-align: center; color: var(--gold); font-weight: 600; min-height: 1.5em; }
+  .vertex { display: grid; grid-template-columns: 14px 1fr; gap: 10px; margin-bottom: 10px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; margin-top: 4px; }
+  .note { border-left: 4px solid var(--warn); background: #241d18; }
+  .note h2 { color: var(--warn); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  .muted { color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bobinas Tesla &amp; Triángulo para Sanar</h1>
+  <div class="sub">Las tres bobinas colocadas en los vértices del triángulo, trabajando juntas.</div>
+</header>
+
+<main>
+  <section class="card stage">
+    <canvas id="lienzo" width="900" height="900" aria-label="Animación de tres bobinas Tesla en los vértices de un triángulo"></canvas>
+    <div class="controls">
+      <div>
+        <label for="intensidad">Intensidad visual <span id="vIntensidad">60%</span></label>
+        <input id="intensidad" type="range" min="10" max="100" value="60">
+      </div>
+      <div>
+        <label for="ritmo">Ritmo de respiración <span id="vRitmo">6 resp/min</span></label>
+        <input id="ritmo" type="range" min="4" max="10" value="6">
+      </div>
+      <div>
+        <label for="duracion">Duración de la sesión</label>
+        <select id="duracion">
+          <option value="180">3 minutos</option>
+          <option value="300" selected>5 minutos</option>
+          <option value="600">10 minutos</option>
+          <option value="900">15 minutos</option>
+        </select>
+      </div>
+      <div class="timer" id="timer">05:00</div>
+      <div class="phase" id="fase">Listo para comenzar</div>
+      <div class="btns">
+        <button class="btn" id="btnIniciar">Iniciar sesión</button>
+        <button class="btn secondary" id="btnReiniciar">Reiniciar</button>
+      </div>
+      <p class="muted">Sigue el brillo del triángulo: cuando crece, inhala; cuando baja, exhala. Los arcos recorren los tres vértices en orden.</p>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Los tres vértices del triángulo</h2>
+      <div class="vertex"><span class="dot" style="background:#8fd3ff"></span><div><b>Cuerpo</b> — descanso, alimentación, movimiento y atención médica.</div></div>
+      <div class="vertex"><span class="dot" style="background:#c79bff"></span><div><b>Mente</b> — calma, respiración consciente y manejo del estrés.</div></div>
+      <div class="vertex"><span class="dot" style="background:#f2c14e"></span><div><b>Espíritu / vínculo</b> — propósito, comunidad y relaciones.</div></div>
+      <p class="muted">Cada vértice tiene una bobina. Cuando las tres se encienden juntas, el triángulo se cierra: la idea es que ningún lado se descuide.</p>
+    </div>
+    <div class="card">
+      <h2>¿Qué es una bobina Tesla?</h2>
+      <p>Es un transformador resonante inventado por Nikola Tesla (1891). Produce voltajes muy altos (cientos de miles de voltios) a alta frecuencia, lo que genera los arcos eléctricos y el brillo característico.</p>
+      <ul>
+        <li><b>Primario:</b> pocas vueltas de cable grueso con un capacitor.</li>
+        <li><b>Secundario:</b> miles de vueltas de cable fino.</li>
+        <li><b>Toroide:</b> la "dona" de arriba, donde salen los arcos.</li>
+      </ul>
+      <p class="muted">Aquí las bobinas son una animación: sirven como guía visual para la respiración y la relajación.</p>
+    </div>
+  </section>
+
+  <section class="card note">
+    <h2>Importante: salud y seguridad</h2>
+    <ul>
+      <li>No hay evidencia científica de que las bobinas Tesla curen enfermedades. Esta página es un apoyo de relajación, <b>no sustituye a un médico</b> ni a ningún tratamiento.</li>
+      <li>Una bobina Tesla real es peligrosa: el alto voltaje puede causar quemaduras, descargas y fuego.</li>
+      <li>Personas con marcapasos, implantes electrónicos o embarazo deben mantenerse lejos de equipos reales de alto voltaje.</li>
+      <li>Los campos que generan pueden dañar teléfonos y aparatos electrónicos cercanos.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  const cv = document.getElementById('lienzo');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const COLORS = ['#8fd3ff', '#c79bff', '#f2c14e'];
+  const NAMES = ['Cuerpo', 'Mente', 'Espíritu'];
+
+  const cx = W / 2, cy = H / 2 + 40, R = 300;
+  const verts = [0, 1, 2].map(i => {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / 3;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+
+  const $ = id => document.getElementById(id);
+  const state = { intensity: 0.6, bpm: 6, running: false, remaining: 300, total: 300, last: null };
+
+  $('intensidad').addEventListener('input', e => { state.intensity = e.target.value / 100; $('vIntensidad').textContent = e.target.value + '%'; });
+  $('ritmo').addEventListener('input', e => { state.bpm = +e.target.value; $('vRitmo').textContent = e.target.value + ' resp/min'; });
+  $('duracion').addEventListener('change', e => { if (!state.running) { state.total = state.remaining = +e.target.value; showTime(); } });
+  $('btnIniciar').addEventListener('click', () => {
+    state.running = !state.running;
+    if (state.running && state.remaining <= 0) state.remaining = state.total;
+    $('btnIniciar').textContent = state.running ? 'Pausar' : 'Continuar';
+  });
+  $('btnReiniciar').addEventListener('click', () => {
+    state.running = false;
+    state.total = state.remaining = +$('duracion').value;
+    $('btnIniciar').textContent = 'Iniciar sesión';
+    $('fase').textContent = 'Listo para comenzar';
+    showTime();
+  });
+
+  function showTime() {
+    const s = Math.max(0, Math.ceil(state.remaining));
+    $('timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function drawCoil(v, color, glow) {
+    const baseY = v.y + 70, topY = v.y - 40;
+    ctx.fillStyle = '#2a3150';
+    ctx.fillRect(v.x - 34, baseY, 68, 14);
+    ctx.strokeStyle = '#b87333'; ctx.lineWidth = 2;
+    for (let y = baseY - 4; y > topY + 6; y -= 5) {
+      ctx.beginPath(); ctx.moveTo(v.x - 14, y); ctx.lineTo(v.x + 14, y - 2); ctx.stroke();
+    }
+    ctx.save();
+    ctx.shadowColor = color; ctx.shadowBlur = 30 * glow;
+    ctx.fillStyle = '#9aa5c8';
+    ctx.beginPath(); ctx.ellipse(v.x, topY, 40, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function arc(a, b, color, jag, width) {
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.shadowColor = color; ctx.shadowBlur = 18;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y);
+    const steps = 18;
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const env = Math.sin(Math.PI * t);
+      ctx.lineTo(a.x + (b.x - a.x) * t + (Math.random() - .5) * jag * env,
+                 a.y + (b.y - a.y) * t + (Math.random() - .5) * jag * env);
+    }
+    ctx.lineTo(b.x, b.y); ctx.stroke();
+    ctx.restore();
+  }
+
+  function frame(ts) {
+    const dt = state.last == null ? 0 : (ts - state.last) / 1000;
+    state.last = ts;
+
+    if (state.running) {
+      state.remaining -= dt;
+      if (state.remaining <= 0) {
+        state.remaining = 0; state.running = false;
+        $('btnIniciar').textContent = 'Iniciar sesión';
+        $('fase').textContent = 'Sesión terminada · triángulo cerrado';
+      }
+      showTime();
+    }
+
+    const period = 60 / state.bpm;
+    const phase = ((ts / 1000) % period) / period;
+    const breath = 0.5 - 0.5 * Math.cos(phase * 2 * Math.PI);
+    if (state.running) $('fase').textContent = phase < 0.5 ? 'Inhala…' : 'Exhala…';
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(7,10,22,0.35)';
+    ctx.fillRect(0, 0, W, H);
+
+    const tops = verts.map(v => ({ x: v.x, y: v.y - 40 }));
+
+    const glow = 0.4 + 0.6 * breath;
+    ctx.save();
+    ctx.strokeStyle = `rgba(242,193,78,${0.25 + 0.55 * breath})`;
+    ctx.lineWidth = 3 + 4 * breath;
+    ctx.shadowColor = '#f2c14e'; ctx.shadowBlur = 25 * glow;
+    ctx.beginPath(); tops.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.stroke();
+    ctx.restore();
+
+    const g = ctx.createRadialGradient(cx, cy - 40, 0, cx, cy - 40, 120 + 80 * breath);
+    g.addColorStop(0, `rgba(255,255,255,${0.15 * glow})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    verts.forEach((v, i) => drawCoil(v, COLORS[i], glow));
+
+    if (!reduceMotion || state.running) {
+      const active = Math.floor((ts / 1000) * 1.5) % 3;
+      const k = state.intensity;
+      for (let i = 0; i < 3; i++) {
+        const a = tops[i], b = tops[(i + 1) % 3];
+        if (Math.random() < 0.35 + 0.6 * k) arc(a, b, COLORS[i], 60 * k, i === active ? 2.5 : 1.2);
+        if (Math.random() < 0.3 * k) arc(a, { x: cx, y: cy - 40 }, COLORS[i], 40 * k, 1);
+      }
+      tops.forEach((p, i) => {
+        for (let n = 0; n < Math.round(1 + 3 * k); n++) {
+          const ang = Math.random() * Math.PI * 2, len = 30 + Math.random() * 60 * k;
+          arc(p, { x: p.x + Math.cos(ang) * len, y: p.y + Math.sin(ang) * len - 20 }, COLORS[i], 18, 1);
+        }
+      });
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.font = '600 26px system-ui, sans-serif'; ctx.textAlign = 'center';
+    verts.forEach((v, i) => {
+      ctx.fillStyle = COLORS[i];
+      ctx.fillText(NAMES[i], v.x, i === 0 ? v.y - 95 : v.y + 120);
+    });
+
+    requestAnimationFrame(frame);
+  }
+  showTime();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
