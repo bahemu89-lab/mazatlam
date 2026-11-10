@@ -38,6 +38,16 @@
   .c1{--a:#ff9ccb;--b:#f0569a;--d:#b8306f}.c2{--a:#7dd0ff;--b:#2f95e8;--d:#1a63a8}.c3{--a:#8ef0b0;--b:#24b36c;--d:#14784a}.c4{--a:#ffc077;--b:#ff7a1a;--d:#b8500a}
   .c5{--a:#b39cff;--b:#7f5af0;--d:#5232b3}.c6{--a:#ff8fb1;--b:#e53170;--d:#a11f4e}.c7{--a:#7fe3e0;--b:#00a8a8;--d:#00706f}.c8{--a:#ffe98a;--b:#ffb703;--d:#c47f00;color:#6a3f00}
   .c8 span.name{text-shadow:0 1px 0 rgba(255,255,255,.5);background:rgba(255,255,255,.25)}
+  .hero { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 10px 16px; margin-bottom: 4px; }
+  .hero .hi { font-size: 22px; color: #ff6f61; font-weight: 900; }
+  .hero .reto-ttl { font-size: 16px; color: #7a4b00; margin-top: 2px; }
+  .hero .reto { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .hero .reto a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px; background: linear-gradient(180deg, #fff7d6, #ffe08a); color: #7a4b00; text-decoration: none; font-size: 16px; box-shadow: 0 3px 0 #d9a520; }
+  .hero .reto a.done { background: linear-gradient(180deg, #d8f3dc, #9fe0b0); color: #14784a; box-shadow: 0 3px 0 #3fa864; }
+  .hero .hero-tx { flex: 1; }
+  .hero .hero-btns { display: flex; flex-direction: column; gap: 8px; }
+  .hero .hero-btns .btn { font-size: 18px; min-height: 52px; padding: 6px 16px; text-decoration: none; }
+  @media (max-width: 640px) { .hero { flex-wrap: wrap; } .hero .hero-btns { flex-direction: row; width: 100%; } .hero .hero-btns .btn { flex: 1; } .hero .mz svg { width: 70px; height: 70px; } }
   .grid h2.sec { grid-column: 1 / -1; margin: 10px 0 0; font-size: 26px; text-align: left; padding-left: 6px; }
   .tile .lv { position: absolute; top: 8px; left: 10px; font-size: 16px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
   .tile .sg { position: absolute; top: 6px; right: 10px; font-size: 14px; background: rgba(0,0,0,.25); padding: 2px 8px; border-radius: 12px; }
@@ -51,7 +61,13 @@
     <h1 class="title-outline">¡A jugar!</h1>
     <a class="total" id="total" href="progreso.html">⭐ 0</a>
   </div>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="grid">
+    <div class="hero panel">
+      <div class="mz" id="mz"></div>
+      <div class="hero-tx"><div class="hi" id="hi">¡Hola! Soy Mazi 🦊</div><div class="reto-ttl">🌟 Reto del día</div><div class="reto" id="reto"></div></div>
+      <div class="hero-btns"><a class="btn purple" href="album.html" id="album-btn">📒 Álbum</a><a class="btn blue" href="progreso.html">📊 Progreso</a></div>
+    </div>
+  </div>
   <div class="footer">Juegos de Mazatlam · sin internet</div>
 <script src="common.js"></script>
 <script>
@@ -123,6 +139,18 @@
       grid.appendChild(a); tiles.push(a);
     });
   });
+  // Mascota, reto del día y saludo
+  document.getElementById('mz').innerHTML = KidsGame.mascot(96);
+  var names = {}; secciones.forEach(function (sec) { sec.juegos.forEach(function (j) { names[j.f] = j; }); });
+  var dailyDone = {}; try { dailyDone = (JSON.parse(localStorage.getItem('kg-daily') || '{}'))[new Date().toISOString().slice(0, 10)] || {}; } catch (e) {}
+  var retoEl = document.getElementById('reto');
+  KidsGame.dailyGames().forEach(function (f) { var j = names[f]; if (!j) return; var a = document.createElement('a'); a.href = 'games/' + f + '.html'; a.className = dailyDone[f] ? 'done' : ''; a.innerHTML = '<span class="emoji">' + j.e + '</span>' + j.n + (dailyDone[f] ? ' ✅' : ''); a.addEventListener('pointerdown', function () { KidsGame.sound.tap(); }); retoEl.appendChild(a); });
+  var h = new Date().getHours(); var saludo = h < 12 ? '¡Buenos días!' : h < 19 ? '¡Hola!' : '¡Buenas noches!';
+  var nst = Object.keys(KidsGame.stickers.owned()).length; document.getElementById('album-btn').textContent = '📒 Álbum ' + nst + '/' + KidsGame.stickers.all().length;
+  document.getElementById('hi').textContent = saludo + ' Soy Mazi 🦊';
+  document.getElementById('mz').addEventListener('pointerdown', function () { KidsGame.sound.pop(); KidsGame.fx.burstAt(document.getElementById('mz'), { chars: ['⭐', '💛', '✨'] }); KidsGame.say(KidsGame.pick(['¡Hola! ¿A qué jugamos hoy?', '¡Vamos a pensar mucho!', 'El reto del día te da stickers extra', '¡Tú puedes con el nivel experto!'])); });
+  // Transición al abrir un juego
+  grid.addEventListener('click', function (ev) { var a = ev.target.closest('a'); if (a && a.getAttribute('href')) { ev.preventDefault(); KidsGame.go(a.getAttribute('href')); } });
   // Destello aleatorio en los mosaicos
   setInterval(function () { var t = tiles[KidsGame.rand(tiles.length)]; if (!t) return; t.classList.remove('shine'); void t.offsetWidth; t.classList.add('shine'); }, 1400);
   try { document.getElementById('total').textContent = '⭐ ' + (localStorage.getItem('kg-total-stars') || 0); } catch (e) {}

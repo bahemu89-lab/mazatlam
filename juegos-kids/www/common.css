@@ -154,3 +154,69 @@ body::after {
 @media (max-width: 700px) { #kg-levels .btn { min-width: 128px; min-height: 96px; padding: 8px 12px; } #kg-levels .lv-txt { font-size: 22px; } #kg-levels .row { gap: 10px; } }
 .kg-level-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-weight: 900; font-size: 18px; color: #7a4b00;
   background: linear-gradient(180deg, #fff7d6, #ffe08a); box-shadow: 0 3px 0 #d9a520, 0 6px 10px rgba(0,0,0,.2), inset 0 1px 0 #fff; }
+
+/* ===== Capa de diseño de juego ===== */
+.kg-mazi { overflow: visible; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); }
+.kg-mazi .mz-eyes { transform-origin: 60px 58px; animation: mzblink 4.5s infinite; }
+@keyframes mzblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+.kg-mazi.talk .mz-mouth { animation: mztalk .22s infinite alternate; transform-origin: 60px 86px; }
+@keyframes mztalk { from { transform: scaleY(1); } to { transform: scaleY(2.2) translateY(2px); } }
+.kg-mazi { animation: float 3.2s ease-in-out infinite; }
+
+/* Partículas / texto flotante / anillo / sacudida */
+.kg-p { position: fixed; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; z-index: 70; margin: -5px 0 0 -5px;
+  animation: kgp .8s ease-out forwards; box-shadow: 0 0 6px rgba(255,255,255,.6); }
+.kg-p.ch { width: auto; height: auto; font-size: 22px; background: none !important; box-shadow: none; margin: -11px 0 0 -11px; }
+@keyframes kgp { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+.kg-float { position: fixed; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: #fff; pointer-events: none; z-index: 70;
+  text-shadow: 0 2px 0 #e05a8a, 0 4px 10px rgba(0,0,0,.35); animation: kgfl 1.2s ease-out forwards; }
+.kg-float.good { text-shadow: 0 2px 0 #1b8a4c, 0 4px 10px rgba(0,0,0,.35); }
+@keyframes kgfl { 0% { transform: translate(-50%,-50%) scale(.6); opacity: 0; } 20% { opacity: 1; transform: translate(-50%,-70%) scale(1.15); } 100% { transform: translate(-50%,-160%) scale(1); opacity: 0; } }
+.kg-ring { position: fixed; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 5px solid #fff; pointer-events: none; z-index: 70;
+  box-shadow: 0 0 0 3px rgba(61,169,252,.6); animation: kgring .75s ease-out forwards; }
+@keyframes kgring { to { transform: scale(7); opacity: 0; } }
+.kg-shake { animation: kgshk .45s; }
+@keyframes kgshk { 0%,100% { transform: translate(0,0); } 20% { transform: translate(-8px, 4px); } 40% { transform: translate(8px, -4px); } 60% { transform: translate(-6px, 2px); } 80% { transform: translate(6px, -2px); } }
+
+/* Manita de tutorial */
+.kg-hand { position: fixed; font-size: 54px; line-height: 1; transform: translate(-30%, -10%) rotate(-15deg); pointer-events: none; z-index: 80;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); animation: kghand 1.2s ease-in-out infinite; }
+.kg-hand.press { transform: translate(-30%, -10%) rotate(-15deg) scale(.82); animation: none; }
+@keyframes kghand { 0%,100% { margin-top: 0; } 50% { margin-top: -10px; } }
+
+/* Cómo se juega (dentro del selector de nivel) */
+#kg-levels .box.with-howto { max-width: 94vw; padding: 18px 22px; }
+#kg-levels .howto { display: flex; gap: 14px; align-items: center; text-align: left; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 3px dashed #e3e8f5; position: relative; }
+#kg-levels .howto .mz { flex: 0 0 auto; }
+#kg-levels .howto .steps { flex: 1 1 auto; position: relative; padding-right: 72px; }
+#kg-levels .howto .art { position: absolute; right: 0; top: -6px; font-size: 54px; }
+#kg-levels .howto .hw-ttl { font-size: 22px; color: #3da9fc; margin-bottom: 6px; }
+#kg-levels .howto .st { display: flex; gap: 10px; align-items: center; font-size: 18px; color: #2b3a67; margin: 4px 0; }
+#kg-levels .howto .st .emoji { font-size: 26px; width: 34px; text-align: center; flex: 0 0 auto; }
+#kg-levels .howto .hw-say { position: absolute; right: 0; bottom: 0; width: 56px; height: 56px; min-width: 56px; min-height: 56px; font-size: 24px; }
+@media (max-width: 700px), (max-height: 620px) {
+  #kg-levels .howto .mz svg { width: 80px; height: 80px; } #kg-levels .howto .st { font-size: 16px; } #kg-levels .howto .art { font-size: 40px; }
+  #kg-levels .box.with-howto { padding: 12px 14px; }
+}
+
+/* Recompensa en la celebración */
+#kg-overlay .reward { display: none; margin: 4px 0 12px; padding: 10px 14px; border-radius: 20px; background: linear-gradient(180deg, #fff7d6, #ffe9a8); border: 3px solid #fff; box-shadow: 0 4px 0 #d9a520, inset 0 1px 0 #fff; }
+#kg-overlay .rw-ttl { font-size: 20px; color: #7a4b00; }
+#kg-overlay .rw-row { display: flex; gap: 10px; justify-content: center; margin: 6px 0; }
+#kg-overlay .rw-st { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 14px; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c9d2e6; font-size: 15px; color: #2b3a67; animation: pop .6s .2s ease-out backwards; }
+#kg-overlay .rw-st .emoji { font-size: 44px; }
+#kg-overlay .rw-st.gold { background: linear-gradient(180deg, #fff3b0, #ffd54a); box-shadow: 0 4px 0 #c47f00, 0 0 18px rgba(255,200,0,.6); }
+#kg-overlay .rw-sub { font-size: 14px; color: #7a4b00; }
+
+/* Aviso de carga */
+#kg-loading { position: fixed; inset: 0; z-index: 48; display: flex; align-items: center; justify-content: center; background: rgba(23,44,102,.35); }
+#kg-loading .bx { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 28px; }
+#kg-loading .tx { font-size: 22px; color: #3da9fc; }
+#kg-loading .dots i { display: inline-block; width: 12px; height: 12px; margin: 0 4px; border-radius: 50%; background: #f582ae; animation: bounce .9s infinite; }
+#kg-loading .dots i:nth-child(2) { animation-delay: .15s; } #kg-loading .dots i:nth-child(3) { animation-delay: .3s; }
+
+/* Transiciones entre pantallas */
+body.kg-in { animation: kgin .35s ease-out; }
+@keyframes kgin { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: none; } }
+body.kg-out { animation: kgout .22s ease-in forwards; }
+@keyframes kgout { to { opacity: 0; transform: scale(.98); } }
