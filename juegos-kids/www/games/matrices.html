@@ -4,60 +4,107 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="stylesheet" href="../common.css">
-<title>La pieza que falta</title>
+<title>El cofre del tesoro</title>
 <style>
+  /* ===== Mundo: "La cueva del tesoro" — cada matriz es la cerradura de un cofre ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%),
-      radial-gradient(circle at 12% 30%, rgba(255,255,255,.18) 0 40px, rgba(255,255,255,0) 41px),
-      radial-gradient(circle at 90% 70%, rgba(255,255,255,.14) 0 60px, rgba(255,255,255,0) 61px),
-      radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0 24px, rgba(255,255,255,0) 25px),
-      linear-gradient(180deg, #5b3fd6 0%, #7a4fe0 45%, #a060e8 100%);
+      radial-gradient(ellipse 70% 45% at 50% 105%, rgba(255,196,70,.45), rgba(255,196,70,0) 70%),
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(120,90,220,.5), rgba(120,90,220,0) 70%),
+      linear-gradient(180deg, #1d1650 0%, #3a2585 48%, #5a3aa8 100%);
   }
-  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
-    background-image: radial-gradient(circle, rgba(255,255,255,.35) 1.5px, rgba(255,255,255,0) 2px); background-size: 42px 42px; }
-  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
+  .cave { position: absolute; inset: 0; z-index: 0; pointer-events: none; width: 100%; height: 100%; }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; max-width: 100%; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
+  .hud .hero { width: 52px; height: 52px; flex: 0 0 auto; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
+  .hud .hero svg { width: 100%; height: 100%; overflow: visible; }
+  .hud .streak { display: none; font-size: 18px; font-weight: 900; color: #fff; padding: 4px 12px; border-radius: 20px; white-space: nowrap;
+    background: linear-gradient(180deg, #ff9f43, #ff5e3a); box-shadow: 0 3px 0 #b8300a, 0 5px 10px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.3); animation: pop .4s ease-out; }
+  .hud .streak.on { display: inline-block; }
   .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
   .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #5232b3; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
 
-  .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px 40px; }
-  .board { position: relative; display: grid; gap: var(--g); padding: var(--g); border-radius: 26px;
-    background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.15)); border: 3px solid rgba(255,255,255,.7);
-    box-shadow: 0 10px 0 rgba(40,20,110,.45), 0 20px 30px rgba(20,0,80,.35), inset 0 2px 0 rgba(255,255,255,.7); }
-  .tile { position: relative; width: var(--t); height: var(--t); border-radius: 18%; display: flex; align-items: center; justify-content: center;
+  .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 40px; }
+  .stage.out { animation: stout .26s ease-in forwards; } .stage.in { animation: stin .4s cubic-bezier(.3,1.3,.4,1); }
+  @keyframes stout { to { transform: translateX(-70px) scale(.9); opacity: 0; } }
+  @keyframes stin { from { transform: translateX(80px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* ---- Cofre: tapa + cuerpo (el tablero) + candado ---- */
+  .cofre { --w1: #c98a4b; --w2: #8a5a2a; --w3: #4e2d0c; --m1: #ffe98a; --m2: #d9a520; --m3: #8a5a00;
+    position: relative; display: flex; flex-direction: column; align-items: center; perspective: 900px; }
+  .cofre.gold { --w1: #ffe08a; --w2: #e0a830; --w3: #8a5a00; --m1: #fff7c2; --m2: #ffcf4a; --m3: #a86f00; }
+  .cofre.ice { --w1: #dff6ff; --w2: #7fcff2; --w3: #2b7fb0; --m1: #ffffff; --m2: #bfe9ff; --m3: #4aa0d0; }
+  .cofre.candy { --w1: #ffd6ec; --w2: #ff7fb8; --w3: #b8306f; --m1: #fff; --m2: #ffe98a; --m3: #d9a520; }
+  .cofre.magic { --w1: #e3ccff; --w2: #8a5cf6; --w3: #3b1f8a; --m1: #fff7c2; --m2: #ffcf4a; --m3: #a86f00; }
+  .lid { position: relative; width: 100%; height: var(--lh); transform-origin: 50% 100%; transition: transform .9s cubic-bezier(.4,1.4,.4,1); z-index: 3; }
+  .lid svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); }
+  .cofre.open .lid { transform: rotateX(-112deg); }
+  .gems { position: absolute; left: 6%; right: 6%; bottom: 100%; height: calc(var(--lh) * .9); z-index: 1; display: flex; align-items: flex-end; justify-content: center; gap: 2%; opacity: 0; transform: translateY(30%) scale(.6); transition: opacity .4s .5s, transform .6s .5s cubic-bezier(.3,1.5,.4,1); pointer-events: none; }
+  .cofre.open .gems { opacity: 1; transform: none; }
+  .gems .emoji { font-size: calc(var(--lh) * .55); animation: float 2.2s ease-in-out infinite; }
+  .gems .emoji:nth-child(2) { animation-delay: -.7s; font-size: calc(var(--lh) * .7); } .gems .emoji:nth-child(3) { animation-delay: -1.4s; }
+  .glow { position: absolute; left: 10%; right: 10%; bottom: 100%; height: var(--lh); border-radius: 50% 50% 0 0; z-index: 0; opacity: 0; transition: opacity .6s .4s; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,240,160,.95), rgba(255,220,80,.4) 45%, rgba(255,220,80,0) 72%); }
+  .cofre.open .glow { opacity: 1; }
+  .board { position: relative; z-index: 2; display: grid; gap: var(--g); padding: calc(var(--g) + var(--t) * .26) var(--g) var(--g); border-radius: 6px 6px 22px 22px;
+    background: linear-gradient(180deg, var(--w1) 0%, var(--w2) 55%, var(--w3) 100%);
+    box-shadow: 0 10px 0 var(--w3), 0 22px 34px rgba(10,0,40,.5), inset 0 3px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.25); }
+  .board::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 10px, rgba(0,0,0,.06) 10px 22px); }
+  .board::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 9px; border-radius: 4px; background: linear-gradient(180deg, var(--m1), var(--m2) 60%, var(--m3)); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+  .band { position: absolute; top: 0; bottom: 0; width: 7%; background: linear-gradient(90deg, var(--m3), var(--m1) 40%, var(--m2) 70%, var(--m3)); box-shadow: 0 0 4px rgba(0,0,0,.4); z-index: 1; pointer-events: none; }
+  .band.l { left: 4%; } .band.r { right: 4%; }
+  .tile { position: relative; z-index: 2; width: var(--t); height: var(--t); border-radius: 18%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(180deg, #ffffff 0%, #eef1f9 100%); border: 3px solid #fff;
-    box-shadow: 0 6px 0 #c9d2e6, 0 10px 16px rgba(20,0,80,.3), inset 0 2px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.05); }
+    box-shadow: 0 6px 0 #c9d2e6, 0 10px 16px rgba(20,0,80,.35), inset 0 2px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.05); }
   .tile::after { content: ""; position: absolute; left: 6%; right: 6%; top: 4%; height: 36%; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,0)); }
   .tile svg { width: 88%; height: 88%; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0,0,0,.22)); }
-  .tile.hole { background: linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.1)); border: 4px dashed #fff; box-shadow: inset 0 0 20px rgba(255,255,255,.3); animation: holep 1.4s ease-in-out infinite; }
+  .tile.hole { background: radial-gradient(circle at 50% 45%, rgba(0,0,0,.55), rgba(0,0,0,.35) 60%, rgba(0,0,0,.6)); border: 4px dashed rgba(255,233,138,.9); box-shadow: inset 0 0 20px rgba(0,0,0,.6), 0 0 0 3px rgba(255,233,138,.35); animation: holep 1.4s ease-in-out infinite; }
   .tile.hole::after { display: none; }
-  .tile.hole .q { font-size: calc(var(--t) * .5); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #5232b3, 0 6px 10px rgba(0,0,0,.3); }
-  @keyframes holep { 50% { transform: scale(1.05); box-shadow: inset 0 0 30px rgba(255,255,255,.6), 0 0 24px 4px rgba(255,255,255,.5); } }
+  .tile.hole .q { font-size: calc(var(--t) * .5); font-weight: 900; color: #ffe98a; text-shadow: 0 3px 0 #8a5a00, 0 6px 10px rgba(0,0,0,.4); }
+  @keyframes holep { 50% { transform: scale(1.05); } }
   .tile.hint { animation: hintp .5s ease-in-out 3; }
-  @keyframes hintp { 50% { box-shadow: 0 6px 0 #c47f00, 0 10px 16px rgba(20,0,80,.3), 0 0 0 6px #ffe98a, 0 0 30px 8px rgba(255,233,138,.9); transform: scale(1.06); } }
+  @keyframes hintp { 50% { transform: scale(1.08) translateY(-4px); } }
   .tile.placed { animation: land .6s cubic-bezier(.3,1.6,.5,1); border-color: #6fdc8c; box-shadow: 0 6px 0 #3fa864, 0 10px 16px rgba(20,0,80,.3), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); }
   @keyframes land { 0% { transform: scale(1.4); } 40% { transform: scale(.88, 1.12); } 70% { transform: scale(1.08, .94); } 100% { transform: scale(1); } }
-  .cands { display: grid; gap: var(--g); padding: var(--g); border-radius: 30px; }
+  /* candado colgando del borde superior del tablero */
+  .lock { position: absolute; left: 50%; bottom: calc(var(--t) * -.3); width: calc(var(--t) * .44); height: calc(var(--t) * .57); margin-left: calc(var(--t) * -.22); z-index: 6; pointer-events: none; transform-origin: 50% 0; animation: swing 3.4s ease-in-out infinite; }
+  @keyframes swing { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  .lock svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.45)); }
+  .lock .shackle { transform-origin: 23px 36px; transition: transform .45s cubic-bezier(.4,1.6,.5,1); }
+  .cofre.open .lock { animation: none; }
+  .cofre.open .lock .shackle { transform: translateY(-14px) rotate(-40deg); }
+  .cofre.wrong .lock { animation: lockshake .45s; }
+  @keyframes lockshake { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-14deg); } 40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(6deg); } }
+
+  /* ---- Bandeja de llaves (candidatos) ---- */
+  .trayw { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .trayttl { font-size: 18px; font-weight: 900; color: #ffe98a; text-shadow: 0 2px 0 #5232b3, 0 3px 6px rgba(0,0,0,.4); }
+  .cands { display: grid; gap: var(--g); padding: var(--g); border-radius: 30px; background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.1)); border: 3px solid rgba(255,255,255,.55);
+    box-shadow: 0 8px 0 rgba(20,0,80,.4), 0 16px 28px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6); }
   .cand { width: var(--c); height: var(--c); cursor: pointer; transition: transform .12s, box-shadow .12s; animation: pop .4s ease-out backwards; touch-action: manipulation; }
-  .cand:active { transform: scale(.94) translateY(3px); box-shadow: 0 2px 0 #c9d2e6, 0 6px 10px rgba(20,0,80,.3); }
+  .cand:active { transform: scale(.92) translateY(3px); box-shadow: 0 2px 0 #c9d2e6, 0 6px 10px rgba(20,0,80,.3); }
   .cand.bad { animation: shake .4s; }
   .cand.dim { opacity: .35; transform: scale(.9); pointer-events: none; }
   .cand.fly { position: fixed; z-index: 70; margin: 0; transition: left .6s cubic-bezier(.3,1.3,.5,1), top .6s cubic-bezier(.3,1.3,.5,1), width .6s, height .6s; pointer-events: none; }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+
+  /* ---- Banner de ronda ---- */
+  .banner { position: absolute; left: 50%; top: 40%; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.5); padding: 12px 36px; border-radius: 40px; white-space: nowrap;
+    font-size: clamp(26px, 4.5vw, 40px); font-weight: 900; color: #fff; background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 2px 0 rgba(255,255,255,.6);
+    box-shadow: 0 8px 0 #c47f00, 0 18px 30px rgba(0,0,0,.4), inset 0 2px 0 #fff; }
+  .banner.show { animation: bannerin 1.5s cubic-bezier(.3,1.4,.4,1) forwards; }
+  @keyframes bannerin { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } 16% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); } 26% { transform: translate(-50%,-50%) scale(1); } 76% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-100%) scale(.9); } }
+  @media (max-width: 800px) { .hud { gap: 8px; padding: 6px 8px; } .trayttl { font-size: 16px; } }
 </style>
 </head>
 <body>
 <script src="../common.js"></script>
 <script>
-var game = KidsGame.init({ title: 'La pieza que falta' });
+var game = KidsGame.init({ title: 'El cofre del tesoro' });
 (function () {
   var ROUNDS = 8;
   var LABELS = { 1: '2×2, una regla', 2: '3×3, dos reglas', 3: 'Giros y sumas', 4: 'Combinaciones' };
@@ -66,12 +113,63 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
   var SHAPES = ['circle', 'square', 'triangle', 'star', 'heart', 'diamond', 'hex', 'cross'];
   var ROTS = ['arrow', 'triangle', 'moon', 'tee'];
   var SIZES = ['s', 'm', 'l'];
+  // Cofres desbloqueables (cosmético): se gana uno al completar cada nivel
+  var SKINS = [{ id: 'wood', n: 'Cofre de madera', e: '🪵' }, { id: 'gold', n: 'Cofre dorado', e: '🥇' }, { id: 'ice', n: 'Cofre de hielo', e: '🧊' }, { id: 'candy', n: 'Cofre de dulce', e: '🍬' }, { id: 'magic', n: 'Cofre mágico', e: '🔮' }];
+  var cos = { unlocked: ['wood'], sel: 'wood' };
+  try { var sv = JSON.parse(localStorage.getItem('kg-cos-matrices')); if (sv && sv.unlocked) cos = sv; } catch (e) {}
+  function saveCos() { try { localStorage.setItem('kg-cos-matrices', JSON.stringify(cos)); } catch (e) {} }
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', uid = 0;
-  var hud, dots, instrTxt, stage, board, cands;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, sayText = '', uid = 0, streak = 0, wrongsRound = 0, handShown = false;
+  var hud, dots, instrTxt, stage, cofre, board, cands, streakEl, skinBtn, lockEl;
 
   function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
-  function others(arr, used, n) { return KidsGame.shuffle(arr.filter(function (v) { return used.indexOf(v) < 0; })).slice(0, n); }
+
+  // ---------- Arte propio: cofre (hero), tapa, candado, cueva ----------
+  function heroSVG(size) {
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<linearGradient id="hw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a05a"/><stop offset="1" stop-color="#7a4a1c"/></linearGradient>' +
+      '<linearGradient id="hm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".6" stop-color="#ffc83a"/><stop offset="1" stop-color="#a86f00"/></linearGradient>' +
+      '<radialGradient id="hg" cx="50%" cy="100%" r="70%"><stop offset="0" stop-color="#fff6c4"/><stop offset="1" stop-color="#ffd23a" stop-opacity="0"/></radialGradient></defs>' +
+      '<ellipse cx="50" cy="92" rx="40" ry="6" fill="rgba(0,0,0,.25)"/>' +
+      '<ellipse cx="50" cy="44" rx="34" ry="22" fill="url(#hg)"/>' +
+      '<text x="30" y="40" font-size="16">💎</text><text x="52" y="34" font-size="18">🪙</text>' +
+      '<path d="M12 46 L12 28 Q12 10 30 10 L70 10 Q88 10 88 28 L88 46 Z" fill="url(#hw)" stroke="#4e2d0c" stroke-width="2" transform="rotate(-28 50 46) translate(0 -8)"/>' +
+      '<rect x="12" y="46" width="76" height="40" rx="6" fill="url(#hw)" stroke="#4e2d0c" stroke-width="2"/>' +
+      '<rect x="12" y="46" width="76" height="7" fill="url(#hm)"/><rect x="24" y="46" width="8" height="40" fill="url(#hm)" opacity=".9"/><rect x="68" y="46" width="8" height="40" fill="url(#hm)" opacity=".9"/>' +
+      '<rect x="42" y="52" width="16" height="16" rx="4" fill="url(#hm)" stroke="#8a5a00" stroke-width="1.5"/><circle cx="50" cy="58" r="2.5" fill="#5a3a00"/><rect x="48.8" y="58" width="2.4" height="5" fill="#5a3a00"/>' +
+      '<ellipse cx="34" cy="56" rx="10" ry="3" fill="rgba(255,255,255,.35)"/></svg>';
+  }
+  function lidSVG() {
+    return '<svg viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden="true"><defs>' +
+      '<linearGradient id="lw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--w1)"/><stop offset=".6" stop-color="var(--w2)"/><stop offset="1" stop-color="var(--w3)"/></linearGradient>' +
+      '<linearGradient id="lm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--m1)"/><stop offset=".6" stop-color="var(--m2)"/><stop offset="1" stop-color="var(--m3)"/></linearGradient></defs>' +
+      '<path d="M6 90 L6 44 Q6 4 46 4 L254 4 Q294 4 294 44 L294 90 Z" fill="url(#lw)" stroke="var(--w3)" stroke-width="3" stroke-linejoin="round"/>' +
+      '<path d="M26 90 L26 44 Q26 22 48 22 L252 22 Q274 22 274 44 L274 90" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4"/>' +
+      '<rect x="56" y="4" width="22" height="86" fill="url(#lm)" stroke="var(--m3)" stroke-width="1.5"/><rect x="222" y="4" width="22" height="86" fill="url(#lm)" stroke="var(--m3)" stroke-width="1.5"/>' +
+      '<rect x="0" y="78" width="300" height="12" fill="url(#lm)"/>' +
+      '<rect x="134" y="62" width="32" height="28" rx="5" fill="url(#lm)" stroke="var(--m3)" stroke-width="1.5"/>' +
+      '<ellipse cx="90" cy="30" rx="28" ry="7" fill="rgba(255,255,255,.22)"/></svg>';
+  }
+  function lockSVG() {
+    return '<svg viewBox="0 0 46 60" aria-hidden="true"><defs>' +
+      '<linearGradient id="kb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".55" stop-color="#ffc83a"/><stop offset="1" stop-color="#a86f00"/></linearGradient>' +
+      '<linearGradient id="ks" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b98a8"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#6b7a8a"/></linearGradient></defs>' +
+      '<path class="shackle" d="M11 36 L11 18 Q11 4 23 4 Q35 4 35 18 L35 28" fill="none" stroke="url(#ks)" stroke-width="7" stroke-linecap="round"/>' +
+      '<rect x="4" y="26" width="38" height="32" rx="7" fill="url(#kb)" stroke="#8a5a00" stroke-width="2"/>' +
+      '<circle cx="23" cy="40" r="4.5" fill="#5a3a00"/><rect x="21" y="40" width="4" height="9" rx="1.5" fill="#5a3a00"/>' +
+      '<ellipse cx="14" cy="32" rx="6" ry="2.5" fill="rgba(255,255,255,.55)"/></svg>';
+  }
+  function caveSVG() {
+    var stal = '', i, x;
+    for (i = 0; i < 11; i++) { x = i * 40 + (i % 2 ? 10 : 0); stal += 'M' + (x - 22) + ' 0 L' + x + ' ' + (26 + (i % 3) * 14) + ' L' + (x + 22) + ' 0 Z '; }
+    var sparks = '';
+    for (i = 0; i < 16; i++) { sparks += '<circle cx="' + ((i * 97) % 400) + '" cy="' + (40 + (i * 61) % 220) + '" r="' + (1 + (i % 3) * .6) + '" fill="#fff" opacity="' + (.35 + (i % 4) * .15) + '"/>'; }
+    return '<svg class="cave" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">' +
+      '<path d="' + stal + '" fill="#160f3d" opacity=".9"/><path d="' + stal + '" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>' + sparks +
+      '<path d="M0 300 L0 262 Q60 246 120 262 T240 258 T400 266 L400 300 Z" fill="#1a1140" opacity=".95"/>' +
+      '<ellipse cx="60" cy="270" rx="22" ry="7" fill="#ffc83a" opacity=".55"/><ellipse cx="340" cy="272" rx="26" ry="8" fill="#ffc83a" opacity=".5"/><circle cx="74" cy="262" r="5" fill="#ffe98a" opacity=".8"/><circle cx="330" cy="264" r="5" fill="#ffe98a" opacity=".8"/>' +
+      '</svg>';
+  }
 
   // ---------- formas SVG con volumen ----------
   function starPts(n, r1, r2) { var p = []; for (var i = 0; i < n * 2; i++) { var r = i % 2 ? r2 : r1, a = Math.PI * i / n - Math.PI / 2; p.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a)).toFixed(1)); } return p.join(' '); }
@@ -179,7 +277,6 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
         hint = kind === 'union' ? 'La tercera junta lo que hay en las dos primeras.' : 'La tercera tiene solo lo que está en las dos primeras.';
       }
     }
-    // candidatos: respuesta + distractores que cambian exactamente un atributo
     var need = nivel === 1 ? 4 : 6, seen = {}, out = [ans]; seen[key(ans)] = 1;
     KidsGame.shuffle(muts).forEach(function (m) {
       if (out.length >= need) return;
@@ -204,43 +301,67 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
 
   // ---------- construcción ----------
   function build() {
-    game.innerHTML = '';
+    game.innerHTML = caveSVG();
     hud = el('div', 'hud panel');
+    hud.appendChild(el('div', 'hero', heroSVG(52)));
     hud.appendChild(KidsGame.levelBadge(nivel));
     dots = el('div', 'dots');
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
+    streakEl = el('span', 'streak'); hud.appendChild(streakEl);
+    skinBtn = el('button', 'btn round purple', '🎨'); skinBtn.setAttribute('aria-label', 'Cambiar cofre');
+    skinBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); cycleSkin(); });
+    skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
+    hud.appendChild(skinBtn);
     var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
-    var instr = el('div', 'instr panel', '<span class="ico emoji">🧩</span><span class="txt"></span>');
+    var instr = el('div', 'instr panel', '<span class="ico emoji">🗝️</span><span class="txt"></span>');
     instrTxt = instr.querySelector('.txt');
     var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
     instr.appendChild(sp);
     game.appendChild(instr);
     stage = el('div', 'stage');
-    board = el('div', 'board'); cands = el('div', 'cands panel');
-    stage.appendChild(board); stage.appendChild(cands);
+    cofre = el('div', 'cofre ' + cos.sel);
+    cofre.innerHTML = '<div class="glow"></div><div class="gems"><span class="emoji">💎</span><span class="emoji">🪙</span><span class="emoji">💍</span></div><div class="lid">' + lidSVG() + '</div>';
+    board = el('div', 'board'); board.innerHTML = '<div class="band l"></div><div class="band r"></div>';
+    lockEl = el('div', 'lock', lockSVG()); cofre.querySelector('.lid').appendChild(lockEl);
+    cofre.appendChild(board);
+    var trayw = el('div', 'trayw', '<div class="trayttl">🗝️ ¿Cuál es la llave?</div>');
+    cands = el('div', 'cands'); trayw.appendChild(cands);
+    stage.appendChild(cofre); stage.appendChild(trayw);
     game.appendChild(stage);
-    window.addEventListener('resize', layout);
+    game.appendChild(el('div', 'banner'));
   }
+  function cycleSkin() {
+    KidsGame.sound.tap();
+    var i = cos.unlocked.indexOf(cos.sel); cos.sel = cos.unlocked[(i + 1) % cos.unlocked.length]; saveCos();
+    cofre.className = 'cofre ' + cos.sel + (cofre.classList.contains('open') ? ' open' : '');
+    var s = SKINS.filter(function (k) { return k.id === cos.sel; })[0]; KidsGame.toast(s.e + ' ' + s.n, 1200);
+  }
+  function unlockSkin(lv) {
+    var s = SKINS[Math.min(lv, SKINS.length - 1)];
+    if (cos.unlocked.indexOf(s.id) >= 0) return null;
+    cos.unlocked.push(s.id); cos.sel = s.id; saveCos(); return s;
+  }
+  function banner(txt) { var b = game.querySelector('.banner'); if (!b) return; b.textContent = txt; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
   function layout() {
     if (!stage || !cur) return;
     var W = stage.clientWidth, H = stage.clientHeight, N = cur.N, nc = cur.cands.length, g = 10;
-    var land = W > H * 1.15, t, c, cols;
-    if (land) {
-      t = Math.floor(Math.min((H - 40) / N - g, 150, (W * 0.5 - 40) / N - g));
-      cols = nc === 4 ? 2 : 2; var rows = Math.ceil(nc / cols);
-      c = Math.floor(Math.min((H - 40) / rows - g, (W - (t + g) * N - 110) / cols - g, 150));
-    } else {
-      t = Math.floor(Math.min((W - 40) / N - g, (H * 0.6 - 30) / N - g, 160));
-      cols = nc === 4 ? 4 : 3; var rows2 = Math.ceil(nc / cols);
-      c = Math.floor(Math.min((W - 60) / cols - g, (H - (t + g) * N - 70) / rows2 - g, 140));
-    }
-    t = Math.max(64, t); c = Math.max(64, c);
+    var land = W > H * 1.15, bw, t, c, cols, rows;
+    // el cofre (tapa + cuerpo) mide ~1.25 veces el ancho del tablero
+    if (land) { bw = Math.min((H - 30) / 1.4, W * 0.48 - 30, 150 * N + (N + 1) * g); cols = 2; rows = Math.ceil(nc / cols); }
+    else { bw = Math.min(W - 40, (H * 0.6 - 24) / 1.4, 160 * N + (N + 1) * g); cols = nc === 4 ? 4 : 3; rows = Math.ceil(nc / cols); }
+    t = Math.floor((bw - (N + 1) * g) / N); t = Math.max(64, t);
+    bw = N * t + (N + 1) * g;
+    var lh = Math.round(bw * 0.27);
+    if (land) c = Math.floor(Math.min((H - 50) / rows - g, (W - bw - 110) / cols - g, 150));
+    else c = Math.floor(Math.min((W - 60) / cols - g, (H - lh - bw - t * .26 - 70) / rows - g, 140));
+    c = Math.max(64, c);
     stage.style.setProperty('--t', t + 'px'); stage.style.setProperty('--c', c + 'px'); stage.style.setProperty('--g', g + 'px');
+    cofre.style.setProperty('--lh', lh + 'px'); cofre.style.width = bw + 'px';
     board.style.gridTemplateColumns = 'repeat(' + N + ', ' + t + 'px)';
     cands.style.gridTemplateColumns = 'repeat(' + cols + ', ' + c + 'px)';
   }
@@ -248,21 +369,25 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
   function showPicker() {
     running = false; lock = true;
     if (board) { board.innerHTML = ''; cands.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'matrices', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'matrices', labels: LABELS, art: heroSVG(64), music: 'aventura',
+      howto: [{ icon: '🔍', text: 'Mira las filas y las columnas' }, { icon: '🗝️', text: 'Toca la llave que falta' }, { icon: '💎', text: '¡Se abre el cofre del tesoro!' }],
+      onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; build(); newRound(true); }
+  function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); if (streak >= 3) { streakEl.style.animation = 'none'; void streakEl.offsetWidth; streakEl.style.animation = ''; } }
 
-  function newRound() {
+  function newRound(first) {
     if (!running) return;
-    cur = gen(); lock = false;
-    instrTxt.textContent = '¿Qué pieza falta?';
-    sayText = '¿Qué pieza falta? Mira las filas y las columnas, y toca la pieza correcta.';
-    board.innerHTML = ''; cands.innerHTML = '';
+    cur = gen(); lock = false; wrongsRound = 0;
+    instrTxt.textContent = '¿Qué llave falta?';
+    sayText = 'Mira las filas y las columnas. ¿Qué llave falta para abrir el cofre?';
+    board.innerHTML = '<div class="band l"></div><div class="band r"></div>'; cands.innerHTML = '';
+    cofre.classList.remove('open', 'wrong');
+    lockEl.querySelector('.shackle').style.transition = 'none'; void lockEl.offsetWidth; lockEl.querySelector('.shackle').style.transition = '';
     for (var r = 0; r < cur.N; r++) for (var c = 0; c < cur.N; c++) {
       var t = cur.grid[r][c], d;
-      if (t) { d = el('div', 'tile', tileSVG(t)); } else { d = el('div', 'tile hole', '<span class="q">?</span>'); }
-      d.style.animation = 'pop .4s ease-out backwards'; d.style.animationDelay = ((r * cur.N + c) * 50) + 'ms';
-      if (!t) { d.style.animation = ''; }
+      if (t) { d = el('div', 'tile', tileSVG(t)); d.style.animation = 'pop .4s ease-out backwards'; d.style.animationDelay = ((r * cur.N + c) * 50) + 'ms'; }
+      else { d = el('div', 'tile hole', '<span class="q">?</span>'); }
       d.dataset.r = r; d.dataset.c = c; board.appendChild(d);
     }
     cur.cands.forEach(function (t, i) {
@@ -271,14 +396,23 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
       cands.appendChild(d);
     });
     layout();
-    KidsGame.say(sayText);
+    banner('Cofre ' + (round + 1) + ' de ' + ROUNDS);
+    if (!first) { stage.classList.remove('out'); stage.classList.add('in'); setTimeout(function () { stage.classList.remove('in'); }, 450); }
+    setTimeout(function () { if (running) KidsGame.say(sayText); }, first ? 500 : 200);
+    // Tutorial: manita sobre la llave correcta en la primera ronda del nivel 1
+    if (nivel === 1 && round === 0 && !handShown) {
+      handShown = true;
+      setTimeout(function () { if (!running || lock) return; var cs = cands.querySelectorAll('.cand'); for (var i = 0; i < cs.length; i++) if (key(cs[i]._t) === key(cur.ans)) { KidsGame.hand({ el: cs[i], timeout: 12000 }); break; } }, 1500);
+    }
   }
 
   function pickCand(d) {
     if (lock || !running) return;
     if (key(d._t) !== key(cur.ans)) {
+      streak = 0; setStreak(); wrongsRound++;
       KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      d.classList.remove('bad'); void d.offsetWidth; d.classList.add('bad'); setTimeout(function () { d.classList.remove('bad'); }, 450);
+      KidsGame.fx.shake(d);
+      cofre.classList.remove('wrong'); void cofre.offsetWidth; cofre.classList.add('wrong');
       if (nivel <= 2) {
         var tiles = board.querySelectorAll('.tile'); var N = cur.N;
         for (var i = 0; i < tiles.length; i++) { var r = +tiles[i].dataset.r, c = +tiles[i].dataset.c; if ((r === N - 1 || c === N - 1) && !tiles[i].classList.contains('hole')) { tiles[i].classList.remove('hint'); void tiles[i].offsetWidth; tiles[i].classList.add('hint'); } }
@@ -287,8 +421,10 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
       return;
     }
     lock = true; KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    streak++; setStreak();
     var all = cands.querySelectorAll('.cand'); for (var k = 0; k < all.length; k++) if (all[k] !== d) all[k].classList.add('dim');
     var hole = board.querySelector('.hole'), hr = hole.getBoundingClientRect(), dr = d.getBoundingClientRect();
+    KidsGame.fx.ring(d);
     var fly = el('div', 'tile cand fly', d.innerHTML);
     fly.style.left = dr.left + 'px'; fly.style.top = dr.top + 'px'; fly.style.width = dr.width + 'px'; fly.style.height = dr.height + 'px';
     document.body.appendChild(fly); d.style.visibility = 'hidden';
@@ -296,40 +432,44 @@ var game = KidsGame.init({ title: 'La pieza que falta' });
     fly.style.left = hr.left + 'px'; fly.style.top = hr.top + 'px'; fly.style.width = hr.width + 'px'; fly.style.height = hr.height + 'px';
     setTimeout(function () {
       fly.remove(); hole.className = 'tile placed'; hole.innerHTML = d.innerHTML;
-      var g = game.getBoundingClientRect();
-      sparkle(hr.left + hr.width / 2 - g.left, hr.top + hr.height / 2 - g.top, 26);
-      KidsGame.say(KidsGame.pick(['¡Esa es!', '¡Muy bien!', '¡Exacto!', '¡Genial!']));
+      var x = hr.left + hr.width / 2, y = hr.top + hr.height / 2;
+      KidsGame.fx.burst(x, y, { n: 16 });
+      if (streak >= 3) { KidsGame.fx.floatText(x, y - 30, '¡Racha x' + streak + '!', 'good'); } else KidsGame.fx.floatText(x, y - 30, '+1', 'good');
+      if (streak > 0 && streak % 5 === 0) { KidsGame.addStar(1); KidsGame.fx.burst(x, y - 60, { n: 10, chars: ['⭐', '✨'] }); KidsGame.toast('⭐ ¡Bonus de racha!', 1300); }
+      // ¡clic! el candado se abre y la tapa se levanta
+      setTimeout(function () {
+        KidsGame.sound.pop(); cofre.classList.add('open'); KidsGame.music.duck(1600);
+        setTimeout(function () { var lr = cofre.getBoundingClientRect(); KidsGame.sound.win(); KidsGame.fx.burst(lr.left + lr.width / 2, lr.top + lr.height * .25, { n: 18, chars: ['💎', '🪙', '✨', '⭐'] }); }, 500);
+      }, 350);
+      KidsGame.say(KidsGame.pick(['¡Esa es! ¡Se abrió!', '¡Muy bien! ¡Tesoro!', '¡Exacto! ¡Clic!', '¡Genial!']));
       dots.children[round].classList.add('on'); round++;
-      setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1500);
+      setTimeout(function () {
+        if (!running) return;
+        if (round >= ROUNDS) { finish(); return; }
+        stage.classList.add('out');
+        setTimeout(function () { if (running) newRound(false); }, 280);
+      }, 2300);
     }, 650);
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 120;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
-    }
-  }
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var s = unlockSkin(nivel);
+    if (skinBtn) skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' piezas encontradas!',
+      sub: '¡' + ROUNDS + ' cofres abiertos!' + (s ? ' 🎨 Nuevo: ' + s.n : ''),
       onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
       onAgain: function () { start(nivel); }
     });
   }
 
   window.__g3 = {
-    state: function () { return cur && { mode: cur.kind, N: cur.N, ncands: cur.cands.length, ans: key(cur.ans), round: round, nivel: nivel, lock: lock, uniq: cur.cands.map(key).filter(function (v, i, a) { return a.indexOf(v) === i; }).length }; },
-    solve: function () { if (!cur || lock) return false; var cs = cands.querySelectorAll('.cand'); for (var i = 0; i < cs.length; i++) if (key(cs[i]._t) === key(cur.ans)) { pickCand(cs[i]); return true; } return false; },
+    state: function () { return cur && { mode: cur.kind, N: cur.N, ncands: cur.cands.length, ans: key(cur.ans), round: round, nivel: nivel, lock: lock, streak: streak, uniq: cur.cands.map(key).filter(function (v, i, a) { return a.indexOf(v) === i; }).length }; },
+    solve: function () { if (!cur || lock || !running) return false; var cs = cands.querySelectorAll('.cand'); for (var i = 0; i < cs.length; i++) if (key(cs[i]._t) === key(cur.ans)) { pickCand(cs[i]); return true; } return false; },
     wrong: function () { if (!cur || lock) return false; var cs = cands.querySelectorAll('.cand'); for (var i = 0; i < cs.length; i++) if (key(cs[i]._t) !== key(cur.ans)) { pickCand(cs[i]); return true; } return false; }
   };
+  window.addEventListener('resize', layout);
   showPicker();
 })();
 </script>

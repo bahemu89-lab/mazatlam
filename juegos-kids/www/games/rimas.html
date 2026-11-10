@@ -6,14 +6,30 @@
 <link rel="stylesheet" href="../common.css">
 <title>Rimas</title>
 <style>
-  /* Escena: escenario de poesía al atardecer, con notas musicales flotando */
+  /* Mundo: "El escenario de los poetas" — telón, foco de luz, piso de madera y notas flotando */
   .game { background:
-      radial-gradient(ellipse 60% 45% at 50% 100%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%),
-      radial-gradient(circle at 15% 20%, rgba(255,255,255,.35), rgba(255,255,255,0) 30%),
-      linear-gradient(180deg, #ffd6f0 0%, #e2c4ff 45%, #b9a6ff 100%); }
-  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; pointer-events: none;
-    background: linear-gradient(180deg, rgba(90,60,160,0) 0%, rgba(90,60,160,.18) 100%); }
-  .note { position: absolute; z-index: 0; pointer-events: none; font-size: 56px; font-weight: 900; color: rgba(255,255,255,.85); text-shadow: 0 4px 0 rgba(120,80,200,.35), 0 8px 14px rgba(0,0,0,.15); animation: float 4.5s ease-in-out infinite; }
+      radial-gradient(ellipse 34% 70% at 50% 0%, rgba(255,245,200,.45), rgba(255,245,200,0) 70%),
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,.25) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 70% 18%, rgba(255,255,255,.3) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 85% 45%, rgba(255,255,255,.25) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 35% 55%, rgba(255,255,255,.2) 0 2px, rgba(255,255,255,0) 3px),
+      linear-gradient(180deg, #2a1f5e 0%, #4a338f 40%, #6a4cc4 72%, #8a6ee0 86%, #8a6ee0 86.5%, #c98b48 87%, #a3652e 93%, #8b5222 100%); }
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13.5%; pointer-events: none;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 3px, rgba(0,0,0,0) 3px 60px, rgba(0,0,0,.12) 60px 63px, rgba(0,0,0,0) 63px 120px); box-shadow: inset 0 6px 0 rgba(255,235,200,.35), inset 0 14px 20px rgba(0,0,0,.25); }
+  .curtain { position: absolute; top: 0; bottom: 12%; width: 9%; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(90deg, #b3122e 0 10px, #e4294a 10px 22px, #8d0a22 22px 30px); box-shadow: 0 0 24px rgba(0,0,0,.45), inset 0 -20px 30px rgba(0,0,0,.35); border-radius: 0 0 40% 40% / 0 0 10% 10%; }
+  .curtain.l { left: 0; } .curtain.r { right: 0; }
+  .curtain::after { content: ""; position: absolute; left: -6px; right: -6px; top: 58%; height: 26px; border-radius: 14px; background: linear-gradient(180deg, #ffe08a, #d9a520); box-shadow: 0 3px 0 #a0780c, 0 6px 10px rgba(0,0,0,.35); }
+  .valance { position: absolute; left: 0; right: 0; top: 0; height: 34px; z-index: 2; pointer-events: none; background: repeating-linear-gradient(90deg, #b3122e 0 24px, #e4294a 24px 48px); box-shadow: 0 6px 12px rgba(0,0,0,.35);
+    -webkit-mask: radial-gradient(circle at 24px 34px, rgba(0,0,0,0) 0 14px, #000 15px) 0 0 / 48px 100%; mask: radial-gradient(circle at 24px 34px, rgba(0,0,0,0) 0 14px, #000 15px) 0 0 / 48px 100%; }
+  .note { position: absolute; z-index: 0; pointer-events: none; font-size: 56px; font-weight: 900; color: rgba(255,230,150,.75); text-shadow: 0 4px 0 rgba(60,30,120,.35), 0 8px 14px rgba(0,0,0,.25); animation: float 4.5s ease-in-out infinite; }
+  /* La rana poeta (hero art) */
+  .frog { position: absolute; right: calc(9% + 2px); top: 150px; z-index: 3; cursor: pointer; filter: drop-shadow(0 8px 8px rgba(0,0,0,.35)); animation: float 3.4s ease-in-out infinite; }
+  .frog svg { display: block; overflow: visible; }
+  .fg-eyes { transform-box: fill-box; transform-origin: center; animation: fgblink 4.8s infinite; }
+  @keyframes fgblink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  .fg-mouth { transform-box: fill-box; transform-origin: 50% 0; transition: transform .2s; }
+  .frog.sing .fg-mouth { transform: scaleY(1.9); }
+  .frog.sing { animation: fgsing .5s ease-in-out 3; }
+  @keyframes fgsing { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-18px) rotate(-6deg) scale(1.04); } }
+  @media (max-width: 820px) { .frog { right: calc(4.5% + 6px); } .curtain { width: 4.5%; } .valance { height: 26px; } }
   .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; gap: min(2vh, 16px); z-index: 1; }
   .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
   .hud .btn { font-size: 28px; }
@@ -26,8 +42,8 @@
   .count { font-size: 18px; font-weight: 900; color: #7a4b00; background: linear-gradient(180deg, #fff7d6, #ffe08a); padding: 3px 12px; border-radius: 20px; box-shadow: 0 3px 0 #d9a520, inset 0 1px 0 #fff; }
   @media (max-width: 820px) { .prog { top: 8px; right: 50%; transform: translateX(50%); flex-direction: column-reverse; } }
 
-  .q { font-size: min(4.6vh, 5vw, 34px); font-weight: 900; color: #fff; text-align: center; padding: 8px 26px; border-radius: 30px; flex: 0 0 auto; margin-top: min(9vh, 70px);
-    background: linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: 0 6px 0 #5232b3, 0 12px 18px rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.6); text-shadow: 0 2px 0 rgba(0,0,0,.25); max-width: 94vw; }
+  .q { font-size: min(4.6vh, 5vw, 34px); font-weight: 900; color: #fff; text-align: center; padding: 8px 26px; border-radius: 30px; flex: 0 0 auto; margin-top: min(8vh, 60px);
+    background: linear-gradient(180deg, #b39cff, #7f5af0); box-shadow: 0 6px 0 #5232b3, 0 12px 18px rgba(0,0,0,.22), inset 0 2px 0 rgba(255,255,255,.6); text-shadow: 0 2px 0 rgba(0,0,0,.25); max-width: 84vw; }
   .q b { color: #ffe066; }
   .target { display: flex; align-items: center; gap: min(3vw, 24px); flex: 0 0 auto; cursor: pointer; }
   .medal { position: relative; width: min(20vh, 28vw, 160px); height: min(20vh, 28vw, 160px); border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -40,9 +56,9 @@
   .word small { display: block; font-size: .5em; letter-spacing: 1px; opacity: .9; }
 
   /* Opciones: tarjetas con emoji, palabra y altavoz */
-  .opts { display: flex; flex-wrap: wrap; justify-content: center; gap: min(2.4vw, 20px); flex: 0 0 auto; max-width: 98vw; }
-  .opt { flex-direction: column; gap: 2px; width: min(28vw, 240px); min-height: min(26vh, 200px); padding: 8px 8px 6px; border-radius: 26px; animation: pop .35s ease-out backwards; }
-  .opts.four .opt { width: min(22.5vw, 30vh, 220px); }
+  .opts { display: flex; flex-wrap: wrap; justify-content: center; gap: min(2.4vw, 20px); flex: 0 0 auto; max-width: 84vw; }
+  .opt { flex-direction: column; gap: 2px; width: min(26vw, 240px); min-height: min(26vh, 200px); padding: 8px 8px 6px; border-radius: 26px; animation: pop .35s ease-out backwards; }
+  .opts.four .opt { width: min(19vw, 30vh, 190px); }
   .opt .emoji { font-size: min(11vh, 12vw, 84px); }
   .opt .lbl { font-size: min(3.6vh, 4vw, 26px); font-weight: 900; color: #1f2f6b; text-shadow: 0 1px 0 #fff; white-space: nowrap; }
   .opt .spk { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-top: 2px;
@@ -51,7 +67,7 @@
   .opt.ok { animation: bounce .6s; } .opt.dim { opacity: .4; filter: saturate(.3); pointer-events: none; }
 
   /* Parejas: dos columnas unidas por líneas */
-  .board { position: relative; display: flex; justify-content: space-between; width: min(96vw, 820px); flex: 0 0 auto; gap: 10vw; }
+  .board { position: relative; display: flex; justify-content: space-between; width: min(88vw, 760px); flex: 0 0 auto; gap: 8vw; }
   .col { display: flex; flex-direction: column; gap: min(1.6vh, 12px); flex: 1 1 0; }
   .pair { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: min(13vh, 104px); padding: 4px 12px; border-radius: 22px; touch-action: none; animation: pop .35s ease-out backwards; }
   .pair .emoji { font-size: min(8vh, 9vw, 64px); }
@@ -66,22 +82,43 @@
   .board line.done { stroke: #2fd27a; }
 
   /* Verso */
-  .verse { font-size: min(4.8vh, 4.6vw, 36px); font-weight: 900; color: #3b2a7a; text-align: center; padding: 14px 28px; border-radius: 28px; line-height: 1.3; max-width: 94vw; flex: 0 0 auto; margin-top: min(9vh, 70px);
+  .verse { font-size: min(4.8vh, 4.6vw, 36px); font-weight: 900; color: #3b2a7a; text-align: center; padding: 14px 28px; border-radius: 28px; line-height: 1.3; max-width: min(84vw, 620px); flex: 0 0 auto; margin-top: min(8vh, 60px);
     background: linear-gradient(180deg, #fffdf5, #fff2c7); border: 3px solid #fff; box-shadow: 0 8px 0 #d9b85c, 0 16px 26px rgba(90,60,0,.25), inset 0 2px 0 #fff; }
   .verse .gap { display: inline-block; min-width: 2.6em; border-bottom: 5px dashed #7f5af0; color: #7f5af0; padding: 0 6px; }
   .verse .gap.full { border-bottom-style: solid; color: #148a4d; border-color: #2fd27a; }
   .rows { display: flex; flex-direction: column; gap: min(1.4vh, 10px); flex: 0 0 auto; align-items: center; }
-  .row { display: flex; flex-wrap: wrap; justify-content: center; gap: min(1.6vw, 12px); align-items: center; max-width: 96vw; }
-  .row .tag { font-size: 30px; width: 54px; text-align: center; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
-  .chip { flex: 0 0 auto; white-space: nowrap; flex-direction: row; gap: 8px; min-height: 68px; padding: 4px 14px; border-radius: 20px; font-size: min(3.2vh, 3.2vw, 22px); font-weight: 900; color: #1f2f6b; animation: pop .3s backwards; }
-  .chip .emoji { font-size: min(6vh, 6vw, 42px); }
+  .row { display: flex; flex-wrap: wrap; justify-content: center; gap: min(1.6vw, 12px); align-items: center; max-width: 82vw; }
+  .row .tag { font-size: 28px; width: 44px; text-align: center; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
+  .chip { flex: 0 0 auto; white-space: nowrap; flex-direction: column; gap: 0; min-width: 104px; min-height: 64px; padding: 4px 10px 2px; border-radius: 18px; font-size: min(2.8vh, 2.6vw, 18px); font-weight: 900; color: #1f2f6b; animation: pop .3s backwards; }
+  .chip .emoji { font-size: min(5vh, 5vw, 34px); }
   .chip.sel { background: linear-gradient(180deg, #fff4c2, #ffd166); border-color: #ffb703; box-shadow: 0 6px 0 #c97d0b, 0 10px 16px rgba(90,50,0,.3), 0 0 0 4px rgba(255,209,102,.5), inset 0 2px 0 #fff; }
-  .actions { display: flex; gap: 18px; align-items: center; justify-content: center; flex: 0 0 auto; min-height: 76px; }
-  .actions .btn { font-size: 40px; min-width: 130px; min-height: 76px; }
+  .actions { display: flex; gap: 18px; align-items: center; justify-content: center; flex: 0 0 auto; min-height: 68px; }
+  .actions .btn { font-size: 36px; min-width: 130px; min-height: 68px; }
   .actions .btn.off { opacity: .45; filter: saturate(.4); }
   .spark { position: fixed; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 31; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .7s ease-out forwards; }
   @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
   @media (max-height: 700px) { .opt { min-height: 160px; } .opt .emoji { font-size: 64px; } }
+  /* ---- Kit de "juice" (racha, banner de ronda, transiciones) ---- */
+  .jk-banner { position: fixed; left: 50%; top: 70px; z-index: 44; transform: translate(-50%,0) scale(.6); opacity: 0; pointer-events: none;
+    padding: 8px 28px; border-radius: 40px; font-size: 28px; font-weight: 900; color: #fff; white-space: nowrap; border: 4px solid #fff;
+    background: linear-gradient(180deg, #ffb703, #ff8906); box-shadow: 0 7px 0 #b85a00, 0 16px 28px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.6);
+    text-shadow: 0 3px 0 #b85a00, 0 5px 8px rgba(0,0,0,.3); }
+  .jk-banner.in { animation: jkb 1.4s ease-in-out forwards; }
+  @keyframes jkb { 0% { transform: translate(-50%,0) scale(.6); opacity: 0 } 14% { transform: translate(-50%,0) scale(1.08); opacity: 1 } 24% { transform: translate(-50%,0) scale(1) } 78% { transform: translate(-50%,0) scale(1); opacity: 1 } 100% { transform: translate(-50%,-30px) scale(.9); opacity: 0 } }
+  .jk-streak { position: fixed; top: 78px; right: 240px; z-index: 40; padding: 5px 14px; border-radius: 30px; pointer-events: none;
+    background: linear-gradient(180deg,#fff7d6,#ffd166); box-shadow: 0 4px 0 #d9a520, 0 8px 14px rgba(0,0,0,.2), inset 0 1px 0 #fff; font-size: 20px; font-weight: 900; color: #7a4b00;
+    opacity: 0; transition: opacity .3s; }
+  .jk-streak.on { opacity: 1; }
+  .jk-streak.hot { animation: jkhot .45s ease-out; }
+  @keyframes jkhot { 0% { transform: scale(1) } 40% { transform: scale(1.3) rotate(-4deg) } 100% { transform: scale(1) } }
+  @media (max-width: 820px) { .jk-banner { top: 120px; } .jk-streak { top: 148px; left: 8px; right: auto; } }
+  .jk-in { animation: jkin .42s cubic-bezier(.2,.9,.3,1.15) both; }
+  .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
+  @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-press { animation: jkpress .28s ease-out; }
+  @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
+
 </style>
 </head>
 <body>
@@ -146,7 +183,15 @@
     [['barco','⛵'],['charco','💧'],['marco','🖼️'],['arco','🏹']],
     [['cepillo','🪥'],['cuchillo','🔪'],['castillo','🏰'],['anillo','💍'],['martillo','🔨'],['grillo','🦗'],['amarillo','🟡']],
     [['corona','👑'],['persona','🧑']],
-    [['vela','🕯️'],['abuela','👵'],['escuela','🏫'],['ciruela','🫐'],['tela','🧵'],['muela','🦷']]
+    [['vela','🕯️'],['abuela','👵'],['escuela','🏫'],['ciruela','🫐'],['tela','🧵'],['muela','🦷']],
+    [['jirafa','🦒'],['garrafa','🫙'],['gafa','👓']],
+    [['tigre','🐯'],['vinagre','🧴']],
+    [['cometa','☄️'],['bicicleta','🚲'],['galleta','🍪'],['maleta','🧳'],['trompeta','🎺'],['carreta','🛒']],
+    [['pingüino','🐧'],['molino','🏭'],['destino','🧭']],
+    [['dinosaurio','🦖'],['acuario','🐠'],['canario','🐤']],
+    [['camión','🚚'],['ratón','🐭']],
+    [['ventana','🪟'],['semana','📅'],['hermana','👧']],
+    [['cuchillo','🔪'],['bolsillo','👖'],['tobillo','🦶']]
   ];
   // Versos para completar (nivel 4): texto con ___, respuesta y dos opciones que no riman
   var VERSES = [
@@ -169,7 +214,17 @@
     ['Mi abuela Manuela va a la ___', ['escuela','🏫'], [['playa','🏖️'],['tienda','🏪']]],
     ['El tomate Vicente come ___', ['chocolate','🍫'], [['sopa','🍲'],['pan','🍞']]],
     ['La tortuga Lola come ___', ['lechuga','🥬'], [['sopa','🍲'],['arroz','🍚']]],
-    ['El delfín Martín patina con su ___', ['patín','⛸️'], [['bici','🚲'],['pelota','⚽']]]
+    ['El delfín Martín patina con su ___', ['patín','⛸️'], [['bici','🚲'],['pelota','⚽']]],
+    ['La jirafa Rafa se puso una ___', ['gafa','👓'], [['bufanda','🧣'],['gorra','🧢']]],
+    ['El pingüino Lino vive en un ___', ['molino','🏭'], [['castillo','🏰'],['nido','🪺']]],
+    ['Mi hermana Ana mira por la ___', ['ventana','🪟'], [['puerta','🚪'],['tele','📺']]],
+    ['El oso goloso come un ___', ['caramelo','🍬'], [['tomate','🍅'],['pan','🍞']]],
+    ['Una abeja en la bandeja llama a la ___', ['oveja','🐑'], [['vaca','🐮'],['rana','🐸']]],
+    ['El cangrejo Alejo es muy ___', ['viejo','👴'], [['rápido','🏃'],['azul','🔵']]],
+    ['La ardilla Camila come una ___', ['tortilla','🫓'], [['sopa','🍲'],['fresa','🍓']]],
+    ['Mi perro Guerrero duerme en el ___', ['cerro','⛰️'], [['sofá','🛋️'],['jardín','🌷']]],
+    ['La mariposa Rosa es muy ___', ['hermosa','🥰'], [['grande','🧍'],['rápida','🏃']]],
+    ['El pollo Rollo come un ___', ['bollo','🥐'], [['helado','🍦'],['plátano','🍌']]]
   ];
   // Inventa un poema: animales (con su rima), adjetivos invariables y objetos
   var ANIMALS = [['El gato','gato','🐱'],['El pato','pato','🦆'],['El ratón','ratón','🐭'],['El conejo','conejo','🐰'],['La rana','rana','🐸'],['La foca','foca','🦭'],['El elefante','elefante','🐘'],['El sapo','sapo','🐸'],['El zorro','zorro','🦊'],['El delfín','delfín','🐬'],['La tortuga','tortuga','🐢'],['La ardilla','ardilla','🐿️']];
@@ -178,6 +233,83 @@
   var TEMPL = ['{A} {J} se puso {O}.', '{A} {J} baila con {O}.', '{A} {J} sueña con {O}.'];
   var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
   var ROUNDS = 8;
+  /* ---- Kit de "juice": racha, banner de ronda, transición entre rondas, guardado ---- */
+  var JK = (function () {
+    var streak = 0, pill = null, bannerEl = null;
+    function pillEl() { if (!pill) { pill = document.createElement('div'); pill.className = 'jk-streak'; document.body.appendChild(pill); } return pill; }
+    function hit(el, txt) {
+      streak++; var p = pillEl();
+      if (streak >= 2) { p.textContent = '🔥 Racha ' + streak; p.classList.add('on'); p.classList.remove('hot'); void p.offsetWidth; p.classList.add('hot'); }
+      var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      var x = r ? r.left + r.width / 2 : window.innerWidth / 2, y = r ? r.top + 8 : window.innerHeight / 2;
+      if (el) { try { KidsGame.fx.ring(el); } catch (e) {} }
+      if (streak % 5 === 0) { KidsGame.addStar(); KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '! ⭐ extra', 'good'); KidsGame.fx.burst(x, y, { n: 22, r: 110, chars: ['⭐', '✨', '🔥', '💫'] }); }
+      else if (streak >= 3) { KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '!', 'good'); KidsGame.fx.burst(x, y, { n: 14, chars: ['✨', '⭐'] }); }
+      else { KidsGame.fx.floatText(x, y, txt || '+1', 'good'); KidsGame.fx.burst(x, y, { n: 12 }); }
+      return streak;
+    }
+    function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
+    function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    function banner(text) {
+      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
+      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+    }
+    function swap(el, fn) {
+      if (!el || !el.parentNode) { fn(); return; }
+      el.classList.remove('jk-in'); el.classList.add('jk-out');
+      setTimeout(function () { el.classList.remove('jk-out'); fn(); el.classList.add('jk-in'); setTimeout(function () { el.classList.remove('jk-in'); }, 480); }, 230);
+    }
+    function press(el) { if (!el) return; el.classList.remove('jk-press'); void el.offsetWidth; el.classList.add('jk-press'); }
+    function store(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+    function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    return { hit: hit, miss: miss, reset: reset, banner: banner, swap: swap, press: press, store: store, put: put, get streak() { return streak; } };
+  })();
+
+  // ---- Hero art: la rana poeta con micrófono; disfraces desbloqueables ----
+  var OUTFITS = [{ k: 'none', n: 'sin disfraz' }, { k: 'bow', n: 'moño' }, { k: 'crown', n: 'corona' }, { k: 'hat', n: 'sombrero de copa' }, { k: 'glasses', n: 'lentes de estrella' }];
+  var outfitIdx = JK.store('kg-rimas-rana', 0) || 0;
+  function outfitsUnlocked() { return Math.min(OUTFITS.length, 1 + (JK.store('kg-rimas-ranas', 0) || 0)); }
+  function unlockOutfit() { var n = JK.store('kg-rimas-ranas', 0) || 0; if (n + 1 < OUTFITS.length) { JK.put('kg-rimas-ranas', n + 1); KidsGame.toast('🎁 ¡Nuevo disfraz: ' + OUTFITS[n + 1].n + '!', 2200); } }
+  function frogSVG(size, id, outfit) {
+    id = id || 'fg'; outfit = outfit || 'none';
+    var o = '';
+    if (outfit === 'bow') o = '<polygon points="46,16 28,6 30,26" fill="url(#' + id + 'p)" stroke="#c9457f" stroke-width="2" stroke-linejoin="round"/><polygon points="46,16 64,6 62,26" fill="url(#' + id + 'p)" stroke="#c9457f" stroke-width="2" stroke-linejoin="round"/><circle cx="46" cy="16" r="5" fill="#ffb3d1" stroke="#c9457f" stroke-width="2"/>';
+    else if (outfit === 'crown') o = '<polygon points="42,24 42,4 52,14 65,0 78,14 88,4 88,24" fill="url(#' + id + 'g)" stroke="#d98f00" stroke-width="2" stroke-linejoin="round"/><circle cx="52" cy="18" r="3" fill="#ef476f"/><circle cx="65" cy="16" r="3" fill="#3da9fc"/><circle cx="78" cy="18" r="3" fill="#2cb67d"/>';
+    else if (outfit === 'hat') o = '<rect x="46" y="-6" width="38" height="28" rx="4" fill="#2b3445"/><rect x="38" y="18" width="54" height="9" rx="4" fill="#2b3445"/><rect x="46" y="12" width="38" height="7" fill="#ff6f61"/><rect x="50" y="-3" width="4" height="18" rx="2" fill="rgba(255,255,255,.3)"/>';
+    else if (outfit === 'glasses') o = '<circle cx="46" cy="38" r="16" fill="rgba(255,255,255,.12)" stroke="#ffd166" stroke-width="4"/><circle cx="84" cy="38" r="16" fill="rgba(255,255,255,.12)" stroke="#ffd166" stroke-width="4"/><path d="M62 38 L68 38" stroke="#ffd166" stroke-width="4" stroke-linecap="round"/><text x="46" y="24" text-anchor="middle" font-size="14" fill="#ffd166">★</text><text x="84" y="24" text-anchor="middle" font-size="14" fill="#ffd166">★</text>';
+    return '<svg viewBox="0 -8 136 138" width="' + size + '" height="' + Math.round(size * 138 / 136) + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="' + id + 'b" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#b6f07a"/><stop offset=".5" stop-color="#5fbe4f"/><stop offset="1" stop-color="#2e7d32"/></radialGradient>' +
+      '<radialGradient id="' + id + 'w" cx="50%" cy="35%" r="65%"><stop offset="0" stop-color="#fffbe0"/><stop offset="1" stop-color="#e6e2a8"/></radialGradient>' +
+      '<linearGradient id="' + id + 'm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa5b8"/><stop offset="1" stop-color="#3a4557"/></linearGradient>' +
+      '<linearGradient id="' + id + 'p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc1dc"/><stop offset="1" stop-color="#e0508f"/></linearGradient>' +
+      '<linearGradient id="' + id + 'g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a6"/><stop offset="1" stop-color="#e09a00"/></linearGradient></defs>' +
+      '<ellipse cx="65" cy="126" rx="44" ry="5" fill="rgba(0,0,0,.25)"/>' +
+      '<ellipse cx="38" cy="118" rx="16" ry="7" fill="#4a9d40" stroke="#2e7d32" stroke-width="2"/><ellipse cx="92" cy="118" rx="16" ry="7" fill="#4a9d40" stroke="#2e7d32" stroke-width="2"/>' +
+      '<ellipse cx="65" cy="82" rx="44" ry="38" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/>' +
+      '<ellipse cx="65" cy="96" rx="26" ry="20" fill="url(#' + id + 'w)"/>' +
+      '<circle cx="46" cy="40" r="17" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/><circle cx="84" cy="40" r="17" fill="url(#' + id + 'b)" stroke="#2e7d32" stroke-width="2.5"/>' +
+      '<g class="fg-eyes"><circle cx="46" cy="40" r="11" fill="#fff"/><circle cx="84" cy="40" r="11" fill="#fff"/><circle cx="48" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="82" cy="42" r="5.5" fill="#1f1f1f"/><circle cx="50" cy="40" r="2" fill="#fff"/><circle cx="84" cy="40" r="2" fill="#fff"/></g>' +
+      '<path class="fg-mouth" d="M42 78 Q65 100 88 78 Q65 90 42 78 Z" fill="#8d1f3d" stroke="#2e7d32" stroke-width="2" stroke-linejoin="round"/>' +
+      '<circle cx="36" cy="72" r="6" fill="#ff8aa8" opacity=".55"/><circle cx="94" cy="72" r="6" fill="#ff8aa8" opacity=".55"/>' +
+      '<path d="M98 92 Q110 90 114 80" stroke="#4a9d40" stroke-width="10" stroke-linecap="round" fill="none"/>' +
+      '<rect x="109" y="70" width="10" height="30" rx="5" fill="#2b3445" transform="rotate(-18 114 85)"/>' +
+      '<circle cx="118" cy="62" r="12" fill="url(#' + id + 'm)" stroke="#2b3445" stroke-width="2"/><path d="M108 58 H128 M108 64 H128 M110 69 H126 M113 52 V72 M118 50 V74 M123 52 V72" stroke="rgba(0,0,0,.35)" stroke-width="1.2"/>' +
+      '<circle cx="114" cy="57" r="3" fill="#fff" opacity=".6"/>' +
+      '<path d="M32 92 Q20 94 18 104" stroke="#4a9d40" stroke-width="10" stroke-linecap="round" fill="none"/>' +
+      o + '</svg>';
+  }
+  var frogEl = null;
+  function renderFrog() { if (frogEl) frogEl.innerHTML = frogSVG(Math.min(window.innerWidth > 820 ? 100 : 112, Math.round(window.innerHeight * 0.15)), 'fg', OUTFITS[outfitIdx].k); }
+  function cycleOutfit() {
+    var n = outfitsUnlocked(); if (n <= 1) { KidsGame.sound.wrong(); KidsGame.toast('Completa un nivel para ganar un disfraz 🎁', 1600); frogSing(); return; }
+    outfitIdx = (outfitIdx + 1) % n; JK.put('kg-rimas-rana', outfitIdx); renderFrog(); KidsGame.sound.pop(); JK.press(frogEl); KidsGame.say('Rana con ' + OUTFITS[outfitIdx].n);
+  }
+  function frogSing() {
+    if (!frogEl) return; frogEl.classList.remove('sing'); void frogEl.offsetWidth; frogEl.classList.add('sing');
+    KidsGame.fx.burstAt(frogEl, { n: 12, r: 90, chars: ['♪', '♫', '🎵', '✨'] });
+    setTimeout(function () { frogEl && frogEl.classList.remove('sing'); }, 1600);
+  }
+  var HOWTO = [{ icon: '👂', text: 'Escucha la palabra' }, { icon: '🎤', text: 'Toca la que suena igual al final' }, { icon: '🐸', text: 'La rana canta cuando aciertas' }];
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); fn(ev); }); }
@@ -216,7 +348,8 @@
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
   function pickLevel() {
     clearTimers(); lock = true; game.innerHTML = '';
-    KidsGame.levelPicker({ labels: { 1: '¿Cuál rima?', 2: 'Con trampa', 3: 'Parejas y ¿cuál no?', 4: 'Versos e inventar' }, onPick: function (n) { startLevel(n); } });
+    JK.reset();
+    KidsGame.levelPicker({ labels: { 1: '¿Cuál rima?', 2: 'Con trampa', 3: 'Parejas y ¿cuál no?', 4: 'Versos e inventar' }, howto: HOWTO, art: frogSVG(66, 'fgp', OUTFITS[outfitIdx].k), music: 'alegre', onPick: function (n) { startLevel(n); } });
   }
   function startLevel(n) { level = n; round = 0; usedG = []; buildScreen(); nextRound(); }
   function hud() {
@@ -229,6 +362,8 @@
   function buildScreen() {
     clearTimers(); game.innerHTML = '';
     screen = el('div', 'screen');
+    screen.appendChild(el('div', 'curtain l')); screen.appendChild(el('div', 'curtain r')); screen.appendChild(el('div', 'valance'));
+    frogEl = el('div', 'frog'); renderFrog(); onTap(frogEl, cycleOutfit); screen.appendChild(frogEl);
     ['♪', '♫', '♩', '♬', '♪', '♫', '♩'].forEach(function (n, i) {
       var d = el('div', 'note', n); d.style.left = [4, 90, 10, 86, 48, 28, 70][i] + '%'; d.style.top = [22, 28, 78, 80, 92, 92, 92][i] + '%';
       d.style.animationDelay = (-i * 0.9) + 's'; d.style.fontSize = (40 + (i * 13) % 30) + 'px'; screen.appendChild(d);
@@ -263,17 +398,21 @@
   }
 
   function nextRound() {
-    clearTimers(); lock = false; body.innerHTML = ''; updateProgress();
+    clearTimers(); lock = false;
+    if (round > 0 && body.children.length) { JK.swap(body, nextRoundNow); } else nextRoundNow();
+  }
+  function nextRoundNow() {
+    body.innerHTML = ''; updateProgress(); JK.banner('Rima ' + (round + 1) + ' de ' + ROUNDS);
     if (level === 1 || level === 2) roundChoose();
     else if (level === 3) { if (round % 2 === 0) roundOdd(); else roundPairs(); }
     else { if (round < 5) roundVerse(); else roundInvent(); }
   }
   function win(extraSay) {
-    lock = true; round++; updateProgress();
+    lock = true; round++; updateProgress(); frogSing(); JK.put('kg-rimas-hand', 1);
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
     later(function () {
       if (round >= ROUNDS) {
-        KidsGame.levelDone(level);
+        KidsGame.levelDone(level); unlockOutfit();
         KidsGame.celebrate({ sub: '¡' + ROUNDS + ' rimas!', onNext: function () { if (level < 4) startLevel(level + 1); else pickLevel(); }, onAgain: function () { startLevel(level); } });
       } else nextRound();
     }, 1700);
@@ -304,13 +443,14 @@
     });
     body.appendChild(o);
     speak('¿Cuál rima con ' + target[0] + '?');
+    if (level === 1 && round === 0 && !JK.store('kg-rimas-hand', 0)) { var ok = o.querySelector('.opt[data-w="' + answer[0] + '"]'); if (ok) later(function () { KidsGame.hand({ el: ok, timeout: 12000 }); }, 1200); }
   }
   function chooseRhyme(c, w, target) {
     if (lock) return;
     if (rhymes(w[0], target[0])) {
-      c.classList.add('ok'); sparks(c, '#7dffb0');
+      c.classList.add('ok'); sparks(c, '#7dffb0'); JK.hit(c);
       speak(target[0] + '... ' + w[0] + '. ¡Riman!'); win();
-    } else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' no rima con ' + target[0]); }
+    } else { KidsGame.sound.wrong(); replay(c, 'bad'); JK.miss(c); speak(w[0] + ' no rima con ' + target[0]); }
   }
 
   /* ---------- Nivel 3a: ¿cuál NO rima? ---------- */
@@ -325,8 +465,8 @@
       var c = optCard(w); c.style.animationDelay = (i * 80) + 'ms';
       onTap(c, function () {
         if (lock) return;
-        if (w === odd) { c.classList.add('ok'); sparks(c, '#7dffb0'); speak(w[0] + ' no rima. ¡Muy bien!'); win(); }
-        else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' sí rima'); }
+        if (w === odd) { c.classList.add('ok'); sparks(c, '#7dffb0'); JK.hit(c); speak(w[0] + ' no rima. ¡Muy bien!'); win(); }
+        else { KidsGame.sound.wrong(); replay(c, 'bad'); JK.miss(c); speak(w[0] + ' sí rima'); }
       });
       o.appendChild(c);
     });
@@ -382,11 +522,11 @@
       if (rhymes(hit.dataset.w, w[0])) {
         var k = hit.querySelector('.knob').getBoundingClientRect(), r = board.getBoundingClientRect();
         L.setAttribute('x2', k.left + k.width / 2 - r.left); L.setAttribute('y2', k.top + k.height / 2 - r.top); L.classList.add('done');
-        c.classList.add('ok', 'done'); hit.classList.add('ok', 'done'); sparks(hit, '#7dffb0'); KidsGame.sound.pop();
+        c.classList.add('ok', 'done'); hit.classList.add('ok', 'done'); sparks(hit, '#7dffb0'); KidsGame.sound.pop(); JK.hit(hit);
         speak(w[0] + '... ' + hit.dataset.w);
         current.matched++;
         if (current.matched === 4) win(); else KidsGame.addStar();
-      } else { L.remove(); KidsGame.sound.wrong(); replay(c, 'bad'); replay(hit, 'bad'); speak(w[0] + ' no rima con ' + hit.dataset.w); }
+      } else { L.remove(); KidsGame.sound.wrong(); replay(c, 'bad'); replay(hit, 'bad'); JK.miss(hit); speak(w[0] + ' no rima con ' + hit.dataset.w); }
     }
     c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
   }
@@ -407,10 +547,10 @@
       onTap(c, function () {
         if (lock) return;
         if (w === v[1]) {
-          c.classList.add('ok'); sparks(c, '#7dffb0');
+          c.classList.add('ok'); sparks(c, '#7dffb0'); JK.hit(c);
           var gap = ve.querySelector('.gap'); gap.textContent = w[0]; gap.classList.add('full');
           speak(v[0].replace('___', w[0]) + '. ¡Rima!'); win();
-        } else { KidsGame.sound.wrong(); replay(c, 'bad'); speak(w[0] + ' no rima'); }
+        } else { KidsGame.sound.wrong(); replay(c, 'bad'); JK.miss(c); speak(w[0] + ' no rima'); }
       });
       o.appendChild(c);
     });
@@ -419,6 +559,7 @@
   }
 
   /* ---------- Nivel 4b: inventa un poema ---------- */
+  var inventAuto = null;
   function roundInvent() {
     var tpl = TEMPL[round % TEMPL.length];
     var sel = { A: null, J: null, O: null }, read = false;
@@ -467,16 +608,18 @@
       KidsGame.sound.pop(); read = true; render();
       var bonus = sel.O[2] === sel.A[1];
       speak(text() + (bonus ? '. ¡' + sel.A[1] + ' rima con ' + sel.O[0].split(' ').pop() + '!' : ''));
-      if (bonus) { sparks(ve, '#ffe066'); KidsGame.confetti(20); ve.classList.add('ok'); } else { replay(ve, 'pop'); }
+      if (bonus) { sparks(ve, '#ffe066'); KidsGame.confetti(20); ve.classList.add('ok'); JK.hit(ve, '¡Rima!'); frogSing(); } else { replay(ve, 'pop'); }
     });
     onTap(okB, function () { if (lock || !read) { KidsGame.sound.wrong(); return; } if (sel.O[2] === sel.A[1]) KidsGame.addStar(); win(); });
     acts.appendChild(playB); acts.appendChild(okB); body.appendChild(acts);
+    inventAuto = function () { rA.querySelectorAll('.chip')[0].dispatchEvent(new Event('pointerdown')); rJ.querySelectorAll('.chip')[0].dispatchEvent(new Event('pointerdown')); var chips = rO.querySelectorAll('.chip'); for (var i = 0; i < chips.length; i++) if (objs[i][2] === sel.A[1]) { chips[i].dispatchEvent(new Event('pointerdown')); return true; } chips[0].dispatchEvent(new Event('pointerdown')); return false; };
     render();
     speak('Inventa tu poema. Elige un animal, cómo es, y qué tiene');
   }
 
   // Ganchos para pruebas
   window.__rimas = { get level() { return level; }, get round() { return round; }, get current() { return current; }, start: startLevel, next: nextRound, groups: GROUPS.length, verses: VERSES.length,
+    jump: function (n) { round = n; nextRoundNow(); }, autoInvent: function () { return inventAuto && inventAuto(); }, get streak() { return JK.streak; }, outfits: outfitsUnlocked,
     check: function () { var bad = []; GROUPS.forEach(function (G) { G.forEach(function (w) { if (!w[1]) bad.push(w[0]); }); }); return bad; } };
   pickLevel();
 })();

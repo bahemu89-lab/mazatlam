@@ -4,99 +4,98 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="stylesheet" href="../common.css">
-<title>El intruso</title>
+<title>El gran teatro</title>
 <style>
+  /* ===== Mundo: "El gran teatro" — los personajes salen al escenario y el reflector busca al intruso ===== */
   .game {
+    --c1: #ff6b6b; --c2: #c62828; --c3: #7a0f0f;
     display: flex; flex-direction: column; align-items: center; padding: 10px 12px; gap: 10px;
     background:
-      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
-      radial-gradient(circle at 10% 90%, rgba(255,255,255,.35), rgba(255,255,255,0) 30%),
-      radial-gradient(circle at 90% 80%, rgba(255,255,255,.3), rgba(255,255,255,0) 28%),
-      linear-gradient(180deg, #c9b6ff 0%, #a98cff 45%, #7f5af0 100%);
+      radial-gradient(ellipse 50% 60% at 50% 10%, rgba(255,240,180,.22), rgba(255,240,180,0) 70%),
+      linear-gradient(180deg, #2a1040 0%, #4a1d5e 55%, #2a1040 100%);
   }
-  /* burbujas decorativas al fondo */
-  .game::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
-    background:
-      radial-gradient(circle at 15% 30%, rgba(255,255,255,.35) 0 22px, rgba(255,255,255,0) 23px),
-      radial-gradient(circle at 85% 40%, rgba(255,255,255,.3) 0 30px, rgba(255,255,255,0) 31px),
-      radial-gradient(circle at 70% 88%, rgba(255,255,255,.28) 0 18px, rgba(255,255,255,0) 19px),
-      radial-gradient(circle at 30% 75%, rgba(255,255,255,.25) 0 26px, rgba(255,255,255,0) 27px),
-      radial-gradient(circle at 50% 50%, rgba(255,255,255,.2) 0 14px, rgba(255,255,255,0) 15px);
-  }
-  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
+  .game.azul { --c1: #74c0ff; --c2: #1f6fd0; --c3: #0d3a7a; } .game.morado { --c1: #c9a6ff; --c2: #7f3fe0; --c3: #3d1a80; }
+  .game.dorado { --c1: #ffe98a; --c2: #e0a020; --c3: #7a5000; } .game.verde { --c1: #8ef0b0; --c2: #1f9a55; --c3: #0d5a30; }
+  /* piso de madera del escenario */
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, #a86a30 0 70px, #8a5020 70px 74px, #b8783a 74px 150px, #8a5020 150px 154px), linear-gradient(180deg, #c98a4b, #7a4a1c);
+    background-blend-mode: multiply; box-shadow: inset 0 10px 20px rgba(0,0,0,.45), 0 -2px 0 #e0a860; }
+  /* luces del techo */
+  .game::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .9;
+    background: radial-gradient(ellipse 14% 60% at 22% 0%, rgba(255,240,170,.22), rgba(255,240,170,0) 70%), radial-gradient(ellipse 14% 60% at 78% 0%, rgba(255,240,170,.22), rgba(255,240,170,0) 70%),
+      radial-gradient(circle at 10% 30%, rgba(255,255,255,.35) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 92% 24%, rgba(255,255,255,.3) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 6% 62%, rgba(255,255,255,.3) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 95% 58%, rgba(255,255,255,.3) 0 2px, rgba(255,255,255,0) 3px); }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; max-width: 100%; }
+  .hud .hero { width: 52px; height: 52px; flex: 0 0 auto; } .hud .hero svg { width: 100%; height: 100%; overflow: visible; }
   .dots { display: flex; gap: 6px; }
-  .dots span {
-    width: 16px; height: 16px; border-radius: 50%;
-    background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18);
-    transition: transform .2s, background .2s;
-  }
+  .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round { width: 64px; height: 64px; font-size: 28px; }
-
-  .instr {
-    position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
-    padding: 8px 12px 8px 20px; border-radius: 40px; max-width: 96%;
-  }
-  .instr .txt { font-size: 30px; font-size: clamp(20px, 3.2vw, 30px); font-weight: 900; color: #5232b3; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .hud .streak { display: none; font-size: 18px; font-weight: 900; color: #fff; padding: 4px 12px; border-radius: 20px; white-space: nowrap; background: linear-gradient(180deg, #ff9f43, #ff5e3a); box-shadow: 0 3px 0 #b8300a, 0 5px 10px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.3); animation: pop .4s ease-out; }
+  .hud .streak.on { display: inline-block; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 20px; border-radius: 40px; max-width: 96%; }
+  .instr .txt { font-size: clamp(20px, 3.2vw, 30px); font-weight: 900; color: #5232b3; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .instr .txt.long { font-size: clamp(16px, 2.3vw, 24px); white-space: normal; text-align: center; }
   .instr .ico { font-size: 34px; animation: float 3s ease-in-out infinite; }
 
-  .board { position: relative; z-index: 1; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; }
-  .grid { display: grid; gap: var(--gap); width: var(--bw); height: var(--bh); }
+  /* ---- Escenario con telón ---- */
+  .theater { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 26px;
+    background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255,230,160,.18), rgba(0,0,0,0) 70%), linear-gradient(180deg, #1a0a2e, #35164f); box-shadow: inset 0 0 0 4px rgba(255,220,120,.35), inset 0 0 60px rgba(0,0,0,.6), 0 12px 24px rgba(0,0,0,.4); }
+  .valance { position: absolute; left: 0; right: 0; top: 0; height: 12%; min-height: 34px; z-index: 6; pointer-events: none;
+    background: repeating-linear-gradient(90deg, var(--c1) 0 14px, var(--c2) 14px 34px, var(--c3) 34px 40px); border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    box-shadow: 0 8px 14px rgba(0,0,0,.5), inset 0 -8px 10px rgba(0,0,0,.3); }
+  .valance::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 10px; background: radial-gradient(circle at 10px 0, #ffd54a 0 5px, transparent 6px) 0 0 / 22px 10px repeat-x; }
+  .curt { position: absolute; top: 0; bottom: 0; width: 52%; z-index: 5; pointer-events: none; transition: transform .55s cubic-bezier(.5,0,.3,1);
+    background: repeating-linear-gradient(90deg, var(--c1) 0 12px, var(--c2) 12px 30px, var(--c3) 30px 36px); box-shadow: 0 0 30px rgba(0,0,0,.6); }
+  .curt.l { left: 0; transform: translateX(-86%); border-radius: 0 30px 30px 0 / 0 50% 50% 0; } .curt.r { right: 0; transform: translateX(86%); border-radius: 30px 0 0 30px / 50% 0 0 50%; }
+  .curt::after { content: ""; position: absolute; top: 0; bottom: 0; width: 36px; background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.45)); } .curt.l::after { right: 0; } .curt.r::after { left: 0; transform: scaleX(-1); }
+  .theater.closed .curt.l, .theater.closed .curt.r { transform: translateX(0); }
+  .dark { position: absolute; inset: 0; z-index: 3; background: rgba(10,0,25,.72); opacity: 0; transition: opacity .4s; pointer-events: none; }
+  .theater.lights .dark { opacity: 1; }
+  .beam { position: absolute; z-index: 4; left: 0; top: 0; width: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity .35s .15s; transform-origin: 50% 0; }
+  .beam i { position: absolute; left: -50%; top: 0; width: 200%; height: 100%; display: block; clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+    background: linear-gradient(180deg, rgba(255,250,200,.95), rgba(255,240,160,.45) 60%, rgba(255,240,160,.15)); }
+  .theater.lights .beam { opacity: 1; }
+  .lamp { position: absolute; z-index: 7; top: 2%; width: 44px; height: 30px; margin-left: -22px; border-radius: 10px 10px 4px 4px; background: linear-gradient(180deg, #5a6478, #1e2430); box-shadow: 0 3px 0 #0d1016, 0 6px 10px rgba(0,0,0,.5); pointer-events: none; transition: left .45s cubic-bezier(.4,1.3,.4,1); }
+  .lamp::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: -6px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #fff8d0, #ffd54a 60%, #e0a020); box-shadow: 0 0 10px #ffe98a; }
+  .grid { position: relative; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh); }
+  .med { z-index: 2; }
   .med {
-    --c1: #ffd6e8; --c2: #f0569a; --c3: #b8306f;
-    position: relative; width: 100%; height: 100%; border-radius: 50%; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    background:
-      radial-gradient(circle at 36% 28%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.4) 18%, rgba(255,255,255,0) 40%),
-      radial-gradient(circle at 50% 50%, var(--c1) 0%, var(--c2) 100%);
+    --m1: #ffd6e8; --m2: #f0569a; --m3: #b8306f;
+    position: relative; width: 100%; height: 100%; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 36% 28%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.4) 18%, rgba(255,255,255,0) 40%), radial-gradient(circle at 50% 50%, var(--m1) 0%, var(--m2) 100%);
     border: 4px solid rgba(255,255,255,.9);
-    box-shadow: 0 9px 0 var(--c3), 0 18px 26px rgba(30,10,80,.35), inset 0 3px 0 rgba(255,255,255,.7), inset 0 -8px 0 rgba(0,0,0,.1);
-    animation: float 3.4s ease-in-out infinite;
-    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 9px 0 var(--m3), 0 18px 26px rgba(0,0,0,.45), inset 0 3px 0 rgba(255,255,255,.7), inset 0 -8px 0 rgba(0,0,0,.1);
+    animation: float 3.4s ease-in-out infinite; transition: transform .15s, box-shadow .15s, opacity .3s;
   }
-  .med::before {
-    content: ""; position: absolute; left: 14%; right: 14%; top: 5%; height: 34%; border-radius: 50%; pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0));
-  }
-  .med::after {
-    content: ""; position: absolute; inset: 8%; border-radius: 50%; pointer-events: none;
-    border: 3px solid rgba(255,255,255,.35);
-  }
+  .med::before { content: ""; position: absolute; left: 14%; right: 14%; top: 5%; height: 34%; border-radius: 50%; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0)); }
+  .med::after { content: ""; position: absolute; inset: 8%; border-radius: 50%; pointer-events: none; border: 3px solid rgba(255,255,255,.35); }
   .med .emoji { font-size: var(--fs); filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)); transition: transform .15s; }
-  .med:active { transform: scale(1.08); }
-  .med:active .emoji { transform: scale(1.1); }
+  .med:active { transform: scale(1.08); } .med:active .emoji { transform: scale(1.1); }
   .med.pop { animation: pop .4s ease-out backwards; }
-  .med.bad { animation: shake .4s; }
-  .med.dim { opacity: .45; filter: saturate(.4); transform: scale(.9); animation: none; }
-  .med.ok {
-    animation: none; transform: scale(1.15); z-index: 3;
-    box-shadow: 0 9px 0 var(--c3), 0 18px 26px rgba(30,10,80,.35), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.6), 0 0 40px 10px rgba(255,233,138,.9), inset 0 3px 0 rgba(255,255,255,.7);
-  }
-  .med.ok .emoji { animation: bounce .6s 2; }
-  .p1 { --c1: #ffd6e8; --c2: #f0569a; --c3: #b8306f; }
-  .p2 { --c1: #d4f0ff; --c2: #2f95e8; --c3: #1a63a8; }
-  .p3 { --c1: #dbffe6; --c2: #24b36c; --c3: #14784a; }
-  .p4 { --c1: #ffe9cc; --c2: #ff8a1a; --c3: #b8500a; }
-  .p5 { --c1: #fff8d0; --c2: #ffb703; --c3: #c47f00; }
-  .p6 { --c1: #dbfaf9; --c2: #00b3b3; --c3: #00706f; }
-
-  .med.ok.first { transform: scale(1.08); box-shadow: 0 9px 0 var(--c3), 0 18px 26px rgba(30,10,80,.35), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.6), inset 0 3px 0 rgba(255,255,255,.7); }
+  .med.dim { opacity: .55; animation: none; transform: scale(.92); }
+  .med.ok { animation: none; transform: scale(1.18); z-index: 5;
+    box-shadow: 0 9px 0 var(--m3), 0 18px 26px rgba(0,0,0,.45), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.6), 0 0 44px 12px rgba(255,233,138,.95), inset 0 3px 0 rgba(255,255,255,.7); }
+  .med.ok .emoji { animation: bow .9s ease-in-out 2; }
+  @keyframes bow { 0%,100% { transform: rotate(0) translateY(0); } 40% { transform: rotate(14deg) translateY(6px) scale(1.05); } 70% { transform: rotate(-8deg) translateY(-4px); } }
+  .med.ok.first { transform: scale(1.08); box-shadow: 0 9px 0 var(--m3), 0 18px 26px rgba(0,0,0,.45), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.6), inset 0 3px 0 rgba(255,255,255,.7); }
+  .p1 { --m1: #ffd6e8; --m2: #f0569a; --m3: #b8306f; } .p2 { --m1: #d4f0ff; --m2: #2f95e8; --m3: #1a63a8; } .p3 { --m1: #dbffe6; --m2: #24b36c; --m3: #14784a; }
+  .p4 { --m1: #ffe9cc; --m2: #ff8a1a; --m3: #b8500a; } .p5 { --m1: #fff8d0; --m2: #ffb703; --m3: #c47f00; } .p6 { --m1: #dbfaf9; --m2: #00b3b3; --m3: #00706f; }
   .hud .left { font-size: 22px; font-weight: 900; color: #5232b3; white-space: nowrap; text-shadow: 0 1px 0 #fff; }
-  .instr .txt.long { font-size: clamp(16px, 2.3vw, 24px); white-space: normal; text-align: center; }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
-           box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+
+  .banner { position: absolute; left: 50%; top: 42%; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.5); padding: 12px 36px; border-radius: 40px; white-space: nowrap;
+    font-size: clamp(26px, 4.5vw, 40px); font-weight: 900; color: #6a3f00; background: linear-gradient(180deg, #ffe98a, #ffb703); text-shadow: 0 2px 0 rgba(255,255,255,.6);
+    box-shadow: 0 8px 0 #c47f00, 0 18px 30px rgba(0,0,0,.4), inset 0 2px 0 #fff; }
+  .banner.show { animation: bannerin 1.5s cubic-bezier(.3,1.4,.4,1) forwards; }
+  @keyframes bannerin { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } 16% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); } 26% { transform: translate(-50%,-50%) scale(1); } 76% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-100%) scale(.9); } }
+  @media (max-width: 800px) { .hud { gap: 8px; padding: 6px 8px; } }
 </style>
 </head>
 <body>
 <script src="../common.js"></script>
 <script>
-var game = KidsGame.init({ title: 'El intruso' });
+var game = KidsGame.init({ title: 'El gran teatro' });
 (function () {
   // ---------- Datos ----------
-  // Nivel 1: categorías claramente distintas
   var CATS = [
     { n: 'animales',     s: 'un animal',      items: ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🐮','🐷'] },
     { n: 'frutas',       s: 'una fruta',      items: ['🍎','🍌','🍇','🍓','🍒','🍑','🍍','🥝','🍉','🍊','🍋','🍐'] },
@@ -105,15 +104,18 @@ var game = KidsGame.init({ title: 'El intruso' });
     { n: 'comida',       s: 'comida',         items: ['🍕','🍔','🌭','🌮','🍝','🍞','🧀','🍳','🍩','🍪','🎂','🍦'] },
     { n: 'juguetes',     s: 'un juguete',     items: ['🎈','🎲','🪀','🧸','🎯','🎮','🏀','⚽','🎁','🪁','🎳','🛴'] },
     { n: 'flores',       s: 'una flor',       items: ['🌹','🌻','🌷','🌸','🌼','🌺','💐','🌵','🌴','🌳','🍀','🌿'] },
-    { n: 'bichitos',     s: 'un bichito',     items: ['🐝','🐞','🦋','🐛','🐜','🐌','🕷️','🦗','🐝','🦋'] },
+    { n: 'bichitos',     s: 'un bichito',     items: ['🐝','🐞','🦋','🐛','🐜','🐌','🕷️','🦗'] },
     { n: 'animales del mar', s: 'un animal del mar', items: ['🐟','🐠','🐡','🦈','🐙','🦀','🐬','🐳','🦑','🐚','🐋','🦐'] },
     { n: 'instrumentos', s: 'un instrumento', items: ['🎸','🎹','🎺','🎻','🥁','🎷','🎤','🎧','🪕','🎵'] },
     { n: 'cosas del cielo', s: 'algo del cielo', items: ['☀️','🌙','⭐','🌈','☁️','⚡','🌟','☄️','🌤️','❄️'] },
     { n: 'cosas de la casa', s: 'algo de la casa', items: ['🪑','🛏️','🛋️','🚪','🧹','🧺','🕰️','🔑','🪟','🛁'] },
     { n: 'pelotas',      s: 'una pelota',     items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🥎'] },
-    { n: 'herramientas', s: 'una herramienta', items: ['🔨','🔧','🪛','🔩','🪚','⚙️','🪓','🔦','📏','✂️'] }
+    { n: 'herramientas', s: 'una herramienta', items: ['🔨','🔧','🪛','🔩','🪚','⚙️','🪓','🔦','📏','✂️'] },
+    { n: 'útiles de la escuela', s: 'algo de la escuela', items: ['✏️','📚','🎒','📐','🖍️','📏','🖊️','📒','🗒️','📎'] },
+    { n: 'cosas de fiesta', s: 'algo de fiesta', items: ['🎂','🎁','🎈','🎉','🎊','🎀','🧁','🍭','🪅','🎠'] },
+    { n: 'dinosaurios y dragones', s: 'un dinosaurio o dragón', items: ['🦕','🦖','🐉','🐲','🦎','🐊'] },
+    { n: 'caritas', s: 'una carita', items: ['😀','😃','😄','😁','😆','🙂','😊','😍','🤩','😎'] }
   ];
-  // Nivel 2: misma familia, distinto tipo
   var SUBS = [
     [ { n: 'animales de la granja', s: 'un animal de la granja', items: ['🐄','🐷','🐔','🐑','🐴','🐐','🐓','🐰','🦆'] },
       { n: 'animales del mar', s: 'un animal del mar', items: ['🐟','🐙','🦀','🐬','🐳','🦈','🐠','🐡'] },
@@ -133,9 +135,12 @@ var game = KidsGame.init({ title: 'El intruso' });
       { n: 'zapatos', s: 'un zapato', items: ['👟','👠','👢','🥿','👞','🩴'] },
       { n: 'sombreros', s: 'un sombrero', items: ['🎩','👒','🧢','👑','⛑️','🎓'] } ],
     [ { n: 'instrumentos', s: 'un instrumento', items: ['🎸','🎹','🎺','🎻','🥁','🎷'] },
-      { n: 'pelotas', s: 'una pelota', items: ['⚽','🏀','🏈','⚾','🎾','🏐'] } ]
+      { n: 'pelotas', s: 'una pelota', items: ['⚽','🏀','🏈','⚾','🎾','🏐'] } ],
+    [ { n: 'cosas del baño', s: 'algo del baño', items: ['🪥','🧼','🛁','🚿','🧻','🪒','🧴'] },
+      { n: 'cosas de la cocina', s: 'algo de la cocina', items: ['🍳','🥄','🍴','🔪','🫖','🧂','🥣'] } ],
+    [ { n: 'animales que saltan', s: 'un animal que salta', items: ['🐸','🦘','🐰','🦗','🐇'] },
+      { n: 'animales que nadan', s: 'un animal que nada', items: ['🐟','🐬','🐳','🦈','🐠','🐙'] } ]
   ];
-  // Nivel 3: parecidos pero con una diferencia sutil (color, vuelan, frío/calor, agua/tierra)
   var ATTR = [
     [ { n: 'cosas rojas',     s: 'algo rojo',     items: ['🍎','🍓','🍒','🌹','🚒','🎈','❤️','🌶️'] },
       { n: 'cosas naranjas',  s: 'algo naranja',  items: ['🍊','🥕','🎃','🦊','🏀','🍑','🦁','🐅'] },
@@ -150,9 +155,12 @@ var game = KidsGame.init({ title: 'El intruso' });
     [ { n: 'animales del agua', s: 'un animal del agua', items: ['🐟','🐙','🦀','🐬','🐳','🦈','🐠','🐡'] },
       { n: 'animales de la tierra', s: 'un animal de la tierra', items: ['🐶','🐱','🐮','🐷','🐴','🐘','🦁','🐰'] } ],
     [ { n: 'cosas grandes', s: 'algo grande', items: ['🐘','🦒','🐳','🏔️','🚌','🏠','🌳','🚂'] },
-      { n: 'cosas pequeñas', s: 'algo pequeño', items: ['🐜','🐝','🐞','🐌','🐁','🔑','💍','🌰'] } ]
+      { n: 'cosas pequeñas', s: 'algo pequeño', items: ['🐜','🐝','🐞','🐌','🐁','🔑','💍','🌰'] } ],
+    [ { n: 'cosas redondas', s: 'algo redondo', items: ['⚽','🍊','🌕','🎱','🍩','🪙','🔵','🎾'] },
+      { n: 'cosas largas', s: 'algo largo', items: ['✏️','🥖','🐍','🪜','🚂','🎸','📏','🥒'] } ],
+    [ { n: 'animales con plumas', s: 'un animal con plumas', items: ['🐔','🦆','🦉','🐧','🐦','🦅','🦜','🦢'] },
+      { n: 'animales con pelo', s: 'un animal con pelo', items: ['🐶','🐱','🐻','🐰','🦊','🐑','🐵','🐹'] } ]
   ];
-  // Nivel 4 (Experto): categorías por propiedad abstracta; se explica en voz alta por qué
   var ABSTRACT = [
     [ { n: 'cosas que flotan', s: 'algo que flota', why: 'flotan en el agua', items: ['⛵','🦆','🎈','🛟','🍎','🪵','🛶','🥥','🏄','🛳️','🧊','🍃'] },
       { n: 'cosas que se hunden', s: 'algo que se hunde', why: 'se hunden en el agua', items: ['🪨','🔑','⚓','🔩','🪙','🧱','🔨','🥄'] } ],
@@ -169,7 +177,11 @@ var game = KidsGame.init({ title: 'El intruso' });
     [ { n: 'cosas del día', s: 'algo del día', why: 'son del día', items: ['☀️','🌈','🌻','🏖️','🕶️','🌤️','🐓','🦋','🌞','⛱️'] },
       { n: 'cosas de la noche', s: 'algo de la noche', why: 'son de la noche', items: ['🌙','⭐','🦉','🛏️','🔦','🦇','🌌','😴','🌠','🕯️'] } ],
     [ { n: 'cosas blandas', s: 'algo blando', why: 'son blandos', items: ['🧸','🛏️','🍮','☁️','🧁','🍞','🐑','🧶','🛋️','🍡'] },
-      { n: 'cosas duras', s: 'algo duro', why: 'son duros', items: ['🪨','🧱','💎','🔩','🥥','🪙','🔨','⚓','🪵','🥄'] } ]
+      { n: 'cosas duras', s: 'algo duro', why: 'son duros', items: ['🪨','🧱','💎','🔩','🥥','🪙','🔨','⚓','🪵','🥄'] } ],
+    [ { n: 'cosas que hacen ruido', s: 'algo que hace ruido', why: 'hacen ruido', items: ['🥁','🔔','🚨','📢','🎺','🐓','🚒','🎸','⏰','🐕'] },
+      { n: 'cosas silenciosas', s: 'algo silencioso', why: 'no hacen ruido', items: ['🐌','🦋','🌙','📚','🧸','🪨','🌵','🕯️','🐢','☁️'] } ],
+    [ { n: 'cosas que se estiran', s: 'algo que se estira', why: 'se estiran y vuelven', items: ['🎈','🧶','🪢','🩹','🧦','🍬','🫧','🦑'] },
+      { n: 'cosas que se rompen', s: 'algo que se rompe', why: 'se rompen si se caen', items: ['🥚','🍽️','🏺','💡','🪟','🫙','🧊','🍪'] } ]
   ];
   var LEVELS = [
     { n: 4, k: 1, groups: [CATS] },
@@ -180,48 +192,83 @@ var game = KidsGame.init({ title: 'El intruso' });
   var LABELS = { 1: '4 fichas', 2: '6 fichas · parecidos', 3: '9 fichas · sutiles', 4: '12 fichas · 2 intrusos' };
   var ROUNDS = 8;
   var PALETTE = ['p1','p2','p3','p4','p5','p6'];
+  var SKINS = [{ id: 'rojo', n: 'Telón rojo', e: '🟥' }, { id: 'azul', n: 'Telón azul', e: '🟦' }, { id: 'morado', n: 'Telón morado', e: '🟪' }, { id: 'dorado', n: 'Telón dorado', e: '🟨' }, { id: 'verde', n: 'Telón verde', e: '🟩' }];
+  var cos = { unlocked: ['rojo'], sel: 'rojo' };
+  try { var sv = JSON.parse(localStorage.getItem('kg-cos-intruso')); if (sv && sv.unlocked) cos = sv; } catch (e) {}
+  function saveCos() { try { localStorage.setItem('kg-cos-intruso', JSON.stringify(cos)); } catch (e) {} }
 
-  var nivel = 0, cfg = null, round = 0, lock = false, running = false, foundN = 0;
-  var hud, dots, instr, instrTxt, board, grid, left;
+  var nivel = 0, cfg = null, round = 0, lock = false, running = false, foundN = 0, streak = 0, handShown = false, session = 0;
+  var hud, dots, instr, instrTxt, theater, grid, left, streakEl, skinBtn, beam, lamp;
+
+  function heroSVG(size) {
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<linearGradient id="tl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a8a"/><stop offset="1" stop-color="#8a0f0f"/></linearGradient>' +
+      '<linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8d0"/><stop offset="1" stop-color="#ffd54a" stop-opacity=".1"/></linearGradient>' +
+      '<radialGradient id="tm" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#ffe98a"/><stop offset="1" stop-color="#c47f00"/></radialGradient></defs>' +
+      '<path d="M4 8 Q50 26 96 8 L96 30 Q50 44 4 30 Z" fill="url(#tl)" stroke="#6a0a0a" stroke-width="2"/>' +
+      '<path d="M4 8 L4 92 Q14 70 22 92 L22 24 Q12 20 4 8 Z" fill="url(#tl)" stroke="#6a0a0a" stroke-width="2"/><path d="M96 8 L96 92 Q86 70 78 92 L78 24 Q88 20 96 8 Z" fill="url(#tl)" stroke="#6a0a0a" stroke-width="2"/>' +
+      '<path d="M50 30 L22 92 L78 92 Z" fill="url(#tb)"/>' +
+      '<ellipse cx="50" cy="90" rx="24" ry="5" fill="rgba(255,220,100,.5)"/>' +
+      '<path d="M50 54 Q58 54 60 62 Q68 62 66 70 Q68 80 58 80 L42 80 Q32 80 34 70 Q32 62 40 62 Q42 54 50 54 Z" fill="url(#tm)" stroke="#8a5a00" stroke-width="2"/>' +
+      '<ellipse cx="44" cy="66" rx="3.5" ry="4" fill="#fff"/><ellipse cx="56" cy="66" rx="3.5" ry="4" fill="#fff"/><circle cx="44.5" cy="67" r="2" fill="#222"/><circle cx="56.5" cy="67" r="2" fill="#222"/>' +
+      '<path d="M43 73 Q50 80 57 73" fill="#8a2a2a" stroke="#6a1a1a" stroke-width="1.5"/>' +
+      '<text x="24" y="52" font-size="10">⭐</text><text x="66" y="48" font-size="10">⭐</text></svg>';
+  }
 
   function build() {
     game.innerHTML = '';
+    game.className = 'game ' + cos.sel;
     hud = document.createElement('div'); hud.className = 'hud panel';
+    hud.insertAdjacentHTML('beforeend', '<div class="hero">' + heroSVG(52) + '</div>');
     hud.appendChild(KidsGame.levelBadge(nivel));
     dots = document.createElement('div'); dots.className = 'dots';
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
     left = document.createElement('span'); left.className = 'left'; hud.appendChild(left);
+    streakEl = document.createElement('span'); streakEl.className = 'streak'; hud.appendChild(streakEl);
+    skinBtn = document.createElement('button'); skinBtn.className = 'btn round purple'; skinBtn.textContent = '🎨'; skinBtn.setAttribute('aria-label', 'Cambiar telón');
+    skinBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); cycleSkin(); });
+    skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
+    hud.appendChild(skinBtn);
     var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
 
     instr = document.createElement('div'); instr.className = 'instr panel';
-    instr.innerHTML = '<span class="ico emoji">🔍</span><span class="txt">¿Cuál no va con los demás?</span>';
+    instr.innerHTML = '<span class="ico emoji">🔦</span><span class="txt">¿Cuál no va con los demás?</span>';
     instrTxt = instr.querySelector('.txt');
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊'; sp.setAttribute('aria-label', 'Repetir');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(question()); });
     instr.appendChild(sp);
     game.appendChild(instr);
 
-    board = document.createElement('div'); board.className = 'board';
+    theater = document.createElement('div'); theater.className = 'theater closed';
+    theater.innerHTML = '<div class="dark"></div><div class="beam"><i></i></div><div class="lamp" style="left:50%"></div><div class="curt l"></div><div class="curt r"></div><div class="valance"></div>';
+    beam = theater.querySelector('.beam'); lamp = theater.querySelector('.lamp');
     grid = document.createElement('div'); grid.className = 'grid';
-    board.appendChild(grid); game.appendChild(board);
+    theater.appendChild(grid); game.appendChild(theater);
+    var b = document.createElement('div'); b.className = 'banner'; game.appendChild(b);
   }
+  function cycleSkin() {
+    KidsGame.sound.tap();
+    var i = cos.unlocked.indexOf(cos.sel); cos.sel = cos.unlocked[(i + 1) % cos.unlocked.length]; saveCos();
+    game.className = 'game ' + cos.sel;
+    var s = SKINS.filter(function (k) { return k.id === cos.sel; })[0]; KidsGame.toast(s.e + ' ' + s.n, 1200);
+  }
+  function unlockSkin(lv) { var s = SKINS[Math.min(lv, SKINS.length - 1)]; if (cos.unlocked.indexOf(s.id) >= 0) return null; cos.unlocked.push(s.id); cos.sel = s.id; saveCos(); return s; }
+  function banner(txt) { var b = game.querySelector('.banner'); if (!b) return; b.textContent = txt; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+  function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); }
   function question() { return cfg.k === 2 ? 'Hay dos intrusos. ¿Cuáles no van con los demás?' : '¿Cuál no va con los demás?'; }
 
   function showPicker() {
-    running = false; lock = true;
+    running = false; lock = true; session++;
     if (grid) grid.innerHTML = '';
-    KidsGame.levelPicker({ key: 'intruso', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'intruso', labels: LABELS, art: heroSVG(64), music: 'alegre',
+      howto: [{ icon: '🎭', text: 'Salen al escenario varias fichas' }, { icon: '🤔', text: 'Una no va con las demás' }, { icon: '🔦', text: 'Tócala y el reflector la ilumina' }],
+      onPick: function (lv) { start(lv); } });
   }
-
-  function start(lv) {
-    nivel = lv; cfg = LEVELS[lv - 1]; round = 0; running = true;
-    build();
-    newRound();
-  }
+  function start(lv) { nivel = lv; cfg = LEVELS[lv - 1]; round = 0; running = true; streak = 0; session++; build(); setTimeout(newRound, 150); }
 
   function makeRound() {
     var n = cfg.n, k = cfg.k, tries = 0;
@@ -250,55 +297,57 @@ var game = KidsGame.init({ title: 'El intruso' });
     if (!cur) { cfg = LEVELS[Math.max(0, nivel - 2)]; cur = makeRound(); cfg = LEVELS[nivel - 1]; }
     lock = false; foundN = 0;
     grid.innerHTML = '';
+    theater.classList.remove('lights'); theater.classList.add('closed');
     instrTxt.textContent = cfg.k === 2 ? '¡Hay 2 intrusos! ¿Cuáles no van?' : '¿Cuál no va con los demás?';
     instrTxt.classList.toggle('long', cfg.k === 2);
     left.textContent = cfg.k === 2 ? '🔍 2' : '';
     cur.items.forEach(function (it, i) {
       var m = document.createElement('div');
       m.className = 'med pop ' + KidsGame.pick(PALETTE);
-      m.style.animationDelay = (i * 60) + 'ms';
+      m.style.animationDelay = (300 + i * 60) + 'ms';
       m.innerHTML = '<span class="emoji">' + it.e + '</span>';
-      m.addEventListener('animationend', function () {
-        if (m.classList.contains('pop')) { m.classList.remove('pop'); m.style.animationDelay = (Math.random() * 2) + 's'; }
-      });
+      m.addEventListener('animationend', function () { if (m.classList.contains('pop')) { m.classList.remove('pop'); m.style.animationDelay = (Math.random() * 2) + 's'; } });
       m.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(m, it); });
       grid.appendChild(m);
     });
     layout();
-    KidsGame.say(question());
+    banner('Acto ' + (round + 1) + ' de ' + ROUNDS);
+    // se abre el telón
+    var ss = session;
+    setTimeout(function () { if (ss !== session) return; theater.classList.remove('closed'); KidsGame.sound.pop(); }, 350);
+    setTimeout(function () { if (ss === session && running) KidsGame.say(question()); }, 700);
+    if (nivel === 1 && round === 0 && !handShown) {
+      handShown = true;
+      setTimeout(function () { if (ss !== session || !running || lock) return; var meds = grid.querySelectorAll('.med'); for (var i = 0; i < cur.items.length; i++) if (cur.items[i].ok) { KidsGame.hand({ el: meds[i], timeout: 12000 }); break; } }, 2000);
+    }
   }
 
   function layout() {
     if (!cfg || !grid) return;
     var n = cfg.n;
     var cols = n === 4 ? 2 : (n === 12 ? 4 : 3), rows = n / cols;
-    var W = board.clientWidth - 10, H = board.clientHeight - 10;
+    var W = theater.clientWidth - 40, H = theater.clientHeight - 20;
+    var top = Math.max(34, theater.clientHeight * 0.12);
+    H = H - top;
     if (W < H && cols > rows) { var t = cols; cols = rows; rows = t; }
     var gap = n >= 9 ? 14 : 22;
     var size = Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - (rows - 1) * gap) / rows));
-    size = Math.max(64, Math.min(size, 230));
+    size = Math.max(64, Math.min(size, 220));
     grid.style.setProperty('--gap', gap + 'px');
     grid.style.setProperty('--bw', (cols * size + (cols - 1) * gap) + 'px');
     grid.style.setProperty('--bh', (rows * size + (rows - 1) * gap) + 'px');
     grid.style.setProperty('--fs', Math.round(size * 0.5) + 'px');
     grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
     grid.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+    grid.style.marginTop = (top * 0.6) + 'px';
   }
-
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = document.createElement('div');
-      s.className = 'spark' + (i % 3 === 0 ? ' star' : '');
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 110;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px');
-      s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors);
-      s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s);
-      (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
-    }
+  function spotlight(m) {
+    var tr = theater.getBoundingClientRect(), r = m.getBoundingClientRect();
+    var cx = r.left + r.width / 2 - tr.left, cy = r.top + r.height / 2 - tr.top;
+    var w = r.width * 1.6;
+    beam.style.left = (cx - w / 2) + 'px'; beam.style.top = '0px'; beam.style.width = w + 'px'; beam.style.height = (cy + r.height * .5) + 'px';
+    lamp.style.left = cx + 'px';
+    theater.classList.add('lights');
   }
   function explain() {
     var o = cur.other, m = cur.main;
@@ -312,44 +361,54 @@ var game = KidsGame.init({ title: 'El intruso' });
       foundN++;
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
       m.classList.add('ok');
-      var r = m.getBoundingClientRect(), g = game.getBoundingClientRect();
-      sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 22);
-      if (foundN < cfg.k) { m.classList.add('first'); left.textContent = '🔍 1'; KidsGame.say('¡Uno! Falta otro intruso'); KidsGame.toast('✅ ¡Uno! Falta otro', 1300); return; }
+      var r = m.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      KidsGame.fx.ring(m); KidsGame.fx.burst(x, y, { n: 18 });
+      if (foundN < cfg.k) { m.classList.add('first'); left.textContent = '🔍 1'; KidsGame.fx.floatText(x, y - 40, '¡Uno!', 'good'); KidsGame.say('¡Uno! Falta otro intruso'); return; }
       lock = true; left.textContent = '';
+      streak++; setStreak();
+      if (streak >= 3) KidsGame.fx.floatText(x, y - 50, '¡Racha x' + streak + '!', 'good'); else KidsGame.fx.floatText(x, y - 50, '+1', 'good');
+      if (streak % 5 === 0) { KidsGame.addStar(1); KidsGame.fx.burst(x, y - 70, { n: 10, chars: ['⭐', '✨'] }); KidsGame.toast('⭐ ¡Bonus de racha!', 1300); }
       var all = grid.querySelectorAll('.med');
       for (var i = 0; i < all.length; i++) if (!all[i].classList.contains('ok')) all[i].classList.add('dim');
+      spotlight(m); KidsGame.music.duck(1800);
+      setTimeout(function () { KidsGame.fx.burst(x, y - 20, { n: 10, chars: ['👏', '⭐'] }); }, 500);
       KidsGame.say(explain());
       dots.children[round].classList.add('on');
       round++;
+      var ss = session;
       setTimeout(function () {
-        if (round >= ROUNDS) finish(); else newRound();
-      }, cfg.k === 2 ? 2600 : 1600);
+        if (ss !== session || !running) return;
+        if (round >= ROUNDS) { finish(); return; }
+        theater.classList.add('closed'); KidsGame.sound.tap();
+        setTimeout(function () { if (ss === session && running) newRound(); }, 600);
+      }, cfg.k === 2 ? 2800 : 1900);
     } else {
+      streak = 0; setStreak();
       KidsGame.sound.wrong(); KidsGame.vibrate(20);
-      m.classList.remove('bad'); void m.offsetWidth; m.classList.add('bad');
-      m.addEventListener('animationend', function h() { m.classList.remove('bad'); m.removeEventListener('animationend', h); });
+      KidsGame.fx.shake(m);
     }
   }
 
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var s = unlockSkin(nivel);
+    if (skinBtn) skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
     KidsGame.celebrate({
-      sub: '¡Encontraste ' + (ROUNDS * cfg.k) + ' intrusos!',
+      sub: '¡Encontraste ' + (ROUNDS * cfg.k) + ' intrusos!' + (s ? ' 🎨 Nuevo: ' + s.n : ''),
       onNext: function () { start(Math.min(4, nivel + 1)); },
       onAgain: function () { start(nivel); }
     });
   }
 
   window.addEventListener('resize', layout);
-  // Expuesto para pruebas
   window.__intr = {
     get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get cfg() { return cfg; }, explain: explain,
     solve: function () {
-      if (lock || !cur) return false;
+      if (lock || !cur || !running) return false;
       var meds = grid.querySelectorAll('.med'), out = [];
       cur.items.forEach(function (it, i) { if (it.ok && !meds[i].classList.contains('ok')) { meds[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); out.push(it.e); } });
-      return out.join('');
+      return out.join('') || false;
     }
   };
   showPicker();

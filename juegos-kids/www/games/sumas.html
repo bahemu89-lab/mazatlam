@@ -6,48 +6,67 @@
 <link rel="stylesheet" href="../common.css">
 <title>Sumas</title>
 <style>
+  /* ===== La pastelería: pared de rayas rosas, toldo, mostrador de madera y el osito pastelero ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
       radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse 100% 50% at 50% 110%, rgba(0,80,60,.4), rgba(0,0,0,0) 60%),
-      linear-gradient(180deg, #a8f0c6 0%, #4fd39a 50%, #1fa877 100%);
+      repeating-linear-gradient(90deg, rgba(245,130,174,.16) 0 34px, rgba(255,255,255,0) 34px 68px),
+      linear-gradient(180deg, #fff0f5 0%, #ffe3ec 68%, #e0a86a 68.5%, #b8773c 72%, #8f5a2a 100%);
   }
   .game::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
-    background:
-      radial-gradient(circle at 8% 30%, rgba(255,255,255,.4) 0 26px, rgba(255,255,255,0) 27px),
-      radial-gradient(circle at 93% 26%, rgba(255,255,255,.35) 0 34px, rgba(255,255,255,0) 35px),
-      radial-gradient(circle at 90% 80%, rgba(255,255,255,.3) 0 20px, rgba(255,255,255,0) 21px),
-      radial-gradient(circle at 6% 84%, rgba(255,255,255,.3) 0 30px, rgba(255,255,255,0) 31px),
-      radial-gradient(circle at 50% 96%, rgba(255,255,255,.25) 0 16px, rgba(255,255,255,0) 17px);
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 52px; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(90deg, #ff8fb3 0 56px, #fff 56px 112px);
+    border-bottom: 5px solid #e0569a; box-shadow: 0 8px 16px rgba(120,0,60,.2);
+    -webkit-mask: radial-gradient(circle at 28px 52px, rgba(0,0,0,0) 26px, #000 27px) repeat-x; -webkit-mask-size: 56px 100%;
+    mask: radial-gradient(circle at 28px 52px, rgba(0,0,0,0) 26px, #000 27px) repeat-x; mask-size: 56px 100%;
   }
-  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
+  .game::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 28px, rgba(90,40,10,.1) 28px 30px), radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%);
+    box-shadow: inset 0 12px 20px rgba(120,60,10,.25); opacity: .9;
+  }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; margin-top: 30px; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round { width: 64px; height: 64px; font-size: 28px; }
-  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; }
-  .instr .txt { font-size: 28px; font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #14784a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
-  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+  /* Vitrina de la pastelería: una repisa con los pasteles ganados por nivel (desbloqueables) */
+  .vit { display: flex; gap: 4px; padding: 4px 8px 6px; border-radius: 14px; background: linear-gradient(180deg, #ffe3ec, #ffc8d9); box-shadow: inset 0 2px 4px rgba(120,0,60,.15), 0 3px 0 #e0a86a; }
+  .vit span { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 24px; border-radius: 8px; background: rgba(255,255,255,.7); }
+  .vit span.off { opacity: .35; font-size: 16px; }
+  .vit span.new { animation: pop .5s ease-out; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 10px; border-radius: 40px; }
+  .instr .txt { font-size: 28px; font-size: clamp(18px, 3vw, 28px); font-weight: 900; color: #b8306f; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .instr .baker { width: 64px; height: 64px; flex: 0 0 auto; filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); cursor: pointer; }
+  .baker .bk-eyes { transform-origin: 60px 54px; animation: bkblink 4.6s infinite; }
+  @keyframes bkblink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  .baker .bk-head { transform-origin: 60px 80px; animation: bknod 3.4s ease-in-out infinite; }
+  @keyframes bknod { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg); } }
+  .baker.cheer { animation: bkcheer .5s ease-out; }
+  @keyframes bkcheer { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.15, .9); } 70% { transform: scale(.95, 1.08) translateY(-5px); } }
 
   .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; gap: clamp(14px, 3vh, 34px); }
+  .stage { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .stage.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .stage.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   .eq { display: flex; align-items: stretch; justify-content: center; gap: 14px; gap: clamp(6px, 1.2vw, 14px); width: 100%; }
   .eq .op, .eq .res { align-self: center; }
+  /* Charolas de pastelería: porcelana blanca con borde rosa y carpetita */
   .tray {
     position: relative; flex: 1 1 0; max-width: 420px; min-height: 150px; padding: 14px 10px 18px; border-radius: 28px;
     display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 4px;
     background:
-      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
-      repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 26px, rgba(120,60,10,.08) 26px 28px),
-      linear-gradient(180deg, #ffd58a 0%, #f2b25a 60%, #d8923a 100%);
-    border: 3px solid #fff7e0;
-    box-shadow: 0 9px 0 #a8672a, 0 18px 26px rgba(0,60,40,.35), inset 0 2px 0 #fff, inset 0 -6px 0 rgba(0,0,0,.08), inset 0 0 0 6px rgba(255,255,255,.18);
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.95), rgba(255,255,255,0) 70%),
+      repeating-radial-gradient(circle at 50% 50%, rgba(245,130,174,.13) 0 5px, rgba(255,255,255,0) 5px 14px),
+      linear-gradient(180deg, #ffffff 0%, #fff0f5 60%, #ffd9e6 100%);
+    border: 4px solid #f582ae;
+    box-shadow: 0 9px 0 #c94b85, 0 18px 26px rgba(120,0,60,.3), inset 0 2px 0 #fff, inset 0 -6px 0 rgba(0,0,0,.05), inset 0 0 0 6px rgba(255,255,255,.6);
     transition: opacity .4s, transform .4s;
   }
   .tray.pop { animation: pop .4s ease-out backwards; }
   .tray.gone { opacity: 0; transform: scale(.85); }
-  .tray.win { box-shadow: 0 9px 0 #a8672a, 0 18px 26px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 40px 10px rgba(255,233,138,.85), inset 0 2px 0 #fff; }
+  .tray.win { box-shadow: 0 9px 0 #c94b85, 0 18px 26px rgba(120,0,60,.3), 0 0 0 6px #ffe98a, 0 0 40px 10px rgba(255,233,138,.85), inset 0 2px 0 #fff; }
   .obj {
     position: relative; width: var(--o); height: var(--o); display: flex; align-items: center; justify-content: center; cursor: pointer;
     transition: transform .55s cubic-bezier(.3,1.4,.4,1), opacity .5s; animation: wob 3s ease-in-out infinite;
@@ -72,7 +91,7 @@
     flex: 0 0 auto; width: 130px; width: clamp(96px, 12vw, 130px); height: 130px; height: clamp(96px, 12vw, 130px); border-radius: 26px; display: flex; align-items: center; justify-content: center;
     font-size: 76px; font-size: clamp(54px, 7vw, 76px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #c47f00, 0 6px 10px rgba(0,0,0,.3);
     background: linear-gradient(180deg, #fff6d0, #ffd54a); border: 4px dashed #fff;
-    box-shadow: 0 8px 0 #c47f00, 0 16px 24px rgba(0,60,40,.35), 0 0 0 5px rgba(255,255,255,.4), inset 0 2px 0 #fff;
+    box-shadow: 0 8px 0 #c47f00, 0 16px 24px rgba(120,0,60,.3), 0 0 0 5px rgba(255,255,255,.4), inset 0 2px 0 #fff;
     animation: qpulse 1.3s ease-in-out infinite; position: relative;
   }
   .res::before { content: ""; position: absolute; left: 8%; right: 8%; top: 5%; height: 36%; border-radius: 18px 18px 50% 50%; background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0)); pointer-events: none; }
@@ -88,7 +107,7 @@
     font-size: calc(var(--n) * .58); font-weight: 900; color: #fff; text-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(0,0,0,.3);
     background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, var(--a), var(--b));
     border: 3px solid rgba(255,255,255,.85);
-    box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,60,40,.35), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -5px 0 rgba(0,0,0,.1);
+    box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(120,0,60,.3), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -5px 0 rgba(0,0,0,.1);
     transition: transform .12s, box-shadow .12s; animation: pop .4s ease-out backwards;
   }
   .num::before { content: ""; position: absolute; left: 8%; right: 8%; top: 4%; height: 36%; border-radius: 18% 18% 50% 50%; background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0)); pointer-events: none; }
@@ -102,10 +121,10 @@
   .num.dim { opacity: .4; transform: scale(.9); animation: none; }
 
   /* ---- Niveles 3-4: hueco para arrastrar, marco de diez, cuentos de dos pasos ---- */
-  .instr.story .txt { white-space: normal; text-align: center; font-size: clamp(16px, 2.4vw, 24px); line-height: 1.15; max-width: 70vw; }
-  .tray.hole { border: 4px dashed #fff; background: linear-gradient(180deg, #fff6d0, #ffd54a); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(0,60,40,.35), 0 0 0 5px rgba(255,255,255,.4), inset 0 2px 0 #fff; min-height: 120px; }
+  .instr.story .txt { white-space: normal; text-align: center; font-size: clamp(16px, 2.4vw, 24px); line-height: 1.15; max-width: 66vw; }
+  .tray.hole { border: 4px dashed #fff; background: linear-gradient(180deg, #fff6d0, #ffd54a); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(120,0,60,.3), 0 0 0 5px rgba(255,255,255,.4), inset 0 2px 0 #fff; min-height: 120px; }
   .tray.hole .qm { font-size: clamp(54px, 7vw, 80px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #c47f00, 0 6px 10px rgba(0,0,0,.3); animation: qpulse 1.3s ease-in-out infinite; }
-  .tray.hole.hot { transform: scale(1.06); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(0,60,40,.35), 0 0 0 8px #ffe98a, 0 0 40px 10px rgba(255,233,138,.9), inset 0 2px 0 #fff; }
+  .tray.hole.hot { transform: scale(1.06); box-shadow: 0 9px 0 #c47f00, 0 18px 26px rgba(120,0,60,.3), 0 0 0 8px #ffe98a, 0 0 40px 10px rgba(255,233,138,.9), inset 0 2px 0 #fff; }
   .tray.hole .num { animation: land .6s cubic-bezier(.3,1.6,.5,1); }
   .tray .tf { width: min(100%, 300px); filter: drop-shadow(0 6px 5px rgba(60,30,0,.3)); }
   .tray.cnt3 { max-width: 300px; min-height: 120px; }
@@ -116,10 +135,14 @@
   .obj.off .emoji { filter: grayscale(1) opacity(.35); }
   .obj.off::after { content: "✖"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--o) * .6); color: #e53170; text-shadow: 0 2px 0 #fff; }
   .obj.add .emoji { filter: drop-shadow(0 0 8px #ffe066) drop-shadow(0 5px 4px rgba(0,0,0,.3)); }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
-           box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #ff9ccb, #f0569a); text-shadow: 0 3px 0 #b8306f, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #b8306f, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  @media (max-width: 700px) { .hud { gap: 8px; } .vit span { width: 28px; height: 28px; font-size: 20px; } .instr .baker { width: 56px; height: 56px; } }
 </style>
 </head>
 <body>
@@ -127,71 +150,115 @@
 <script>
 var game = KidsGame.init({ title: 'Sumas' });
 (function () {
-  var OBJS = ['🍎', '🍓', '🍪', '🍭', '🐥', '🌸', '⭐', '🎈', '🐟', '🦋', '🍩', '🐞', '🍬', '🐸', '🌟'];
+  var OBJS = ['🧁', '🍩', '🍪', '🎂', '🍰', '🥐', '🍬', '🍭', '🍫', '🥧', '🍡', '🍦', '🍓', '🍒', '🥨'];
   var ROUNDS = 8;
   var NUMCOLS = ['c1', 'c2', 'c3', 'c4'];
   var NUMS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro'];
   var LABELS = { 1: 'sumas hasta 10', 2: 'hasta 20 · restas', 3: '3 + ? = 8 · arrastra', 4: 'cuentos · doble y mitad' };
+  var HOWTO = [{ icon: '🧁', text: 'Cuenta los pastelitos de cada charola' }, { icon: '➕', text: 'Júntalos: ¿cuántos hay en total?' }, { icon: '🔢', text: 'Toca el número correcto' }];
+  // Vitrina: un pastel nuevo por nivel completado (cosmético, guardado en localStorage)
+  var DECOS = [['pastel', '🎂', 'un pastel'], ['pastelitos', '🧁', 'unos pastelitos'], ['donas', '🍩', 'unas donas'], ['trofeo', '🏆', 'el trofeo de oro']];
   var MODES = {
     1: ['add', 'add', 'add', 'add', 'add', 'add', 'add', 'add'],
     2: ['add', 'add', 'add', 'sub', 'add', 'add', 'sub', 'add'],
     3: ['missing', 'sub', 'missing', 'add', 'missing', 'sub', 'missing', 'add'],
     4: ['story', 'double', 'story', 'half', 'story', 'double', 'story', 'half']
   };
-  // Cuentos de dos pasos (Experto): a, luego −b o +b, luego −c o +c
   var STORIES = [
     { who: 'Tenía {a} dulces', s1: ['me comí {b}', 'regalé {b}'], a1: ['me dio {c} mi mamá', 'encontré {c} más'], q: '¿cuántos tengo?', e: '🍬' },
-    { who: 'Había {a} pajaritos en el árbol', s1: ['se fueron volando {b}', 'se asustaron {b}'], a1: ['llegaron {c} más', 'volvieron {c}'], q: '¿cuántos hay ahora?', e: '🐦' },
-    { who: 'Tenía {a} globos', s1: ['se reventaron {b}', 'se me escaparon {b}'], a1: ['me compraron {c} más', 'mi abuela me dio {c}'], q: '¿cuántos tengo?', e: '🎈' },
-    { who: 'Había {a} galletas en el plato', s1: ['mi papá se comió {b}', 'se cayeron {b}'], a1: ['mamá horneó {c} más', 'pusieron {c} más'], q: '¿cuántas quedan?', e: '🍪' },
-    { who: 'En el estanque había {a} peces', s1: ['se escondieron {b}', 'se fueron {b}'], a1: ['llegaron {c} nuevos', 'salieron {c} más'], q: '¿cuántos se ven?', e: '🐟' },
-    { who: 'Tenía {a} flores', s1: ['se marchitaron {b}', 'regalé {b}'], a1: ['corté {c} más', 'me regalaron {c}'], q: '¿cuántas tengo?', e: '🌸' }
+    { who: 'Había {a} galletas en la charola', s1: ['se vendieron {b}', 'se cayeron {b}'], a1: ['horneé {c} más', 'pusieron {c} más'], q: '¿cuántas quedan?', e: '🍪' },
+    { who: 'Tenía {a} pastelitos', s1: ['vendí {b}', 'regalé {b}'], a1: ['decoré {c} más', 'me trajeron {c}'], q: '¿cuántos tengo?', e: '🧁' },
+    { who: 'Había {a} donas en la vitrina', s1: ['se compraron {b}', 'se comieron {b}'], a1: ['salieron {c} del horno', 'pusieron {c} más'], q: '¿cuántas hay ahora?', e: '🍩' },
+    { who: 'Tenía {a} paletas', s1: ['di {b} a mis amigos', 'se derritieron {b}'], a1: ['hice {c} más', 'me regalaron {c}'], q: '¿cuántas tengo?', e: '🍭' },
+    { who: 'Había {a} fresas para el pastel', s1: ['me comí {b}', 'se usaron {b}'], a1: ['compré {c} más', 'trajeron {c} más'], q: '¿cuántas quedan?', e: '🍓' }
   ];
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, counted = 0, plan = [];
-  var hud, dots, instr, instrTxt, stage, eq, trayA, trayB, trayC, opEl, op2El, resEl, nums;
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, counted = 0, plan = [], streak = 0, handShown = false;
+  var hud, dots, instr, instrTxt, stage, eq, trayA, trayB, trayC, opEl, op2El, resEl, nums, banner, vit;
+
+  function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---- Hero art: el osito pastelero (SVG con parpadeo, cabeceo y batidor) ----
+  function bakerSVG(size) {
+    return '<svg class="baker" viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="bkf" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#dfa872"/><stop offset="1" stop-color="#9c6230"/></radialGradient>' +
+      '<linearGradient id="bkh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dde4f0"/></linearGradient>' +
+      '<linearGradient id="bka" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ccb"/><stop offset="1" stop-color="#f0569a"/></linearGradient></defs>' +
+      '<ellipse cx="60" cy="113" rx="36" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M28 112 Q28 76 60 76 Q92 76 92 112Z" fill="url(#bka)"/><path d="M40 112 Q40 86 60 86 Q80 86 80 112Z" fill="#fff" opacity=".92"/><path d="M48 96 L72 96" stroke="#f582ae" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M90 92 L106 72" stroke="#8a5a32" stroke-width="4" stroke-linecap="round"/><ellipse cx="108" cy="64" rx="7" ry="10" fill="none" stroke="#8d93a8" stroke-width="2.5"/><path d="M103 58 L113 70 M113 58 L103 70 M108 54 L108 74" stroke="#8d93a8" stroke-width="1.5"/>' +
+      '<g class="bk-head">' +
+      '<circle cx="30" cy="44" r="11" fill="url(#bkf)" stroke="#6b3d12" stroke-width="2"/><circle cx="90" cy="44" r="11" fill="url(#bkf)" stroke="#6b3d12" stroke-width="2"/><circle cx="30" cy="44" r="5" fill="#f5cfa8"/><circle cx="90" cy="44" r="5" fill="#f5cfa8"/>' +
+      '<ellipse cx="60" cy="58" rx="32" ry="28" fill="url(#bkf)" stroke="#6b3d12" stroke-width="2"/>' +
+      '<ellipse cx="60" cy="69" rx="14" ry="10" fill="#f5cfa8"/>' +
+      '<g class="bk-eyes"><ellipse cx="48" cy="54" rx="4.5" ry="5.5" fill="#2b2b2b"/><ellipse cx="72" cy="54" rx="4.5" ry="5.5" fill="#2b2b2b"/><circle cx="49.5" cy="52" r="1.6" fill="#fff"/><circle cx="73.5" cy="52" r="1.6" fill="#fff"/></g>' +
+      '<ellipse cx="60" cy="65" rx="5" ry="3.5" fill="#2b2b2b"/>' +
+      '<path class="bk-mouth" d="M53 72 Q60 78 67 72" stroke="#6b3d12" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="40" cy="64" r="4.5" fill="#ff8aa8" opacity=".5"/><circle cx="80" cy="64" r="4.5" fill="#ff8aa8" opacity=".5"/>' +
+      '<path d="M34 36 Q28 10 50 12 Q60 0 70 12 Q92 10 86 36Z" fill="url(#bkh)" stroke="#9aa5b8" stroke-width="2" stroke-linejoin="round"/><rect x="36" y="31" width="48" height="11" rx="5" fill="#fff" stroke="#9aa5b8" stroke-width="2"/>' +
+      '</g></svg>';
+  }
+  function bakerCheer() { var b = instr && instr.querySelector('.baker'); if (b) { b.classList.remove('cheer'); void b.offsetWidth; b.classList.add('cheer'); } }
 
   function build() {
     game.innerHTML = '';
-    hud = document.createElement('div'); hud.className = 'hud panel';
+    hud = el('div', 'hud panel');
     hud.appendChild(KidsGame.levelBadge(nivel));
-    dots = document.createElement('div'); dots.className = 'dots';
+    dots = el('div', 'dots');
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
-    var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
+    vit = el('div', 'vit'); renderVit(); hud.appendChild(vit);
+    var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
 
-    instr = document.createElement('div'); instr.className = 'instr panel';
-    instr.innerHTML = '<span class="ico emoji">🧮</span><span class="txt"></span>';
+    instr = el('div', 'instr panel');
+    instr.innerHTML = bakerSVG(64) + '<span class="txt"></span>';
     instrTxt = instr.querySelector('.txt');
-    var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
+    instr.querySelector('.baker').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); bakerCheer(); sayRound(); });
+    var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); sayRound(); });
     instr.appendChild(sp);
     game.appendChild(instr);
 
-    stage = document.createElement('div'); stage.className = 'stage';
-    eq = document.createElement('div'); eq.className = 'eq';
-    trayA = document.createElement('div'); trayA.className = 'tray';
-    trayB = document.createElement('div'); trayB.className = 'tray';
-    trayC = document.createElement('div'); trayC.className = 'tray hidden';
-    opEl = document.createElement('div'); opEl.className = 'op';
-    op2El = document.createElement('div'); op2El.className = 'op hidden';
-    var eqSign = document.createElement('div'); eqSign.className = 'op eq'; eqSign.textContent = '=';
-    resEl = document.createElement('div'); resEl.className = 'res';
+    stage = el('div', 'stage');
+    eq = el('div', 'eq');
+    trayA = el('div', 'tray'); trayB = el('div', 'tray'); trayC = el('div', 'tray hidden');
+    opEl = el('div', 'op'); op2El = el('div', 'op hidden');
+    var eqSign = el('div', 'op eq', '=');
+    resEl = el('div', 'res');
     eq.appendChild(trayA); eq.appendChild(opEl); eq.appendChild(trayB); eq.appendChild(op2El); eq.appendChild(trayC); eq.appendChild(eqSign); eq.appendChild(resEl);
-    nums = document.createElement('div'); nums.className = 'nums panel';
+    nums = el('div', 'nums panel');
     stage.appendChild(eq); stage.appendChild(nums);
     game.appendChild(stage);
+    banner = el('div', 'rbanner'); game.appendChild(banner);
   }
+  function renderVit(newId) {
+    var have = readJSON('kg-sumas-deco', []);
+    vit.innerHTML = DECOS.map(function (d) { var on = have.indexOf(d[0]) >= 0; return '<span class="' + (on ? (d[0] === newId ? 'new' : '') : 'off') + '" title="' + d[2] + '">' + (on ? d[1] : '🔒') + '</span>'; }).join('');
+  }
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++; bakerCheer();
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 12, chars: streak >= 3 ? ['⭐', '✨', '🧁'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
 
   function showPicker() {
     running = false; lock = true;
     if (stage) { trayA.innerHTML = ''; trayB.innerHTML = ''; trayC.innerHTML = ''; nums.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'sumas', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'sumas', labels: LABELS, howto: HOWTO, art: bakerSVG(64), music: 'alegre', onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; plan = KidsGame.shuffle(MODES[lv]); build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; plan = KidsGame.shuffle(MODES[lv]); build(); newRound(true); }
 
   function fill(t, v) { return t.replace('{a}', v.a).replace('{b}', v.b).replace('{c}', v.c); }
   function makeRound() {
@@ -210,7 +277,7 @@ var game = KidsGame.init({ title: 'Sumas' });
       max = 20; a = 2 + KidsGame.rand(9); b = a; ans = a * 2;
     } else if (mode === 'half') {
       max = 12; ans = 1 + KidsGame.rand(6); a = ans * 2; b = 0;
-    } else { // story
+    } else {
       max = 20;
       var st = KidsGame.pick(STORIES);
       a = 5 + KidsGame.rand(8); b = 1 + KidsGame.rand(Math.min(4, a - 2)); c = 1 + KidsGame.rand(5);
@@ -225,7 +292,7 @@ var game = KidsGame.init({ title: 'Sumas' });
   }
 
   function makeObj(e, ghost) {
-    var o = document.createElement('div'); o.className = 'obj' + (ghost ? ' ghost' : '');
+    var o = el('div', 'obj' + (ghost ? ' ghost' : ''));
     o.innerHTML = '<span class="emoji">' + e + '</span>';
     o.style.animationDelay = (Math.random() * 3) + 's';
     if (!ghost) o.addEventListener('pointerdown', function (ev) { ev.preventDefault(); countTap(o); });
@@ -241,7 +308,6 @@ var game = KidsGame.init({ title: 'Sumas' });
     else if (cur.sub) KidsGame.say('Hay ' + NUMS[cur.a] + ' y se van ' + NUMS[cur.b] + '. ¿Cuántos quedan?');
     else KidsGame.say(NUMS[cur.a] + ' más ' + NUMS[cur.b] + '. ¿Cuántos hay en total?');
   }
-  // Marco de diez: a puntos llenos, (c - a) huecos punteados
   function tenFrame(a, c) {
     var frames = c > 10 ? 2 : 1, s = '';
     for (var f = 0; f < frames; f++) {
@@ -257,7 +323,13 @@ var game = KidsGame.init({ title: 'Sumas' });
     return s;
   }
 
-  function newRound() {
+  // Entre rondas el escenario sale deslizando y el nuevo entra (nunca un cambio seco)
+  function newRound(first) {
+    if (!running) return;
+    if (!first) { lock = true; stage.classList.add('out'); setTimeout(function () { stage.classList.remove('out'); doRound(); }, 300); }
+    else doRound();
+  }
+  function doRound() {
     if (!running) return;
     cur = makeRound(); lock = false; counted = 0;
     var m = cur.mode;
@@ -285,7 +357,7 @@ var game = KidsGame.init({ title: 'Sumas' });
       for (var h = 0; h < cur.a; h++) trayA.appendChild(makeObj(cur.e, false));
       trayB.className = 'tray hidden'; opEl.className = 'op txt'; opEl.textContent = '½';
       instrTxt.textContent = 'La mitad de ' + cur.a;
-    } else { // story: a − b + c
+    } else {
       for (var p = 0; p < cur.a; p++) trayA.appendChild(makeObj(cur.e, false));
       for (var q = 0; q < cur.b; q++) trayB.appendChild(makeObj(cur.e, true));
       opEl.textContent = '−';
@@ -294,14 +366,22 @@ var game = KidsGame.init({ title: 'Sumas' });
       instrTxt.textContent = cur.text;
     }
     cur.opts.forEach(function (v, i) {
-      var n = document.createElement('div'); n.className = 'num ' + NUMCOLS[i % NUMCOLS.length];
+      var n = el('div', 'num ' + NUMCOLS[i % NUMCOLS.length]);
       n.textContent = v; n.dataset.n = v; n.style.animationDelay = (300 + i * 90) + 'ms';
       if (m === 'missing') n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); startDrag(ev, n, v); });
       else n.addEventListener('pointerdown', function (ev) { ev.preventDefault(); pickNum(n, v); });
       nums.appendChild(n);
     });
     layout();
+    stage.classList.add('in'); void stage.offsetWidth; stage.classList.remove('in');
+    showBanner('Ronda ' + (round + 1) + ' de ' + ROUNDS);
     sayRound();
+    // Tutorial: en la primera ronda del nivel 1 la manita toca un pastelito (para contar) y luego el número correcto
+    if (nivel === 1 && round === 0 && !handShown) {
+      handShown = true;
+      setTimeout(function () { if (!running || lock) return; var o = trayA.querySelector('.obj'); if (o) { var hd = KidsGame.hand({ el: o, until: false, timeout: 2600 }); } }, 1200);
+      setTimeout(function () { if (!running || lock) return; var n = nums.querySelector('.num[data-n="' + cur.ans + '"]'); if (n) KidsGame.hand({ el: n }); }, 4200);
+    }
   }
 
   function layout() {
@@ -309,8 +389,6 @@ var game = KidsGame.init({ title: 'Sumas' });
     var W = stage.clientWidth, H = stage.clientHeight;
     var numSize = Math.max(72, Math.min(120, Math.floor((W - 120) / 4), Math.floor(H * 0.22)));
     nums.style.setProperty('--n', numSize + 'px');
-    // tamaño de objetos: caben en la bandeja sin desbordar la altura disponible
-    // cuántos objetos acabará teniendo la bandeja A (tras volar los de B y C)
     var trayW = trayA.clientWidth - 20, m = cur.mode;
     var maxN = m === 'add' ? cur.a + cur.b : m === 'double' ? cur.a * 2 : m === 'story' ? cur.a + cur.c : Math.max(cur.a, cur.b || 0, cur.c || 0);
     var availH = H - numSize - 90;
@@ -327,27 +405,12 @@ var game = KidsGame.init({ title: 'Sumas' });
   function countTap(o) {
     if (lock || !running || o.querySelector('.cnt')) return;
     counted++;
-    var c = document.createElement('span'); c.className = 'cnt'; c.textContent = counted; o.appendChild(c);
+    var c = el('span', 'cnt', String(counted)); o.appendChild(c);
     KidsGame.sound.pop(); KidsGame.say(NUMS[counted] || String(counted));
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = document.createElement('div');
-      s.className = 'spark' + (i % 3 === 0 ? ' star' : '');
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 100;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors);
-      s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s);
-      (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
-    }
-  }
-
   function wrongNum(n) {
-    KidsGame.sound.wrong(); KidsGame.vibrate(20);
+    KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(n);
     n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad');
     n.addEventListener('animationend', function h() { n.classList.remove('bad'); n.removeEventListener('animationend', h); });
   }
@@ -357,7 +420,7 @@ var game = KidsGame.init({ title: 'Sumas' });
     lock = true;
     n.classList.add('ok');
     var all = nums.querySelectorAll('.num'); for (var i = 0; i < all.length; i++) if (all[i] !== n) all[i].classList.add('dim');
-    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); hit(n);
     var m = cur.mode;
     if (m === 'sub') subtractAnim(); else if (m === 'add' || m === 'double') joinAnim(); else if (m === 'story') storyAnim(); else halfAnim();
     done();
@@ -365,8 +428,7 @@ var game = KidsGame.init({ title: 'Sumas' });
   function done() {
     setTimeout(function () {
       resEl.textContent = cur.ans; resEl.classList.add('done');
-      var r = resEl.getBoundingClientRect(), g = game.getBoundingClientRect();
-      sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 24);
+      KidsGame.fx.burstAt(resEl, { n: 16, chars: ['⭐', '✨'] });
       KidsGame.say('¡' + (NUMS[cur.ans] || cur.ans) + '!');
       dots.children[round].classList.add('on');
       round++;
@@ -405,12 +467,11 @@ var game = KidsGame.init({ title: 'Sumas' });
     lock = true;
     trayB.innerHTML = ''; trayB.appendChild(n); n.classList.add('ok');
     var all = nums.querySelectorAll('.num'); for (var i = 0; i < all.length; i++) all[i].classList.add('dim');
-    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
+    KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); hit(n);
     trayA.classList.add('win'); trayB.classList.add('win');
     done();
   }
 
-  // los objetos de la bandeja B (y C) saltan a la bandeja A (FLIP)
   function joinAnim() {
     var objs = Array.prototype.slice.call(trayB.querySelectorAll('.obj')).concat(Array.prototype.slice.call(trayC.querySelectorAll('.obj')));
     var before = objs.map(function (o) { return o.getBoundingClientRect(); });
@@ -429,7 +490,6 @@ var game = KidsGame.init({ title: 'Sumas' });
     });
     trayA.classList.add('win');
   }
-  // en la resta, los objetos que se van se desvanecen
   function subtractAnim(n) {
     var objs = Array.prototype.slice.call(trayA.querySelectorAll('.obj'));
     trayA.querySelectorAll('.cnt').forEach(function (c) { c.remove(); });
@@ -439,7 +499,6 @@ var game = KidsGame.init({ title: 'Sumas' });
     trayB.classList.add('gone');
     trayA.classList.add('win');
   }
-  // cuento de dos pasos: primero se van b, luego llegan c
   function storyAnim() {
     subtractAnim(cur.b);
     setTimeout(function () {
@@ -452,7 +511,6 @@ var game = KidsGame.init({ title: 'Sumas' });
       objs.forEach(function (o, i) { o.style.transition = 'transform .6s cubic-bezier(.3,1.4,.4,1) ' + (i * 40) + 'ms'; o.style.transform = 'translate(0,0)'; });
     }, cur.b * 90 + 250);
   }
-  // mitad: la segunda mitad se tacha
   function halfAnim() {
     var objs = Array.prototype.slice.call(trayA.querySelectorAll('.obj'));
     trayA.querySelectorAll('.cnt').forEach(function (c) { c.remove(); });
@@ -463,8 +521,12 @@ var game = KidsGame.init({ title: 'Sumas' });
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var sub = '¡' + ROUNDS + ' cuentas correctas!';
+    // Recompensa cosmética: un pastel nuevo en la vitrina por nivel completado
+    var have = readJSON('kg-sumas-deco', []), d = DECOS[nivel - 1];
+    if (d && have.indexOf(d[0]) < 0) { have.push(d[0]); writeJSON('kg-sumas-deco', have); renderVit(d[0]); sub += ' · ' + d[1] + ' ¡Ganaste ' + d[2] + ' para la vitrina!'; }
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' cuentas correctas!',
+      sub: sub,
       onNext: function () { start(Math.min(4, nivel + 1)); },
       onAgain: function () { start(nivel); }
     });
@@ -473,7 +535,7 @@ var game = KidsGame.init({ title: 'Sumas' });
   window.addEventListener('resize', layout);
   // Expuesto para pruebas
   window.__sum = {
-    get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get nivel() { return nivel; },
+    get cur() { return cur; }, get lock() { return lock; }, get round() { return round; }, get nivel() { return nivel; }, get streak() { return streak; },
     solve: function () {
       if (lock || !cur) return false;
       var n = nums.querySelector('.num[data-n="' + cur.ans + '"]');

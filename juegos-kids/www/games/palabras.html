@@ -6,21 +6,22 @@
 <link rel="stylesheet" href="../common.css">
 <title>Forma la palabra</title>
 <style>
-  /* Escena: pared suave arriba y escritorio de madera abajo, con bloques de letras decorativos */
+  /* Mundo: "El tren de las palabras" — cielo, colinas lejanas, pradera y vías */
   .game {
     background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
-      linear-gradient(180deg, #ffe8c2 0%, #ffd9a8 56%, #ffd9a8 56.5%, #c98b48 57%, #b8763a 72%, #9e6230 100%);
+      radial-gradient(ellipse 34% 22% at 18% 58%, #8fd37a 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 40% 26% at 72% 60%, #7cc96a 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 60% 30% at 95% 62%, #9ad987 0 60%, rgba(0,0,0,0) 61%),
+      linear-gradient(180deg, #9fdcff 0%, #d9f2ff 46%, #d9f2ff 56%, #6cc05a 56.5%, #5ab14c 76%, #4a9d40 100%);
   }
-  .game::before { /* veta de la madera */
-    content: ""; position: absolute; left: 0; right: 0; top: 57%; bottom: 0; pointer-events: none;
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 8px, rgba(0,0,0,0) 8px 30px, rgba(0,0,0,.06) 30px 34px, rgba(0,0,0,0) 34px 58px);
-    box-shadow: inset 0 10px 18px rgba(80,40,0,.35), inset 0 4px 0 rgba(255,235,200,.45);
-  }
-  .deco { position: absolute; z-index: 0; pointer-events: none; opacity: .5; font-size: 54px; font-weight: 900; color: #fff; width: 78px; height: 78px; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center; text-shadow: 0 3px 0 rgba(0,0,0,.2);
-    background: linear-gradient(135deg, var(--a), var(--b) 60%, var(--d) 140%); box-shadow: 0 7px 0 var(--d), 0 14px 18px rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.6); animation: float 4s ease-in-out infinite; }
+  .game::before { content: ""; position: absolute; left: 0; right: 0; top: 56%; bottom: 0; pointer-events: none; opacity: .9;
+    background: radial-gradient(circle at 12% 30%, #ffd166 0 6px, rgba(0,0,0,0) 7px), radial-gradient(circle at 30% 70%, #ff8aa8 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 64% 40%, #fff 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 88% 75%, #ffd166 0 6px, rgba(0,0,0,0) 7px), radial-gradient(circle at 50% 85%, #ff8aa8 0 5px, rgba(0,0,0,0) 6px); }
+  .cloud { position: absolute; z-index: 0; pointer-events: none; width: 140px; height: 46px; border-radius: 40px; background: #fff; opacity: .9; box-shadow: 0 6px 10px rgba(0,60,120,.08); animation: drift 40s linear infinite; }
+  .cloud::before { content: ""; position: absolute; left: 24px; top: -24px; width: 60px; height: 60px; border-radius: 50%; background: #fff; }
+  .cloud::after { content: ""; position: absolute; left: 66px; top: -16px; width: 48px; height: 48px; border-radius: 50%; background: #fff; }
+  @keyframes drift { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
   .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; gap: min(1.6vh, 12px); z-index: 1; }
+  .top.jk-in { animation-duration: .5s; }
   .hud { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; align-items: center; gap: 8px; }
   .hud .btn { font-size: 28px; }
   .tools { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 8px; }
@@ -53,16 +54,37 @@
   .eye { font-size: min(6vh, 40px); filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
   .tip { font-size: min(3.2vh, 22px); color: #6b3f00; font-weight: 900; text-shadow: 0 1px 0 #fff; text-align: center; }
 
-  /* Casillas donde caen las letras / sílabas */
-  .slots { display: flex; gap: min(1.4vw, 10px); justify-content: center; flex-wrap: wrap; flex: 0 0 auto; max-width: 96vw; padding: 8px 0; }
+  /* Tren: vagones (casillas) + locomotora sobre las vías */
+  .trainwrap { position: relative; width: 100%; display: flex; justify-content: center; padding: 6px 0 22px; flex: 0 0 auto; }
+  .rails { position: absolute; left: -4%; right: -4%; bottom: 6px; height: 20px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0 4px, #8a94a6 4px 8px, rgba(0,0,0,0) 8px 12px, #8a94a6 12px 16px, rgba(0,0,0,0) 16px),
+      repeating-linear-gradient(90deg, #8b5222 0 16px, rgba(0,0,0,0) 16px 40px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+  .train { display: flex; align-items: flex-end; gap: 6px; position: relative; z-index: 1; }
+  .train.go { animation: trainGo 1.7s ease-in forwards; }
+  .train.in { animation: trainIn .8s cubic-bezier(.2,.8,.3,1.05) both; }
+  @keyframes trainGo { 0% { transform: translateX(0); } 12% { transform: translateX(-12px); } 100% { transform: translateX(140vw); } }
+  @keyframes trainIn { from { transform: translateX(-130vw); } to { transform: translateX(0); } }
+  .train.go .wh, .train.in .wh { animation: wspin .5s linear infinite; }
+  .wh { transform-box: fill-box; transform-origin: center; }
+  @keyframes wspin { to { transform: rotate(360deg); } }
+  .loco { flex: 0 0 auto; width: calc(var(--s, 86px) * 1.55); margin-left: 4px; margin-bottom: -4px; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); cursor: pointer; position: relative; }
+  .loco svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .lc-eyes { transform-box: fill-box; transform-origin: center; animation: lcblink 4.6s infinite; }
+  @keyframes lcblink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  .puff { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #dfe7f2); pointer-events: none; opacity: 0; animation: puff 1.3s ease-out forwards; }
+  @keyframes puff { 0% { transform: translate(0,0) scale(.4); opacity: .95; } 100% { transform: translate(-50px,-90px) scale(2.4); opacity: 0; } }
+  .slots { display: flex; gap: min(1.2vw, 8px); justify-content: center; flex-wrap: wrap; flex: 0 0 auto; max-width: 78vw; padding: 0 0 14px; }
   .slot {
     --s: min(11vw, 11vh, 86px);
-    width: var(--s); height: var(--s); border-radius: 16px; display: flex; align-items: center; justify-content: center; position: relative;
-    font-size: calc(var(--s) * .6); font-weight: 900; color: #1f2f6b; line-height: 1;
-    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.3)); border: 4px dashed rgba(31,47,107,.35);
-    box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.5);
+    width: var(--s); height: var(--s); border-radius: 14px 14px 10px 10px; display: flex; align-items: center; justify-content: center; position: relative;
+    font-size: calc(var(--s) * .6); font-weight: 900; color: #7a4b00; line-height: 1;
+    background: linear-gradient(180deg, #fff8e6, #f1dcb6); border: 4px dashed rgba(122,75,0,.4);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,.1), 0 4px 0 #b8863a;
     transition: transform .12s, background .2s, border-color .2s;
   }
+  .slot::before, .slot::after { content: ""; position: absolute; bottom: -16px; width: 24px; height: 24px; border-radius: 50%; z-index: -1;
+    background: radial-gradient(circle at 35% 30%, #9aa5b8, #2b3445 62%); box-shadow: inset 0 0 0 3px #141a26, 0 2px 2px rgba(0,0,0,.3); }
+  .slot::before { left: 12%; } .slot::after { right: 12%; }
   .slot.syl { --s: min(13vw, 11vh, 92px); width: auto; min-width: var(--s); padding: 0 10px; font-size: calc(var(--s) * .5); }
   .slots.long .slot { --s: min(8.6vw, 9vh, 70px); }
   .slots.long .slot.syl { --s: min(10vw, 10vh, 76px); }
@@ -71,13 +93,34 @@
     box-shadow: 0 6px 0 var(--d, #1a63a8), 0 10px 16px rgba(20,40,90,.28), inset 0 3px 0 rgba(255,255,255,.7), inset 0 -4px 0 rgba(0,0,0,.15); text-shadow: 0 3px 0 var(--d, #1a63a8), 0 5px 8px rgba(0,0,0,.3); cursor: pointer; }
   .slot.good { --a: #c6ffd9; --b: #2fd27a; --d: #148a4d; animation: flash .6s; }
   .slot.cursor { border-color: #ffb703; animation: blinkb 1s infinite; }
-  @keyframes blinkb { 0%,100% { box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 0 0 0 rgba(255,183,3,0); } 50% { box-shadow: inset 0 4px 10px rgba(0,0,0,.12), 0 0 0 6px rgba(255,183,3,.55); } }
-  @keyframes flash { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(120,255,170,.9); } 40% { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(120,255,170,0); } 100% { transform: scale(1); } }
+  @keyframes blinkb { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  @keyframes flash { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
   .slot.bad { animation: shake .35s; border-color: #ff6f61; }
+  .tools .btn.lococ { font-size: 26px; }
+  /* ---- Kit de "juice" (racha, banner de ronda, transiciones) ---- */
+  .jk-banner { position: fixed; left: 50%; top: 70px; z-index: 44; transform: translate(-50%,0) scale(.6); opacity: 0; pointer-events: none;
+    padding: 8px 28px; border-radius: 40px; font-size: 28px; font-weight: 900; color: #fff; white-space: nowrap; border: 4px solid #fff;
+    background: linear-gradient(180deg, #ffb703, #ff8906); box-shadow: 0 7px 0 #b85a00, 0 16px 28px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.6);
+    text-shadow: 0 3px 0 #b85a00, 0 5px 8px rgba(0,0,0,.3); }
+  .jk-banner.in { animation: jkb 1.4s ease-in-out forwards; }
+  @keyframes jkb { 0% { transform: translate(-50%,0) scale(.6); opacity: 0 } 14% { transform: translate(-50%,0) scale(1.08); opacity: 1 } 24% { transform: translate(-50%,0) scale(1) } 78% { transform: translate(-50%,0) scale(1); opacity: 1 } 100% { transform: translate(-50%,-30px) scale(.9); opacity: 0 } }
+  .jk-streak { position: fixed; top: 78px; right: 240px; z-index: 40; padding: 5px 14px; border-radius: 30px; pointer-events: none;
+    background: linear-gradient(180deg,#fff7d6,#ffd166); box-shadow: 0 4px 0 #d9a520, 0 8px 14px rgba(0,0,0,.2), inset 0 1px 0 #fff; font-size: 20px; font-weight: 900; color: #7a4b00;
+    opacity: 0; transition: opacity .3s; }
+  .jk-streak.on { opacity: 1; }
+  .jk-streak.hot { animation: jkhot .45s ease-out; }
+  @keyframes jkhot { 0% { transform: scale(1) } 40% { transform: scale(1.3) rotate(-4deg) } 100% { transform: scale(1) } }
+  @media (max-width: 820px) { .jk-banner { top: 120px; } .jk-streak { top: 148px; left: 8px; right: auto; } }
+  .jk-in { animation: jkin .42s cubic-bezier(.2,.9,.3,1.15) both; }
+  .jk-out { animation: jkout .24s ease-in forwards; pointer-events: none; }
+  @keyframes jkin { from { transform: translateX(70px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
+  @keyframes jkout { to { transform: translateX(-70px) scale(.92); opacity: 0 } }
+  .jk-press { animation: jkpress .28s ease-out; }
+  @keyframes jkpress { 0% { transform: scale(1) } 35% { transform: scale(.9,1.1) } 70% { transform: scale(1.1,.92) } 100% { transform: scale(1) } }
 
   /* Bandeja de bloques de plástico con bisel */
-  .tray { display: flex; flex-wrap: wrap; gap: min(1.6vw, 12px); justify-content: center; align-content: flex-start; flex: 0 0 auto; max-width: 96vw; min-height: min(12vh, 100px); padding: 10px 12px; border-radius: 26px;
-    background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.2)); box-shadow: inset 0 3px 8px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.5); }
+  .tray { display: flex; flex-wrap: wrap; gap: min(1.6vw, 12px); justify-content: center; align-content: flex-start; flex: 0 0 auto; max-width: 96vw; min-height: min(12vh, 100px); padding: 10px 14px; border-radius: 26px;
+    background: linear-gradient(180deg, #d59a52, #b8763a 60%, #a3652e); box-shadow: 0 6px 0 #6b3d12, 0 12px 20px rgba(60,30,0,.3), inset 0 3px 0 rgba(255,235,200,.5), inset 0 -4px 10px rgba(0,0,0,.2); }
   .block {
     --a: #ffd0e4; --b: #f582ae; --d: #b8306f; --s: min(11vw, 11vh, 86px);
     position: relative; width: var(--s); height: var(--s); border-radius: 18px; flex: 0 0 auto;
@@ -148,8 +191,81 @@
     ['👑','CORONA',['CO','RO','NA']], ['🎸','GUITARRA',['GUI','TA','RRA']], ['🎒','MOCHILA',['MO','CHI','LA']], ['🪞','ESPEJO',['ES','PE','JO']],
     ['🪟','VENTANA',['VEN','TA','NA']], ['🥄','CUCHARA',['CU','CHA','RA']], ['✂️','TIJERAS',['TI','JE','RAS']], ['🏅','MEDALLA',['ME','DA','LLA']],
     ['🍊','NARANJA',['NA','RAN','JA']], ['🐑','OVEJA',['O','VE','JA']], ['🐌','CARACOL',['CA','RA','COL']],
-    ['🦋','MARIPOSA',['MA','RI','PO','SA']], ['🐘','ELEFANTE',['E','LE','FAN','TE']], ['🚲','BICICLETA',['BI','CI','CLE','TA']], ['🦖','DINOSAURIO',['DI','NO','SAU','RIO']]
+    ['🦋','MARIPOSA',['MA','RI','PO','SA']], ['🐘','ELEFANTE',['E','LE','FAN','TE']], ['🚲','BICICLETA',['BI','CI','CLE','TA']], ['🦖','DINOSAURIO',['DI','NO','SAU','RIO']],
+    ['🐜','HORMIGA',['HOR','MI','GA']], ['🌽','MAÍZ',['MA','ÍZ']], ['🍉','SANDÍA',['SAN','DÍ','A']], ['🧦','CALCETÍN',['CAL','CE','TÍN']], ['🎩','SOMBRERO',['SOM','BRE','RO']],
+    ['🍫','CHOCOLATE',['CHO','CO','LA','TE']], ['🌈','ARCOÍRIS',['AR','CO','Í','RIS']], ['🐨','KOALA',['KO','A','LA']], ['🦩','FLAMENCO',['FLA','MEN','CO']], ['🪁','PAPALOTE',['PA','PA','LO','TE']],
+    ['🧃','JUGO',['JU','GO']], ['🐞','CATARINA',['CA','TA','RI','NA']], ['🥦','BRÓCOLI',['BRÓ','CO','LI']], ['🧸','OSITO',['O','SI','TO']], ['🛝','RESBALADILLA',['RES','BA','LA','DI','LLA']],
+    ['🍐','DURAZNO',['DU','RAZ','NO']], ['🦔','ERIZO',['E','RI','ZO']], ['🐫','CAMELLO',['CA','ME','LLO']], ['🎺','TROMPETA',['TROM','PE','TA']], ['🪆','MUÑECO',['MU','ÑE','CO']],
+    ['🧢','GORRA',['GO','RRA']], ['🍄','HONGO',['HON','GO']], ['🐌','CARACOLITO',['CA','RA','CO','LI','TO']], ['🌋','VOLCÁN',['VOL','CÁN']], ['🚁','HELICÓPTERO',['HE','LI','CÓP','TE','RO']]
   ];
+  /* ---- Kit de "juice": racha, banner de ronda, transición entre rondas, guardado ---- */
+  var JK = (function () {
+    var streak = 0, pill = null, bannerEl = null;
+    function pillEl() { if (!pill) { pill = document.createElement('div'); pill.className = 'jk-streak'; document.body.appendChild(pill); } return pill; }
+    function hit(el, txt) {
+      streak++; var p = pillEl();
+      if (streak >= 2) { p.textContent = '🔥 Racha ' + streak; p.classList.add('on'); p.classList.remove('hot'); void p.offsetWidth; p.classList.add('hot'); }
+      var r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      var x = r ? r.left + r.width / 2 : window.innerWidth / 2, y = r ? r.top + 8 : window.innerHeight / 2;
+      if (el) { try { KidsGame.fx.ring(el); } catch (e) {} }
+      if (streak % 5 === 0) { KidsGame.addStar(); KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '! ⭐ extra', 'good'); KidsGame.fx.burst(x, y, { n: 22, r: 110, chars: ['⭐', '✨', '🔥', '💫'] }); }
+      else if (streak >= 3) { KidsGame.fx.floatText(x, y, '¡Racha x' + streak + '!', 'good'); KidsGame.fx.burst(x, y, { n: 14, chars: ['✨', '⭐'] }); }
+      else { KidsGame.fx.floatText(x, y, txt || '+1', 'good'); KidsGame.fx.burst(x, y, { n: 12 }); }
+      return streak;
+    }
+    function miss(el) { streak = 0; if (pill) pill.classList.remove('on'); if (el) KidsGame.fx.shake(el); }
+    function reset() { streak = 0; if (pill) pill.classList.remove('on'); }
+    function banner(text) {
+      if (!bannerEl) { bannerEl = document.createElement('div'); bannerEl.className = 'jk-banner'; document.body.appendChild(bannerEl); }
+      bannerEl.textContent = text; bannerEl.classList.remove('in'); void bannerEl.offsetWidth; bannerEl.classList.add('in');
+    }
+    function swap(el, fn) {
+      if (!el || !el.parentNode) { fn(); return; }
+      el.classList.remove('jk-in'); el.classList.add('jk-out');
+      setTimeout(function () { el.classList.remove('jk-out'); fn(); el.classList.add('jk-in'); setTimeout(function () { el.classList.remove('jk-in'); }, 480); }, 230);
+    }
+    function press(el) { if (!el) return; el.classList.remove('jk-press'); void el.offsetWidth; el.classList.add('jk-press'); }
+    function store(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+    function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    return { hit: hit, miss: miss, reset: reset, banner: banner, swap: swap, press: press, store: store, put: put, get streak() { return streak; } };
+  })();
+
+  // ---- Hero art: la locomotora con carita ----
+  var LOCOS = [{ n: 'roja', a: '#ff9c93', b: '#e63946', d: '#9d1b2b' }, { n: 'azul', a: '#7dd0ff', b: '#2f95e8', d: '#1a63a8' }, { n: 'verde', a: '#8ef0b0', b: '#24b36c', d: '#14784a' }, { n: 'morada', a: '#b39cff', b: '#7f5af0', d: '#5232b3' }];
+  var locoIdx = JK.store('kg-palabras-loco', 0) || 0;
+  function locosUnlocked() { return Math.min(LOCOS.length, 1 + (JK.store('kg-palabras-locos', 0) || 0)); }
+  function unlockLoco() { var n = JK.store('kg-palabras-locos', 0) || 0; if (n + 1 < LOCOS.length) { JK.put('kg-palabras-locos', n + 1); KidsGame.toast('🎁 ¡Nueva locomotora ' + LOCOS[n + 1].n + '!', 2200); } }
+  function wheel(id, cx, cy, r) {
+    return '<g class="wh"><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + 'k)" stroke="#141a26" stroke-width="3"/>' +
+      '<path d="M' + (cx - r + 4) + ' ' + cy + 'H' + (cx + r - 4) + 'M' + cx + ' ' + (cy - r + 4) + 'V' + (cy + r - 4) + '" stroke="#c9d2e6" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .32) + '" fill="#ffd166" stroke="#c47f00" stroke-width="2"/></g>';
+  }
+  function locoSVG(col, id, w) {
+    id = id || 'lc';
+    return '<svg viewBox="0 0 172 128"' + (w ? ' width="' + w + '" height="' + Math.round(w * 128 / 172) + '"' : '') + ' aria-hidden="true"><defs>' +
+      '<linearGradient id="' + id + 'b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + col.a + '"/><stop offset=".5" stop-color="' + col.b + '"/><stop offset="1" stop-color="' + col.d + '"/></linearGradient>' +
+      '<radialGradient id="' + id + 'w" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bfe0ff"/></radialGradient>' +
+      '<linearGradient id="' + id + 'k" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a879c"/><stop offset="1" stop-color="#2b3445"/></linearGradient></defs>' +
+      '<ellipse cx="86" cy="124" rx="74" ry="4" fill="rgba(0,0,0,.18)"/>' +
+      '<rect x="6" y="20" width="72" height="12" rx="5" fill="' + col.d + '"/>' +
+      '<rect x="12" y="28" width="60" height="72" rx="10" fill="url(#' + id + 'b)" stroke="' + col.d + '" stroke-width="3"/>' +
+      '<rect x="20" y="38" width="44" height="30" rx="6" fill="url(#' + id + 'w)" stroke="' + col.d + '" stroke-width="3"/>' +
+      '<path d="M24 42 L34 42" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9"/>' +
+      '<rect x="96" y="18" width="22" height="36" rx="4" fill="url(#' + id + 'k)"/><rect x="90" y="12" width="34" height="11" rx="4" fill="#2b3445"/>' +
+      '<rect x="64" y="50" width="84" height="48" rx="16" fill="url(#' + id + 'b)" stroke="' + col.d + '" stroke-width="3"/>' +
+      '<rect x="70" y="56" width="70" height="7" rx="3" fill="rgba(255,255,255,.4)"/>' +
+      '<ellipse cx="80" cy="50" rx="11" ry="8" fill="#ffd166" stroke="#c47f00" stroke-width="2"/>' +
+      '<circle cx="140" cy="74" r="22" fill="#fff6dc" stroke="' + col.d + '" stroke-width="3"/>' +
+      '<g class="lc-eyes"><circle cx="132" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="148" cy="70" r="5.2" fill="#1f2f6b"/><circle cx="133.6" cy="68.3" r="1.9" fill="#fff"/><circle cx="149.6" cy="68.3" r="1.9" fill="#fff"/></g>' +
+      '<path d="M130 80 Q140 90 150 80" stroke="#c8601a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="125" cy="78" r="3.5" fill="#ff8aa8" opacity=".6"/><circle cx="155" cy="78" r="3.5" fill="#ff8aa8" opacity=".6"/>' +
+      '<path d="M148 98 L170 112 L148 112 Z" fill="#ffd166" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/>' +
+      '<rect x="12" y="98" width="140" height="10" rx="4" fill="#2b3445"/>' +
+      wheel(id, 36, 110, 13) + wheel(id, 78, 110, 13) + wheel(id, 118, 110, 13) +
+      '<path d="M36 110 L118 110" stroke="#c9d2e6" stroke-width="4" stroke-linecap="round" opacity=".9"/>' +
+      '</svg>';
+  }
+  var HOWTO = [{ icon: '👂', text: 'Escucha la palabra' }, { icon: '🚃', text: 'Lleva cada letra a su vagón' }, { icon: '🚂', text: '¡Con la palabra completa, el tren se va!' }];
   var PAL = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
     ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
   var COLORS = ['#f582ae', '#3da9fc', '#2cb67d', '#ffb703', '#7f5af0', '#ff8906'];
@@ -179,7 +295,7 @@
 
   /* ---------- Estado ---------- */
   var level = 1, round = 0, cur = null, slots = [], tray = null, trayEl = null, wordEl = null, picEl = null, medal = null, slotsEl = null, timerEl = null, tipEl = null;
-  var dotsEl = null, countEl = null, checkBtn = null, wrongsEl = null, lock = false, used = [], misses = 0, timers = [];
+  var dotsEl = null, countEl = null, checkBtn = null, wrongsEl = null, lock = false, used = [], misses = 0, timers = [], trainEl = null, locoEl = null, topEl = null;
   function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
@@ -188,14 +304,16 @@
       var L = norm(w[1]).length;
       if (n === 1) return L <= 4 && w[1] === norm(w[1]);
       if (n === 2) return L >= 5 && L <= 6;
-      if (n === 3) return w[2].length >= 2;
+      if (n === 3) return w[2].length >= 2 && w[2].length <= 4;
       return L >= 4 && L <= 7;
     });
   }
   function pickLevel() {
     clearTimers(); lock = true; game.innerHTML = '';
+    JK.reset();
     KidsGame.levelPicker({
       labels: { 1: 'Copia 3-4 letras', 2: 'Memoria 5 letras', 3: 'Sílabas', 4: 'Teclado sin modelo' },
+      howto: HOWTO, art: locoSVG(LOCOS[locoIdx], 'lcp', 78), music: 'aventura',
       onPick: function (n) { startLevel(n); }
     });
   }
@@ -209,14 +327,22 @@
     return h;
   }
   function decorate(s) {
-    var pos = [[3, 62], [90, 64], [8, 86], [88, 88], [48, 90], [26, 94], [70, 94]];
-    var L = 'ABCMOSZ'.split('');
-    pos.forEach(function (p, i) {
-      var d = el('div', 'deco', L[i]); d.style.left = p[0] + '%'; d.style.top = p[1] + '%'; paint(d, PAL[i % PAL.length]);
-      d.style.animationDelay = (-i * 0.7) + 's'; d.style.transform = 'rotate(' + ((i * 37) % 30 - 15) + 'deg)';
-      s.appendChild(d);
+    [[8, 14, 0], [52, 10, -16], [80, 22, -30]].forEach(function (p) {
+      var c = el('div', 'cloud'); c.style.left = p[0] + '%'; c.style.top = p[1] + '%'; c.style.animationDelay = p[2] + 's'; c.style.transform = 'scale(' + (0.7 + p[1] / 40) + ')'; s.appendChild(c);
     });
   }
+  function renderLoco() { if (locoEl) locoEl.innerHTML = locoSVG(LOCOS[locoIdx], 'lc'); }
+  function cycleLoco() {
+    var n = locosUnlocked(); if (n <= 1) { KidsGame.toast('Completa un nivel para ganar otra locomotora 🎁', 1600); KidsGame.sound.wrong(); return; }
+    locoIdx = (locoIdx + 1) % n; JK.put('kg-palabras-loco', locoIdx); renderLoco(); KidsGame.sound.pop(); JK.press(locoEl); KidsGame.say('Locomotora ' + LOCOS[locoIdx].n);
+  }
+  function smoke() {
+    if (!locoEl) return;
+    for (var i = 0; i < 4; i++) (function (i) { setTimeout(function () {
+      var pf = el('div', 'puff'); pf.style.left = '58%'; pf.style.top = '6%'; pf.style.animationDelay = '0s'; locoEl.appendChild(pf); setTimeout(function () { pf.remove(); }, 1400);
+    }, i * 220); })(i);
+  }
+  function chug() { [0, 160, 320, 480].forEach(function (t, i) { setTimeout(function () { KidsGame.sound.note(i % 2 ? 180 : 140); }, t); }); setTimeout(function () { KidsGame.sound.note(660); }, 700); }
 
   function buildScreen() {
     clearTimers(); game.innerHTML = '';
@@ -226,6 +352,7 @@
     var sayB = el('button', 'btn round blue', '🔊'); sayB.setAttribute('aria-label', 'Repetir');
     onTap(sayB, function () { if (!cur) return; KidsGame.sound.tap(); KidsGame.say(cur[1].toLowerCase()); replay(picEl, 'pop'); });
     tools.appendChild(sayB);
+    var lb = el('button', 'btn round yellow lococ', '🚂'); lb.setAttribute('aria-label', 'Cambiar locomotora'); onTap(lb, cycleLoco); tools.appendChild(lb);
     if (level >= 3) {
       var slow = el('button', 'btn round purple', '🐢'); slow.setAttribute('aria-label', 'Sílabas despacio');
       onTap(slow, function () { if (!cur) return; KidsGame.sound.tap(); saySlow(); });
@@ -236,7 +363,7 @@
     for (var i = 0; i < ROUNDS; i++) dotsEl.appendChild(el('div', 'dot'));
     prog.appendChild(countEl); prog.appendChild(dotsEl); s.appendChild(prog);
 
-    var top = el('div', 'top');
+    var top = el('div', 'top'); topEl = top;
     medal = el('div', 'medal'); picEl = el('div', 'pic emoji'); medal.appendChild(picEl);
     onTap(medal, function () { if (!cur) return; KidsGame.sound.tap(); KidsGame.say(cur[1].toLowerCase()); replay(picEl, 'pop'); });
     var model = el('div', 'model');
@@ -245,7 +372,9 @@
     tipEl = el('div', 'tip'); model.appendChild(tipEl);
     top.appendChild(medal); top.appendChild(model); s.appendChild(top);
 
-    slotsEl = el('div', 'slots'); s.appendChild(slotsEl);
+    var tw = el('div', 'trainwrap'); tw.appendChild(el('div', 'rails'));
+    trainEl = el('div', 'train'); slotsEl = el('div', 'slots'); locoEl = el('div', 'loco'); renderLoco(); onTap(locoEl, cycleLoco);
+    trainEl.appendChild(slotsEl); trainEl.appendChild(locoEl); tw.appendChild(trainEl); s.appendChild(tw);
     if (level === 4) { trayEl = buildKeyboard(); } else { trayEl = el('div', 'tray'); }
     s.appendChild(trayEl);
     var acts = el('div', 'actions');
@@ -286,7 +415,9 @@
     var pool = poolFor(level).filter(function (w) { return used.indexOf(w[1]) < 0; });
     if (!pool.length) { used = []; pool = poolFor(level); }
     cur = KidsGame.pick(pool); used.push(cur[1]);
-    picEl.textContent = cur[0]; replay(picEl, 'pop');
+    picEl.textContent = cur[0]; replay(picEl, 'pop'); replay(topEl, 'jk-in');
+    JK.banner('Palabra ' + (round + 1) + ' de ' + ROUNDS);
+    trainEl.classList.remove('go'); replay(trainEl, 'in');
     wordEl.className = 'word'; wrongsEl.className = 'wrongs'; tipEl.textContent = '';
     updateProgress();
     var pieces, expected;
@@ -329,6 +460,9 @@
     if (checkBtn) checkBtn.classList.add('off');
     KidsGame.say(cur[1].toLowerCase());
     if (level === 3) later(saySlow, 1600);
+    if (level === 1 && round === 0 && !JK.store('kg-palabras-hand', 0)) {
+      later(function () { var it = null; tray.forEach(function (t) { if (!it && t.v === slots[0].expect) it = t; }); if (it && slots[0].val == null) KidsGame.hand({ from: it.el, to: slots[0].el, timeout: 14000 }); }, 1000);
+    }
   }
 
   /* ---------- Arrastre ---------- */
@@ -380,14 +514,14 @@
   function place(item, i, dragged) {
     var s = slots[i]; item.el.style.opacity = '';
     if (level <= 2 && item.v !== s.expect) {
-      KidsGame.sound.wrong(); replay(s.el, 'bad'); replay(item.el, 'bad'); misses++;
+      KidsGame.sound.wrong(); replay(s.el, 'bad'); replay(item.el, 'bad'); misses++; JK.miss(s.el);
       if (level === 2 && misses >= 2 && wordEl.classList.contains('hidden')) { peek(); }
       return;
     }
     s.val = item.v; s.block = item; item.el.classList.add('used');
     s.el.textContent = item.v; s.el.classList.add('full'); paint(s.el, item.pal);
-    if (level <= 2) { s.el.classList.add('good'); replay(s.el, 'good'); KidsGame.sound.pop(); sparks(s.el, '#7dffb0'); if (firstEmpty() == null) complete(); }
-    else { KidsGame.sound.pop(); if (firstEmpty() == null) checkBtn.classList.remove('off'); }
+    if (level <= 2) { s.el.classList.add('good'); replay(s.el, 'good'); KidsGame.sound.pop(); sparks(s.el, '#7dffb0'); JK.hit(s.el); if (firstEmpty() == null) complete(); }
+    else { KidsGame.sound.pop(); JK.press(s.el); if (firstEmpty() == null) checkBtn.classList.remove('off'); }
   }
   function peek() { misses = 0; wordEl.classList.remove('hidden'); tipEl.textContent = ''; later(function () { wordEl.classList.add('hidden'); tipEl.innerHTML = '<span class="emoji eye">🙈</span>'; }, 1200); }
   // Nivel 3-4: tocar una casilla llena la vacía
@@ -424,7 +558,8 @@
       if (ok) { s.locked = true; s.el.classList.add('good'); replay(s.el, 'good'); paint(s.el, PAL[2]); sparks(s.el, '#7dffb0'); }
       else { wrong++; replay(s.el, 'bad'); }
     });
-    if (!wrong) { complete(); return; }
+    if (!wrong) { JK.hit(medal, '¡Bien!'); complete(); return; }
+    JK.miss(slotsEl);
     KidsGame.sound.wrong(); KidsGame.vibrate(40);
     wrongsEl.textContent = '✘ ' + wrong; replay(wrongsEl, 'pop'); wrongsEl.classList.add('show');
     KidsGame.say(wrong === 1 ? 'Una letra no está bien' : wrong + ' no están bien');
@@ -436,20 +571,21 @@
   }
 
   function complete() {
-    lock = true; round++; updateProgress();
+    lock = true; round++; updateProgress(); JK.put('kg-palabras-hand', 1);
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30); sparks(medal, '#ffe066'); replay(picEl, 'bounce');
     wordEl.className = 'word'; wordEl.textContent = cur[1]; tipEl.textContent = '';
     slots.forEach(function (s, i) { setTimeout(function () { replay(s.el, 'good'); }, i * 70); });
     KidsGame.say(cur[1].toLowerCase() + '. ¡Muy bien!');
+    later(function () { trainEl.classList.remove('in'); trainEl.classList.add('go'); smoke(); chug(); KidsGame.fx.burstAt(locoEl, { n: 18, chars: ['⭐', '✨', '💨'] }); }, 700);
     later(function () {
       picEl.classList.remove('bounce');
       if (round >= ROUNDS) {
-        KidsGame.levelDone(level);
+        KidsGame.levelDone(level); unlockLoco();
         KidsGame.celebrate({ sub: '¡' + ROUNDS + ' palabras!', stars: 3,
           onNext: function () { if (level < 4) startLevel(level + 1); else pickLevel(); },
           onAgain: function () { startLevel(level); } });
       } else nextWord();
-    }, 1500);
+    }, 2300);
   }
 
   // Ganchos para pruebas
@@ -458,7 +594,7 @@
     slots: function () { return slots.map(function (s) { return s.val; }); },
     solve: function () { slots.forEach(function (s, i) { if (s.val != null) return; if (level === 4) { s.val = norm(s.expect); s.el.textContent = s.val; s.el.classList.add('full'); } else { var it = null; tray.forEach(function (t) { if (!it && !t.el.classList.contains('used') && t.v === s.expect) it = t; }); if (it) place(it, i, false); } }); if (level >= 3) { checkBtn.classList.remove('off'); check(); } },
     place: function (v, i) { var it = null; tray.forEach(function (t) { if (!it && !t.el.classList.contains('used') && t.v === v) it = t; }); if (it) place(it, i == null ? firstEmpty() : i, false); },
-    key: function (L) { pressKey(L, trayEl.querySelector('.key')); }, check: check, start: startLevel
+    key: function (L) { pressKey(L, trayEl.querySelector('.key')); }, check: check, start: startLevel, get streak() { return JK.streak; }, locos: locosUnlocked
   };
   pickLevel();
 })();

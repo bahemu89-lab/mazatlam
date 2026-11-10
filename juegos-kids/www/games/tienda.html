@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="../common.css">
 <title>La tiendita</title>
 <style>
+  /* ===== La tiendita: toldo, pared de rayas, mostrador de madera, la tendera y la caja registradora ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
@@ -25,16 +26,35 @@
     background: repeating-linear-gradient(45deg, #ffe9ef 0 40px, #ffd1dc 40px 80px); opacity: .7;
     box-shadow: inset 0 10px 20px rgba(120,0,40,.15);
   }
+  /* Decoraciones desbloqueables de la tienda */
+  .deco-bunting { position: absolute; left: 0; right: 0; top: 60px; height: 30px; z-index: 1; pointer-events: none;
+    background: conic-gradient(from 330deg at 50% 100%, #ffd166 0 60deg, rgba(0,0,0,0) 0) 0 0 / 44px 30px repeat-x, conic-gradient(from 330deg at 50% 100%, #3da9fc 0 60deg, rgba(0,0,0,0) 0) 22px 0 / 44px 30px repeat-x;
+    border-top: 3px solid #b8306f; }
+  .deco-lights { position: absolute; left: 0; right: 0; top: 92px; height: 22px; z-index: 1; pointer-events: none; opacity: .95;
+    background: radial-gradient(circle at 50% 50%, #fff9c4 0 4px, rgba(255,230,120,.7) 6px, rgba(255,230,120,0) 11px) repeat-x; background-size: 40px 22px; }
   .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
-  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 10px; border-radius: 40px; max-width: 100%; }
   .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #b8306f; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+  .instr .keeper { width: 60px; height: 60px; flex: 0 0 auto; }
+  /* La tendera: parpadea y saluda */
+  .keeper { filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); cursor: pointer; }
+  .keeper .sk-eyes { transform-origin: 60px 56px; animation: skblink 4.3s infinite; }
+  @keyframes skblink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  .keeper .sk-hand { transform-origin: 100px 86px; animation: skwave 1.8s ease-in-out infinite; }
+  @keyframes skwave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-28deg) translateY(-4px); } 50% { transform: rotate(8deg); } 75% { transform: rotate(-20deg) translateY(-3px); } }
+  .keeper .sk-head { transform-origin: 60px 82px; animation: sknod 3.8s ease-in-out infinite; }
+  @keyframes sknod { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg); } }
+  .keeper.cheer { animation: skcheer .5s ease-out; }
+  @keyframes skcheer { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.12, .9); } 70% { transform: scale(.96, 1.06) translateY(-6px); } }
 
   .shop { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; max-width: 980px; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 10px; --is: clamp(104px, 19vh, 190px); }
+  .shop { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .shop.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .shop.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   .shelf { flex: 0 0 auto; position: relative; display: flex; justify-content: space-evenly; align-items: flex-end; height: 112px; padding: 0 20px 14px; border-radius: 12px 12px 18px 18px;
     background: linear-gradient(180deg, rgba(255,255,255,0) 0 68%, #e2a062 68%, #b8702f 86%, #7a4714 100%);
     box-shadow: 0 10px 18px rgba(80,20,20,.25); }
@@ -43,6 +63,9 @@
   .prod .emoji { font-size: 58px; animation: float 4s ease-in-out infinite; }
   .prod.picked { opacity: .3; filter: grayscale(.8); }
   .prod.picked .emoji { animation: none; }
+  .prod.deco { width: 64px; height: 64px; }
+  .prod.deco .emoji { font-size: 44px; animation: none; }
+  .prod.deco.new { animation: pop .6s ease-out; }
   .tag { position: absolute; right: -8px; bottom: -4px; padding: 2px 9px 2px 12px; border-radius: 6px 12px 12px 6px; font-size: 17px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.3);
     background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6);
     box-shadow: 0 3px 0 #c47f00, 0 4px 8px rgba(0,0,0,.25), inset 0 1px 0 #fff; z-index: 2; }
@@ -55,7 +78,8 @@
       linear-gradient(180deg, #f0b36e 0%, #d6893f 60%, #a85f20 100%);
     border: 3px solid #ffe3c0;
     box-shadow: 0 10px 0 #7a4714, 0 20px 30px rgba(80,20,20,.35), inset 0 2px 0 #fff, inset 0 0 0 6px rgba(255,255,255,.15); }
-  .who { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 150px; }
+  .who { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 150px; justify-content: flex-end; }
+  .who .keeper { width: calc(var(--is) * .95); height: calc(var(--is) * .95); }
   .medal { width: calc(var(--is) * .72); height: calc(var(--is) * .72); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;
     background: radial-gradient(circle at 35% 30%, #ffffff, #ffd6e0 45%, #f0569a 100%);
     box-shadow: 0 6px 0 #b8306f, 0 12px 20px rgba(0,0,0,.3), inset 0 2px 0 #fff, 0 0 0 5px rgba(255,255,255,.5); }
@@ -74,19 +98,29 @@
   .plus { font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 3px 0 #b8306f, 0 5px 8px rgba(0,0,0,.3); }
   .billwrap { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
   .billwrap svg { filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)); }
-  .paybox { flex: 0 1 300px; min-width: 240px; min-height: 160px; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 24px; position: relative;
-    background: linear-gradient(180deg, #fff6d0, #ffe08a); border: 4px dashed #fff; transition: transform .15s, box-shadow .15s;
-    box-shadow: 0 7px 0 #c47f00, 0 14px 22px rgba(80,20,20,.3), inset 0 2px 0 #fff; }
-  .paybox.hot { transform: scale(1.04); box-shadow: 0 7px 0 #c47f00, 0 14px 22px rgba(80,20,20,.3), 0 0 0 6px #7dd0ff, 0 0 30px 6px rgba(125,208,255,.8); }
+  /* Caja registradora: pantalla, teclitas y cajón que se abre al pagar */
+  .paybox { flex: 0 1 300px; min-width: 240px; min-height: 170px; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 12px 8px; border-radius: 22px 22px 14px 14px; position: relative;
+    background: linear-gradient(180deg, #e6ebf5 0%, #b9c3d6 55%, #8d99b3 100%); border: 3px solid #fff; transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 8px 0 #4b5468, 0 16px 24px rgba(80,20,20,.3), inset 0 2px 0 #fff, inset 0 -4px 0 rgba(0,0,0,.08); }
+  .paybox::after { content: ""; position: absolute; right: 12px; top: 54px; width: 42px; height: 30px; border-radius: 6px; pointer-events: none; opacity: .9;
+    background: radial-gradient(circle at 50% 50%, #ff6f8e 0 4px, rgba(0,0,0,0) 5px) 0 0 / 14px 15px, radial-gradient(circle at 50% 50%, #3da9fc 0 4px, rgba(0,0,0,0) 5px) 7px 7px / 14px 15px; }
+  .paybox.hot { transform: scale(1.04); box-shadow: 0 8px 0 #4b5468, 0 16px 24px rgba(80,20,20,.3), 0 0 0 6px #7dd0ff, 0 0 30px 6px rgba(125,208,255,.8); }
   .paybox.bad { animation: shake .4s; }
-  .paybox.win { border-style: solid; background: linear-gradient(180deg, #e9ffe9, #b9f0c4); box-shadow: 0 7px 0 #14784a, 0 14px 22px rgba(0,60,40,.3), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); }
-  .paybox .lbl { font-size: 18px; font-weight: 900; color: #8a4b0a; text-shadow: 0 1px 0 #fff; }
-  .paybox .tot { font-size: clamp(42px, 6vw, 60px); line-height: 1; font-weight: 900; color: #fff; text-shadow: 0 3px 0 #c47f00, 0 6px 10px rgba(0,0,0,.3); transition: transform .15s; }
+  .paybox.win { box-shadow: 0 8px 0 #14784a, 0 16px 24px rgba(0,60,40,.3), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); }
+  .paybox .lbl { font-size: 17px; font-weight: 900; color: #3f4759; text-shadow: 0 1px 0 #fff; align-self: flex-start; padding-left: 6px; }
+  .paybox .tot { font-size: clamp(40px, 5.6vw, 56px); line-height: 1; font-weight: 900; color: #6cffc2; letter-spacing: 2px; padding: 4px 18px; border-radius: 12px; min-width: 70%; text-align: center; font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #2b3b78, #141d44); border: 3px solid #8fa6d8; text-shadow: 0 0 10px rgba(108,255,194,.9); box-shadow: inset 0 2px 6px rgba(0,0,0,.6); transition: transform .15s; }
+  .paybox.win .tot { color: #ffe98a; text-shadow: 0 0 10px rgba(255,233,138,.9); }
   .paybox .tot.bump { animation: bump .3s; }
-  @keyframes bump { 50% { transform: scale(1.25); } }
-  .paid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2px; min-height: 48px; }
+  @keyframes bump { 50% { transform: scale(1.15); } }
+  .paid { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 2px; min-height: 54px; width: 100%; padding: 4px 8px; border-radius: 10px; margin-top: 4px;
+    background: linear-gradient(180deg, #7a5230, #5a3717); box-shadow: inset 0 3px 6px rgba(0,0,0,.45), 0 2px 0 rgba(255,255,255,.4); transition: transform .35s cubic-bezier(.3,1.5,.5,1); }
+  .paybox.win .paid { transform: translateY(14px); }
   .paid .pc { width: 44px; height: 44px; margin: 0 -6px; cursor: pointer; animation: pop .3s ease-out; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); }
   .paid .pc svg { width: 100%; height: 100%; }
+  .paybox .bell { position: absolute; left: 10px; top: 52px; font-size: 26px; transform-origin: 50% 0; }
+  .paybox.win .bell { animation: ring .7s ease-in-out; }
+  @keyframes ring { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-25deg); } 40% { transform: rotate(22deg); } 60% { transform: rotate(-16deg); } 80% { transform: rotate(10deg); } }
 
   .wallet { position: relative; z-index: 2; flex: 0 0 auto; width: 100%; max-width: 980px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 14px; border-radius: 34px; }
   .coins { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; flex: 1 1 auto; }
@@ -98,10 +132,14 @@
     background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 2px 0 #1a63a8, 0 3px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.6); z-index: 2; }
   .ghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -55%) scale(1.15); filter: drop-shadow(0 14px 12px rgba(0,0,0,.4)); }
   .pay { font-size: 26px; min-height: 72px; padding: 8px 22px; white-space: nowrap; }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
-  @media (max-height: 820px) and (min-aspect-ratio: 1/1) { .shelf { height: 92px; } .prod { width: 70px; height: 70px; } .prod .emoji { font-size: 48px; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #ff9ccb, #f0569a); text-shadow: 0 3px 0 #b8306f, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #b8306f, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  @media (max-height: 820px) and (min-aspect-ratio: 1/1) { .shelf { height: 92px; } .prod { width: 70px; height: 70px; } .prod .emoji { font-size: 48px; } .prod.deco { width: 56px; height: 56px; } .prod.deco .emoji { font-size: 38px; } }
 </style>
 </head>
 <body>
@@ -110,15 +148,44 @@
 var game = KidsGame.init({ title: 'La tiendita' });
 (function () {
   var ROUNDS = 6;
-  var PRODS = ['🍎', '🍌', '🍬', '🍪', '🥐', '🍩', '🧃', '🍦', '🍭', '🧁', '🥪', '🍕', '🧸', '🎈', '🍫', '📚', '⚽', '🚗', '🎁', '🪁', '🧩', '🎀', '🎨', '🪀', '🦆', '🧢', '🍇', '🥕'];
-  var PNAME = { '🍎': 'la manzana', '🍌': 'el plátano', '🍬': 'el dulce', '🍪': 'la galleta', '🥐': 'el pan', '🍩': 'la dona', '🧃': 'el jugo', '🍦': 'el helado', '🍭': 'la paleta', '🧁': 'el pastelito', '🥪': 'el sándwich', '🍕': 'la pizza', '🧸': 'el osito', '🎈': 'el globo', '🍫': 'el chocolate', '📚': 'los libros', '⚽': 'el balón', '🚗': 'el carrito', '🎁': 'el regalo', '🪁': 'el papalote', '🧩': 'el rompecabezas', '🎀': 'el moño', '🎨': 'las pinturas', '🪀': 'el yoyo', '🦆': 'el patito', '🧢': 'la gorra', '🍇': 'las uvas', '🥕': 'la zanahoria' };
+  var PRODS = ['🍎', '🍌', '🍬', '🍪', '🥐', '🍩', '🧃', '🍦', '🍭', '🧁', '🥪', '🍕', '🧸', '🎈', '🍫', '📚', '⚽', '🚗', '🎁', '🪁', '🧩', '🎀', '🎨', '🪀', '🦆', '🧢', '🍇', '🥕', '🍉', '🥛', '🧦', '🪆'];
+  var PNAME = { '🍎': 'la manzana', '🍌': 'el plátano', '🍬': 'el dulce', '🍪': 'la galleta', '🥐': 'el pan', '🍩': 'la dona', '🧃': 'el jugo', '🍦': 'el helado', '🍭': 'la paleta', '🧁': 'el pastelito', '🥪': 'el sándwich', '🍕': 'la pizza', '🧸': 'el osito', '🎈': 'el globo', '🍫': 'el chocolate', '📚': 'los libros', '⚽': 'el balón', '🚗': 'el carrito', '🎁': 'el regalo', '🪁': 'el papalote', '🧩': 'el rompecabezas', '🎀': 'el moño', '🎨': 'las pinturas', '🪀': 'el yoyo', '🦆': 'el patito', '🧢': 'la gorra', '🍇': 'las uvas', '🥕': 'la zanahoria', '🍉': 'la sandía', '🥛': 'la leche', '🧦': 'los calcetines', '🪆': 'la muñeca' };
   var LABELS = { 1: 'Monedas de $1', 2: 'Combina monedas', 3: 'Dos cosas', 4: 'Da el cambio' };
-  var KEEPERS = ['👩‍🌾', '🧑‍🍳', '👨‍🌾', '👩‍🍳'], CUSTS = ['🧒', '👧', '👦', '👵', '👴', '🧑'];
+  var HOWTO = [{ icon: '🪙', text: 'Arrastra monedas a la caja registradora' }, { icon: '🧮', text: 'Junta el precio exacto' }, { icon: '💳', text: 'Toca Pagar y ¡ring!' }];
+  var CUSTS = ['🧒', '👧', '👦', '👵', '👴', '🧑'];
+  // Decoraciones de la tienda: una por nivel completado (cosmético, guardado en localStorage)
+  var DECOS = [['planta', '🪴', 'una plantita'], ['farol', '🏮', 'un farolito'], ['letrero', '🪧', 'el letrero de la tienda'], ['trofeo', '🏆', 'el trofeo de la mejor tienda']];
+  var EXTRA = { banderines: 2, luces: 4 }; // además: banderines al nivel 2 y foquitos al nivel 4
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null, total = 0, paid = [];
-  var hud, dots, instrTxt, shop, shelf, counter, who, bubble, buy, paybox, totEl, paidEl, wallet, coinsEl, sayText = '';
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, total = 0, paid = [], streak = 0, handShown = false;
+  var hud, dots, instrTxt, instr, shop, shelf, counter, who, bubble, buy, paybox, totEl, paidEl, wallet, coinsEl, banner, sayText = '';
 
   function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---- Hero art: la tendera (SVG con parpadeo, saludo y gorra de la tienda) ----
+  function keeperSVG(size) {
+    return '<svg class="keeper" viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="skf" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffe6cc"/><stop offset="1" stop-color="#f0b88a"/></radialGradient>' +
+      '<linearGradient id="ska" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ef0b0"/><stop offset="1" stop-color="#24b36c"/></linearGradient>' +
+      '<linearGradient id="skc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8fb3"/><stop offset="1" stop-color="#d64266"/></linearGradient></defs>' +
+      '<ellipse cx="60" cy="113" rx="36" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M28 112 Q28 78 60 78 Q92 78 92 112Z" fill="#ffd166"/>' +
+      '<path d="M38 112 Q38 86 60 86 Q82 86 82 112Z" fill="url(#ska)"/><path d="M44 94 L76 94" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round"/><rect x="50" y="98" width="20" height="10" rx="3" fill="#fff" opacity=".85"/>' +
+      '<g class="sk-hand"><path d="M90 92 L100 84" stroke="#f0b88a" stroke-width="6" stroke-linecap="round"/><circle cx="102" cy="80" r="8" fill="url(#skf)" stroke="#b07a5a" stroke-width="2"/><path d="M98 74 L96 68 M102 72 L102 66 M106 74 L108 68" stroke="#f0b88a" stroke-width="3" stroke-linecap="round"/></g>' +
+      '<g class="sk-head">' +
+      '<path d="M30 60 Q24 30 60 26 Q96 30 90 60 L94 84 Q88 90 84 84 L84 60 Q60 50 36 60 L36 84 Q32 90 26 84Z" fill="#6b3d12"/>' +
+      '<circle cx="60" cy="58" r="27" fill="url(#skf)" stroke="#b07a5a" stroke-width="2"/>' +
+      '<path d="M34 50 Q40 32 60 32 Q80 32 86 50 Q74 42 60 44 Q46 42 34 50Z" fill="#6b3d12"/>' +
+      '<path d="M30 40 Q34 16 60 16 Q86 16 90 40 Z" fill="url(#skc)"/><rect x="26" y="37" width="68" height="9" rx="4.5" fill="#b8306f"/><circle cx="60" cy="27" r="4" fill="#ffd166"/>' +
+      '<g class="sk-eyes"><ellipse cx="50" cy="58" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="70" cy="58" rx="4" ry="5" fill="#2b2b2b"/><circle cx="51.5" cy="56" r="1.5" fill="#fff"/><circle cx="71.5" cy="56" r="1.5" fill="#fff"/></g>' +
+      '<circle cx="42" cy="66" r="4" fill="#ff8aa8" opacity=".55"/><circle cx="78" cy="66" r="4" fill="#ff8aa8" opacity=".55"/>' +
+      '<ellipse cx="60" cy="65" rx="3" ry="2" fill="#e0a080"/>' +
+      '<path class="sk-mouth" d="M52 71 Q60 79 68 71" stroke="#b8306f" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+      '</g></svg>';
+  }
+  function keeperCheer() { Array.prototype.forEach.call(game.querySelectorAll('.keeper'), function (k) { k.classList.remove('cheer'); void k.getBoundingClientRect(); k.classList.add('cheer'); }); }
 
   // Monedas y billete renderizados en SVG (estilo mexicano: bimetálicas)
   function coinSVG(v, size) {
@@ -156,8 +223,9 @@ var game = KidsGame.init({ title: 'La tiendita' });
     hud.appendChild(lb);
     game.appendChild(hud);
 
-    var instr = el('div', 'instr panel', '<span class="ico emoji">🛒</span><span class="txt"></span>');
+    instr = el('div', 'instr panel', keeperSVG(60) + '<span class="txt"></span>');
     instrTxt = instr.querySelector('.txt');
+    instr.querySelector('.keeper').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); keeperCheer(); KidsGame.say(sayText); });
     var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
     instr.appendChild(sp);
@@ -168,7 +236,7 @@ var game = KidsGame.init({ title: 'La tiendita' });
     counter = el('div', 'counter');
     who = el('div', 'who'); bubble = el('div', 'bubble');
     buy = el('div', 'buy');
-    paybox = el('div', 'paybox', '<div class="lbl"></div><div class="tot">$0</div><div class="paid"></div>');
+    paybox = el('div', 'paybox', '<span class="bell emoji">🔔</span><div class="lbl"></div><div class="tot">$0</div><div class="paid"></div>');
     totEl = paybox.querySelector('.tot'); paidEl = paybox.querySelector('.paid');
     counter.appendChild(who); counter.appendChild(buy); counter.appendChild(paybox);
     shop.appendChild(shelf); shop.appendChild(counter);
@@ -180,17 +248,44 @@ var game = KidsGame.init({ title: 'La tiendita' });
     pay.addEventListener('pointerdown', function (ev) { ev.preventDefault(); checkPay(); });
     wallet.appendChild(pay);
     game.appendChild(wallet);
+    banner = el('div', 'rbanner'); game.appendChild(banner);
+    renderDeco();
   }
+  // Decoraciones desbloqueadas: banderines y foquitos en la pared, adornos en los extremos de la repisa
+  function renderDeco(newId) {
+    var have = readJSON('kg-tienda-deco', []);
+    Array.prototype.forEach.call(game.querySelectorAll('.deco-bunting, .deco-lights'), function (d) { d.remove(); });
+    if (have.indexOf('farol') >= 0) game.appendChild(el('div', 'deco-bunting'));
+    if (have.indexOf('trofeo') >= 0) game.appendChild(el('div', 'deco-lights'));
+    Array.prototype.forEach.call(shelf.querySelectorAll('.prod.deco'), function (d) { d.remove(); });
+    DECOS.forEach(function (d, i) {
+      if (have.indexOf(d[0]) < 0) return;
+      var p = el('div', 'prod deco' + (d[0] === newId ? ' new' : ''), '<span class="emoji">' + d[1] + '</span>'); p.title = d[2];
+      if (i % 2 === 0) shelf.insertBefore(p, shelf.firstChild); else shelf.appendChild(p);
+    });
+  }
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++; keeperCheer();
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 14, chars: streak >= 3 ? ['⭐', '✨', '🪙'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
 
   function showPicker() {
     running = false; lock = true;
     if (buy) { buy.innerHTML = ''; coinsEl.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'tienda', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'tienda', labels: LABELS, howto: HOWTO, art: keeperSVG(64), music: 'alegre', onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; build(); newRound(true); }
 
   function makeRound() {
-    var c = { items: [], need: 0, wallet: null, bill: 0, keeper: KidsGame.pick(KEEPERS), cust: KidsGame.pick(CUSTS), shelf: KidsGame.shuffle(PRODS).slice(0, 4) };
+    var c = { items: [], need: 0, wallet: null, bill: 0, cust: KidsGame.pick(CUSTS), shelf: KidsGame.shuffle(PRODS).slice(0, 4) };
     var p1, p2;
     if (nivel === 1) {
       p1 = 1 + KidsGame.rand(5); c.items = [{ e: c.shelf[0], p: p1 }]; c.need = p1;
@@ -219,7 +314,13 @@ var game = KidsGame.init({ title: 'La tiendita' });
     return c;
   }
 
-  function newRound() {
+  // Entre rondas la tienda sale deslizando y la compra nueva entra (nunca un cambio seco)
+  function newRound(first) {
+    if (!running) return;
+    if (!first) { lock = true; shop.classList.add('out'); setTimeout(function () { shop.classList.remove('out'); doRound(); }, 300); }
+    else doRound();
+  }
+  function doRound() {
     if (!running) return;
     cur = makeRound(); lock = false; total = 0; paid = [];
     instrTxt.textContent = cur.instr; sayText = cur.say;
@@ -231,9 +332,12 @@ var game = KidsGame.init({ title: 'La tiendita' });
       if (!isBuy) pr.appendChild(el('span', 'tag', '$' + (1 + KidsGame.rand(9))));
       shelf.appendChild(pr);
     });
+    renderDeco();
     who.innerHTML = '';
-    var m = el('div', 'medal', '<span class="emoji">' + (nivel === 4 ? cur.cust : cur.keeper) + '</span>');
-    who.appendChild(m); bubble.className = 'bubble'; bubble.textContent = cur.bub; who.appendChild(bubble);
+    if (nivel === 4) who.appendChild(el('div', 'medal', '<span class="emoji">' + cur.cust + '</span>'));
+    else who.innerHTML = keeperSVG(120);
+    var kp = who.querySelector('.keeper'); if (kp) kp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); keeperCheer(); KidsGame.say(sayText); });
+    bubble.className = 'bubble'; bubble.textContent = cur.bub; who.appendChild(bubble);
     buy.innerHTML = '';
     cur.items.forEach(function (it, i) {
       if (i) buy.appendChild(el('div', 'plus', '+'));
@@ -250,7 +354,11 @@ var game = KidsGame.init({ title: 'La tiendita' });
       c.addEventListener('pointerdown', function (ev) { startDrag(ev, w); });
       coinsEl.appendChild(c);
     });
+    shop.classList.add('in'); void shop.offsetWidth; shop.classList.remove('in');
+    showBanner('Compra ' + (round + 1) + ' de ' + ROUNDS);
     KidsGame.say(sayText);
+    // Tutorial: en la primera compra del nivel 1 la manita arrastra una moneda a la caja
+    if (nivel === 1 && round === 0 && !handShown) { handShown = true; setTimeout(function () { var c = coinsEl.querySelector('.coin'); if (running && !lock && c) KidsGame.hand({ from: c, to: paybox }); }, 1200); }
   }
 
   function startDrag(ev, w) {
@@ -288,8 +396,7 @@ var game = KidsGame.init({ title: 'La tiendita' });
     if (lock || !running) return;
     KidsGame.sound.tap();
     if (total === cur.need) { win(); return; }
-    KidsGame.sound.wrong(); KidsGame.vibrate(20);
-    paybox.classList.remove('bad'); void paybox.offsetWidth; paybox.classList.add('bad');
+    KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(paybox);
     var d = cur.need - total, msg;
     if (total === 0) msg = nivel === 4 ? 'Dame mi cambio' : 'Pon monedas';
     else if (d > 0) msg = 'Faltan $' + d; else msg = 'Te pasaste $' + (-d);
@@ -297,40 +404,38 @@ var game = KidsGame.init({ title: 'La tiendita' });
     KidsGame.say(msg.replace('$', '') + (d > 0 && total ? ' pesos' : ''));
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 110;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
-    }
+  // ¡Ring! La caja registradora suena y abre el cajón
+  function registerRing() {
+    KidsGame.sound.note(1568); setTimeout(function () { KidsGame.sound.note(2093); }, 140);
+    var r = paybox.getBoundingClientRect();
+    KidsGame.fx.floatText(r.left + r.width / 2, r.top - 10, '¡Ring! 🔔', 'good');
   }
   function win() {
     lock = true;
     paybox.classList.add('win');
     bubble.className = 'bubble ok'; bubble.textContent = nivel === 4 ? '¡Gracias! 😊' : '¡Justo! ¡Gracias!';
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-    var g = game.getBoundingClientRect(), r = paybox.getBoundingClientRect();
-    sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+    registerRing(); hit(paybox);
     KidsGame.say(nivel === 4 ? '¡Cambio correcto! Gracias.' : '¡Pagaste justo! Gracias.');
     dots.children[round].classList.add('on'); round++;
-    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1700);
+    setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1800);
   }
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var sub = '¡' + ROUNDS + ' compras perfectas!';
+    // Recompensa cosmética: una decoración nueva para la tienda por nivel completado
+    var have = readJSON('kg-tienda-deco', []), d = DECOS[nivel - 1];
+    if (d && have.indexOf(d[0]) < 0) { have.push(d[0]); writeJSON('kg-tienda-deco', have); renderDeco(d[0]); sub += ' · ' + d[1] + ' ¡Ganaste ' + d[2] + '!'; }
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' compras perfectas!',
+      sub: sub,
       onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
       onAgain: function () { start(nivel); }
     });
   }
 
   window.__g3 = {
-    state: function () { return cur && { need: cur.need, total: total, nivel: nivel, round: round, lock: lock, bill: cur.bill }; },
+    state: function () { return cur && { need: cur.need, total: total, nivel: nivel, round: round, lock: lock, bill: cur.bill, streak: streak }; },
     solve: function () {
       if (!cur || lock) return false;
       var rem = cur.need - total, ws = cur.wallet.slice().sort(function (a, b) { return b.v - a.v; });

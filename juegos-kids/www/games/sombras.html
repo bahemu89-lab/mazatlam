@@ -6,28 +6,62 @@
 <link rel="stylesheet" href="../common.css">
 <title>Sombras</title>
 <style>
+  /* ===== Mundo: "El bosque al atardecer" — cielo naranja-violeta, sol bajo, árboles en silueta y Lumi, el farolito ===== */
   .game {
-    display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px; touch-action: none;
-    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,246,190,.55), rgba(255,255,255,0) 70%);
+    display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 8px 8px 8px 100px; touch-action: none;
+    background:
+      radial-gradient(circle at 78% 30%, #fff3c4 0 34px, rgba(255,214,120,.55) 50px, rgba(255,214,120,0) 150px),
+      radial-gradient(ellipse 80% 30% at 50% 78%, #4a2a7a 0, rgba(74,42,122,0) 70%),
+      linear-gradient(180deg, #ffb36b 0%, #ff8a7a 30%, #d2679e 55%, #7e4fb8 80%, #3d2a6e 100%);
   }
-  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; flex-wrap: wrap; row-gap: var(--gap); }
-  /* ancho limitado a --n columnas para que las filas se repartan parejas (5 + 5 y no 8 + 2) */
+  /* colinas lejanas en silueta */
+  .game::before {
+    content: ""; position: absolute; left: -10%; right: -10%; bottom: 0; height: 46%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 45% 70% at 20% 100%, #4a2f7e 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 55% 60% at 75% 100%, #3e2670 0 60%, rgba(0,0,0,0) 61%),
+      radial-gradient(ellipse 40% 50% at 50% 100%, #2c1b55 0 60%, rgba(0,0,0,0) 61%);
+  }
+  .trees { position: absolute; left: 0; right: 0; bottom: 0; height: 32%; z-index: 0; pointer-events: none; }
+  .trees svg { width: 100%; height: 100%; display: block; }
+  .fly { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #fff6a8; z-index: 0; pointer-events: none; opacity: 0; box-shadow: 0 0 8px 3px rgba(255,240,150,.8); animation: fly 5s ease-in-out infinite; }
+  @keyframes fly { 0% { transform: translate(0,0) scale(.6); opacity: 0; } 25% { opacity: 1; } 50% { transform: translate(18px,-26px) scale(1); opacity: .5; } 75% { opacity: 1; } 100% { transform: translate(-12px,-50px) scale(.7); opacity: 0; } }
+  .friend { position: absolute; z-index: 0; pointer-events: none; font-size: 44px; animation: float 3.6s ease-in-out infinite; }
+  /* Lumi, el farolito que proyecta las sombras */
+  .lamp { position: absolute; left: 4px; top: 4px; width: 96px; height: 170px; z-index: 1; pointer-events: none; overflow: visible; }
+  .lamp svg { width: 100%; height: 100%; overflow: visible; }
+  .lamp .cone { transition: opacity .3s; }
+  .lamp .pupils { transition: transform .15s; }
+  .lamp .glass { transform-box: fill-box; transform-origin: 50% 100%; animation: lampsway 4s ease-in-out infinite; }
+  @keyframes lampsway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .lamp .flare { opacity: 0; transition: opacity .15s; }
+  .lamp.flash .flare { opacity: 1; }
+  .lamp .m-happy { opacity: 0; } .lamp .m-oops { opacity: 0; }
+  .lamp.flash .m-smile, .lamp.oops .m-smile { opacity: 0; }
+  .lamp.flash .m-happy { opacity: 1; } .lamp.oops .m-oops { opacity: 1; }
+  .lamp.oops .glass { animation: lampshake .4s; }
+  @keyframes lampshake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+  .lamp .eyes { transform-box: fill-box; transform-origin: 50% 50%; animation: lblink 4.4s infinite; }
+  @keyframes lblink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+  .row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; flex: 0 0 auto; position: relative; flex-wrap: wrap; row-gap: var(--gap); z-index: 1; transition: transform .35s cubic-bezier(.2,1.3,.4,1), opacity .3s; }
+  .game.sw .row { transform: scale(.9); opacity: 0; }
   .row.top, .row.objs { max-width: calc(var(--n) * var(--sz) + (var(--n) - 1) * var(--gap) + 2px); margin: 0 auto; }
-  /* Franja de suelo soleado detrás de las sombras */
+  /* Claro del bosque donde caen las sombras */
   .row.top::before {
     content: ""; position: absolute; left: 50%; top: -16px; bottom: -16px; z-index: -1; border-radius: 34px;
     width: calc(var(--n) * var(--sz) + (var(--n) - 1) * var(--gap) + 44px); transform: translateX(-50%);
     background:
-      radial-gradient(ellipse 60% 55% at 30% 0%, rgba(255,255,255,.45), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 60% 55% at 30% 0%, rgba(255,230,160,.45), rgba(255,255,255,0) 70%),
       repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 14px, rgba(0,0,0,0) 14px 30px),
-      linear-gradient(180deg, #b7ee7a 0%, #7fcf52 55%, #55ad3c 100%);
-    box-shadow: 0 8px 0 #3d8a2c, 0 18px 28px rgba(0,60,0,.28), inset 0 3px 0 rgba(255,255,255,.55), inset 0 -4px 0 rgba(0,0,0,.12);
+      linear-gradient(180deg, #8fcf5e 0%, #5fae45 55%, #3f8a35 100%);
+    box-shadow: 0 8px 0 #2b6a28, 0 18px 28px rgba(0,30,0,.35), inset 0 3px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.12);
   }
   .row.top::after {
-    content: "🌷 🌼 🌱"; position: absolute; left: 50%; top: -34px; transform: translateX(calc((var(--n) * var(--sz) + (var(--n) - 1) * var(--gap)) / -2 - 12px));
+    content: "🌷 🍄 🌱"; position: absolute; left: 50%; top: -34px; transform: translateX(calc((var(--n) * var(--sz) + (var(--n) - 1) * var(--gap)) / -2 - 12px));
     font-size: 24px; z-index: 1; pointer-events: none; filter: drop-shadow(0 3px 2px rgba(0,0,0,.25));
     font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
   }
+  .row.top:empty::before, .row.top:empty::after { display: none; }
   .hint {
     flex: 0 0 auto; font-size: 24px; font-weight: 900; color: #fff; border-radius: 30px; padding: 8px 22px;
     display: flex; align-items: center; gap: 10px; position: relative; z-index: 2;
@@ -42,7 +76,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: calc(var(--sz) * 0.62);
   }
-  /* Parche de tierra iluminado por el sol, con sombra "real" del objeto */
+  /* Parche de tierra iluminado por el farol, con la sombra "real" del objeto */
   .slot {
     position: relative; border-radius: 26px;
     background:
@@ -53,52 +87,34 @@
     box-shadow: 0 7px 0 #b88a3c, 0 14px 20px rgba(60,30,0,.3), inset 0 2px 0 #fff, inset 0 -6px 12px rgba(150,100,20,.2);
     transition: transform .2s, box-shadow .2s;
   }
-  .slot::before {
-    content: ""; position: absolute; inset: 7px; border-radius: 18px; pointer-events: none;
-    border: 3px dashed rgba(140,95,20,.35);
-  }
+  .slot::before { content: ""; position: absolute; inset: 7px; border-radius: 18px; pointer-events: none; border: 3px dashed rgba(140,95,20,.35); }
   .slot::after {
     content: ""; position: absolute; left: 14%; right: 14%; bottom: 9%; height: 16%; border-radius: 50%; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 50%, rgba(60,40,20,.35), rgba(60,40,20,0) 70%);
-    transition: opacity .3s;
+    background: radial-gradient(ellipse at 50% 50%, rgba(60,40,20,.35), rgba(60,40,20,0) 70%); transition: opacity .3s;
   }
-  .slot .emoji {
-    filter: brightness(0) blur(.7px); opacity: .62; position: relative; z-index: 1;
-    transform: skewX(-6deg) scaleY(.96) translateY(2%);
-    transition: filter .35s, opacity .35s, transform .35s;
-  }
+  .slot .emoji { filter: brightness(0) blur(.7px); opacity: .62; position: relative; z-index: 1; transform: skewX(-6deg) scaleY(.96) translateY(2%); transition: filter .35s, opacity .35s, transform .35s; }
   .slot.hover { transform: scale(1.1) translateY(-4px); box-shadow: 0 11px 0 #b88a3c, 0 20px 26px rgba(60,30,0,.35), 0 0 0 6px rgba(255,235,120,.9), 0 0 30px rgba(255,220,80,.9), inset 0 2px 0 #fff; }
   .slot.hover .emoji { opacity: .8; }
   .slot.ok {
-    background:
-      radial-gradient(ellipse 70% 60% at 30% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
-      linear-gradient(180deg, #ecffe9 0%, #bdf3c6 100%);
+    background: radial-gradient(ellipse 70% 60% at 30% 22%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%), linear-gradient(180deg, #ecffe9 0%, #bdf3c6 100%);
     border-color: #fff;
     box-shadow: 0 7px 0 #3fa864, 0 14px 20px rgba(20,120,60,.35), 0 0 0 5px rgba(120,230,150,.7), 0 0 26px rgba(120,255,160,.8), inset 0 2px 0 #fff;
   }
   .slot.ok::before { border-color: rgba(60,170,90,.35); border-style: solid; }
   .slot.ok::after { opacity: .5; }
-  .slot.ok .emoji { filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); opacity: 1; transform: none; animation: bounce .6s 1; }
+  .slot.ok .emoji { filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); opacity: 1; transform: none; animation: landed .5s cubic-bezier(.2,1.5,.4,1); }
+  @keyframes landed { 0% { transform: scale(1.3,.7); } 50% { transform: scale(.9,1.12); } 100% { transform: scale(1); } }
   .slot.bad { animation: shake .35s; }
   /* Medallones brillantes */
   .obj {
     position: relative; border-radius: 50%; cursor: grab; touch-action: none;
-    background:
-      radial-gradient(circle at 35% 28%, #ffffff 0%, #f5f8ff 35%, #d9e3f7 70%, #b8c8ea 100%);
+    background: radial-gradient(circle at 35% 28%, #ffffff 0%, #f5f8ff 35%, #d9e3f7 70%, #b8c8ea 100%);
     border: 5px solid #fff;
     box-shadow: 0 0 0 4px #ffd45c, 0 8px 0 #c48d1e, 0 8px 0 4px #c48d1e, 0 16px 22px rgba(20,40,90,.35), inset 0 3px 0 #fff, inset 0 -6px 10px rgba(80,110,170,.22);
-    transition: transform .15s, opacity .2s, box-shadow .15s;
+    transition: transform .15s, opacity .2s;
     animation: float 3.4s ease-in-out infinite;
   }
-  .obj::before {
-    content: ""; position: absolute; left: 14%; right: 14%; top: 6%; height: 34%; border-radius: 50%; pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0));
-  }
-  .obj::after {
-    content: ""; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
-    background: conic-gradient(from 200deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,.8) 40deg, rgba(255,255,255,0) 80deg, rgba(255,255,255,0) 360deg);
-    opacity: .9;
-  }
+  .obj::before { content: ""; position: absolute; left: 14%; right: 14%; top: 6%; height: 34%; border-radius: 50%; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0)); }
   .obj .emoji { position: relative; z-index: 1; filter: drop-shadow(0 5px 5px rgba(0,0,0,.3)); }
   .obj.pop { animation: pop .35s ease-out backwards; }
   .obj:active { transform: scale(.94); }
@@ -108,25 +124,9 @@
   .ghost {
     position: absolute; left: 0; top: 0; pointer-events: none; z-index: 20;
     width: var(--sz); height: var(--sz); display: flex; align-items: center; justify-content: center;
-    font-size: calc(var(--sz) * 0.72);
-    transform: translate(-50%, -60%) scale(1.15);
+    font-size: calc(var(--sz) * 0.72); transform: translate(-50%, -60%) scale(1.15);
   }
   .ghost .emoji { filter: drop-shadow(0 18px 12px rgba(0,0,0,.4)); transform: rotate(-6deg); }
-  /* Chispas doradas al acertar */
-  .spark {
-    position: absolute; width: 18px; height: 18px; z-index: 30; pointer-events: none; margin: -9px 0 0 -9px;
-    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-    background: radial-gradient(circle at 50% 50%, #fff 0, #ffe27a 40%, #ffb703 100%);
-    animation: spark .75s ease-out forwards;
-  }
-  .spark.pink { background: radial-gradient(circle at 50% 50%, #fff 0, #ffb3d1 40%, #f0569a 100%); }
-  @keyframes spark { 0%{transform:translate(0,0) scale(.3) rotate(0);opacity:1} 60%{opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(1.3) rotate(200deg);opacity:0} }
-  .ring {
-    position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; z-index: 29; pointer-events: none;
-    border: 6px solid rgba(255,255,255,.95); box-shadow: 0 0 0 4px rgba(255,220,80,.6);
-    animation: ring .55s ease-out forwards;
-  }
-  @keyframes ring { 0%{transform:scale(.4);opacity:1} 100%{transform:scale(3.2);opacity:0} }
   .row.mid { gap: 12px; z-index: 2; }
   .slot.decoy::before { border-color: rgba(140,95,20,.2); }
   .slot .emoji.rot { transition: transform .5s cubic-bezier(.3,1.4,.4,1), filter .35s, opacity .35s; }
@@ -135,6 +135,13 @@
   .hint.small { font-size: 20px; padding: 6px 16px; }
   .row.mid .kg-level-badge { font-size: 20px; padding: 8px 16px; }
   .row.mid .lvbtn { font-size: 28px; }
+  .banner { position: absolute; left: 50%; top: 45%; z-index: 12; pointer-events: none; padding: 10px 32px; border-radius: 40px; white-space: nowrap;
+    font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #b8306f, 0 4px 8px rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #ff9ccb, #f0569a); border: 3px solid #fff; box-shadow: 0 6px 0 #b8306f, 0 14px 24px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
+  .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
+  @media (max-width: 700px) { .game { padding-left: 74px; } .lamp { width: 70px; height: 130px; } }
 </style>
 </head>
 <body>
@@ -147,7 +154,10 @@ var game = KidsGame.init({ title: 'Sombras' });
     ['🍎','🍌','🍇','🍓','🍉','🍍','🥕','🍒','🍐','🥑','🌽','🍄'],
     ['🚗','🚌','🚲','✈️','🚁','🚂','⛵','🚀','🚜','🛵','🚤','🎈'],
     ['🧸','⚽','🪁','🎸','🎺','🧩','🪀','🎨','🚂','🪆','🎲','🏀'],
-    ['🌻','🌵','🌳','🍄','🌈','☂️','🔑','⭐','🏠','🔔','🎩','👑']
+    ['🌻','🌵','🌳','🍄','🌈','☂️','🔑','⭐','🏠','🔔','🎩','👑'],
+    ['🦋','🐞','🐝','🐌','🐜','🐛','🕷️','🦂','🐸','🦎','🐍','🦗'],
+    ['👕','👗','👖','🧢','👟','🧦','🧤','🧣','👒','🎒','👓','☂️'],
+    ['🎸','🎺','🥁','🎻','🎹','🎷','🎤','🎧','🔔','📯','🎲','🪁']
   ];
   // Nivel 3: conjuntos de siluetas parecidas (distractores difíciles)
   var SETS_HARD = [
@@ -155,28 +165,86 @@ var game = KidsGame.init({ title: 'Sombras' });
     ['🍎','🍊','🍋','🍑','🍅','🍐','🥝','🥭','🍏','🧅','🥔','🍈'],
     ['🚗','🚕','🚙','🚌','🚎','🚐','🚚','🚛','🏎️','🚓','🚑','🚒'],
     ['🐔','🐓','🐦','🐧','🦆','🦢','🦉','🦜','🐤','🦩','🕊️','🦚'],
-    ['🐟','🐠','🐡','🦈','🐬','🐳','🐋','🦭','🐙','🦑','🦐','🦞']
+    ['🐟','🐠','🐡','🦈','🐬','🐳','🐋','🦭','🐙','🦑','🦐','🦞'],
+    ['🦋','🐞','🐝','🐜','🐛','🦗','🕷️','🐌','🦟','🦂','🐸','🦎']
   ];
-  // 4 = Experto: 9 sombras GIRADAS o en espejo (hay que rotarlas mentalmente) + 1 sombra señuelo sin objeto
   var DIFF = { 1: { base: 3, max: 4 }, 2: { base: 5, max: 6 }, 3: { base: 7, max: 8, hard: true }, 4: { base: 9, max: 9, hard: true, rot: true, decoy: 1 } };
   var LABELS = { 1: '3-4 sombras', 2: '5-6 sombras', 3: '7-8 · parecidas', 4: '9 giradas · 1 trampa' };
   var ROTS = ['rotate(90deg)', 'rotate(-90deg)', 'rotate(180deg)', 'scaleX(-1)', 'scaleX(-1) rotate(90deg)', 'scaleX(-1) rotate(-90deg)', 'rotate(135deg)', 'rotate(-135deg)'];
-  var nivel = 1, running = false;
+  // Amigos del bosque: aparecen en la escena al completar niveles (cosmético, guardado)
+  var FRIENDS = [{ lv: 1, e: '🦉', n: 'Búho', pos: { right: '3%', bottom: '38%' } }, { lv: 2, e: '🦊', n: 'Zorro', pos: { left: '12%', bottom: '3%' } }, { lv: 3, e: '🦔', n: 'Erizo', pos: { right: '14%', bottom: '2%' } }, { lv: 4, e: '🦌', n: 'Ciervo', pos: { left: '38%', bottom: '2%' } }];
+  function readFriends() { try { return JSON.parse(localStorage.getItem('kg-sombras-amigos') || '[]'); } catch (e) { return []; } }
+  function doneLevels() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').sombras || {}; } catch (e) { return {}; } }
+  var nivel = 1, running = false, streak = 0, hand = null;
   var round = 0, count = 3, items = [], slots = [], placed = 0;
   var hint = document.createElement('div'); hint.className = 'hint';
   var top = document.createElement('div'); top.className = 'row top';
   var bottom = document.createElement('div'); bottom.className = 'row objs';
   var mid = document.createElement('div'); mid.className = 'row mid';
   game.innerHTML = '';
+  // Escena: árboles, luciérnagas, farolito
+  var trees = document.createElement('div'); trees.className = 'trees';
+  trees.innerHTML = '<svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true"><path fill="#2a1a4e" d="M0 200 L0 150 L30 150 L30 120 L50 70 L70 120 L70 150 L110 150 L110 100 L135 40 L160 100 L160 150 L200 150 L200 130 L225 80 L250 130 L250 150 L320 150 L320 110 L350 50 L380 110 L380 150 L440 150 L440 125 L465 85 L490 125 L490 150 L560 150 L560 100 L590 30 L620 100 L620 150 L680 150 L680 130 L705 90 L730 130 L730 150 L800 150 L800 110 L830 45 L860 110 L860 150 L910 150 L910 125 L935 85 L960 125 L960 150 L1000 150 L1000 200 Z"/><path fill="#1c1038" d="M0 200 L0 170 L40 170 L40 140 L60 105 L80 140 L80 170 L150 170 L150 150 L170 115 L190 150 L190 170 L290 170 L290 145 L310 110 L330 145 L330 170 L420 170 L420 150 L440 120 L460 150 L460 170 L540 170 L540 140 L560 100 L580 140 L580 170 L660 170 L660 150 L680 118 L700 150 L700 170 L780 170 L780 145 L800 110 L820 145 L820 170 L900 170 L900 150 L920 120 L940 150 L940 170 L1000 170 L1000 200 Z"/></svg>';
+  game.appendChild(trees);
+  for (var fi = 0; fi < 7; fi++) { var f = document.createElement('div'); f.className = 'fly'; f.style.left = (8 + fi * 13) + '%'; f.style.top = (45 + (fi % 3) * 15) + '%'; f.style.animationDelay = (-fi * 0.9) + 's'; game.appendChild(f); }
+  var lamp = document.createElement('div'); lamp.className = 'lamp';
+  function lampSVG(w) {
+    return '<svg viewBox="0 0 96 170" aria-hidden="true"><defs>' +
+      '<linearGradient id="lpost" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3416"/><stop offset=".5" stop-color="#9c6b3c"/><stop offset="1" stop-color="#5a3416"/></linearGradient>' +
+      '<radialGradient id="lglass" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#fffbe0"/><stop offset=".55" stop-color="#ffd54a"/><stop offset="1" stop-color="#f29b1a"/></radialGradient>' +
+      '<linearGradient id="lcone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff2a8" stop-opacity=".45"/><stop offset="1" stop-color="#fff2a8" stop-opacity="0"/></linearGradient></defs>' +
+      '<polygon class="cone" points="62,74 ' + (w || 900) + ',10 ' + (w || 900) + ',240 62,96" fill="url(#lcone)"/>' +
+      '<rect x="12" y="20" width="10" height="150" rx="4" fill="url(#lpost)"/><path d="M12 24 Q 40 10 56 28" stroke="#6b4320" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+      '<g class="glass"><line x1="56" y1="28" x2="56" y2="40" stroke="#444" stroke-width="3"/>' +
+      '<path d="M36 44 L 76 44 L 72 36 L 40 36 Z" fill="#3b3b4a"/><rect x="38" y="44" width="36" height="52" rx="8" fill="url(#lglass)" stroke="#3b3b4a" stroke-width="4"/>' +
+      '<path d="M36 96 L 76 96 L 72 104 L 40 104 Z" fill="#3b3b4a"/>' +
+      '<circle class="flare" cx="56" cy="70" r="30" fill="#fff6a8" opacity=".6"/>' +
+      '<g class="eyes"><ellipse cx="48" cy="64" rx="5" ry="6" fill="#fff"/><ellipse cx="64" cy="64" rx="5" ry="6" fill="#fff"/><g class="pupils"><circle cx="49" cy="65" r="3" fill="#3b2a1a"/><circle cx="65" cy="65" r="3" fill="#3b2a1a"/></g></g>' +
+      '<path class="m-smile" d="M49 80 Q 56 86 63 80" stroke="#8a4b12" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+      '<path class="m-happy" d="M48 78 Q 56 92 64 78 Z" fill="#8a2f3a"/>' +
+      '<path class="m-oops" d="M49 84 Q 56 78 63 84" stroke="#8a4b12" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="43" cy="74" r="3" fill="#ff8aa8" opacity=".6"/><circle cx="69" cy="74" r="3" fill="#ff8aa8" opacity=".6"/></g></svg>';
+  }
+  lamp.innerHTML = lampSVG(900);
+  game.appendChild(lamp);
+  var pupils = lamp.querySelector('.pupils'), lampT = null;
+  function lampLook(cx, cy) {
+    if (cx == null) { pupils.setAttribute('transform', 'translate(0 0)'); return; }
+    var r = lamp.getBoundingClientRect(), ex = r.left + r.width * 0.58, ey = r.top + r.height * 0.38;
+    var dx = cx - ex, dy = cy - ey, len = Math.sqrt(dx * dx + dy * dy) || 1;
+    pupils.setAttribute('transform', 'translate(' + (dx / len * 2.2).toFixed(1) + ' ' + (dy / len * 2.2).toFixed(1) + ')');
+  }
+  function lampMood(m, ms) { clearTimeout(lampT); lamp.classList.remove('flash', 'oops'); void lamp.offsetWidth; lamp.classList.add(m); lampT = setTimeout(function () { lamp.classList.remove(m); }, ms || 700); }
+  var bannerEl = document.createElement('div'); bannerEl.className = 'banner'; game.appendChild(bannerEl);
+  var bannerT = null;
+  function banner(txt, gold, ms) { clearTimeout(bannerT); bannerEl.textContent = txt; bannerEl.className = 'banner show' + (gold ? ' gold' : ''); bannerT = setTimeout(function () { bannerEl.classList.remove('show'); }, ms || 1100); }
   mid.appendChild(hint);
   game.appendChild(top); game.appendChild(mid); game.appendChild(bottom);
+  function renderFriends() {
+    var old = game.querySelectorAll('.friend'); for (var i = 0; i < old.length; i++) old[i].remove();
+    var have = readFriends();
+    FRIENDS.forEach(function (fr) {
+      if (have.indexOf(fr.e) < 0) return;
+      var d = document.createElement('div'); d.className = 'friend emoji'; d.textContent = fr.e;
+      for (var k in fr.pos) d.style[k] = fr.pos[k];
+      d.style.animationDelay = (-Math.random() * 3) + 's';
+      game.appendChild(d);
+    });
+  }
+  function syncFriends() {
+    var d = doneLevels(), have = readFriends(), added = null;
+    FRIENDS.forEach(function (fr) { if (d[fr.lv] && have.indexOf(fr.e) < 0) { have.push(fr.e); added = fr; } });
+    try { localStorage.setItem('kg-sombras-amigos', JSON.stringify(have)); } catch (e) {}
+    renderFriends();
+    if (added) { KidsGame.toast('🌳 ¡' + added.n + ' ' + added.e + ' llegó al bosque!', 2600); }
+  }
+  syncFriends();
 
   function layout() {
     var n = items.length || 3, nTop = slots.length || n;
-    var W = game.clientWidth - 16 - 44, H = game.clientHeight - mid.offsetHeight - 40;
+    var W = game.clientWidth - 16 - 44 - (window.innerWidth > 700 ? 92 : 66), H = game.clientHeight - mid.offsetHeight - 40;
     var gap = 14;
     function szFor(cols, rows) { return Math.floor(Math.min((W - (cols - 1) * gap) / cols, (H - 40) / (rows + 1.2), 200)); }
-    // una fila si caben bien; si las fichas quedarían pequeñas, dos filas arriba y dos abajo
     var cols = nTop, rows = 2, sz = szFor(cols, rows);
     if (sz < 100 && nTop > 4) { cols = Math.ceil(nTop / 2); rows = 4; sz = szFor(cols, rows); }
     sz = Math.max(64, sz);
@@ -186,10 +254,12 @@ var game = KidsGame.init({ title: 'Sombras' });
   }
 
   function pickLevel() {
-    running = false; drag = null;
+    running = false; drag = null; if (hand) { hand.stop(); hand = null; }
     top.innerHTML = ''; bottom.innerHTML = ''; mid.innerHTML = '';
     items = []; slots = [];
-    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { nivel = n; round = 0; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, music: 'calma', art: lampSVG(96).replace('<svg ', '<svg width="40" height="70" '),
+      howto: [{ icon: '🔦', text: 'Lumi alumbra y hace sombras' }, { icon: '👆', text: 'Arrastra cada cosa a su sombra' }, { icon: '⭐', text: 'Acierta todas para ganar' }],
+      onPick: function (n) { nivel = n; round = 0; streak = 0; start(); } });
   }
   function buildHud() {
     mid.innerHTML = '';
@@ -200,28 +270,11 @@ var game = KidsGame.init({ title: 'Sombras' });
     mid.appendChild(b);
   }
 
-  // Chispas y anillo de luz que salen del centro de un elemento
-  function burst(el) {
-    var r = el.getBoundingClientRect(), g = game.getBoundingClientRect();
-    var cx = r.left - g.left + r.width / 2, cy = r.top - g.top + r.height / 2;
-    var ring = document.createElement('div'); ring.className = 'ring'; ring.style.left = cx + 'px'; ring.style.top = cy + 'px';
-    game.appendChild(ring); setTimeout(function () { ring.remove(); }, 700);
-    for (var i = 0; i < 14; i++) {
-      var s = document.createElement('div'); s.className = 'spark' + (i % 3 === 0 ? ' pink' : '');
-      var a = (i / 14) * Math.PI * 2 + Math.random() * .4, d = r.width * .5 + Math.random() * r.width * .4;
-      s.style.left = cx + 'px'; s.style.top = cy + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', Math.sin(a) * d + 'px');
-      s.style.animationDelay = (Math.random() * 100) + 'ms';
-      game.appendChild(s);
-      (function (e) { setTimeout(function () { e.remove(); }, 950); })(s);
-    }
-  }
-
   function start() {
     running = true;
     var D = DIFF[nivel];
     count = Math.min(D.base + Math.floor(round / 2), D.max);
-    var set = (D.hard ? SETS_HARD : SETS)[round % SETS.length];
+    var sets = D.hard ? SETS_HARD : SETS, set = sets[round % sets.length];
     var pool = KidsGame.shuffle(set);
     items = pool.slice(0, count);
     var decoys = D.decoy ? pool.slice(count, count + D.decoy) : [];
@@ -230,7 +283,6 @@ var game = KidsGame.init({ title: 'Sombras' });
     hint.className = 'hint' + (D.rot ? ' small' : '');
     hint.innerHTML = D.rot ? '<span class="emoji hand">👆</span> Arrastra · <span class="emoji spin">🔄</span> ¡Están giradas!' : '<span class="emoji hand">👆</span> Arrastra <span class="emoji">➡️</span> <span class="emoji" style="filter:brightness(0);opacity:.7">🐶</span>';
     buildHud();
-    // sombras (con señuelos mezclados) en posiciones al azar
     var slotList = items.map(function (em) { return { v: em, decoy: false }; }).concat(decoys.map(function (em) { return { v: em, decoy: true }; }));
     KidsGame.shuffle(slotList).forEach(function (it, i) {
       var s = document.createElement('div');
@@ -250,7 +302,12 @@ var game = KidsGame.init({ title: 'Sombras' });
       bottom.appendChild(o);
     });
     layout();
+    game.classList.remove('sw');
+    banner('Ronda ' + (round + 1) + ' · ' + count + ' sombras', false, 1200);
     KidsGame.say(D.rot ? 'Las sombras están giradas o al revés. ¿Dónde va cada una? Hay una sombra de más' : '¿Dónde va cada sombra?');
+    if (nivel === 1 && round === 0) {
+      setTimeout(function () { if (!running) return; var o = bottom.querySelector('.obj'), s = o && slots.filter(function (x) { return x.dataset.v === o.dataset.v; })[0]; if (o && s) hand = KidsGame.hand({ from: o, to: s }); }, 900);
+    }
   }
 
   var drag = null;
@@ -270,10 +327,7 @@ var game = KidsGame.init({ title: 'Sombras' });
     document.addEventListener('pointerup', onUp);
     document.addEventListener('pointercancel', onUp);
   }
-  function gameXY(cx, cy) {
-    var r = game.getBoundingClientRect();
-    return { x: cx - r.left, y: cy - r.top };
-  }
+  function gameXY(cx, cy) { var r = game.getBoundingClientRect(); return { x: cx - r.left, y: cy - r.top }; }
   function moveGhost(cx, cy) {
     var p = gameXY(cx, cy);
     drag.g.style.transform = 'translate(' + (p.x - drag.g.offsetWidth / 2) + 'px,' + (p.y - drag.g.offsetHeight * 0.6) + 'px) scale(1.15)';
@@ -281,11 +335,11 @@ var game = KidsGame.init({ title: 'Sombras' });
     if (drag.hover && drag.hover !== over) drag.hover.classList.remove('hover');
     if (over && !over.classList.contains('ok')) over.classList.add('hover');
     drag.hover = over;
+    lampLook(cx, cy);
   }
   function slotAt(cx, cy) {
     for (var i = 0; i < slots.length; i++) {
-      var r = slots[i].getBoundingClientRect();
-      var m = 12;
+      var r = slots[i].getBoundingClientRect(), m = 12;
       if (cx >= r.left - m && cx <= r.right + m && cy >= r.top - m && cy <= r.bottom + m) return slots[i];
     }
     return null;
@@ -300,18 +354,24 @@ var game = KidsGame.init({ title: 'Sombras' });
     d.g.remove();
     d.o.classList.remove('dragging');
     if (d.hover) d.hover.classList.remove('hover');
+    lampLook(null);
     if (!running) return;
     var target = slotAt(ev.clientX, ev.clientY);
     if (target && !target.classList.contains('ok') && !target.dataset.decoy && target.dataset.v === d.o.dataset.v) {
       target.classList.add('ok');
-      var em = target.querySelector('.emoji'); if (em.style.transform) em.style.transform = ''; // la sombra girada vuelve a su posición
+      var em = target.querySelector('.emoji'); if (em.style.transform) em.style.transform = '';
       d.o.classList.add('gone');
       KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-      burst(target);
+      KidsGame.fx.ring(target); KidsGame.fx.burstAt(target, { n: 12, chars: ['✨', '⭐', '🌟'] });
+      var r = target.getBoundingClientRect(); KidsGame.fx.floatText(r.left + r.width / 2, r.top, '+1', 'good');
+      lampMood('flash', 700);
+      streak++;
+      if (streak === 3 || (streak > 3 && streak % 5 === 0)) setTimeout(function () { KidsGame.fx.floatText(r.left + r.width / 2, r.top - 44, '¡Racha x' + streak + '!'); }, 250);
+      if (streak % 5 === 0) setTimeout(function () { KidsGame.addStar(); banner('⭐ ¡Bonus de racha!', true, 1100); KidsGame.sound.win(); }, 500);
       placed++;
-      if (placed === items.length) setTimeout(finish, 600);
+      if (placed === items.length) setTimeout(finish, 700);
     } else if (target) {
-      KidsGame.sound.wrong();
+      KidsGame.sound.wrong(); streak = 0; lampMood('oops', 600);
       if (target.dataset.decoy) { KidsGame.toast('🙈 ¡Esa sombra es de mentira!', 1300); KidsGame.say('Esa sombra no es de ningún objeto'); }
       target.classList.remove('bad'); void target.offsetWidth; target.classList.add('bad');
       d.o.classList.remove('bad'); void d.o.offsetWidth; d.o.classList.add('bad');
@@ -320,19 +380,21 @@ var game = KidsGame.init({ title: 'Sombras' });
   }
 
   function finish() {
-    if (round >= 1 || count >= DIFF[nivel].max) KidsGame.levelDone(nivel); // dos rondas (o la ronda máxima) = nivel completado
-    KidsGame.celebrate({
-      sub: 'Ronda ' + (round + 1) + ' · ' + count + ' sombras',
-      onNext: function () { round++; start(); },
-      onAgain: function () { start(); }
-    });
+    if (round >= 1 || count >= DIFF[nivel].max) { KidsGame.levelDone(nivel); syncFriends(); }
+    banner('🌟 ¡Todas!', true, 1200);
+    setTimeout(function () {
+      KidsGame.celebrate({
+        sub: 'Ronda ' + (round + 1) + ' · ' + count + ' sombras',
+        onNext: function () { round++; nextRound(); },
+        onAgain: function () { nextRound(); }
+      });
+    }, 500);
   }
+  function nextRound() { game.classList.add('sw'); setTimeout(start, 320); }
 
   window.addEventListener('resize', function () { if (running) layout(); });
-  // Expuesto para pruebas
   window.__som = {
-    get items() { return items; }, get slots() { return slots.length; }, get placed() { return placed; }, get round() { return round; },
-    // arrastra (eventos sintéticos) un objeto hasta la sombra indicada (o la correcta); devuelve si acertó
+    get items() { return items; }, get slots() { return slots.length; }, get placed() { return placed; }, get round() { return round; }, get streak() { return streak; },
     drop: function (v, toV) {
       var o = bottom.querySelector('.obj[data-v="' + v + '"]:not(.gone)'); var s = slots.filter(function (x) { return x.dataset.v === (toV || v) && (toV ? true : !x.dataset.decoy); })[0];
       if (!o || !s) return null;

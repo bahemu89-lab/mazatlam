@@ -6,29 +6,50 @@
 <link rel="stylesheet" href="../common.css">
 <title>Números</title>
 <style>
-  .game { display: flex; flex-direction: column; padding: 8px 8px 8px; gap: 10px; }
-  .hud { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: min(5vw, 26px); font-weight: 900; flex-wrap: nowrap; }
+  /* ===== El bosque de los números: claro del bosque con árboles a los lados, luz entre las hojas y el búho contador ===== */
+  .game { display: flex; flex-direction: column; padding: 8px 22px 10px; gap: 10px;
+    background:
+      radial-gradient(ellipse 50% 35% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, #d6f2ff 0%, #e9f8d8 30%, #9fdc74 62%, #4f9d3c 100%); }
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(circle at 4% 10%, #2f7a35 0 72px, rgba(0,0,0,0) 73px),
+      radial-gradient(circle at 12% 24%, #4fa04a 0 64px, rgba(0,0,0,0) 65px),
+      radial-gradient(circle at 2% 36%, #3b8d3e 0 56px, rgba(0,0,0,0) 57px),
+      radial-gradient(circle at 96% 8%, #2f7a35 0 76px, rgba(0,0,0,0) 77px),
+      radial-gradient(circle at 88% 24%, #4fa04a 0 66px, rgba(0,0,0,0) 67px),
+      radial-gradient(circle at 98% 38%, #3b8d3e 0 58px, rgba(0,0,0,0) 59px),
+      linear-gradient(90deg, #8a5a2b, #b57a3f 45%, #6b3d12) 7% 100% / 26px 72% no-repeat,
+      linear-gradient(90deg, #8a5a2b, #b57a3f 45%, #6b3d12) 93% 100% / 26px 72% no-repeat;
+    background-repeat: no-repeat; }
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 14%; pointer-events: none; z-index: 0;
+    background: radial-gradient(circle at 10% 60%, #ffd23f 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 30% 30%, #ff8fb3 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 70% 50%, #fff 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 90% 25%, #ffd23f 0 5px, rgba(0,0,0,0) 6px), radial-gradient(circle at 50% 70%, #b39cff 0 4px, rgba(0,0,0,0) 5px);
+    background-size: 220px 100%; opacity: .8; }
+  .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: min(5vw, 26px); font-weight: 900; flex-wrap: nowrap; }
   .hud .q { display: flex; align-items: center; gap: 8px; color: #1f2f6b; border-radius: 30px; padding: 6px 18px; white-space: nowrap; text-shadow: 0 1px 0 #fff;
     background: linear-gradient(180deg, #ffffff, #eef2fb); border: 3px solid #fff; box-shadow: 0 5px 0 #c9d2e6, 0 10px 16px rgba(20,40,90,.2), inset 0 2px 0 #fff; }
   .hud .q .emoji { font-size: 1.35em; }
-  .hud .round { white-space: nowrap; }
   .hud .lvl { display: flex; align-items: center; gap: 8px; }
   .hud .lvl .btn { font-size: 26px; }
   .hud .lvl .rnd { font-size: 18px; color: #fff; text-shadow: 0 2px 0 #1f7fae, -1px -1px 0 #1f7fae, 1px -1px 0 #1f7fae, -1px 1px 0 #1f7fae, 1px 1px 0 #1f7fae; }
-  /* Contador: insignia brillante con halo */
+  /* Búho contador (hero art) + insignia del número */
+  .owlbox { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; cursor: pointer; }
+  .owl { width: 70px; height: 70px; filter: drop-shadow(0 5px 4px rgba(0,0,0,.3)); transition: transform .2s; }
+  .owl .ow-eyes { transform-origin: 60px 52px; animation: owblink 4.2s infinite; }
+  @keyframes owblink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.12); } }
+  .owl.hoot { animation: owhoot .4s ease-out; }
+  @keyframes owhoot { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.14, .9) translateY(3px); } 70% { transform: scale(.96, 1.06) translateY(-4px); } }
   .counter {
     position: relative; width: 74px; height: 74px; border-radius: 50%; color: #fff; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: 900;
     background: radial-gradient(circle at 35% 28%, #d9ccff 0%, #9b7bff 35%, #6a3fe0 75%, #4c27b0 100%);
     box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 22px rgba(155,123,255,.9), inset 0 3px 0 rgba(255,255,255,.6);
-    text-shadow: 0 2px 0 #3c1f8f, 0 4px 6px rgba(0,0,0,.3); animation: glow 2.4s ease-in-out infinite;
+    text-shadow: 0 2px 0 #3c1f8f, 0 4px 6px rgba(0,0,0,.3);
   }
   .counter::before { content: ""; position: absolute; left: 16%; right: 16%; top: 8%; height: 34%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0)); pointer-events: none; }
-  @keyframes glow { 0%,100% { box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 16px rgba(155,123,255,.7), inset 0 3px 0 rgba(255,255,255,.6); }
-    50% { box-shadow: 0 6px 0 #3c1f8f, 0 12px 20px rgba(60,30,140,.35), 0 0 0 5px #fff, 0 0 34px rgba(155,123,255,1), inset 0 3px 0 rgba(255,255,255,.6); } }
-  /* Caja de juguetes: marco de madera, interior con profundidad y labio frontal */
+  /* Caja de madera del bosque (tronco): marco, interior con profundidad y hojitas */
   .box {
-    flex: 1 1 auto; position: relative; min-height: 120px; border-radius: 16px;
+    flex: 1 1 auto; position: relative; min-height: 120px; border-radius: 16px; z-index: 1;
     background: radial-gradient(ellipse at 50% 0%, #fffdf6 0%, #fbf0d8 55%, #f0dcb4 100%);
     border: 14px solid transparent; background-clip: padding-box;
     box-shadow: 0 14px 0 #6b3d12, 0 24px 30px rgba(60,30,0,.35);
@@ -39,6 +60,10 @@
   .box::after { content: ""; position: absolute; inset: 0; border-radius: 4px; pointer-events: none;
     background: linear-gradient(180deg, rgba(120,80,20,.28), rgba(120,80,20,0) 18%), radial-gradient(ellipse at 50% 100%, rgba(120,80,20,.18), rgba(120,80,20,0) 60%);
     box-shadow: inset 0 0 0 3px rgba(90,50,0,.2), inset 8px 8px 20px rgba(90,50,0,.22), inset -6px -6px 14px rgba(255,255,255,.5); }
+  /* Transición entre rondas (solo transform/opacity) */
+  .box, .cards { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .box.out, .cards.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .box.in, .cards.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   .obj { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s; z-index: 1; }
   .obj .emoji { filter: drop-shadow(0 6px 4px rgba(60,30,0,.35)); animation: float 3.2s ease-in-out infinite; }
   .obj:active .emoji { transform: scale(1.12) rotate(0); animation: none; }
@@ -55,9 +80,7 @@
   .obj.jump { animation: jump .45s ease-out; z-index: 2; }
   .obj.bad { animation: shake .35s; }
   @keyframes jump { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-26px) scale(1.3); } }
-  .spark { position: fixed; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; z-index: 30; background: radial-gradient(circle, #fff 0 30%, var(--c) 32% 60%, rgba(255,255,255,0) 62%); box-shadow: 0 0 8px var(--c); animation: sparkfly .75s ease-out forwards; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
-  .cards { flex: 0 0 auto; display: flex; justify-content: center; gap: min(4vw, 26px); padding-top: 6px; }
+  .cards { position: relative; z-index: 2; flex: 0 0 auto; display: flex; justify-content: center; gap: min(4vw, 26px); padding-top: 6px; }
   /* Fichas de número: plástico brillante con bisel y grosor */
   .numcard {
     --a: #bfe6ff; --b: #3da9fc; --d: #1a63a8;
@@ -74,7 +97,7 @@
   .numcard:active { transform: scale(.94) translateY(5px); box-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(20,40,90,.25), inset 0 3px 0 rgba(255,255,255,.6); animation: none; }
   .numcard.ok { --a: #c6ffd9; --b: #2fd27a; --d: #148a4d; animation: bounce .6s; box-shadow: 0 9px 0 var(--d), 0 16px 22px rgba(20,120,60,.3), 0 0 0 6px rgba(120,255,170,.55), 0 0 30px rgba(120,255,170,.8), inset 0 3px 0 rgba(255,255,255,.7); }
   .numcard.bad { animation: shake .35s; }
-  /* ---- Modos nuevos (niveles 2-4) ---- */
+  /* ---- Modos (niveles 2-4) ---- */
   .scene { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: min(3vw, 22px); padding: 10px; align-content: center; }
   .die { width: min(22vw, 24vh, 150px); height: min(22vw, 24vh, 150px); filter: drop-shadow(0 8px 6px rgba(60,30,0,.3)); animation: pop .4s ease-out backwards; }
   .tframe { width: min(42vw, 360px); max-width: 100%; filter: drop-shadow(0 8px 6px rgba(60,30,0,.3)); animation: pop .4s ease-out backwards; }
@@ -118,7 +141,14 @@
   .numcard.ghost { opacity: .25; animation: none; }
   .numcard.sm { width: min(20vw, 16vh, 110px); height: min(20vw, 16vh, 110px); font-size: min(11vw, 9vh, 64px); }
   .cards.four .numcard { width: min(21vw, 18vh, 130px); height: min(21vw, 18vh, 130px); font-size: min(12vw, 10vh, 72px); }
-  @media (max-width: 600px) { .hud { gap: 8px; font-size: 20px; } .hud .q { padding: 6px 12px; } .counter { width: 64px; height: 64px; font-size: 36px; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #8ef0b0, #24b36c); text-shadow: 0 3px 0 #14784a, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #14784a, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  @media (max-width: 600px) { .hud { gap: 8px; font-size: 20px; } .hud .q { padding: 6px 12px; } .counter { width: 64px; height: 64px; font-size: 36px; } .owl { width: 58px; height: 58px; } .game { padding: 8px 12px 10px; } }
 </style>
 </head>
 <body>
@@ -126,49 +156,81 @@
 <script>
 (function () {
   var game = KidsGame.init({ title: 'Números' });
-  var EMOJIS = ['🍎','🍓','🐟','⭐','🎈','🐥','🍪','🦋','🌸','🐞','🍩','🐢','🚗','⚽','🍬','🐰','🐸','🍦'];
+  var EMOJIS = ['🍄','🌰','🍃','🐿️','🐌','🐛','🌼','🍎','🐞','🦋','🐸','🐝','🐣','🌸','🍓','🐰','🦔','🍂','🐢','🍒','🌻','🐦','🦊','🪺'];
   var PAL = [['#ffd0e4','#f582ae','#b8306f'], ['#bfe6ff','#3da9fc','#1a63a8'], ['#c6ffd9','#2cb67d','#14784a'],
     ['#ffe98a','#ffb703','#c47f00'], ['#d6c8ff','#7f5af0','#5232b3'], ['#ffd2a6','#ff8906','#b85a00']];
   var ROUNDS = 8;
   var LABELS = { 1: 'cuenta 1 a 10', 2: 'hasta 20 · dados', 3: 'de 2 en 2 · recta', 4: 'ordena · antes/después' };
-  // Modos por nivel (se barajan cada partida)
+  var HOWTO = [{ icon: '👆', text: 'Toca cada cosa para contarla' }, { icon: '🔢', text: 'Elige el número correcto' }, { icon: '🦉', text: 'El búho te ayuda a contar' }];
+  // Accesorios del búho: uno por nivel completado (cosmético, guardado en localStorage)
+  var ACCS = { 1: ['bow', 'un moño'], 2: ['scarf', 'una bufanda'], 3: ['glasses', 'unos lentes'], 4: ['crown', 'una corona'] };
   var MODES = {
     1: ['count','count','count','count','count','count','count','count'],
     2: ['count','dice','frame','count','dice','frame','count','frame'],
     3: ['groups','line','groups','line','groups','count','line','groups'],
     4: ['order','before','missing','compare','order','after','missing','compare']
   };
-  var level = 1, round = 0, N = 0, lock = false, marked = 0, objs = [], targets = [], emoji = '', mode = 'count', plan = [], cur = null;
+  var level = 1, round = 0, N = 0, lock = false, marked = 0, objs = [], targets = [], emoji = '', mode = 'count', plan = [], cur = null, streak = 0, handShown = false;
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function onTap(e, fn) { e.addEventListener('pointerdown', function (ev) { ev.preventDefault(); fn(ev); }); }
   function replay(node, cls) { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); }
   function range(a, b) { var r = []; for (var i = a; i <= b; i++) r.push(i); return r; }
-  // Estela de chispas que sube desde un elemento (máx. 8)
-  function sparks(node, n) {
-    var r = node.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    for (var i = 0; i < (n || 8); i++) {
-      var d = document.createElement('div'); d.className = 'spark';
-      d.style.left = (cx - 6 + (Math.random() - .5) * r.width * .6) + 'px'; d.style.top = (cy - 6) + 'px';
-      d.style.setProperty('--c', PAL[i % PAL.length][1]);
-      d.style.setProperty('--dx', ((Math.random() - .5) * 90) + 'px'); d.style.setProperty('--dy', (-60 - Math.random() * 80) + 'px');
-      d.style.animationDelay = (Math.random() * 120) + 'ms';
-      document.body.appendChild(d);
-      (function (x) { setTimeout(function () { x.remove(); }, 950); })(d);
-    }
+  function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---- Hero art: el búho contador (SVG con parpadeo y accesorios desbloqueables) ----
+  function owlSVG(size) {
+    var acc = readJSON('kg-numeros-owl', []);
+    function has(a) { return acc.indexOf(a) >= 0; }
+    return '<svg class="owl" viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="owb" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#c49a66"/><stop offset="1" stop-color="#6b4423"/></radialGradient>' +
+      '<radialGradient id="owf" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="#fff6e3"/><stop offset="1" stop-color="#e2c49a"/></radialGradient>' +
+      '<linearGradient id="oww" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a32"/><stop offset="1" stop-color="#5a3717"/></linearGradient></defs>' +
+      '<ellipse cx="60" cy="113" rx="34" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M30 42 L20 14 L46 32Z M90 42 L100 14 L74 32Z" fill="url(#owb)" stroke="#4a2c10" stroke-width="2" stroke-linejoin="round"/>' +
+      '<ellipse cx="60" cy="66" rx="40" ry="44" fill="url(#owb)" stroke="#4a2c10" stroke-width="2"/>' +
+      '<path d="M24 60 Q8 82 26 100 Q34 86 34 64Z" fill="url(#oww)" stroke="#4a2c10" stroke-width="2"/><path d="M96 60 Q112 82 94 100 Q86 86 86 64Z" fill="url(#oww)" stroke="#4a2c10" stroke-width="2"/>' +
+      '<ellipse cx="60" cy="80" rx="24" ry="24" fill="url(#owf)"/>' +
+      '<path d="M46 76 q7 6 14 0 q7 6 14 0 M48 88 q6 6 12 0 q6 6 12 0" fill="none" stroke="#c9a675" stroke-width="2" stroke-linecap="round"/>' +
+      '<g class="ow-eyes"><circle cx="44" cy="52" r="15" fill="#fff" stroke="#4a2c10" stroke-width="2"/><circle cx="76" cy="52" r="15" fill="#fff" stroke="#4a2c10" stroke-width="2"/>' +
+      '<circle cx="46" cy="54" r="7" fill="#2b2b2b"/><circle cx="78" cy="54" r="7" fill="#2b2b2b"/><circle cx="49" cy="51" r="2.5" fill="#fff"/><circle cx="81" cy="51" r="2.5" fill="#fff"/></g>' +
+      (has('glasses') ? '<circle cx="44" cy="52" r="17" fill="none" stroke="#3da9fc" stroke-width="3"/><circle cx="76" cy="52" r="17" fill="none" stroke="#3da9fc" stroke-width="3"/><path d="M61 52 L59 52" stroke="#3da9fc" stroke-width="3"/>' : '') +
+      '<path d="M54 62 L66 62 L60 74Z" fill="#ff9f1c" stroke="#b85a00" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<path d="M46 106 l-6 6 M46 106 l0 7 M46 106 l6 6 M74 106 l-6 6 M74 106 l0 7 M74 106 l6 6" stroke="#ff9f1c" stroke-width="3" stroke-linecap="round"/>' +
+      (has('scarf') ? '<path d="M28 94 Q60 110 92 94 L92 102 Q60 118 28 102Z" fill="#e63946"/><path d="M28 97 Q60 113 92 97" fill="none" stroke="#ffd166" stroke-width="3" stroke-dasharray="6 6"/>' : '') +
+      (has('bow') ? '<path d="M44 24 L30 16 L30 32Z M44 24 L58 16 L58 32Z" fill="#f582ae" stroke="#b8306f" stroke-width="1.5" stroke-linejoin="round"/><circle cx="44" cy="24" r="4" fill="#ffd6e8" stroke="#b8306f" stroke-width="1.5"/>' : '') +
+      (has('crown') ? '<path d="M38 22 L46 4 L56 16 L64 0 L72 16 L82 4 L86 24 Z" fill="#ffd166" stroke="#c47f00" stroke-width="2" stroke-linejoin="round"/><circle cx="64" cy="13" r="3" fill="#ff4d6d"/>' : '') +
+      '</svg>';
   }
+  function owlHoot() { var o = hud.querySelector('.owl'); if (o) replay(o, 'hoot'); }
 
   game.innerHTML = '';
   var hud = el('div', 'hud');
-  var q = el('span', 'q', '¿Cuántos hay?'), counter = el('div', 'counter', '?'), lvl = el('span', 'lvl');
+  var q = el('span', 'q', '¿Cuántos hay?'), owlbox = el('div', 'owlbox', owlSVG(70)), counter = el('div', 'counter', '?'), lvl = el('span', 'lvl');
+  owlbox.appendChild(counter);
   var lvlBtn = el('button', 'btn round yellow', '🎚️'); lvlBtn.setAttribute('aria-label', 'Nivel');
   var badge = el('span'), rnd = el('span', 'rnd');
   lvl.appendChild(lvlBtn); lvl.appendChild(badge); lvl.appendChild(rnd);
-  hud.appendChild(q); hud.appendChild(counter); hud.appendChild(lvl);
-  var box = el('div', 'box'), cards = el('div', 'cards');
-  game.appendChild(hud); game.appendChild(box); game.appendChild(cards);
+  hud.appendChild(q); hud.appendChild(owlbox); hud.appendChild(lvl);
+  var box = el('div', 'box'), cards = el('div', 'cards'), banner = el('div', 'rbanner');
+  game.appendChild(hud); game.appendChild(box); game.appendChild(cards); game.appendChild(banner);
   onTap(lvlBtn, function () { KidsGame.sound.tap(); pickLevel(); });
   onTap(q, function () { KidsGame.sound.tap(); if (cur && cur.say) KidsGame.say(cur.say); });
+  onTap(owlbox, function () { KidsGame.sound.pop(); owlHoot(); KidsGame.say(counter.textContent === '?' ? 'Uh, uh. ¡Cuenta conmigo!' : 'Uh, uh. ' + counter.textContent); });
+
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++; owlHoot();
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 12, chars: streak >= 3 ? ['⭐', '✨', '🍃'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
 
   function maxN() { return level === 1 ? 10 : level === 2 ? 20 : 30; }
   function nOpts() { return level === 1 ? 3 : 4; }
@@ -176,7 +238,7 @@
 
   function pickLevel() {
     lock = true; box.innerHTML = ''; cards.innerHTML = ''; objs = []; targets = []; cur = null;
-    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { level = n; round = 0; plan = KidsGame.shuffle(MODES[n]); startRound(); } });
+    KidsGame.levelPicker({ labels: LABELS, howto: HOWTO, art: owlSVG(64), music: 'calma', onPick: function (n) { level = n; round = 0; streak = 0; plan = KidsGame.shuffle(MODES[n]); startRound(true); } });
   }
 
   // ---- Fichas de respuesta (números) ----
@@ -196,24 +258,36 @@
     while (pool.length < k - 1) { var r = lo + KidsGame.rand(hi - lo + 1); if (r !== ans && pool.indexOf(r) < 0) pool.push(r); }
     return KidsGame.shuffle([ans].concat(KidsGame.shuffle(pool).slice(0, k - 1)));
   }
-  // Acierto genérico: ficha verde, chispas, estrella y siguiente ronda
+  // Acierto genérico: ficha verde, partículas, estrella y siguiente ronda
   function win(c, sayTxt) {
     lock = true;
-    if (c) { c.classList.add('ok'); sparks(c, 10); }
+    if (c) c.classList.add('ok');
+    hit(c || counter);
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(40);
     if (sayTxt) setTimeout(function () { KidsGame.say(sayTxt); }, 250);
     round++;
     setTimeout(function () { if (round >= ROUNDS) finish(); else startRound(); }, 1300);
   }
-  function fail(c) { KidsGame.sound.wrong(); KidsGame.vibrate(20); if (c) replay(c, 'bad'); }
+  function fail(c) { KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(c); if (c) replay(c, 'bad'); }
 
-  function startRound() {
+  // Entre rondas la caja y las fichas salen deslizando y la ronda nueva entra (nunca un cambio seco)
+  function startRound(first) {
+    if (!first && (box.children.length || cards.children.length)) {
+      lock = true; box.classList.add('out'); cards.classList.add('out');
+      setTimeout(function () { box.classList.remove('out'); cards.classList.remove('out'); doRound(); }, 300);
+    } else doRound();
+  }
+  function doRound() {
     lock = false; marked = 0; objs = []; targets = []; cur = null;
     box.innerHTML = ''; cards.innerHTML = ''; cards.className = 'cards'; counter.textContent = '?';
     mode = plan[round % plan.length];
     setBadge();
     ({ count: countRound, dice: diceRound, frame: frameRound, groups: groupsRound, line: lineRound,
        order: orderRound, before: beforeRound, after: beforeRound, missing: missingRound, compare: compareRound })[mode]();
+    box.classList.add('in'); cards.classList.add('in'); void box.offsetWidth; box.classList.remove('in'); cards.classList.remove('in');
+    showBanner('Ronda ' + (round + 1) + ' de ' + ROUNDS);
+    // Tutorial: manita en el primer objeto a contar, solo en la primera ronda del nivel 1
+    if (level === 1 && round === 0 && !handShown && targets.length) { handShown = true; setTimeout(function () { if (!lock && targets[0] && targets[0].isConnected) KidsGame.hand({ el: targets[0] }); }, 1000); }
   }
 
   /* ---------- Contar objetos (nivel 1-3) ---------- */
@@ -221,7 +295,6 @@
     N = 1 + KidsGame.rand(level === 1 ? 10 : level === 2 ? 20 : 15);
     if (level === 2 && N < 6) N += 5;
     emoji = KidsGame.pick(EMOJIS);
-    // Nivel 3: objetos distractores de otro emoji mezclados (solo se cuenta el pedido)
     var D = level >= 3 ? 3 + KidsGame.rand(5) : 0;
     var other = D ? KidsGame.pick(EMOJIS.filter(function (e) { return e !== emoji; })) : '';
     var total = N + D;
@@ -263,19 +336,19 @@
       o.style.fontSize = Math.round(size * 0.78) + 'px';
     });
   }
-  // Ayuda para contar: tocar un objeto lo marca y muestra la cuenta
+  // Ayuda para contar: tocar un objeto lo marca y el búho dice la cuenta
   function markObj(o) {
     if (lock || o.classList.contains('marked')) return;
-    if (!o._target) { KidsGame.sound.wrong(); replay(o, 'bad'); return; }
+    if (!o._target) { KidsGame.sound.wrong(); replay(o, 'bad'); KidsGame.fx.shake(o); return; }
     marked++;
     o.classList.add('marked');
     o.querySelector('.chk').textContent = marked;
-    counter.textContent = marked; replay(counter, 'pop');
+    counter.textContent = marked; replay(counter, 'pop'); owlHoot();
     KidsGame.sound.tap(); KidsGame.say(String(marked));
   }
   function choose(c, n) {
     if (lock) return;
-    if (n === N) { lock = true; c.classList.add('ok'); sparks(c, 10); countAll(); }
+    if (n === N) { lock = true; c.classList.add('ok'); hit(c); countAll(); }
     else fail(c);
   }
   function countAll() {
@@ -284,8 +357,8 @@
     function step() {
       if (i < N) {
         var o = targets[i]; i++;
-        o.classList.remove('marked'); replay(o, 'jump'); sparks(o, 6);
-        counter.textContent = i; replay(counter, 'pop');
+        o.classList.remove('marked'); replay(o, 'jump'); KidsGame.fx.burstAt(o, { n: 5, r: 40 });
+        counter.textContent = i; replay(counter, 'pop'); owlHoot();
         KidsGame.sound.tap(); KidsGame.say(String(i));
         setTimeout(step, N > 12 ? 280 : 450);
       } else {
@@ -361,11 +434,10 @@
       sc.appendChild(c); seq.push(k * (i + 1));
     }
     box.appendChild(sc);
-    // Ayuda: tocar un grupo dice la cuenta acumulada (2, 4, 6...)
     Array.prototype.forEach.call(sc.children, function (c, i) {
-      onTap(c, function () { if (lock || c.querySelector('.lbl')) return; var l = el('span', 'lbl', String(seq[i])); c.appendChild(l); counter.textContent = seq[i]; replay(counter, 'pop'); KidsGame.sound.tap(); KidsGame.say(String(seq[i])); });
+      onTap(c, function () { if (lock || c.querySelector('.lbl')) return; var l = el('span', 'lbl', String(seq[i])); c.appendChild(l); counter.textContent = seq[i]; replay(counter, 'pop'); owlHoot(); KidsGame.sound.tap(); KidsGame.say(String(seq[i])); });
     });
-    numCards(optionsAround(N, k, 30, 4).map(function (v) { return v; }), function (c, n) { if (lock) return; if (n === N) { counter.textContent = N; replay(counter, 'pop'); win(c, String(N)); } else fail(c); });
+    numCards(optionsAround(N, k, 30, 4), function (c, n) { if (lock) return; if (n === N) { counter.textContent = N; replay(counter, 'pop'); win(c, String(N)); } else fail(c); });
     KidsGame.say(cur.say);
   }
 
@@ -383,7 +455,7 @@
       if (v % 5 === 0) t.innerHTML = '<span class="tl">' + v + '</span>';
       (function (t, v) { onTap(t, function () {
         if (lock) return;
-        if (v === N) { t.classList.add('ok'); sparks(t, 10); win(null, '¡' + N + '! Después del ' + (N - 1) + ' y antes del ' + (N + 1)); }
+        if (v === N) { t.classList.add('ok'); win(t, '¡' + N + '! Después del ' + (N - 1) + ' y antes del ' + (N + 1)); }
         else { fail(t); KidsGame.say(String(v)); }
       }); })(t, v);
       ln.appendChild(t);
@@ -415,9 +487,7 @@
   }
   function startDrag(ev, c) {
     if (lock || drag) return;
-    if (c.parentNode !== cards) { // regresa la ficha a la bandeja
-      c.parentNode.classList.remove('filled'); cards.appendChild(c); KidsGame.sound.pop(); return;
-    }
+    if (c.parentNode !== cards) { c.parentNode.classList.remove('filled'); cards.appendChild(c); KidsGame.sound.pop(); return; }
     var r = c.getBoundingClientRect();
     var g = c.cloneNode(true); g.className = 'numcard sm drag'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
     document.body.appendChild(g);
@@ -453,11 +523,11 @@
     var ok = placed.every(function (v, i) { return v === cur.sorted[i]; });
     if (ok) {
       lock = true;
-      slots.forEach(function (x) { x.querySelector('.numcard').classList.add('ok'); sparks(x, 8); });
+      slots.forEach(function (x) { x.querySelector('.numcard').classList.add('ok'); KidsGame.fx.burstAt(x, { n: 6, r: 50 }); });
       counter.textContent = '✓';
-      win(null, cur.sorted.join(', ') + '. ¡De menor a mayor!');
+      win(slots[3], cur.sorted.join(', ') + '. ¡De menor a mayor!');
     } else {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); streak = 0;
       slots.forEach(function (x, i) {
         var t = x.querySelector('.numcard');
         if (placed[i] !== cur.sorted[i]) { replay(t, 'bad'); setTimeout(function () { x.classList.remove('filled'); cards.appendChild(t); }, 450); }
@@ -469,7 +539,7 @@
   /* ---------- Experto: ¿qué va antes / después? ---------- */
   function beforeRound() {
     var after = mode === 'after';
-    N = after ? 3 + KidsGame.rand(27) : 2 + KidsGame.rand(28); // referencia
+    N = after ? 3 + KidsGame.rand(27) : 2 + KidsGame.rand(28);
     var ans = after ? N + 1 : N - 1;
     q.innerHTML = '¿Qué va <b>' + (after ? 'después' : 'antes') + '</b> del ' + N + '?';
     cur = { say: '¿Qué número va ' + (after ? 'después' : 'antes') + ' del ' + N + '?' };
@@ -488,7 +558,7 @@
   function missingRound() {
     var step = KidsGame.pick([1, 1, 1, 2, 5]), len = 5;
     var start = step === 5 ? KidsGame.pick([0, 5]) : step === 2 ? 2 * KidsGame.rand(10) : 1 + KidsGame.rand(25);
-    var gap = 1 + KidsGame.rand(len - 2); // nunca el primero ni el último
+    var gap = 1 + KidsGame.rand(len - 2);
     var seqN = []; for (var i = 0; i < len; i++) seqN.push(start + i * step);
     var ans = seqN[gap];
     q.innerHTML = '¿Qué número falta?' + (step > 1 ? ' (de ' + step + ' en ' + step + ')' : '');
@@ -506,8 +576,7 @@
   }
 
   /* ---------- Experto: mayor / menor con el cocodrilo ---------- */
-  function crocSVG(dir) { // dir: 'l' abre la boca a la izquierda, 'r' a la derecha
-    // El volteo va en un <g> interno (un transform CSS en el <svg> lo pisaría la animación "land")
+  function crocSVG(dir) {
     var s = '<svg viewBox="0 0 100 100"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be15d"/><stop offset="1" stop-color="#2e8b3a"/></linearGradient></defs>' +
       '<g' + (dir === 'r' ? ' transform="translate(100 0) scale(-1 1)"' : '') + '>' +
       '<path d="M96 50 L10 12 Q0 18 6 30 L40 48 L6 68 Q0 82 10 88 Z" fill="url(#cg)" stroke="#1f6b2a" stroke-width="3" stroke-linejoin="round"/>' +
@@ -539,10 +608,14 @@
 
   function finish() {
     KidsGame.levelDone(level);
+    var sub = 'Nivel ' + level + ' completo';
+    // Recompensa cosmética: el búho gana un accesorio por nivel completado
+    var acc = readJSON('kg-numeros-owl', []), a = ACCS[level];
+    if (a && acc.indexOf(a[0]) < 0) { acc.push(a[0]); writeJSON('kg-numeros-owl', acc); sub += ' · 🦉 El búho ganó ' + a[1]; var old = owlbox.querySelector('.owl'); if (old) { old.outerHTML = owlSVG(70); } }
     KidsGame.celebrate({
-      sub: 'Nivel ' + level + ' completo',
-      onNext: function () { level = Math.min(level + 1, 4); round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); },
-      onAgain: function () { round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); }
+      sub: sub,
+      onNext: function () { level = Math.min(level + 1, 4); round = 0; streak = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); },
+      onAgain: function () { round = 0; streak = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); }
     });
   }
 
@@ -550,7 +623,7 @@
   // Expuesto para pruebas: set(nivel 1..4), mode, answer, solve()
   window.__num = {
     set: function (l) { level = Math.min(4, Math.max(1, l)); round = 0; plan = KidsGame.shuffle(MODES[level]); startRound(); },
-    get n() { return N; }, get level() { return level; }, get mode() { return mode; }, get round() { return round; }, get cur() { return cur; }, get lock() { return lock; },
+    get n() { return N; }, get level() { return level; }, get mode() { return mode; }, get round() { return round; }, get cur() { return cur; }, get lock() { return lock; }, get streak() { return streak; },
     solve: function () {
       if (lock) return false;
       var ev = function (e) { e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); };

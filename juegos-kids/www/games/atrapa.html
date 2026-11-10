@@ -6,28 +6,57 @@
 <link rel="stylesheet" href="../common.css">
 <title>Atrapa al topo</title>
 <style>
-  /* Jardín: césped con luz, franjas de podado y viñeta */
+  /* ===== Mundo: "La huerta" — cielo, cerca de madera, surcos de tierra con brotes y un espantapájaros que anima ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; touch-action: none;
     background:
-      radial-gradient(ellipse 120% 90% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,60,0,.35) 100%),
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,220,.45), rgba(255,255,255,0) 70%),
-      repeating-linear-gradient(105deg, rgba(255,255,255,.07) 0 46px, rgba(0,0,0,.05) 46px 92px),
-      linear-gradient(180deg, #b6ec8a 0%, #7dcf5b 45%, #4fae3f 100%);
+      radial-gradient(ellipse 120% 90% at 50% 60%, rgba(0,0,0,0) 55%, rgba(60,30,0,.35) 100%),
+      repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 34px, rgba(60,30,0,.16) 34px 40px, rgba(255,220,160,.08) 40px 44px),
+      linear-gradient(180deg, #9fdcff 0%, #cdeeff 20%, #b8ec8a 24%, #a37a48 30%, #8d6238 70%, #6f4a27 100%);
   }
-  .deco { position: absolute; z-index: 0; pointer-events: none; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); line-height: 1;
-    font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+  /* cerca de madera (capa estática) */
+  .game::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 13%; height: 11%; z-index: 0; pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0) 30%, #c99a5a 30%, #a9783f 44%, rgba(0,0,0,0) 44%, rgba(0,0,0,0) 66%, #c99a5a 66%, #a9783f 80%, rgba(0,0,0,0) 80%),
+      radial-gradient(ellipse 14px 10px at 14px 0, #e2b574 0 70%, rgba(0,0,0,0) 72%) 0 0 / 46px 100% repeat-x,
+      linear-gradient(90deg, rgba(0,0,0,0) 0 8px, #d9a764 8px 22px, #b8853f 22px 28px, rgba(0,0,0,0) 28px 46px) 0 6px / 46px 100% repeat-x;
+    filter: drop-shadow(0 4px 3px rgba(0,0,0,.25));
+  }
+  /* brotes de lechuga y zanahoria en los surcos (capa estática) */
+  .game::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 30%; bottom: 0; z-index: 0; pointer-events: none; opacity: .9;
+    background:
+      radial-gradient(ellipse 12px 8px at 20px 12px, #8fd25a 0 60%, rgba(0,0,0,0) 62%) 0 0 / 90px 80px,
+      radial-gradient(ellipse 9px 6px at 60px 50px, #6fbf48 0 60%, rgba(0,0,0,0) 62%) 0 0 / 90px 80px,
+      radial-gradient(ellipse 6px 10px at 40px 34px, #ff9a3c 0 60%, rgba(0,0,0,0) 62%) 0 0 / 90px 80px;
+  }
+  .deco { position: absolute; z-index: 0; pointer-events: none; filter: drop-shadow(0 4px 3px rgba(0,0,0,.25)); line-height: 1; font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
   .deco.sway { animation: sway 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
   @keyframes sway { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
   .deco.fly { animation: fly 14s ease-in-out infinite; }
   @keyframes fly { 0%{transform:translate(0,0) rotate(-6deg)} 25%{transform:translate(28vw,-8vh) rotate(8deg)} 50%{transform:translate(55vw,4vh) rotate(-6deg)} 75%{transform:translate(30vw,12vh) rotate(8deg)} 100%{transform:translate(0,0) rotate(-6deg)} }
+  .deco.new { animation: pop .6s ease-out; }
+  /* Espantapájaros (SVG): levanta los brazos cuando atrapas */
+  .scare { position: absolute; right: 1%; top: 2%; width: 150px; height: 190px; z-index: 0; pointer-events: none; }
+  .scare svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 6px rgba(0,0,0,.3)); }
+  .scare .armL, .scare .armR { transform-box: fill-box; transition: transform .25s cubic-bezier(.2,1.5,.4,1); }
+  .scare .armL { transform-origin: 100% 50%; } .scare .armR { transform-origin: 0 50%; }
+  .scare.cheer .armL { transform: rotate(-70deg); } .scare.cheer .armR { transform: rotate(70deg); }
+  .scare .top { transform-box: fill-box; transform-origin: 50% 100%; animation: scsway 4s ease-in-out infinite; }
+  @keyframes scsway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .scare.cheer .top { animation: schop .35s ease-in-out 3; }
+  @keyframes schop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+  .scare .m-smile { transition: opacity .2s; } .scare .m-open { opacity: 0; transition: opacity .2s; }
+  .scare.cheer .m-smile { opacity: 0; } .scare.cheer .m-open { opacity: 1; }
+  .scare .crow { transform-box: fill-box; transform-origin: 50% 100%; animation: crow 5s ease-in-out infinite; }
+  @keyframes crow { 0%,80%,100% { transform: rotate(0); } 85% { transform: rotate(-8deg); } 95% { transform: rotate(8deg); } }
   .hud { position: absolute; left: 10px; top: 8px; z-index: 5; display: flex; align-items: center; gap: 8px; }
   .hud .kg-level-badge { font-size: 20px; padding: 6px 16px; }
   .hud .lvbtn { font-size: 28px; }
   .lvl {
-    position: absolute; right: 12px; top: 10px; z-index: 5; font-size: 20px; font-weight: 900; color: #fff; border-radius: 30px; padding: 6px 18px;
-    background: linear-gradient(180deg, #ffd166 0%, #ff9f1c 100%);
-    text-shadow: 0 2px 0 #b35a00, 0 3px 6px rgba(0,0,0,.3);
+    font-size: 20px; white-space: nowrap; font-weight: 900; color: #fff; border-radius: 30px; padding: 6px 18px;
+    background: linear-gradient(180deg, #ffd166 0%, #ff9f1c 100%); text-shadow: 0 2px 0 #b35a00, 0 3px 6px rgba(0,0,0,.3);
     box-shadow: 0 5px 0 #b35a00, 0 10px 16px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7);
   }
   .prog {
@@ -37,14 +66,12 @@
   }
   .prog i { width: 24px; height: 24px; border-radius: 50%; display: block; transition: transform .2s; background: radial-gradient(circle at 40% 35%, #dfe7f3, #b3c0d6); box-shadow: inset 0 2px 4px rgba(0,0,0,.2); }
   .prog i.on { background: radial-gradient(circle at 35% 30%, #fff5b8 0%, #ffd23c 40%, #ff9a00 100%); box-shadow: 0 0 0 3px #fff, 0 3px 4px rgba(0,0,0,.3), 0 0 10px rgba(255,200,40,.9); transform: scale(1.15); }
-  .board { position: relative; z-index: 1; flex: 0 0 auto; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh); }
+  .board { position: relative; z-index: 1; flex: 0 0 auto; display: grid; gap: var(--gap); width: var(--bw); height: var(--bh); transition: transform .3s cubic-bezier(.2,1.3,.4,1), opacity .25s; }
+  .board.out { transform: scale(.9); opacity: 0; }
   .hole { position: relative; overflow: hidden; min-width: 64px; min-height: 64px; cursor: pointer; }
-  /* Montículo de tierra con volumen */
   .hole .mound {
     position: absolute; left: 2%; right: 2%; bottom: 0; height: 50%; border-radius: 50%; z-index: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 40% 20%, rgba(255,230,190,.35), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse at 50% 30%, #b5824c 0%, #8a5b30 60%, #6a4322 100%);
+    background: radial-gradient(ellipse 60% 50% at 40% 20%, rgba(255,230,190,.35), rgba(255,255,255,0) 70%), radial-gradient(ellipse at 50% 30%, #b5824c 0%, #8a5b30 60%, #6a4322 100%);
     box-shadow: 0 5px 0 #4a2d14, 0 10px 14px rgba(0,40,0,.35), inset 0 -8px 12px rgba(0,0,0,.25), inset 0 3px 0 rgba(255,220,170,.35);
   }
   .hole .pit {
@@ -55,9 +82,7 @@
   .hole .rim {
     position: absolute; left: 12%; right: 12%; bottom: 10%; height: 32%; border-radius: 50%; z-index: 3;
     background: linear-gradient(180deg, #c99a63 50%, #a5733f 62%, #7a5533 82%, #5a3a1e 100%);
-    clip-path: inset(50% 0 0 0);
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,.25), inset 0 4px 0 rgba(255,235,200,.35);
-    pointer-events: none;
+    clip-path: inset(50% 0 0 0); box-shadow: inset 0 -4px 0 rgba(0,0,0,.25), inset 0 4px 0 rgba(255,235,200,.35); pointer-events: none;
   }
   .hole .tuft {
     position: absolute; bottom: 30%; width: 22%; height: 20%; z-index: 4; pointer-events: none;
@@ -68,22 +93,30 @@
   .hole .tuft.l { left: 4%; transform: rotate(-10deg); }
   .hole .tuft.r { right: 4%; transform: rotate(10deg) scaleX(-1); }
   .hole .critter {
-    position: absolute; left: 0; right: 0; bottom: 20%; z-index: 2; text-align: center;
-    font-size: var(--fs); transform: translateY(130%); transition: transform .18s ease-out;
-    pointer-events: none;
+    position: absolute; left: 0; right: 0; bottom: 20%; z-index: 2; display: flex; flex-direction: column; align-items: center;
+    transform: translateY(175%); transition: transform .18s ease-out; pointer-events: none;
   }
-  .hole .critter .emoji { display: inline-block; filter: brightness(.45) drop-shadow(0 4px 4px rgba(0,0,0,.35)); transition: filter .2s; }
-  /* Nivel Experto: sombrero, collar de color y regla que cambia */
-  .hole .critter { display: flex; flex-direction: column; align-items: center; }
-  .hole .critter .hat { display: none; font-size: 55%; margin-bottom: -22%; z-index: 2; position: relative; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
-  .hole.hat .critter .hat { display: block; }
-  .hole .critter .collar { display: none; position: absolute; left: 50%; bottom: calc(var(--fs) * .2); width: calc(var(--fs) * .8); height: calc(var(--fs) * .18); margin-left: calc(var(--fs) * -.4);
+  .hole .critter .cr { width: var(--cs); height: var(--cs); display: block; overflow: visible; transform-origin: 50% 100%; }
+  .hole .critter .hat { display: none; position: absolute; left: 50%; top: 0; width: calc(var(--cs) * .6); height: calc(var(--cs) * .5); margin-left: calc(var(--cs) * -.3); margin-top: calc(var(--cs) * -.3); z-index: 2; }
+  .hole.hat.up .critter .hat { display: block; }
+  .hole .critter .collar { display: none; position: absolute; left: 50%; bottom: calc(var(--cs) * .1); width: calc(var(--cs) * .66); height: calc(var(--cs) * .16); margin-left: calc(var(--cs) * -.33);
     border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.35), inset 0 -3px 4px rgba(0,0,0,.2); z-index: 3; }
   .hole.c-azul .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #9fe0ff, #2f95e8 60%, #155f9e); }
   .hole.c-rojo .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #ff9c9c, #e63946 60%, #8f1a24); }
   .hole.c-verde .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #9ff0c0, #2cb67d 60%, #146b48); }
   .hole.c-amarillo .critter .collar { display: block; background: radial-gradient(circle at 40% 30%, #fff0a0, #ffb703 60%, #b06f00); }
-  .hole.nope .critter .emoji { animation: shake .35s !important; }
+  .hole.nope .critter .cr { animation: shake .35s !important; }
+  .hole.up .critter { transform: translateY(0); }
+  .hole.up .critter .cr { animation: popup .32s cubic-bezier(.2,1.5,.4,1), wiggle .6s .32s ease-in-out infinite; }
+  @keyframes popup { 0%{transform:scale(.6,1.35)} 55%{transform:scale(1.18,.84)} 80%{transform:scale(.95,1.06)} 100%{transform:scale(1,1)} }
+  @keyframes wiggle { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+  .hole .critter .e-open { transition: opacity .1s; } .hole .critter .e-happy { opacity: 0; }
+  .hole.caught .critter { transition: transform .28s cubic-bezier(.2,1.4,.4,1), opacity .28s; transform: translateY(-45%) scale(1.35); opacity: 0; }
+  .hole.caught .critter .cr { animation: bonk .3s ease-out; }
+  @keyframes bonk { 0%{transform:scale(1.3,.7)} 100%{transform:scale(1)} }
+  .hole.caught .critter .e-open { opacity: 0; } .hole.caught .critter .e-happy { opacity: 1; }
+  .hole.caught .rim { animation: rimPuff .3s ease-out; }
+  @keyframes rimPuff { 0%{transform:scale(1)} 40%{transform:scale(1.08,1.15)} 100%{transform:scale(1)} }
   .rule {
     position: relative; z-index: 1; flex: 0 0 auto; display: none; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 20px; border-radius: 30px;
     font-size: 24px; font-weight: 900; color: #fff; border: 3px solid #fff; white-space: nowrap; max-width: 96vw;
@@ -95,30 +128,17 @@
   .rule .sw { display: inline-block; width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; background: radial-gradient(circle at 40% 30%, #9fe0ff, #2f95e8 60%, #155f9e); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
   .rule .sq { display: inline-flex; align-items: center; gap: 2px; }
   .rule .sq b { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #fff; color: #5232b3; font-size: 16px; text-shadow: none; margin-right: 2px; }
-  .rule .sq .emoji.done { opacity: .35; filter: grayscale(1); }
-  .rule .sq .emoji.now { transform: scale(1.25); }
-  .hole.up .critter { transform: translateY(0); }
-  .hole.up .critter .emoji { filter: brightness(1) drop-shadow(0 6px 5px rgba(0,0,0,.35)); animation: popup .28s ease-out, wiggle .5s .28s infinite; }
-  @keyframes popup { 0%{transform:scale(.7,1.25)} 55%{transform:scale(1.15,.88)} 100%{transform:scale(1,1)} }
-  @keyframes wiggle { 0%,100%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} }
-  .hole.caught .critter { transition: transform .25s, opacity .25s; transform: translateY(-40%) scale(1.3); opacity: 0; }
-  .hole.caught .critter .emoji { animation: none; }
-  .hole.caught .rim { animation: rimPuff .3s ease-out; }
-  @keyframes rimPuff { 0%{transform:scale(1)} 40%{transform:scale(1.08,1.15)} 100%{transform:scale(1)} }
-  .plus {
-    position: absolute; left: 50%; top: 30%; transform: translateX(-50%); z-index: 6; pointer-events: none;
-    font-size: 36px; font-weight: 900; color: #fff; letter-spacing: 1px;
-    text-shadow: 0 3px 0 #e0257a, -2px -2px 0 #e0257a, 2px -2px 0 #e0257a, -2px 2px 0 #e0257a, 2px 2px 0 #e0257a, 0 6px 10px rgba(0,0,0,.35);
-    animation: floatup .85s ease-out forwards;
-  }
-  @keyframes floatup { 0%{opacity:0;transform:translate(-50%,10px) scale(.6)} 30%{opacity:1;transform:translate(-50%,-10px) scale(1.25)} 100%{opacity:0;transform:translate(-50%,-70px) scale(1)} }
-  .spark {
-    position: absolute; width: 22px; height: 22px; z-index: 7; pointer-events: none; margin: -11px 0 0 -11px;
-    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-    background: radial-gradient(circle at 50% 50%, #fff 0, #ffe27a 40%, #ffb703 100%);
-    animation: spark .7s ease-out forwards;
-  }
-  @keyframes spark { 0%{transform:translate(0,0) scale(.3) rotate(0);opacity:1} 60%{opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(180deg);opacity:0} }
+  .rule .sq svg { width: 38px; height: 38px; transition: transform .2s, opacity .2s; }
+  .rule .sq svg.done { opacity: .35; filter: grayscale(1); }
+  .rule .sq svg.now { transform: scale(1.25); }
+  .rule svg.mini { width: 34px; height: 34px; vertical-align: middle; }
+  .banner { position: absolute; left: 50%; top: 44%; z-index: 12; pointer-events: none; padding: 10px 32px; border-radius: 40px; white-space: nowrap;
+    font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #1b8a4c, 0 4px 8px rgba(0,0,0,.3);
+    background: linear-gradient(180deg, #8ef0b0, #24b36c); border: 3px solid #fff; box-shadow: 0 6px 0 #14784a, 0 14px 24px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transform: translate(-50%,-50%) scale(.5); opacity: 0; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .25s; }
+  .banner.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  .banner.gold { background: linear-gradient(180deg, #ffe98a, #ffb703); color: #6a3f00; text-shadow: 0 1px 0 rgba(255,255,255,.6); box-shadow: 0 6px 0 #c47f00, 0 14px 24px rgba(0,0,0,.35); }
+  @media (max-width: 700px) { .scare { width: 110px; height: 140px; top: 7%; } }
 </style>
 </head>
 <body>
@@ -126,11 +146,85 @@
 <script>
 var game = KidsGame.init({ title: 'Atrapa al topo' });
 (function () {
-  var ANIMALS = ['🐹','🐭','🐰','🐿️','🦔','🐸','🐥','🐻','🦊','🐱'];
-  var BIRDS = ['🐥','🐦','🦉','🦜'], NOBIRDS = ['🐹','🐭','🐰','🐿️','🦔','🐸','🐻','🦊','🐱'];
+  // ---------- Bichitos de la huerta dibujados en SVG ----------
+  var KINDS = {
+    topo:    { n: 'Topo',     body: '#8f6b4e', light: '#c7a386', dark: '#5a3f2a', ears: 'round', inner: '#e9b7a3', nose: 'big',   extra: 'whiskers', eyes: 'small' },
+    conejo:  { n: 'Conejo',   body: '#efe6dd', light: '#ffffff', dark: '#bfae9f', ears: 'long',  inner: '#ffb3c7', nose: 'pink',  extra: 'teeth' },
+    raton:   { n: 'Ratón',    body: '#a9aec4', light: '#dfe3f0', dark: '#6f7591', ears: 'round', inner: '#ffb3c7', nose: 'pink',  extra: 'whiskers' },
+    ardilla: { n: 'Ardilla',  body: '#e08a3c', light: '#ffc48a', dark: '#9c5a1a', ears: 'pointy', inner: '#ffd9b3', nose: 'black', extra: 'tail' },
+    erizo:   { n: 'Erizo',    body: '#d9b48a', light: '#f5dcc0', dark: '#8a6a4a', ears: 'none',  inner: '#fff',    nose: 'black', extra: 'spikes' },
+    rana:    { n: 'Rana',     body: '#7fd25a', light: '#c6f5a8', dark: '#3f8f2a', ears: 'none',  inner: '#fff',    nose: 'none',  extra: 'frog' },
+    oso:     { n: 'Oso',      body: '#a86b3c', light: '#d9a06c', dark: '#6b3f1e', ears: 'round', inner: '#e8b98f', nose: 'black', extra: 'muzzle' },
+    zorro:   { n: 'Zorro',    body: '#ff8a3c', light: '#ffc89a', dark: '#b8541a', ears: 'pointy', inner: '#fff',   nose: 'black', extra: 'muzzle' },
+    gato:    { n: 'Gato',     body: '#ffc14d', light: '#ffe6a8', dark: '#c48a1a', ears: 'pointy', inner: '#ffb3c7', nose: 'pink', extra: 'whiskers' },
+    pollito: { n: 'Pollito',  body: '#ffd84a', light: '#fff4b0', dark: '#d9a400', ears: 'none',  inner: '#fff',    nose: 'beak',  extra: 'tuft', bird: true },
+    pajaro:  { n: 'Pajarito', body: '#5fb5ff', light: '#b3deff', dark: '#2a6fb3', ears: 'none',  inner: '#fff',    nose: 'beak',  extra: 'wing', bird: true },
+    buho:    { n: 'Búho',     body: '#b08860', light: '#e0c3a0', dark: '#6e4f30', ears: 'tuftear', inner: '#fff',  nose: 'beak',  extra: 'owl', bird: true }
+  };
+  var ANIMALS = Object.keys(KINDS), BIRDS = ANIMALS.filter(function (k) { return KINDS[k].bird; }), NOBIRDS = ANIMALS.filter(function (k) { return !KINDS[k].bird; });
+  function critterSVG(k) {
+    var K = KINDS[k], id = 'cr-' + k, s = '';
+    s += '<svg class="cr" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="' + id + '" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="' + K.light + '"/><stop offset=".55" stop-color="' + K.body + '"/><stop offset="1" stop-color="' + K.dark + '"/></radialGradient></defs>';
+    var F = 'url(#' + id + ')', st = ' stroke="' + K.dark + '" stroke-width="2.5" stroke-linejoin="round"';
+    if (K.extra === 'tail') s += '<path d="M78 70 Q 108 40 90 10 Q 118 30 104 72 Z" fill="' + F + '"' + st + '/>';
+    if (K.extra === 'spikes') { s += '<g fill="#7a5a3a">'; for (var i = 0; i < 9; i++) { var a = -Math.PI * 0.95 + i * (Math.PI * 0.9 / 8), cx = 50 + Math.cos(a) * 30, cy = 52 + Math.sin(a) * 30; s += '<polygon points="' + (cx - 8) + ',' + (cy + 6) + ' ' + (50 + Math.cos(a) * 48) + ',' + (52 + Math.sin(a) * 48) + ' ' + (cx + 8) + ',' + (cy + 6) + '"/>'; } s += '</g>'; }
+    if (K.extra === 'wing') s += '<path d="M14 70 Q 4 50 22 44 Q 32 60 30 78 Z" fill="' + K.dark + '"/><path d="M86 70 Q 96 50 78 44 Q 68 60 70 78 Z" fill="' + K.dark + '"/>';
+    if (K.ears === 'round') s += '<circle cx="24" cy="26" r="13" fill="' + F + '"' + st + '/><circle cx="76" cy="26" r="13" fill="' + F + '"' + st + '/><circle cx="24" cy="26" r="6.5" fill="' + K.inner + '"/><circle cx="76" cy="26" r="6.5" fill="' + K.inner + '"/>';
+    if (K.ears === 'long') s += '<ellipse cx="36" cy="16" rx="10" ry="24" fill="' + F + '"' + st + ' transform="rotate(-8 36 16)"/><ellipse cx="64" cy="16" rx="10" ry="24" fill="' + F + '"' + st + ' transform="rotate(8 64 16)"/><ellipse cx="36" cy="18" rx="4.5" ry="16" fill="' + K.inner + '" transform="rotate(-8 36 16)"/><ellipse cx="64" cy="18" rx="4.5" ry="16" fill="' + K.inner + '" transform="rotate(8 64 16)"/>';
+    if (K.ears === 'pointy') s += '<polygon points="22,40 18,6 48,26" fill="' + F + '"' + st + '/><polygon points="78,40 82,6 52,26" fill="' + F + '"' + st + '/><polygon points="26,34 24,14 42,26" fill="' + K.inner + '"/><polygon points="74,34 76,14 58,26" fill="' + K.inner + '"/>';
+    if (K.ears === 'tuftear') s += '<polygon points="24,34 16,8 44,22" fill="' + F + '"' + st + '/><polygon points="76,34 84,8 56,22" fill="' + F + '"' + st + '/>';
+    // cuerpo y cabeza
+    s += '<ellipse cx="50" cy="86" rx="34" ry="22" fill="' + F + '"' + st + '/>';
+    s += '<circle cx="50" cy="50" r="31" fill="' + F + '"' + st + '/>';
+    if (K.extra === 'muzzle') s += '<ellipse cx="50" cy="62" rx="16" ry="11" fill="' + (k === 'zorro' ? '#fff' : K.light) + '"/>';
+    if (K.extra === 'owl') s += '<circle cx="37" cy="48" r="14" fill="#f3e4cf"/><circle cx="63" cy="48" r="14" fill="#f3e4cf"/><path d="M30 78 Q 50 70 70 78 Q 50 92 30 78Z" fill="#f3e4cf"/>';
+    if (K.extra === 'tuft') s += '<path d="M44 22 Q 50 6 56 22 M50 20 Q 52 4 60 10" stroke="' + K.dark + '" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    if (K.extra === 'frog') s += '<circle cx="34" cy="24" r="12" fill="' + F + '"' + st + '/><circle cx="66" cy="24" r="12" fill="' + F + '"' + st + '/><circle cx="34" cy="24" r="8" fill="#fff"/><circle cx="66" cy="24" r="8" fill="#fff"/><g class="e-open"><circle cx="35" cy="25" r="4" fill="#222"/><circle cx="67" cy="25" r="4" fill="#222"/></g><g class="e-happy"><path d="M29 25 Q 35 19 41 25 M61 25 Q 67 19 73 25" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/></g><path d="M34 60 Q 50 74 66 60" stroke="' + K.dark + '" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="30" cy="54" r="5" fill="#ff8aa8" opacity=".5"/><circle cx="70" cy="54" r="5" fill="#ff8aa8" opacity=".5"/>';
+    else {
+      // ojos
+      var ey = K.extra === 'owl' ? 48 : 46, er = K.eyes === 'small' ? 4 : (K.extra === 'owl' ? 9 : 7);
+      s += '<g class="e-open"><ellipse cx="38" cy="' + ey + '" rx="' + er + '" ry="' + (er + 1) + '" fill="#fff"/><ellipse cx="62" cy="' + ey + '" rx="' + er + '" ry="' + (er + 1) + '" fill="#fff"/>' +
+        '<circle cx="39" cy="' + (ey + 1) + '" r="' + (er * 0.6) + '" fill="#222"/><circle cx="63" cy="' + (ey + 1) + '" r="' + (er * 0.6) + '" fill="#222"/><circle cx="40" cy="' + (ey - 1) + '" r="1.6" fill="#fff"/><circle cx="64" cy="' + (ey - 1) + '" r="1.6" fill="#fff"/></g>';
+      s += '<g class="e-happy"><path d="M32 ' + ey + ' Q 38 ' + (ey - 7) + ' 44 ' + ey + ' M56 ' + ey + ' Q 62 ' + (ey - 7) + ' 68 ' + ey + '" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/></g>';
+      // nariz / pico y boca
+      if (K.nose === 'big') s += '<ellipse cx="50" cy="60" rx="9" ry="6.5" fill="#ff8fb1"/><ellipse cx="47" cy="58" rx="3" ry="1.8" fill="#fff" opacity=".7"/>';
+      if (K.nose === 'pink') s += '<path d="M45 58 L 55 58 L 50 64 Z" fill="#ff7fa3"/>';
+      if (K.nose === 'black') s += '<ellipse cx="50" cy="60" rx="5.5" ry="4" fill="#2b2b2b"/><ellipse cx="48.5" cy="59" rx="2" ry="1.2" fill="#fff" opacity=".6"/>';
+      if (K.nose === 'beak') s += '<path d="M42 58 L 58 58 L 50 68 Z" fill="#ffa21a" stroke="#c97700" stroke-width="1.5" stroke-linejoin="round"/>';
+      if (K.nose !== 'beak') s += '<path d="M42 66 Q 50 73 58 66" stroke="' + K.dark + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      if (K.extra === 'teeth') s += '<rect x="45" y="67" width="4.5" height="7" rx="1.5" fill="#fff"/><rect x="50.5" y="67" width="4.5" height="7" rx="1.5" fill="#fff"/>';
+      if (K.extra === 'whiskers') s += '<path d="M14 58 L 34 60 M14 66 L 34 63 M86 58 L 66 60 M86 66 L 66 63" stroke="' + K.dark + '" stroke-width="2" stroke-linecap="round" opacity=".7"/>';
+      s += '<circle cx="28" cy="58" r="5" fill="#ff8aa8" opacity=".45"/><circle cx="72" cy="58" r="5" fill="#ff8aa8" opacity=".45"/>';
+    }
+    // patitas sobre el borde del hoyo
+    s += '<ellipse cx="30" cy="92" rx="10" ry="6" fill="' + K.light + '"' + st + '/><ellipse cx="70" cy="92" rx="10" ry="6" fill="' + K.light + '"' + st + '/>';
+    return s + '</svg>';
+  }
+  function flowerSVG() {
+    var s = '<svg class="cr" viewBox="0 0 100 100" aria-hidden="true"><g fill="#fff" stroke="#f0c040" stroke-width="2">';
+    for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4; s += '<ellipse cx="' + (50 + Math.cos(a) * 24) + '" cy="' + (48 + Math.sin(a) * 24) + '" rx="12" ry="8" transform="rotate(' + (i * 45) + ' ' + (50 + Math.cos(a) * 24) + ' ' + (48 + Math.sin(a) * 24) + ')"/>'; }
+    return s + '</g><circle cx="50" cy="48" r="15" fill="#ffd23f" stroke="#d9a400" stroke-width="2"/><g class="e-open"><circle cx="45" cy="46" r="2.5" fill="#222"/><circle cx="55" cy="46" r="2.5" fill="#222"/></g><g class="e-happy"><path d="M42 46 Q 45 42 48 46 M52 46 Q 55 42 58 46" stroke="#222" stroke-width="2" fill="none"/></g><path d="M44 52 Q 50 57 56 52" stroke="#9c6b00" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50 62 L 50 96" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/><path d="M50 80 Q 36 72 38 60 Q 52 66 50 80 Z" fill="#6fcf62"/></svg>';
+  }
+  function hatSVG() { return '<svg class="hat" viewBox="0 0 60 50" aria-hidden="true"><ellipse cx="30" cy="42" rx="28" ry="7" fill="#222"/><rect x="12" y="8" width="36" height="36" rx="4" fill="#333"/><rect x="12" y="30" width="36" height="7" fill="#e63946"/><path d="M14 10 Q 30 4 46 10 L 46 20 Q 30 14 14 20 Z" fill="#555"/></svg>'; }
+  function scarecrowSVG() {
+    return '<svg viewBox="0 0 150 190" aria-hidden="true"><defs><linearGradient id="scsh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a80"/><stop offset="1" stop-color="#d84343"/></linearGradient><linearGradient id="schat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#c99a3a"/></linearGradient></defs>' +
+      '<rect x="71" y="90" width="8" height="100" rx="3" fill="#8a5a2b"/>' +
+      '<g class="top">' +
+      '<g class="armL"><path d="M18 84 L 68 92" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M8 88 L 20 78 L 24 90 Z" fill="#f2c94c"/><path d="M26 86 L 62 92 L 60 104 L 28 98 Z" fill="url(#scsh)"/></g>' +
+      '<g class="armR"><path d="M132 84 L 82 92" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M142 88 L 130 78 L 126 90 Z" fill="#f2c94c"/><path d="M124 86 L 88 92 L 90 104 L 122 98 Z" fill="url(#scsh)"/></g>' +
+      '<path d="M48 84 L 102 84 L 110 140 L 40 140 Z" fill="url(#scsh)" stroke="#9c2b2b" stroke-width="2"/><rect x="60" y="104" width="14" height="14" fill="#4fa3e0" transform="rotate(10 67 111)"/><path d="M62 106 L 72 116 M72 106 L 62 116" stroke="#2a6fb3" stroke-width="2"/>' +
+      '<path d="M40 140 Q 75 150 110 140 L 106 150 Q 75 160 44 150 Z" fill="#f2c94c"/><path d="M50 150 L 48 164 M62 152 L 60 168 M88 152 L 90 168 M100 150 L 102 164" stroke="#d9a400" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M66 62 Q 75 58 84 62 L 86 86 L 64 86 Z" fill="#f2c94c"/>' +
+      '<circle cx="75" cy="52" r="26" fill="#f7dcb0" stroke="#c99a5a" stroke-width="2"/>' +
+      '<path d="M62 48 L 70 48 M80 48 L 88 48" stroke="#333" stroke-width="3" stroke-linecap="round"/><circle cx="66" cy="48" r="3" fill="#333"/><circle cx="84" cy="48" r="3" fill="#333"/>' +
+      '<path d="M72 56 L 78 56 L 75 62 Z" fill="#ff8a3c"/>' +
+      '<path class="m-smile" d="M64 66 Q 75 74 86 66" stroke="#9c5a2b" stroke-width="3" fill="none" stroke-linecap="round"/><path class="m-open" d="M64 64 Q 75 82 86 64 Z" fill="#9c2f3a"/>' +
+      '<path d="M40 34 Q 75 22 110 34 L 104 38 Q 75 30 46 38 Z" fill="url(#schat)" stroke="#9c7a2a" stroke-width="2"/><path d="M52 34 L 56 8 Q 75 2 94 8 L 98 34 Z" fill="url(#schat)" stroke="#9c7a2a" stroke-width="2"/><rect x="54" y="24" width="42" height="7" fill="#e63946"/>' +
+      '<g class="crow"><ellipse cx="124" cy="26" rx="12" ry="9" fill="#2b2b3a"/><circle cx="134" cy="20" r="7" fill="#2b2b3a"/><path d="M140 20 L 148 22 L 140 25 Z" fill="#ffa21a"/><circle cx="136" cy="18" r="1.8" fill="#fff"/><path d="M112 28 Q 104 22 108 16" stroke="#2b2b3a" stroke-width="3" fill="none"/></g>' +
+      '</g></svg>';
+  }
+
   var COLS = ['azul', 'rojo', 'verde', 'amarillo'];
-  // Dificultad: tiempo que el animal asoma (up), pausa entre apariciones (gap) y cantidad de hoyos
-  // Nivel 4 (Experto): 5x4 hoyos, 0.5 s, y una REGLA que cambia cada 8 atrapadas (sombrero, color, no pájaros, en orden)
   var DIFF = {
     1: [{ cols: 3, rows: 3, up: 1400, gap: 1100 }, { cols: 3, rows: 3, up: 1300, gap: 950 }],
     2: [{ cols: 3, rows: 3, up: 950, gap: 750 }, { cols: 4, rows: 3, up: 800, gap: 620 }],
@@ -144,24 +238,46 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     { id: 'nobird', html: 'NO pájaros <span class="emoji">🚫🐦</span>',          say: 'Atrapa a los que no son pájaros' },
     { id: 'seq',    html: 'En orden',                                             say: 'Atrápalos en este orden' }
   ];
+  // Decoración de la huerta que se desbloquea al completar niveles (se guarda)
+  var DECOS = [{ lv: 1, e: '🌻', n: 'Girasol', st: 'left:14%;bottom:6%;font-size:54px' }, { lv: 2, e: '🎃', n: 'Calabaza', st: 'right:16%;bottom:4%;font-size:50px' }, { lv: 3, e: '🍉', n: 'Sandía', st: 'left:4%;top:32%;font-size:42px' }, { lv: 4, e: '🌈', n: 'Arcoíris', st: 'left:30%;top:4%;font-size:70px' }];
+  function readDeco() { try { return JSON.parse(localStorage.getItem('kg-atrapa-deco') || '[]'); } catch (e) { return []; } }
+  function doneLevels() { try { return JSON.parse(localStorage.getItem('kg-done') || '{}').atrapa || {}; } catch (e) { return {}; } }
   var PER_RULE = 8, NEED = 10;
   var nivel = 1, LEVELS = DIFF[1];
-  var level = 0, cfg, holes = [], caught = 0, running = false, timer = null;
+  var level = 0, cfg, holes = [], caught = 0, running = false, timer = null, streak = 0, hand = null, handShown = false;
   var rules = [], ruleIdx = 0, rule = null, seq = [], seqPos = 0, need = NEED;
   game.innerHTML =
     '<span class="deco sway" style="left:2%;bottom:4%;font-size:48px">🌷</span>' +
-    '<span class="deco sway" style="left:9%;bottom:2%;font-size:40px;animation-delay:-1s">🌼</span>' +
-    '<span class="deco sway" style="right:3%;bottom:3%;font-size:50px;animation-delay:-2s">🌻</span>' +
+    '<span class="deco sway" style="left:9%;bottom:2%;font-size:40px;animation-delay:-1s">🥕</span>' +
+    '<span class="deco sway" style="right:3%;bottom:3%;font-size:50px;animation-delay:-2s">🥬</span>' +
     '<span class="deco sway" style="right:11%;bottom:1%;font-size:38px;animation-delay:-.6s">🌱</span>' +
-    '<span class="deco" style="left:3%;top:22%;font-size:46px">🌳</span>' +
-    '<span class="deco" style="right:4%;top:24%;font-size:42px">🌳</span>' +
-    '<span class="deco fly" style="left:10%;top:16%;font-size:30px">🦋</span>';
+    '<span class="deco" style="left:3%;top:9%;font-size:50px">🌳</span>' +
+    '<span class="deco fly" style="left:10%;top:16%;font-size:30px">🦋</span>' +
+    '<div class="scare" id="scare">' + scarecrowSVG() + '</div>';
+  var scare = document.getElementById('scare'), scareT = null;
+  function cheer(ms) { clearTimeout(scareT); scare.classList.remove('cheer'); void scare.offsetWidth; scare.classList.add('cheer'); scareT = setTimeout(function () { scare.classList.remove('cheer'); }, ms || 900); }
+  function renderDeco() {
+    var old = game.querySelectorAll('.deco.unl'); for (var i = 0; i < old.length; i++) old[i].remove();
+    var have = readDeco();
+    DECOS.forEach(function (d) { if (have.indexOf(d.e) < 0) return; var el = document.createElement('span'); el.className = 'deco unl sway'; el.setAttribute('style', d.st); el.textContent = d.e; game.appendChild(el); });
+  }
+  function syncDeco() {
+    var dl = doneLevels(), have = readDeco(), added = null;
+    DECOS.forEach(function (d) { if (dl[d.lv] && have.indexOf(d.e) < 0) { have.push(d.e); added = d; } });
+    try { localStorage.setItem('kg-atrapa-deco', JSON.stringify(have)); } catch (e) {}
+    renderDeco();
+    if (added) KidsGame.toast('🌱 ¡' + added.n + ' ' + added.e + ' nuevo en la huerta!', 2600);
+  }
+  syncDeco();
   var hud = document.createElement('div'); hud.className = 'hud';
   var lvlEl = document.createElement('div'); lvlEl.className = 'lvl';
   var prog = document.createElement('div'); prog.className = 'prog';
   var ruleEl = document.createElement('div'); ruleEl.className = 'rule';
   var board = document.createElement('div'); board.className = 'board';
-  game.appendChild(hud); game.appendChild(lvlEl); game.appendChild(ruleEl); game.appendChild(prog); game.appendChild(board);
+  var bannerEl = document.createElement('div'); bannerEl.className = 'banner';
+  hud.appendChild(lvlEl); game.appendChild(hud); game.appendChild(ruleEl); game.appendChild(prog); game.appendChild(board); game.appendChild(bannerEl);
+  var bannerT = null;
+  function banner(txt, gold, ms) { clearTimeout(bannerT); bannerEl.textContent = txt; bannerEl.className = 'banner show' + (gold ? ' gold' : ''); bannerT = setTimeout(function () { bannerEl.classList.remove('show'); }, ms || 1100); }
 
   function layout() {
     var cols = cfg.cols, rows = cfg.rows;
@@ -173,7 +289,7 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     board.style.setProperty('--gap', gap + 'px');
     board.style.setProperty('--bw', (cols * size + (cols - 1) * gap) + 'px');
     board.style.setProperty('--bh', (rows * size + (rows - 1) * gap) + 'px');
-    board.style.setProperty('--fs', Math.round(size * 0.55) + 'px');
+    board.style.setProperty('--cs', Math.round(size * 0.74) + 'px');
     board.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
     board.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
   }
@@ -184,13 +300,12 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     var shown = expert ? (caught >= need ? PER_RULE : caught % PER_RULE) : caught;
     for (var i = 0; i < total; i++) { var d = document.createElement('i'); if (i < shown) d.className = 'on'; prog.appendChild(d); }
   }
-  // Regla del nivel Experto (cambia cada 8 atrapadas)
   function newSeq() { seq = KidsGame.shuffle(ANIMALS).slice(0, 3); seqPos = 0; }
   function renderRule() {
     if (!cfg.expert || !rule) { ruleEl.classList.remove('show'); ruleEl.innerHTML = ''; return; }
     var html = rule.html;
     if (rule.id === 'seq') {
-      html += ' <span class="sq">' + seq.map(function (a, i) { return '<b>' + (i + 1) + '</b><span class="emoji' + (i < seqPos ? ' done' : i === seqPos ? ' now' : '') + '">' + a + '</span>'; }).join('') + '</span>';
+      html += ' <span class="sq">' + seq.map(function (a, i) { return '<b>' + (i + 1) + '</b>' + critterSVG(a).replace('class="cr"', 'class="' + (i < seqPos ? 'done' : i === seqPos ? 'now' : '') + '"'); }).join('') + '</span>';
     }
     ruleEl.innerHTML = html; ruleEl.classList.add('show');
   }
@@ -198,43 +313,33 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     rule = rules[idx % rules.length];
     if (rule.id === 'seq') newSeq();
     ruleEl.classList.remove('show'); void ruleEl.offsetWidth; renderRule(); layout();
-    KidsGame.say(rule.say + (rule.id === 'seq' ? ': ' + seq.join(', ') : ''));
+    banner('📜 Nueva regla', false, 1000);
+    KidsGame.say(rule.say + (rule.id === 'seq' ? ': ' + seq.map(function (k) { return KINDS[k].n.toLowerCase(); }).join(', ') : ''));
   }
-  // ¿Este animalito cuenta con la regla actual?
   function isTarget(h) {
     if (!cfg.expert) return true;
     if (rule.id === 'hat') return h.hat;
     if (rule.id === 'azul') return h.col === 'azul';
-    if (rule.id === 'nobird') return BIRDS.indexOf(h.animal) < 0;
+    if (rule.id === 'nobird') return !KINDS[h.animal].bird;
     return h.animal === seq[seqPos];
   }
 
   function pickLevel() {
-    running = false; clearTimeout(timer);
+    running = false; clearTimeout(timer); if (hand) { hand.stop(); hand = null; }
     holes.forEach(function (h) { clearTimeout(h.t); });
     board.innerHTML = ''; prog.innerHTML = ''; hud.innerHTML = ''; lvlEl.textContent = ''; ruleEl.classList.remove('show');
     prog.style.visibility = 'hidden';
-    KidsGame.levelPicker({ labels: LABELS, onPick: function (n) { nivel = n; LEVELS = DIFF[n]; level = 0; prog.style.visibility = ''; start(); } });
+    KidsGame.levelPicker({ labels: LABELS, music: 'aventura', art: critterSVG('topo').replace('class="cr"', 'width="60" height="60"'),
+      howto: [{ icon: '🐹', text: 'Los bichitos asoman de los hoyos' }, { icon: '👆', text: 'Tócalos rápido antes de que se escondan' }, { icon: '⭐', text: 'Llena las bolitas para ganar' }],
+      onPick: function (n) { nivel = n; LEVELS = DIFF[n]; level = 0; streak = 0; handShown = false; prog.style.visibility = ''; start(); } });
   }
   function buildHud() {
     hud.innerHTML = '';
     hud.appendChild(KidsGame.levelBadge(nivel));
+    hud.appendChild(lvlEl);
     var b = document.createElement('button'); b.className = 'btn round purple lvbtn'; b.textContent = '🎚️'; b.setAttribute('aria-label', 'Cambiar nivel');
     b.addEventListener('pointerdown', function (ev) { ev.preventDefault(); ev.stopPropagation(); KidsGame.sound.tap(); pickLevel(); });
     hud.appendChild(b);
-  }
-
-  function sparkle(el) {
-    var r = el.getBoundingClientRect(), g = game.getBoundingClientRect();
-    var cx = r.left - g.left + r.width / 2, cy = r.top - g.top + r.height * .45;
-    for (var i = 0; i < 10; i++) {
-      var s = document.createElement('div'); s.className = 'spark';
-      var a = (i / 10) * Math.PI * 2 + Math.random() * .5, d = r.width * .3 + Math.random() * r.width * .3;
-      s.style.left = cx + 'px'; s.style.top = cy + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 20) + 'px');
-      game.appendChild(s);
-      (function (e) { setTimeout(function () { e.remove(); }, 800); })(s);
-    }
   }
 
   function start() {
@@ -243,24 +348,24 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     need = cfg.expert ? PER_RULE * 3 : NEED;
     lvlEl.textContent = 'Ronda ' + (level + 1);
     buildHud();
-    board.innerHTML = '';
+    board.innerHTML = ''; board.classList.remove('out');
     for (var i = 0; i < cfg.cols * cfg.rows; i++) {
       var h = document.createElement('div');
       h.className = 'hole';
-      h.innerHTML = '<div class="mound"></div><div class="pit"></div><div class="critter"><span class="hat emoji">🎩</span><span class="emoji"></span><i class="collar"></i></div><div class="rim"></div><i class="tuft l"></i><i class="tuft r"></i>';
-      var obj = { el: h, em: h.querySelector('.critter > .emoji:not(.hat)'), busy: false, value: 0, t: null, hat: false, col: '', animal: '' };
+      h.innerHTML = '<div class="mound"></div><div class="pit"></div><div class="critter">' + hatSVG() + '<span class="art"></span><i class="collar"></i></div><div class="rim"></div><i class="tuft l"></i><i class="tuft r"></i>';
+      var obj = { el: h, art: h.querySelector('.art'), busy: false, value: 0, t: null, hat: false, col: '', animal: '' };
       (function (o) { o.el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tap(o); }); })(obj);
       board.appendChild(h); holes.push(obj);
     }
     if (cfg.expert) {
-      // 3 reglas por ronda, siempre con "en orden"; las otras dos al azar
       rules = KidsGame.shuffle(RULES.slice(0, 3)).slice(0, 2).concat([RULES[3]]); rules = KidsGame.shuffle(rules);
       ruleIdx = 0; setRule(0);
     } else { rule = null; renderRule(); }
     renderProg(); layout();
+    banner('Ronda ' + (level + 1), false, 1000);
     if (!cfg.expert) KidsGame.say('¡Atrapa a los animalitos!');
     clearTimeout(timer);
-    timer = setTimeout(popOne, 600);
+    timer = setTimeout(popOne, 900);
   }
 
   function popOne() {
@@ -269,10 +374,9 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
     if (free.length) {
       var h = KidsGame.pick(free);
       var flower = !cfg.expert && Math.random() < 0.2;
-      h.busy = true; h.value = flower ? 2 : 1;
+      h.busy = true; h.value = flower ? 2 : 1; h.escaped = false;
       h.el.classList.remove('hat', 'nope', 'c-azul', 'c-rojo', 'c-verde', 'c-amarillo');
       if (cfg.expert) {
-        // ~45% son objetivo de la regla actual; el resto son señuelos que NO hay que tocar
         var want = Math.random() < 0.45;
         if (rule.id === 'seq') h.animal = want ? seq[seqPos] : KidsGame.pick(ANIMALS.filter(function (a) { return a !== seq[seqPos]; }));
         else if (rule.id === 'nobird') h.animal = want ? KidsGame.pick(NOBIRDS) : KidsGame.pick(BIRDS);
@@ -280,56 +384,61 @@ var game = KidsGame.init({ title: 'Atrapa al topo' });
         h.hat = rule.id === 'hat' ? want : Math.random() < 0.35;
         h.col = rule.id === 'azul' ? (want ? 'azul' : KidsGame.pick(COLS.slice(1))) : KidsGame.pick(COLS);
         h.el.classList.toggle('hat', h.hat); h.el.classList.add('c-' + h.col);
-      } else { h.animal = flower ? '🌼' : KidsGame.pick(ANIMALS); h.hat = false; h.col = ''; }
-      h.em.textContent = h.animal;
+      } else { h.animal = flower ? 'flor' : KidsGame.pick(ANIMALS); h.hat = false; h.col = ''; }
+      h.art.innerHTML = flower ? flowerSVG() : critterSVG(h.animal);
       h.el.classList.remove('caught'); h.el.classList.add('up');
-      h.t = setTimeout(function () { hide(h); }, cfg.up);
+      if (nivel === 1 && !handShown) { handShown = true; hand = KidsGame.hand({ el: h.el, timeout: 2500 }); }
+      h.t = setTimeout(function () { hide(h, true); }, cfg.up);
     }
     timer = setTimeout(popOne, cfg.gap * (0.7 + Math.random() * 0.6));
   }
-  function hide(h) {
+  function hide(h, escaped) {
     clearTimeout(h.t); h.t = null;
     h.el.classList.remove('up');
+    if (escaped && running && isTarget(h) && streak > 0) streak = 0;
     setTimeout(function () { if (!h.el.classList.contains('up')) { h.el.classList.remove('caught'); h.busy = false; } }, 260);
   }
 
   function tap(h) {
     if (!running || !h.busy || !h.el.classList.contains('up') || h.el.classList.contains('caught')) return;
     if (!isTarget(h)) {
-      // Señuelo: solo se sacude, sin castigo y sin avanzar
       h.el.classList.remove('nope'); void h.el.offsetWidth; h.el.classList.add('nope');
-      KidsGame.sound.wrong();
+      KidsGame.sound.wrong(); streak = 0;
       return;
     }
     clearTimeout(h.t);
     h.el.classList.add('caught');
     KidsGame.sound.pop(); KidsGame.vibrate(20);
     KidsGame.addStar(h.value);
-    var p = document.createElement('div'); p.className = 'plus';
-    p.textContent = '¡+' + h.value + '!';
-    h.el.appendChild(p); setTimeout(function () { p.remove(); }, 850);
-    sparkle(h.el);
-    setTimeout(function () { h.el.classList.remove('up', 'caught'); h.busy = false; }, 300);
+    var r = h.el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * 0.35;
+    KidsGame.fx.floatText(cx, cy, '+' + h.value, 'good');
+    KidsGame.fx.burst(cx, cy + 10, { n: h.value > 1 ? 14 : 9, r: r.width * 0.5, chars: h.value > 1 ? ['🌼', '✨', '⭐'] : null });
+    streak++;
+    if (streak === 3 || (streak > 3 && streak % 5 === 0)) { setTimeout(function () { KidsGame.fx.floatText(cx, cy - 40, '¡Racha x' + streak + '!'); }, 200); cheer(900); }
+    if (streak % 5 === 0) setTimeout(function () { KidsGame.addStar(); banner('⭐ ¡Bonus de racha!', true, 1000); KidsGame.sound.win(); cheer(1500); }, 450);
+    setTimeout(function () { h.el.classList.remove('up', 'caught'); h.busy = false; }, 320);
     caught = Math.min(caught + 1, need);
     if (cfg.expert && rule.id === 'seq') { seqPos++; if (seqPos >= seq.length) newSeq(); renderRule(); }
     renderProg();
-    if (caught >= need) { running = false; clearTimeout(timer); setTimeout(finish, 500); }
+    if (caught >= need) { running = false; clearTimeout(timer); cheer(2500); setTimeout(finish, 500); }
     else if (cfg.expert && caught % PER_RULE === 0) { ruleIdx++; KidsGame.sound.ok(); setRule(ruleIdx); }
   }
 
   function finish() {
     holes.forEach(function (h) { clearTimeout(h.t); h.el.classList.remove('up'); h.busy = false; });
-    KidsGame.levelDone(nivel);
-    KidsGame.celebrate({
-      sub: 'Ronda ' + (level + 1) + (cfg.expert ? ' · ¡3 reglas!' : ''),
-      onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); start(); },
-      onAgain: function () { start(); }
-    });
+    KidsGame.levelDone(nivel); syncDeco();
+    banner('🎉 ¡Ronda lista!', true, 1200);
+    setTimeout(function () {
+      KidsGame.celebrate({
+        sub: 'Ronda ' + (level + 1) + (cfg.expert ? ' · ¡3 reglas!' : ''),
+        onNext: function () { level = Math.min(level + 1, LEVELS.length - 1); board.classList.add('out'); setTimeout(start, 300); },
+        onAgain: function () { board.classList.add('out'); setTimeout(start, 300); }
+      });
+    }, 600);
   }
 
   window.addEventListener('resize', function () { if (cfg && running) layout(); });
-  // Estado para pruebas
-  window.__atrapa = function () { return { nivel: nivel, caught: caught, need: need, rule: rule && rule.id, seq: seq.slice(), seqPos: seqPos,
+  window.__atrapa = function () { return { nivel: nivel, caught: caught, need: need, rule: rule && rule.id, seq: seq.slice(), seqPos: seqPos, streak: streak,
     holes: holes.map(function (h, i) { return { i: i, up: h.busy && h.el.classList.contains('up') && !h.el.classList.contains('caught'), animal: h.animal, hat: h.hat, col: h.col, target: h.busy ? isTarget(h) : false }; }) }; };
   pickLevel();
 })();

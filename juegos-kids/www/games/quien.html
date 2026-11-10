@@ -4,68 +4,93 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="stylesheet" href="../common.css">
-<title>¿Quién es?</title>
+<title>Agencia de detectives</title>
 <style>
+  /* ===== Mundo: "La agencia de detectives" — fotos de sospechosos en un corcho y una libreta de pistas ===== */
   .game {
+    --l1: #ffe98a; --l2: #c47f00; --l3: #7a4b00; /* lupa (cosmético) */
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px; gap: 8px;
     background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse 100% 50% at 50% 110%, rgba(0,60,60,.4), rgba(0,0,0,0) 60%),
-      linear-gradient(180deg, #b8f5e6 0%, #5fd4c0 50%, #1f9e95 100%);
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,255,255,.18), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 100% 50% at 50% 110%, rgba(0,20,40,.5), rgba(0,0,0,0) 60%),
+      linear-gradient(180deg, #2f5d7a 0%, #1f4258 55%, #16303f 100%);
   }
-  .game::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .45;
-    background:
-      radial-gradient(circle at 10% 30%, rgba(255,255,255,.5) 0 26px, rgba(255,255,255,0) 27px),
-      radial-gradient(circle at 92% 24%, rgba(255,255,255,.45) 0 34px, rgba(255,255,255,0) 35px),
-      radial-gradient(circle at 80% 86%, rgba(255,255,255,.4) 0 20px, rgba(255,255,255,0) 21px),
-      radial-gradient(circle at 22% 84%, rgba(255,255,255,.4) 0 28px, rgba(255,255,255,0) 29px);
-  }
+  .game.dorada { --l1: #fff3b0; --l2: #e0a020; --l3: #8a5a00; } .game.rosa { --l1: #ffd6e8; --l2: #f0569a; --l3: #b8306f; }
+  .game.verde { --l1: #c2ffd2; --l2: #24b36c; --l3: #14784a; } .game.azul { --l1: #d4f0ff; --l2: #2f95e8; --l3: #1a63a8; }
+  /* lambrín de madera abajo */
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 14%; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, #6b4a2a 0 120px, #5a3c20 120px 124px), linear-gradient(180deg, #7a5530, #4e3418); background-blend-mode: multiply; border-top: 6px solid #8a6540; box-shadow: 0 -4px 12px rgba(0,0,0,.35); }
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .35;
+    background: radial-gradient(circle at 8% 24%, rgba(255,255,255,.6) 0 1.5px, rgba(255,255,255,0) 2.5px), radial-gradient(circle at 90% 16%, rgba(255,255,255,.5) 0 1.5px, rgba(255,255,255,0) 2.5px), radial-gradient(circle at 70% 80%, rgba(255,255,255,.4) 0 1.5px, rgba(255,255,255,0) 2.5px); }
   .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 14px; border-radius: 40px; max-width: 100%; }
   .hud .btn.round { width: 64px; height: 64px; font-size: 28px; }
+  .hud .hero { width: 52px; height: 52px; flex: 0 0 auto; } .hud .hero svg { width: 100%; height: 100%; overflow: visible; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
-  .hud .q { font-size: 26px; font-weight: 900; color: #0d6e66; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .hud .q { font-size: 24px; font-weight: 900; color: #1f4258; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; }
+  .hud .streak { display: none; font-size: 18px; font-weight: 900; color: #fff; padding: 4px 12px; border-radius: 20px; white-space: nowrap; background: linear-gradient(180deg, #ff9f43, #ff5e3a); box-shadow: 0 3px 0 #b8300a, 0 5px 10px rgba(0,0,0,.25); text-shadow: 0 1px 0 rgba(0,0,0,.3); animation: pop .4s ease-out; }
+  .hud .streak.on { display: inline-block; }
 
-  .main { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; gap: 10px; align-items: stretch; justify-content: center; }
-  .main.row { flex-direction: row; }
-  .main.col { flex-direction: column; }
-  .boardwrap { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .main { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; gap: 12px; align-items: stretch; justify-content: center; }
+  .main.row { flex-direction: row; } .main.col { flex-direction: column; }
+  .main.out { animation: stout .26s ease-in forwards; } .main.in { animation: stin .4s cubic-bezier(.3,1.3,.4,1); }
+  @keyframes stout { to { transform: translateX(-70px) scale(.94); opacity: 0; } }
+  @keyframes stin { from { transform: translateX(80px) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+  /* corcho */
+  .boardwrap { position: relative; flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; border-radius: 22px; padding: 10px;
+    background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 0 2px, rgba(255,255,255,0) 3px), radial-gradient(circle at 70% 60%, rgba(0,0,0,.08) 0 2px, rgba(0,0,0,0) 3px), linear-gradient(180deg, #d9a86a, #c08a4c);
+    background-size: 37px 41px, 53px 47px, auto; border: 10px solid #6b4a2a; box-shadow: inset 0 0 30px rgba(0,0,0,.25), 0 10px 0 #3e2a14, 0 18px 30px rgba(0,0,0,.4); }
+  .boardwrap::before { content: "SOSPECHOSOS"; position: absolute; left: 50%; top: -22px; transform: translateX(-50%) rotate(-2deg); padding: 2px 16px; border-radius: 6px; font-size: 15px; font-weight: 900; letter-spacing: 2px; color: #7a4b00;
+    background: linear-gradient(180deg, #fff6d0, #ffe08a); box-shadow: 0 3px 0 #c47f00, 0 5px 8px rgba(0,0,0,.3); z-index: 3; }
   .grid { display: grid; gap: var(--gap); }
-  .card3d { position: relative; width: var(--s); height: var(--s); cursor: pointer; perspective: 600px; }
+  .card3d { position: relative; width: var(--s); height: var(--s); cursor: pointer; perspective: 600px; transform: rotate(var(--rot, 0deg)); }
   .card3d .inner { position: absolute; inset: 0; transition: transform .45s cubic-bezier(.4,.2,.2,1.2); transform-style: preserve-3d; }
   .card3d.down .inner { transform: rotateY(180deg); }
-  .face, .back { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .card3d .pin { position: absolute; left: 50%; top: -9px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; z-index: 4; pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, #ff9c9c, #e53935 60%, #8e1515); box-shadow: 0 3px 4px rgba(0,0,0,.45), inset 0 -2px 0 rgba(0,0,0,.2); }
+  .card3d:nth-child(3n) .pin { background: radial-gradient(circle at 35% 30%, #9fdcff, #2f95e8 60%, #1a63a8); } .card3d:nth-child(3n+1) .pin { background: radial-gradient(circle at 35% 30%, #b8f5c0, #24b36c 60%, #14784a); }
+  .face, .back { position: absolute; inset: 0; border-radius: 16px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .face {
     --c1: #ffffff; --c2: #d9ecff; --c3: #7fa6d6;
-    display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 36% 28%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.3) 20%, rgba(255,255,255,0) 42%), radial-gradient(circle at 50% 50%, var(--c1) 0%, var(--c2) 100%);
-    border: 4px solid rgba(255,255,255,.95);
-    box-shadow: 0 8px 0 var(--c3), 0 16px 24px rgba(0,40,60,.35), inset 0 3px 0 rgba(255,255,255,.8), inset 0 -8px 0 rgba(0,0,0,.08);
-    transition: box-shadow .2s;
+    display: flex; align-items: center; justify-content: center; padding: 6%; padding-bottom: 14%;
+    background: linear-gradient(180deg, #ffffff, #f4f6fb); border: 3px solid #fff;
+    box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,20,40,.35), inset 0 2px 0 #fff; transition: box-shadow .2s;
   }
-  .face::after { content: ""; position: absolute; inset: 7%; border-radius: 50%; pointer-events: none; border: 3px solid rgba(255,255,255,.45); }
-  .face svg { width: 86%; height: 86%; overflow: visible; }
+  .face .ph { width: 100%; height: 100%; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: radial-gradient(circle at 36% 28%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.3) 20%, rgba(255,255,255,0) 42%), radial-gradient(circle at 50% 50%, var(--c1) 0%, var(--c2) 100%); box-shadow: inset 0 0 0 2px var(--c3), inset 0 -6px 0 rgba(0,0,0,.06); }
+  .face .ph svg { width: 96%; height: 96%; overflow: visible; }
+  .face .num { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); font-size: calc(var(--s) * .09); font-weight: 900; color: #6b7a99; letter-spacing: 1px; }
   .m1 .face { --c1: #fff; --c2: #ffd6e8; --c3: #d57aa6; } .m2 .face { --c1: #fff; --c2: #d4f0ff; --c3: #6aa6d6; } .m3 .face { --c1: #fff; --c2: #dbffe6; --c3: #5fbf86; }
   .m4 .face { --c1: #fff; --c2: #fff2c4; --c3: #d6ad4a; } .m5 .face { --c1: #fff; --c2: #e6dcff; --c3: #a08ae0; } .m6 .face { --c1: #fff; --c2: #ffe4cc; --c3: #e09a5c; }
   .back { transform: rotateY(180deg); display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * .4);
-    background: radial-gradient(circle at 40% 30%, #9aa8bb, #5b6b80 70%, #3d4a5c); border: 4px solid rgba(255,255,255,.7);
-    box-shadow: 0 8px 0 #2a3545, 0 16px 24px rgba(0,40,60,.35), inset 0 3px 0 rgba(255,255,255,.3); }
-  .back::before { content: ""; position: absolute; inset: 10%; border-radius: 50%; border: 3px dashed rgba(255,255,255,.35); }
-  .card3d { animation: float 3.6s ease-in-out infinite; }
-  .card3d:nth-child(2n) { animation-delay: -1.2s; } .card3d:nth-child(3n) { animation-delay: -2.4s; }
-  .card3d:active .face { transform: scale(1.06); }
-  .card3d.bad .inner { animation: shake .45s; }
-  .card3d.ok { animation: none; }
-  .card3d.ok .inner { transform: scale(1.12); }
-  .card3d.ok .face { box-shadow: 0 8px 0 var(--c3), 0 16px 24px rgba(0,40,60,.35), 0 0 0 8px #ffe98a, 0 0 0 14px rgba(255,255,255,.7), 0 0 44px 12px rgba(255,233,138,.95), inset 0 3px 0 rgba(255,255,255,.8); }
-  .card3d.dim { opacity: .5; filter: saturate(.4); }
-  .card3d.last .face { box-shadow: 0 8px 0 var(--c3), 0 16px 24px rgba(0,40,60,.35), 0 0 0 6px rgba(255,233,138,.9), 0 0 26px 8px rgba(255,233,138,.8), inset 0 3px 0 rgba(255,255,255,.8); }
+    background: linear-gradient(180deg, #e8ecf5, #c9d2e6); border: 3px solid #fff; box-shadow: 0 6px 0 #8f9bb3, 0 12px 20px rgba(0,20,40,.35); }
+  .back::before { content: ""; position: absolute; inset: 10%; border-radius: 10px; border: 3px dashed rgba(0,0,0,.15); }
+  .card3d:active .face { transform: scale(1.04); }
+  .card3d.ok { z-index: 6; }
+  .card3d.ok .inner { transform: scale(1.14); }
+  .card3d.ok .face { box-shadow: 0 6px 0 #3fa864, 0 12px 20px rgba(0,20,40,.35), 0 0 0 6px #ffe98a, 0 0 0 11px rgba(255,255,255,.7), 0 0 40px 10px rgba(255,233,138,.95), inset 0 2px 0 #fff; }
+  .card3d.dim { opacity: .55; }
+  .card3d.dim .face::after { content: "✖"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-12deg); font-size: calc(var(--s) * .5); font-weight: 900; color: rgba(229,57,53,.75); animation: stamp .3s ease-out backwards; }
+  .card3d.ok .face::after { content: "✔"; position: absolute; right: -6%; top: -8%; width: 34%; height: 34%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * .2); font-weight: 900; color: #fff;
+    background: radial-gradient(circle at 35% 30%, #8ef0b0, #24b36c 70%); box-shadow: 0 3px 0 #14784a, 0 4px 8px rgba(0,0,0,.3); animation: stamp .35s .3s cubic-bezier(.3,1.6,.5,1) backwards; }
+  @keyframes stamp { 0% { transform: translate(-50%, -50%) rotate(-12deg) scale(2.2); opacity: 0; } 100% { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; } }
+  .card3d.ok .face::after { animation-name: stamp2; }
+  @keyframes stamp2 { 0% { transform: scale(2.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .card3d.last .face { box-shadow: 0 6px 0 #c9d2e6, 0 12px 20px rgba(0,20,40,.35), 0 0 0 6px rgba(255,233,138,.9), 0 0 26px 8px rgba(255,233,138,.8), inset 0 2px 0 #fff; }
   .card3d.pop { animation: pop .4s ease-out backwards; }
+  /* lupa que se posa sobre el culpable */
+  .lens { position: fixed; z-index: 65; width: 120px; height: 120px; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(2.2) rotate(-30deg); transition: transform .55s cubic-bezier(.3,1.4,.4,1), opacity .25s; }
+  .lens.show { opacity: 1; transform: translate(-40%, -40%) scale(1) rotate(-20deg); }
+  .lens svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 10px 10px rgba(0,0,0,.4)); }
 
-  /* Pistas */
-  .clues { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px; border-radius: 26px; min-width: 0; }
+  /* Libreta de pistas */
+  .clues { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding: 26px 12px 12px; border-radius: 14px 14px 20px 20px; min-width: 0;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 27px, rgba(47,149,232,.18) 27px 29px), linear-gradient(180deg, #fffdf5, #fff8e6); border: 3px solid #fff;
+    box-shadow: 0 8px 0 #c9b98a, 0 16px 28px rgba(0,0,0,.35), inset 0 2px 0 #fff; }
+  .clues::before { content: ""; position: absolute; left: 10px; right: 10px; top: 6px; height: 14px; pointer-events: none;
+    background: radial-gradient(circle at 7px 7px, #5a6478 0 4px, #2b3140 4px 5.5px, rgba(0,0,0,0) 6px) 0 0 / 28px 14px repeat-x; }
+  .clues::after { content: ""; position: absolute; left: 34px; top: 0; bottom: 0; width: 2px; background: rgba(229,57,53,.35); pointer-events: none; }
   .main.row .clues { width: var(--cw); max-width: 44%; justify-content: center; align-self: center; max-height: 100%; }
   .main.col .clues { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
   .clue { position: relative; display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 6px 10px 6px 12px; border-radius: 20px; cursor: pointer;
@@ -87,19 +112,20 @@
   @keyframes cluepulse { 0%,100% { transform: scale(1); } 20%,60% { transform: scale(1.06); background: linear-gradient(180deg, #ffe3e3, #ffb3b3); box-shadow: 0 5px 0 #b33, 0 10px 16px rgba(20,40,90,.2), 0 0 0 5px rgba(255,80,80,.5); } 40%,80% { transform: scale(1.02); } }
   .clues .more { align-self: center; font-size: 22px; min-height: 64px; padding: 6px 18px; }
   .clues .more.off { opacity: .4; pointer-events: none; filter: saturate(.3); }
-  .clues .ttl { font-size: 18px; font-weight: 900; color: #0d6e66; text-align: center; text-shadow: 0 1px 0 #fff; width: 100%; }
+  .clues .ttl { font-size: 18px; font-weight: 900; color: #1f4258; text-align: center; text-shadow: 0 1px 0 #fff; width: 100%; }
 
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px;
-           box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
-  @media (max-width: 800px) { .hud { gap: 6px; padding: 6px 8px; } .hud .q { font-size: 22px; } .clue .txt { font-size: 17px; } .clue .ci { width: 42px; height: 42px; font-size: 26px; } }
+  .banner { position: absolute; left: 50%; top: 40%; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.5); padding: 12px 36px; border-radius: 40px; white-space: nowrap;
+    font-size: clamp(26px, 4.5vw, 40px); font-weight: 900; color: #6a3f00; background: linear-gradient(180deg, #ffe98a, #ffb703); text-shadow: 0 2px 0 rgba(255,255,255,.6);
+    box-shadow: 0 8px 0 #c47f00, 0 18px 30px rgba(0,0,0,.4), inset 0 2px 0 #fff; }
+  .banner.show { animation: bannerin 1.5s cubic-bezier(.3,1.4,.4,1) forwards; }
+  @keyframes bannerin { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.5); } 16% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); } 26% { transform: translate(-50%,-50%) scale(1); } 76% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-100%) scale(.9); } }
+  @media (max-width: 800px) { .hud { gap: 6px; padding: 6px 8px; } .hud .q { font-size: 20px; } .clue .txt { font-size: 17px; } .clue .ci { width: 42px; height: 42px; font-size: 26px; } }
 </style>
 </head>
 <body>
 <script src="../common.js"></script>
 <script>
-var game = KidsGame.init({ title: '¿Quién es?' });
+var game = KidsGame.init({ title: 'Agencia de detectives' });
 (function () {
   var CFG = {
     1: { n: 4,  clues: 2, modes: ['pos', 'pos'] },
@@ -113,17 +139,36 @@ var game = KidsGame.init({ title: '¿Quién es?' });
   var EYES = { azul: '#2f95e8', verde: '#2cb67d', cafe: '#8b5a2b' };
   var SHIRT = { rojo: '#ff4d4d', azul: '#2f95e8', verde: '#2fc56d', amarillo: '#ffc800', morado: '#8a5cf6' };
   var SKIN = ['#ffd9b3', '#e8b48c', '#a86f45'];
-  var KINDS = ['nino', 'nino', 'gato', 'oso'];
-  var HATS = ['none', 'none', 'gorra', 'sombrero', 'corona'];
+  var KINDS = ['nino', 'nino', 'gato', 'oso', 'conejo'];
+  var HATS = ['none', 'none', 'gorra', 'sombrero', 'corona', 'mono'];
+  var HATL = ['gorra', 'sombrero', 'corona', 'mono'], KINDL = ['nino', 'gato', 'oso', 'conejo'];
   var T = {
     hair: { amarillo: 'pelo amarillo', cafe: 'pelo café', rojo: 'pelo rojo', negro: 'pelo negro' },
     eyes: { azul: 'ojos azules', verde: 'ojos verdes', cafe: 'ojos cafés' },
     shirt: { rojo: 'camisa roja', azul: 'camisa azul', verde: 'camisa verde', amarillo: 'camisa amarilla', morado: 'camisa morada' },
-    hat: { gorra: 'gorra', sombrero: 'sombrero', corona: 'corona', none: 'nada en la cabeza' },
-    kind: { nino: 'una persona', gato: 'un gato', oso: 'un oso' },
+    hat: { gorra: 'gorra', sombrero: 'sombrero', corona: 'corona', mono: 'moño', none: 'nada en la cabeza' },
+    kind: { nino: 'una persona', gato: 'un gato', oso: 'un oso', conejo: 'un conejo' },
     mood: { feliz: 'feliz', serio: 'serio' }
   };
-  var ICO = { hair: '💇', eyes: '👁️', shirt: '👕', gorra: '🧢', sombrero: '🎩', corona: '👑', none: '🎩', glasses: '👓', nino: '🧒', gato: '🐱', oso: '🐻', feliz: '😀', serio: '😐' };
+  var ICO = { hair: '💇', eyes: '👁️', shirt: '👕', gorra: '🧢', sombrero: '🎩', corona: '👑', mono: '🎀', none: '🎩', glasses: '👓', nino: '🧒', gato: '🐱', oso: '🐻', conejo: '🐰', feliz: '😀', serio: '😐' };
+  var SKINS = [{ id: 'clasica', n: 'Lupa clásica', e: '🔍' }, { id: 'dorada', n: 'Lupa dorada', e: '🥇' }, { id: 'rosa', n: 'Lupa rosa', e: '🌸' }, { id: 'verde', n: 'Lupa verde', e: '🍀' }, { id: 'azul', n: 'Lupa azul', e: '💙' }];
+  var cos = { unlocked: ['clasica'], sel: 'clasica' };
+  try { var sv = JSON.parse(localStorage.getItem('kg-cos-quien')); if (sv && sv.unlocked) cos = sv; } catch (e) {}
+  function saveCos() { try { localStorage.setItem('kg-cos-quien', JSON.stringify(cos)); } catch (e) {} }
+
+  // ---------- Arte: lupa detective (hero) ----------
+  function lensSVG(size, withHat) {
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="lg" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset=".45" stop-color="#bfe9ff" stop-opacity=".35"/><stop offset="1" stop-color="#2f95e8" stop-opacity=".35"/></radialGradient>' +
+      '<linearGradient id="lr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--l1, #ffe98a)"/><stop offset=".6" stop-color="var(--l2, #c47f00)"/><stop offset="1" stop-color="var(--l3, #7a4b00)"/></linearGradient>' +
+      '<linearGradient id="lh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a2a"/><stop offset="1" stop-color="#3e2a14"/></linearGradient></defs>' +
+      '<path d="M62 62 L88 88" stroke="url(#lh)" stroke-width="14" stroke-linecap="round"/><path d="M64 64 L86 86" stroke="rgba(255,255,255,.25)" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="40" cy="40" r="32" fill="url(#lg)" stroke="url(#lr)" stroke-width="9"/>' +
+      '<circle cx="40" cy="40" r="26" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>' +
+      (withHat ? '<path d="M18 36 Q40 26 62 36 L58 36 Q40 30 22 36 Z" fill="#3d3d55"/><rect x="26" y="20" width="28" height="16" rx="3" fill="#3d3d55"/><rect x="26" y="31" width="28" height="4" fill="#e8322a"/>' +
+        '<ellipse cx="33" cy="46" rx="3.5" ry="4" fill="#fff"/><ellipse cx="47" cy="46" rx="3.5" ry="4" fill="#fff"/><circle cx="33.5" cy="47" r="2" fill="#222"/><circle cx="47.5" cy="47" r="2" fill="#222"/><path d="M34 55 Q40 60 46 55" fill="none" stroke="#b8306f" stroke-width="2" stroke-linecap="round"/>' : '') +
+      '<path d="M22 28 Q26 18 36 16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/></svg>';
+  }
 
   // ---------- Personajes ----------
   function randomChar() {
@@ -132,49 +177,41 @@ var game = KidsGame.init({ title: '¿Quién es?' });
   }
   function sig(c) { return [c.kind, c.hair, c.hat, c.glasses, c.eyes, c.shirt, c.mood].join('|'); }
   function svgChar(c, id) {
-    var fur = c.kind === 'nino' ? c.skin : HAIR[c.hair];
+    var fur = c.kind === 'nino' ? c.skin : (c.kind === 'conejo' ? (c.hair === 'negro' ? '#9aa0ab' : (c.hair === 'amarillo' ? '#fff3d6' : HAIR[c.hair])) : HAIR[c.hair]);
     var s = '<svg viewBox="0 0 100 100"><defs>' +
       '<radialGradient id="h' + id + '" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient>' +
       '<filter id="s' + id + '" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".3"/></filter></defs>';
-    // camisa
     s += '<g filter="url(#s' + id + ')"><path d="M18 100 L18 86 Q50 62 82 86 L82 100 Z" fill="' + SHIRT[c.shirt] + '"/><path d="M18 100 L18 86 Q50 62 82 86 L82 100 Z" fill="url(#h' + id + ')"/>';
     s += '<path d="M42 72 L50 82 L58 72" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" opacity=".7"/></g>';
-    // orejas de animales (detrás de la cabeza)
     if (c.kind === 'gato') s += '<path d="M28 40 L24 14 L44 30 Z" fill="' + fur + '"/><path d="M72 40 L76 14 L56 30 Z" fill="' + fur + '"/><path d="M31 35 L29 21 L40 30 Z" fill="#ffb6c1"/><path d="M69 35 L71 21 L60 30 Z" fill="#ffb6c1"/>';
     if (c.kind === 'oso') s += '<circle cx="28" cy="26" r="10" fill="' + fur + '"/><circle cx="72" cy="26" r="10" fill="' + fur + '"/><circle cx="28" cy="26" r="5" fill="#ffd9b3" opacity=".8"/><circle cx="72" cy="26" r="5" fill="#ffd9b3" opacity=".8"/>';
-    // cabeza
+    if (c.kind === 'conejo') s += '<ellipse cx="38" cy="18" rx="7" ry="16" fill="' + fur + '" transform="rotate(-10 38 18)"/><ellipse cx="62" cy="18" rx="7" ry="16" fill="' + fur + '" transform="rotate(10 62 18)"/><ellipse cx="38" cy="19" rx="3.5" ry="11" fill="#ffb6c1" transform="rotate(-10 38 19)"/><ellipse cx="62" cy="19" rx="3.5" ry="11" fill="#ffb6c1" transform="rotate(10 62 19)"/>';
     s += '<g filter="url(#s' + id + ')"><circle cx="50" cy="48" r="25" fill="' + fur + '"/><circle cx="50" cy="48" r="25" fill="url(#h' + id + ')"/></g>';
-    // pelo (persona)
     if (c.kind === 'nino') s += '<path d="M25 48 A25 25 0 0 1 75 48 L75 42 Q50 20 25 42 Z" fill="' + HAIR[c.hair] + '"/><rect x="25" y="40" width="6" height="18" rx="3" fill="' + HAIR[c.hair] + '"/><rect x="69" y="40" width="6" height="18" rx="3" fill="' + HAIR[c.hair] + '"/>' +
       '<path d="M30 34 Q50 24 70 34" fill="none" stroke="#fff" stroke-width="2" opacity=".35" stroke-linecap="round"/>';
-    // hocico animales
     if (c.kind === 'gato') s += '<ellipse cx="50" cy="59" rx="10" ry="7" fill="#fff" opacity=".85"/><path d="M47 56 L53 56 L50 60 Z" fill="#ff8aa8"/><path d="M34 58 L44 60 M34 63 L44 62 M66 58 L56 60 M66 63 L56 62" stroke="#444" stroke-width="1.3" stroke-linecap="round"/>';
     if (c.kind === 'oso') s += '<ellipse cx="50" cy="60" rx="11" ry="8" fill="#ffd9b3" opacity=".9"/><ellipse cx="50" cy="57" rx="4" ry="3" fill="#2b2b3b"/>';
-    // ojos
+    if (c.kind === 'conejo') s += '<ellipse cx="50" cy="60" rx="9" ry="6" fill="#fff" opacity=".9"/><path d="M47 57 L53 57 L50 60 Z" fill="#ff8aa8"/><rect x="47" y="60" width="6" height="5" rx="1" fill="#fff" stroke="#ccc" stroke-width=".8"/><path d="M50 60 v5" stroke="#ccc" stroke-width=".8"/>';
     [41, 59].forEach(function (x) {
       s += '<ellipse cx="' + x + '" cy="47" rx="5.5" ry="5.5" fill="#fff"/><circle cx="' + x + '" cy="47.5" r="3.4" fill="' + EYES[c.eyes] + '"/><circle cx="' + x + '" cy="47.5" r="1.6" fill="#111"/><circle cx="' + (x - 1.3) + '" cy="46" r="1.1" fill="#fff"/>';
     });
-    // boca
     if (c.kind === 'gato') s += '<path d="M46 62 Q48 65 50 62 Q52 65 54 62" fill="none" stroke="#444" stroke-width="1.6" stroke-linecap="round"/>';
+    else if (c.kind === 'conejo') s += (c.mood === 'feliz' ? '<path d="M44 66 Q50 70 56 66" fill="none" stroke="#8e2b22" stroke-width="2" stroke-linecap="round"/>' : '<path d="M45 67 L55 67" fill="none" stroke="#8e2b22" stroke-width="2.5" stroke-linecap="round"/>');
     else if (c.mood === 'feliz') s += '<path d="M41 59 Q50 69 59 59" fill="#c0392b" stroke="#8e2b22" stroke-width="1.5" stroke-linejoin="round"/><path d="M44 61 Q50 64 56 61 Z" fill="#fff"/>';
     else s += '<path d="M43 62 L57 62" fill="none" stroke="#8e2b22" stroke-width="2.5" stroke-linecap="round"/>';
     if (c.kind === 'gato' && c.mood === 'serio') s += '<path d="M36 41 L44 43 M64 41 L56 43" stroke="#444" stroke-width="2" stroke-linecap="round"/>';
-    if (c.kind === 'oso' && c.mood === 'serio') s += '<path d="M36 40 L45 42 M64 40 L55 42" stroke="#2b2b3b" stroke-width="2" stroke-linecap="round"/>';
+    if ((c.kind === 'oso' || c.kind === 'conejo') && c.mood === 'serio') s += '<path d="M36 40 L45 42 M64 40 L55 42" stroke="#2b2b3b" stroke-width="2" stroke-linecap="round"/>';
     if (c.kind === 'nino' && c.mood === 'serio') s += '<path d="M35 39 L46 40 M65 39 L54 40" stroke="#5a3a1a" stroke-width="2" stroke-linecap="round"/>';
-    // lentes
     if (c.glasses) s += '<g fill="none" stroke="#1f2f6b" stroke-width="2.4"><circle cx="41" cy="47" r="8"/><circle cx="59" cy="47" r="8"/><path d="M49 47 L51 47 M33 46 L26 43 M67 46 L74 43"/></g><circle cx="41" cy="47" r="8" fill="#9bd7ff" opacity=".25"/><circle cx="59" cy="47" r="8" fill="#9bd7ff" opacity=".25"/>';
-    // sombreros
     if (c.hat === 'gorra') s += '<g filter="url(#s' + id + ')"><path d="M26 38 A24 22 0 0 1 74 38 Z" fill="#e8322a"/><path d="M26 38 A24 22 0 0 1 74 38 Z" fill="url(#h' + id + ')"/><path d="M50 36 L84 36 Q86 43 80 43 L50 43 Z" fill="#b71c1c"/><circle cx="50" cy="17" r="3" fill="#b71c1c"/></g>';
     if (c.hat === 'sombrero') s += '<g filter="url(#s' + id + ')"><rect x="22" y="31" width="56" height="7" rx="3" fill="#2b2b3b"/><rect x="32" y="8" width="36" height="26" rx="3" fill="#3d3d55"/><rect x="32" y="8" width="36" height="26" rx="3" fill="url(#h' + id + ')"/><rect x="32" y="26" width="36" height="6" fill="#8a5cf6"/></g>';
     if (c.hat === 'corona') s += '<g filter="url(#s' + id + ')"><path d="M29 37 L29 17 L39 27 L50 11 L61 27 L71 17 L71 37 Z" fill="#ffc800" stroke="#c47f00" stroke-width="1.5" stroke-linejoin="round"/><path d="M29 37 L29 17 L39 27 L50 11 L61 27 L71 17 L71 37 Z" fill="url(#h' + id + ')"/><circle cx="39" cy="31" r="2.5" fill="#e8322a"/><circle cx="50" cy="29" r="2.5" fill="#2f95e8"/><circle cx="61" cy="31" r="2.5" fill="#2cb67d"/></g>';
+    if (c.hat === 'mono') s += '<g filter="url(#s' + id + ')" transform="translate(62 24)"><path d="M0 0 L-16 -9 Q-20 0 -16 9 Z" fill="#ff5fa2"/><path d="M0 0 L16 -9 Q20 0 16 9 Z" fill="#ff5fa2"/><path d="M0 0 L-16 -9 Q-20 0 -16 9 Z M0 0 L16 -9 Q20 0 16 9 Z" fill="url(#h' + id + ')"/><circle r="4.5" fill="#e03a80"/><circle cx="-1" cy="-1.5" r="1.5" fill="#fff" opacity=".7"/></g>';
     return s + '</svg>';
   }
 
   // ---------- Pistas ----------
-  function atomSat(c, k, v) {
-    if (k === 'glasses') return c.glasses === v;
-    return c[k] === v;
-  }
+  function atomSat(c, k, v) { if (k === 'glasses') return c.glasses === v; return c[k] === v; }
   function sat(c, clue) {
     if (clue.or) return atomSat(c, clue.or[0].k, clue.or[0].v) || atomSat(c, clue.or[1].k, clue.or[1].v);
     var r = atomSat(c, clue.k, clue.v);
@@ -208,16 +245,14 @@ var game = KidsGame.init({ title: '¿Quién es?' });
     if (clue.or) return atomIcon(clue.or[0].k, clue.or[0].v, false) + '<span class="or">o</span>' + atomIcon(clue.or[1].k, clue.or[1].v, false);
     return atomIcon(clue.k, clue.v, !!clue.neg);
   }
-  function posAtoms(t) {
-    return [{ k: 'kind', v: t.kind }, { k: 'hair', v: t.hair }, { k: 'hat', v: t.hat }, { k: 'glasses', v: t.glasses }, { k: 'eyes', v: t.eyes }, { k: 'shirt', v: t.shirt }, { k: 'mood', v: t.mood }];
-  }
+  function posAtoms(t) { return [{ k: 'kind', v: t.kind }, { k: 'hair', v: t.hair }, { k: 'hat', v: t.hat }, { k: 'glasses', v: t.glasses }, { k: 'eyes', v: t.eyes }, { k: 'shirt', v: t.shirt }, { k: 'mood', v: t.mood }]; }
   function negAtoms(t) {
     var out = [];
     Object.keys(HAIR).forEach(function (v) { if (v !== t.hair) out.push({ k: 'hair', v: v }); });
     Object.keys(EYES).forEach(function (v) { if (v !== t.eyes) out.push({ k: 'eyes', v: v }); });
     Object.keys(SHIRT).forEach(function (v) { if (v !== t.shirt) out.push({ k: 'shirt', v: v }); });
-    ['gorra', 'sombrero', 'corona'].forEach(function (v) { if (v !== t.hat) out.push({ k: 'hat', v: v }); });
-    ['nino', 'gato', 'oso'].forEach(function (v) { if (v !== t.kind) out.push({ k: 'kind', v: v }); });
+    HATL.forEach(function (v) { if (v !== t.hat) out.push({ k: 'hat', v: v }); });
+    KINDL.forEach(function (v) { if (v !== t.kind) out.push({ k: 'kind', v: v }); });
     if (t.glasses === false) out.push({ k: 'glasses', v: true });
     return out;
   }
@@ -226,8 +261,8 @@ var game = KidsGame.init({ title: '¿Quién es?' });
     Object.keys(HAIR).forEach(function (v) { out.push({ k: 'hair', v: v }); });
     Object.keys(EYES).forEach(function (v) { out.push({ k: 'eyes', v: v }); });
     Object.keys(SHIRT).forEach(function (v) { out.push({ k: 'shirt', v: v }); });
-    ['gorra', 'sombrero', 'corona'].forEach(function (v) { out.push({ k: 'hat', v: v }); });
-    ['nino', 'gato', 'oso'].forEach(function (v) { out.push({ k: 'kind', v: v }); });
+    HATL.forEach(function (v) { out.push({ k: 'hat', v: v }); });
+    KINDL.forEach(function (v) { out.push({ k: 'kind', v: v }); });
     out.push({ k: 'glasses', v: true }); out.push({ k: 'mood', v: 'feliz' }); out.push({ k: 'mood', v: 'serio' });
     return out;
   }
@@ -249,8 +284,8 @@ var game = KidsGame.init({ title: '¿Quién es?' });
         }
         var good = cands.filter(function (cl) {
           var rem = remaining.filter(function (ch) { return sat(ch, cl); });
-          if (rem.length >= remaining.length) return false;          // debe eliminar a alguien
-          if (left === 0) return rem.length === 1;                     // la última deja exactamente uno
+          if (rem.length >= remaining.length) return false;
+          if (left === 0) return rem.length === 1;
           return rem.length >= left + 1 && rem.length <= Math.max(2, remaining.length - 1);
         });
         if (!good.length) { okAll = false; break; }
@@ -266,20 +301,27 @@ var game = KidsGame.init({ title: '¿Quién es?' });
   }
 
   // ---------- Estado / UI ----------
-  var nivel = 0, cfg = null, running = false, lock = false, round = 0, wrongs = 0, cur = null, shown = 0, session = 0;
-  var hud, dots, main, boardwrap, grid, clues, moreBtn, cardEls = [], clueEls = [];
+  var nivel = 0, cfg = null, running = false, lock = false, round = 0, wrongs = 0, cur = null, next = null, shown = 0, session = 0, streak = 0, roundWrong = 0, handShown = false;
+  var hud, dots, main, boardwrap, grid, clues, moreBtn, cardEls = [], clueEls = [], streakEl, skinBtn, lens;
 
   function build() {
     game.innerHTML = '';
+    game.className = 'game ' + cos.sel;
     hud = document.createElement('div'); hud.className = 'hud panel';
+    hud.insertAdjacentHTML('beforeend', '<div class="hero">' + lensSVG(52, true) + '</div>');
     hud.appendChild(KidsGame.levelBadge(nivel));
     dots = document.createElement('div'); dots.className = 'dots';
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
-    var q = document.createElement('span'); q.className = 'q'; q.textContent = '🔍 ¿Quién es?'; hud.appendChild(q);
+    var q = document.createElement('span'); q.className = 'q'; q.textContent = '¿Quién es?'; hud.appendChild(q);
+    streakEl = document.createElement('span'); streakEl.className = 'streak'; hud.appendChild(streakEl);
     var sp = document.createElement('button'); sp.className = 'btn round blue'; sp.textContent = '🔊';
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); explain(); });
     hud.appendChild(sp);
+    skinBtn = document.createElement('button'); skinBtn.className = 'btn round purple'; skinBtn.textContent = '🎨'; skinBtn.setAttribute('aria-label', 'Cambiar lupa');
+    skinBtn.addEventListener('pointerdown', function (ev) { ev.preventDefault(); cycleSkin(); });
+    skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
+    hud.appendChild(skinBtn);
     var lb = document.createElement('button'); lb.className = 'btn round yellow'; lb.textContent = '🎚️'; lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
@@ -287,37 +329,60 @@ var game = KidsGame.init({ title: '¿Quién es?' });
     main = document.createElement('div'); main.className = 'main row';
     boardwrap = document.createElement('div'); boardwrap.className = 'boardwrap';
     grid = document.createElement('div'); grid.className = 'grid'; boardwrap.appendChild(grid);
-    clues = document.createElement('div'); clues.className = 'clues panel';
+    clues = document.createElement('div'); clues.className = 'clues';
     main.appendChild(boardwrap); main.appendChild(clues);
     game.appendChild(main);
+    var b = document.createElement('div'); b.className = 'banner'; game.appendChild(b);
+    lens = document.createElement('div'); lens.className = 'lens'; lens.innerHTML = lensSVG(120, false); game.appendChild(lens);
   }
+  function cycleSkin() {
+    KidsGame.sound.tap();
+    var i = cos.unlocked.indexOf(cos.sel); cos.sel = cos.unlocked[(i + 1) % cos.unlocked.length]; saveCos();
+    game.className = 'game ' + cos.sel;
+    var s = SKINS.filter(function (k) { return k.id === cos.sel; })[0]; KidsGame.toast(s.e + ' ' + s.n, 1200);
+  }
+  function unlockSkin(lv) { var s = SKINS[Math.min(lv, SKINS.length - 1)]; if (cos.unlocked.indexOf(s.id) >= 0) return null; cos.unlocked.push(s.id); cos.sel = s.id; saveCos(); return s; }
+  function banner(txt) { var b = game.querySelector('.banner'); if (!b) return; b.textContent = txt; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+  function setStreak() { streakEl.textContent = '🔥 Racha x' + streak; streakEl.classList.toggle('on', streak >= 3); }
   function explain() {
-    var t = 'Busca al personaje que cumple todas las pistas. Toca una pista para escucharla.';
+    var t = 'Busca al sospechoso que cumple todas las pistas. Toca una pista para escucharla.';
     if (cfg.flip) t = 'Toca a los que no pueden ser para voltearlos. Al final quedará uno.';
     KidsGame.say(t);
   }
   function showPicker() {
-    running = false; lock = true;
+    running = false; lock = true; session++;
     if (grid) { grid.innerHTML = ''; clues.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'quien', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'quien', labels: LABELS, art: lensSVG(64, true), music: 'aventura',
+      howto: [{ icon: '📝', text: 'Lee o escucha las pistas' }, { icon: '🔍', text: 'Busca quién las cumple todas' }, { icon: '👆', text: 'Toca al sospechoso. ¡Caso resuelto!' }],
+      onPick: function (lv) { start(lv); } });
   }
   function start(lv) {
-    nivel = lv; cfg = CFG[lv]; running = true; round = 0; wrongs = 0; session++;
-    build(); newRound();
-    setTimeout(explain, 600);
+    nivel = lv; cfg = CFG[lv]; running = true; round = 0; wrongs = 0; streak = 0; session++; next = null;
+    build();
+    // generar el primer caso tras pintar (en Experto puede tardar en tablets lentas)
+    var close = lv >= 3 ? KidsGame.loading('Buscando sospechosos…') : null, ss = session;
+    KidsGame.defer(function () { if (close) close(); if (ss !== session || !running) return; newRound(true); setTimeout(explain, 700); });
   }
-  function newRound() {
+  function newRound(first) {
     if (!running) return;
-    cur = genRound(nivel); lock = false; shown = cfg.oneByOne ? 1 : cur.clues.length;
+    cur = next || genRound(nivel); next = null; lock = false; roundWrong = 0; shown = cfg.oneByOne ? 1 : cur.clues.length;
     renderCards(); renderClues(); layout();
-    var txt = '¿Quién es? ' + cur.clues.slice(0, shown).map(clueText).join('. ') + '.';
-    setTimeout(function () { KidsGame.say(txt); }, 300);
+    lens.classList.remove('show');
+    banner('Caso ' + (round + 1) + ' de ' + ROUNDS);
+    if (!first) { main.classList.remove('out'); main.classList.add('in'); setTimeout(function () { main.classList.remove('in'); }, 450); }
+    var txt = '¿Quién es? ' + cur.clues.slice(0, shown).map(clueText).join('. ') + '.', ss = session;
+    setTimeout(function () { if (ss === session && running) KidsGame.say(txt); }, first ? 1800 : 400);
+    if (nivel === 1 && round === 0 && !handShown) {
+      handShown = true;
+      setTimeout(function () { if (ss !== session || !running || lock) return; KidsGame.hand({ el: cardEls[cur.target], timeout: 12000 }); }, 5000);
+    }
   }
   function renderCards() {
     grid.innerHTML = ''; cardEls = [];
     cur.chars.forEach(function (c, i) {
       var el = document.createElement('div'); el.className = 'card3d pop m' + (1 + (i % 6)); el.style.animationDelay = (i * 60) + 'ms';
-      el.innerHTML = '<div class="inner"><div class="face">' + svgChar(c, i) + '</div><div class="back"><span class="emoji">❌</span></div></div>';
+      el.style.setProperty('--rot', (((i * 7) % 5) - 2) + 'deg');
+      el.innerHTML = '<span class="pin"></span><div class="inner"><div class="face"><div class="ph">' + svgChar(c, i) + '</div><span class="num">Nº ' + (i + 1) + '</span></div><div class="back"><span class="emoji">❌</span></div></div>';
       el.addEventListener('pointerdown', function (ev) { ev.preventDefault(); tapCard(i, el); });
       el.addEventListener('animationend', function () { el.classList.remove('pop'); });
       grid.appendChild(el); cardEls.push(el);
@@ -325,7 +390,7 @@ var game = KidsGame.init({ title: '¿Quién es?' });
   }
   function renderClues() {
     clues.innerHTML = ''; clueEls = [];
-    var ttl = document.createElement('div'); ttl.className = 'ttl'; ttl.textContent = '🔎 Pistas'; clues.appendChild(ttl);
+    var ttl = document.createElement('div'); ttl.className = 'ttl'; ttl.textContent = '📝 Pistas del caso'; clues.appendChild(ttl);
     cur.clues.slice(0, shown).forEach(function (cl, i) {
       var el = document.createElement('div'); el.className = 'clue'; el.style.animationDelay = (i * 90) + 'ms';
       var txt = clueText(cl);
@@ -343,13 +408,13 @@ var game = KidsGame.init({ title: '¿Quién es?' });
   function layout() {
     if (!cur || !main) return;
     var W = main.clientWidth, H = main.clientHeight, landscape = W > H * 1.1;
-    main.className = 'main ' + (landscape ? 'row' : 'col');
+    main.className = 'main ' + (landscape ? 'row' : 'col') + (main.classList.contains('in') ? ' in' : '');
     var n = cur.chars.length, cols = n <= 4 ? 2 : (n <= 6 ? 3 : (n <= 9 ? 3 : 4)), rows = Math.ceil(n / cols);
     if (landscape && n === 4) { cols = 2; rows = 2; }
     if (!landscape && n === 6) { cols = 3; rows = 2; }
     if (!landscape && n === 12) { cols = 4; rows = 3; }
     if (landscape) { clues.style.setProperty('--cw', Math.min(400, W * 0.42) + 'px'); void clues.offsetWidth; }
-    var bw = boardwrap.clientWidth - 8, bh = boardwrap.clientHeight - 8, gap = 14;
+    var bw = boardwrap.clientWidth - 40, bh = boardwrap.clientHeight - 40, gap = 16;
     var s = Math.floor(Math.min((bw - (cols - 1) * gap) / cols, (bh - (rows - 1) * gap) / rows, 220));
     s = Math.max(72, s);
     grid.style.gridTemplateColumns = 'repeat(' + cols + ', ' + s + 'px)';
@@ -362,7 +427,6 @@ var game = KidsGame.init({ title: '¿Quién es?' });
       var up = faceUp();
       if (el.classList.contains('down')) { el.classList.remove('down'); KidsGame.sound.pop(); markLast(); return; }
       if (up.length > 1) { el.classList.add('down'); KidsGame.sound.pop(); markLast(); return; }
-      // es la única boca arriba: responder
     }
     answer(i, el);
   }
@@ -377,17 +441,32 @@ var game = KidsGame.init({ title: '¿Quién es?' });
       KidsGame.sound.ok(); KidsGame.addStar(1); KidsGame.vibrate(40);
       el.classList.add('ok');
       cardEls.forEach(function (o) { if (o !== el) o.classList.add('dim'); });
-      var g = game.getBoundingClientRect(), r = el.getBoundingClientRect();
-      sparkle(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top, 26);
+      var r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      KidsGame.fx.ring(el); KidsGame.fx.burst(x, y, { n: 18 });
+      // la lupa se posa sobre el culpable
+      lens.style.left = x + 'px'; lens.style.top = y + 'px'; lens.style.width = lens.style.height = Math.round(r.width * .9) + 'px';
+      lens.classList.remove('show'); void lens.offsetWidth; lens.classList.add('show');
+      if (roundWrong === 0) { streak++; } else streak = 0;
+      setStreak();
+      setTimeout(function () {
+        if (streak >= 3) KidsGame.fx.floatText(x, y - r.height * .6, '¡Racha x' + streak + '!', 'good'); else KidsGame.fx.floatText(x, y - r.height * .6, roundWrong === 0 ? '+1 ¡A la primera!' : '+1', 'good');
+        if (streak > 0 && streak % 5 === 0) { KidsGame.addStar(1); KidsGame.fx.burst(x, y - 60, { n: 10, chars: ['⭐', '✨'] }); KidsGame.toast('⭐ ¡Bonus de racha!', 1300); }
+      }, 350);
       dots.children[round].classList.add('on'); round++;
-      KidsGame.say(KidsGame.pick(['¡Sí! ¡Es ese!', '¡Lo encontraste!', '¡Muy bien!']));
+      KidsGame.say(KidsGame.pick(['¡Sí! ¡Caso resuelto!', '¡Lo encontraste, detective!', '¡Muy bien! ¡Es ese!']));
       var ss = session;
-      setTimeout(function () { if (ss !== session) return; if (round >= ROUNDS) finish(); else newRound(); }, 1700);
+      // preparar el siguiente caso mientras celebra (sin congelar el toque)
+      setTimeout(function () { if (ss === session && running && round < ROUNDS) next = genRound(nivel); }, 500);
+      setTimeout(function () {
+        if (ss !== session || !running) return;
+        if (round >= ROUNDS) { finish(); return; }
+        main.classList.add('out'); lens.classList.remove('show');
+        setTimeout(function () { if (ss === session && running) newRound(false); }, 280);
+      }, 2000);
     } else {
-      wrongs++;
+      wrongs++; roundWrong++; streak = 0; setStreak();
       KidsGame.sound.wrong(); KidsGame.vibrate(30);
-      el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad');
-      // la pista que lo excluye
+      KidsGame.fx.shake(el);
       var c = cur.chars[i], idx = -1;
       for (var k = 0; k < shown; k++) if (!sat(c, cur.clues[k])) { idx = k; break; }
       if (idx >= 0) {
@@ -397,37 +476,22 @@ var game = KidsGame.init({ title: '¿Quién es?' });
         KidsGame.say('Pide otra pista.');
         if (moreBtn) { moreBtn.classList.remove('pop'); void moreBtn.offsetWidth; moreBtn.classList.add('pop'); }
       }
-      if (cfg.flip && faceUp().length > 1) { /* en experto, se puede voltear */ }
-    }
-  }
-  function sparkle(x, y, k) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (k || 18); i++) {
-      var s = document.createElement('div');
-      s.className = 'spark' + (i % 3 === 0 ? ' star' : '');
-      var a = Math.random() * Math.PI * 2, dd = 50 + Math.random() * 110;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * dd + 'px'); s.style.setProperty('--dy', (Math.sin(a) * dd - 30) + 'px');
-      s.style.background = KidsGame.pick(colors);
-      s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s);
-      (function (el) { setTimeout(function () { el.remove(); }, 1200); })(s);
     }
   }
   function finish() {
     running = false;
     var stars = wrongs <= 1 ? 3 : (wrongs <= 4 ? 2 : 1), lv = nivel;
     KidsGame.levelDone(lv);
+    var s = unlockSkin(lv);
+    if (skinBtn) skinBtn.style.display = cos.unlocked.length > 1 ? '' : 'none';
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' personajes encontrados!', stars: stars,
+      sub: '¡' + ROUNDS + ' casos resueltos!' + (s ? ' 🎨 Nuevo: ' + s.n : ''), stars: stars,
       onNext: function () { start(Math.min(4, lv + 1)); },
       onAgain: function () { start(lv); }
     });
   }
 
-  // ganchos para pruebas automáticas
-  window.__quien = { get: function () { return { cur: cur, nivel: nivel, round: round, shown: shown, wrongs: wrongs }; }, cards: function () { return cardEls; }, clues: function () { return clueEls; }, sat: sat, gen: genRound, text: clueText };
-
+  window.__quien = { get: function () { return { cur: cur, nivel: nivel, round: round, shown: shown, wrongs: wrongs, lock: lock, streak: streak }; }, cards: function () { return cardEls; }, clues: function () { return clueEls; }, sat: sat, gen: genRound, text: clueText };
   window.addEventListener('resize', layout);
   showPicker();
 })();

@@ -6,29 +6,48 @@
 <link rel="stylesheet" href="../common.css">
 <title>La balanza</title>
 <style>
+  /* ===== El laboratorio: pared de azulejos, repisa con pociones, mesa de trabajo y el ratón científico ===== */
   .game {
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px 10px; gap: 8px;
     background:
-      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
-      radial-gradient(ellipse 100% 40% at 50% 112%, rgba(90,40,0,.45), rgba(0,0,0,0) 60%),
-      linear-gradient(180deg, #fff1cc 0%, #ffd79a 45%, #f0b06a 72%, #c98448 100%);
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255,255,255,.6), rgba(255,255,255,0) 70%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, rgba(0,0,0,0) 2px 64px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.55) 0 2px, rgba(0,0,0,0) 2px 64px),
+      linear-gradient(180deg, #d9f3ff 0%, #bfe6f5 60%, #a9d8ea 100%);
   }
   .game::before {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; pointer-events: none; z-index: 0;
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 24%; pointer-events: none; z-index: 0;
     background:
-      repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 120px, rgba(90,40,0,.12) 120px 124px),
-      repeating-linear-gradient(180deg, rgba(255,255,255,.12) 0 2px, rgba(0,0,0,0) 2px 22px),
-      linear-gradient(180deg, #d99a5a, #a86a2a);
-    box-shadow: 0 -8px 20px rgba(80,30,0,.25); opacity: .9;
+      radial-gradient(ellipse 80% 30% at 50% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 140px, rgba(0,0,0,.08) 140px 144px),
+      linear-gradient(180deg, #4f6d8a 0%, #35506a 12%, #2a4158 100%);
+    box-shadow: 0 -8px 20px rgba(20,40,80,.3);
+  }
+  .game::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 20%; height: 10px; pointer-events: none; z-index: 0;
+    background: linear-gradient(180deg, #9fb3c8, #6d8199); box-shadow: 0 4px 6px rgba(20,40,80,.3);
   }
   .hud { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 14px; border-radius: 40px; }
   .dots { display: flex; gap: 6px; }
   .dots span { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, #e8ecf5, #c9d2e6); box-shadow: inset 0 2px 3px rgba(0,0,0,.18); transition: transform .2s, background .2s; }
   .dots span.on { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffb703 70%); box-shadow: 0 2px 0 #c47f00, 0 3px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transform: scale(1.15); }
   .hud .btn.round, .instr .btn.round { width: 64px; height: 64px; font-size: 28px; }
-  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 18px; border-radius: 40px; max-width: 100%; }
-  .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #8a4b0a; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .instr .ico { font-size: 32px; animation: float 3s ease-in-out infinite; }
+  /* Repisa de pociones: una por nivel completado (desbloqueable) */
+  .vit { display: flex; gap: 4px; padding: 4px 8px 6px; border-radius: 14px; background: linear-gradient(180deg, #e3f1ff, #c9dff2); box-shadow: inset 0 2px 4px rgba(20,40,80,.15), 0 3px 0 #6d8199; }
+  .vit span { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 24px; border-radius: 8px; background: rgba(255,255,255,.75); }
+  .vit span.off { opacity: .35; font-size: 16px; }
+  .vit span.new { animation: pop .5s ease-out; }
+  .vit span.on { animation: bubble 2.6s ease-in-out infinite; }
+  @keyframes bubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .instr { position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 10px; border-radius: 40px; max-width: 100%; }
+  .instr .txt { font-size: clamp(17px, 2.6vw, 26px); font-weight: 900; color: #2a4158; text-shadow: 0 2px 0 #fff, 0 3px 6px rgba(0,0,0,.12); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .instr .mouse { width: 64px; height: 64px; flex: 0 0 auto; filter: drop-shadow(0 4px 4px rgba(0,0,0,.3)); cursor: pointer; }
+  .mouse .ms-eyes { transform-origin: 60px 56px; animation: msblink 4.4s infinite; }
+  @keyframes msblink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  .mouse .ms-head { transform-origin: 60px 80px; animation: mstilt 3.6s ease-in-out infinite; }
+  @keyframes mstilt { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  .mouse.cheer { animation: mscheer .5s ease-out; }
+  @keyframes mscheer { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.15, .9); } 70% { transform: scale(.95, 1.08) translateY(-5px); } }
 
   .rules { position: relative; z-index: 2; flex: 0 0 auto; display: flex; gap: 14px; align-items: center; justify-content: center; }
   .rules:empty { display: none; }
@@ -40,11 +59,15 @@
 
   .stage { position: relative; z-index: 1; flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
   .stage svg { width: 100%; height: 100%; overflow: visible; }
+  /* Transición entre rondas (solo transform/opacity) */
+  .rules, .stage, .bottom { transition: transform .3s cubic-bezier(.3,1.3,.5,1), opacity .28s; }
+  .rules.out, .stage.out, .bottom.out { transform: translateX(-8%) scale(.94); opacity: 0; }
+  .rules.in, .stage.in, .bottom.in { transform: translateX(8%) scale(.94); opacity: 0; transition: none; }
   #beam { transform-origin: 320px 80px; transition: transform .8s cubic-bezier(.3,1.5,.5,1); }
   .hang { transition: transform .8s cubic-bezier(.3,1.5,.5,1); }
-  .hang .dish { transition: filter .3s; }
-  .hang.hot .dish { filter: drop-shadow(0 0 10px #7dd0ff) drop-shadow(0 0 4px #fff); }
-  .hang.win .dish { filter: drop-shadow(0 0 14px #ffe98a) drop-shadow(0 0 6px #fff); }
+  .hang .glow { opacity: 0; transition: opacity .3s; }
+  .hang.hot .glow { opacity: .8; }
+  .hang.win .glow { opacity: 1; }
   .hang.tappable { cursor: pointer; }
   .hang.bad { animation: shake .4s; }
   .hang .item { font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; cursor: pointer; }
@@ -52,7 +75,7 @@
   .wbadge text { font-family: var(--font); font-weight: 900; fill: #fff; font-size: 17px; }
   .qmark { font-family: var(--font); font-weight: 900; font-size: 64px; fill: #7f5af0; animation: qpulse 1.3s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
   @keyframes qpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-  #sideL, #sideR { font-family: var(--font); font-weight: 900; font-size: 22px; fill: #fff; stroke: #8a4b0a; stroke-width: 1; paint-order: stroke; opacity: 0; transition: opacity .3s; }
+  #sideL, #sideR { font-family: var(--font); font-weight: 900; font-size: 22px; fill: #fff; stroke: #2a4158; stroke-width: 1; paint-order: stroke; opacity: 0; transition: opacity .3s; }
   svg.tapmode #sideL, svg.tapmode #sideR { opacity: 1; }
 
   .bottom { position: relative; z-index: 2; flex: 0 0 auto; width: 100%; display: flex; justify-content: center; }
@@ -79,7 +102,7 @@
     font-size: calc(var(--n) * .55); font-weight: 900; color: #fff; text-shadow: 0 3px 0 var(--d), 0 6px 10px rgba(0,0,0,.3);
     background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(180deg, var(--a), var(--b));
     border: 3px solid rgba(255,255,255,.85);
-    box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(60,30,0,.3), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -5px 0 rgba(0,0,0,.1);
+    box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(20,40,80,.3), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -5px 0 rgba(0,0,0,.1);
     transition: transform .12s, box-shadow .12s; animation: pop .4s ease-out backwards;
   }
   .num::before { content: ""; position: absolute; left: 8%; right: 8%; top: 4%; height: 36%; border-radius: 18% 18% 50% 50%; background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0)); pointer-events: none; }
@@ -89,10 +112,15 @@
   .num.bad { animation: shake .4s; }
   .num.ok { --a: #8ef0b0; --b: #24b36c; --d: #14784a; transform: scale(1.12); box-shadow: 0 8px 0 var(--d), 0 16px 24px rgba(0,60,40,.35), 0 0 0 6px #ffe98a, 0 0 36px 8px rgba(255,233,138,.9); animation: none; }
   .num.dim { opacity: .4; transform: scale(.9); animation: none; }
-  .spark { position: absolute; width: 14px; height: 14px; border-radius: 50%; pointer-events: none; z-index: 30; margin: -7px 0 0 -7px; box-shadow: 0 0 10px rgba(255,255,255,.9); animation: sparkfly .8s ease-out forwards; }
-  .spark.star { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 20px; height: 20px; margin: -10px 0 0 -10px; box-shadow: none; }
-  @keyframes sparkfly { 0% { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(200deg); opacity: 0; } }
+  /* Banner de ronda */
+  .rbanner { position: absolute; left: 50%; top: 42%; z-index: 30; transform: translate(-50%, -50%) scale(.5); opacity: 0; pointer-events: none;
+    padding: 10px 36px; border-radius: 40px; font-size: clamp(26px, 4.5vw, 44px); font-weight: 900; color: #fff; white-space: nowrap;
+    background: linear-gradient(180deg, #7dd0ff, #2f95e8); text-shadow: 0 3px 0 #1a63a8, 0 6px 10px rgba(0,0,0,.3);
+    box-shadow: 0 8px 0 #1a63a8, 0 16px 26px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6);
+    transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .3s; }
+  .rbanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   @media (max-height: 700px) { .obj { width: 60px; height: 60px; } .obj .emoji { font-size: 40px; } .tray { min-height: 80px; } }
+  @media (max-width: 700px) { .hud { gap: 8px; } .vit span { width: 28px; height: 28px; font-size: 20px; } .instr .mouse { width: 56px; height: 56px; } }
 </style>
 </head>
 <body>
@@ -107,12 +135,39 @@ var game = KidsGame.init({ title: 'La balanza' });
   var ANIMALS = ['🐘', '🐰', '🐱', '🐶', '🦁', '🐭', '🐻', '🐸', '🐥', '🐢', '🐮'];
   var BIG = ['🐘', '🐻', '🦁', '🐮'], SMALL = ['🐰', '🐭', '🐥', '🐸'];
   var LABELS = { 1: 'Iguala', 2: '¿Qué pesa más?', 3: 'Incógnitas', 4: 'Dos pasos' };
+  var HOWTO = [{ icon: '👆', text: 'Arrastra cosas al plato vacío' }, { icon: '⚖️', text: 'Cuando pesa igual, la balanza queda derecha' }, { icon: '🐭', text: 'El ratón científico te ayuda' }];
+  // Repisa de pociones: una por nivel completado (cosmético, guardado en localStorage)
+  var DECOS = [['verde', '🧪', 'la poción verde'], ['matraz', '⚗️', 'el matraz burbujeante'], ['micro', '🔬', 'el microscopio'], ['adn', '🧬', 'el ADN dorado']];
 
-  var nivel = 0, round = 0, lock = false, running = false, cur = null;
-  var hud, dots, instrTxt, rules, stage, svg, beam, hangL, hangR, itemsL, itemsR, bottom, sayText = '';
+  var nivel = 0, round = 0, lock = false, running = false, cur = null, streak = 0, handShown = false;
+  var hud, dots, instrTxt, instr, rules, stage, svg, beam, hangL, hangR, itemsL, itemsR, bottom, banner, vit, sayText = '';
 
   function el(tag, cls, html) { var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
   function sv(tag, attrs) { var e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---- Hero art: el ratón científico (SVG con parpadeo, bata, gogles y matraz) ----
+  function mouseSVG(size) {
+    return '<svg class="mouse" viewBox="0 0 120 120" width="' + size + '" height="' + size + '" aria-hidden="true"><defs>' +
+      '<radialGradient id="msf" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#e3e6ef"/><stop offset="1" stop-color="#8d93a8"/></radialGradient>' +
+      '<linearGradient id="msc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d8e0ee"/></linearGradient>' +
+      '<radialGradient id="msg" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#d8f6ff"/><stop offset="1" stop-color="#3da9fc"/></radialGradient></defs>' +
+      '<ellipse cx="60" cy="113" rx="36" ry="6" fill="rgba(0,0,0,.2)"/>' +
+      '<path d="M30 112 Q30 78 60 78 Q90 78 90 112Z" fill="url(#msc)" stroke="#9aa5b8" stroke-width="2"/><path d="M60 82 L60 112" stroke="#9aa5b8" stroke-width="2"/><circle cx="60" cy="94" r="2" fill="#9aa5b8"/><circle cx="60" cy="104" r="2" fill="#9aa5b8"/>' +
+      '<path d="M48 80 L60 94 L72 80" fill="none" stroke="#9aa5b8" stroke-width="2"/><rect x="66" y="90" width="11" height="12" rx="2" fill="#eef2fb" stroke="#9aa5b8" stroke-width="1.5"/><rect x="70" y="85" width="4" height="9" rx="1" fill="#2cb67d"/>' +
+      '<path d="M94 106 L102 86 L110 86 L118 106 Z" fill="#c6ffd9" stroke="#14784a" stroke-width="2" stroke-linejoin="round"/><path d="M98 99 L114 99 L118 106 L94 106Z" fill="#2cb67d"/><circle cx="106" cy="94" r="2" fill="#fff" opacity=".8"/><circle cx="110" cy="80" r="2.5" fill="#8ef0b0"/><circle cx="104" cy="74" r="1.8" fill="#8ef0b0"/>' +
+      '<g class="ms-head">' +
+      '<circle cx="28" cy="38" r="16" fill="url(#msf)" stroke="#5f6678" stroke-width="2"/><circle cx="92" cy="38" r="16" fill="url(#msf)" stroke="#5f6678" stroke-width="2"/><circle cx="28" cy="38" r="9" fill="#ffb3c6"/><circle cx="92" cy="38" r="9" fill="#ffb3c6"/>' +
+      '<ellipse cx="60" cy="60" rx="32" ry="27" fill="url(#msf)" stroke="#5f6678" stroke-width="2"/>' +
+      '<g class="ms-eyes"><ellipse cx="48" cy="58" rx="5" ry="6" fill="#2b2b2b"/><ellipse cx="72" cy="58" rx="5" ry="6" fill="#2b2b2b"/><circle cx="50" cy="56" r="1.8" fill="#fff"/><circle cx="74" cy="56" r="1.8" fill="#fff"/></g>' +
+      '<ellipse cx="60" cy="71" rx="6" ry="4.5" fill="#ff8aa8" stroke="#b8306f" stroke-width="1.5"/>' +
+      '<path d="M40 72 L26 70 M40 75 L27 78 M80 72 L94 70 M80 75 L93 78" stroke="#5f6678" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path class="ms-mouth" d="M54 78 Q60 83 66 78" stroke="#5f6678" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M30 42 Q60 30 90 42" fill="none" stroke="#3f4759" stroke-width="4"/><circle cx="46" cy="39" r="9" fill="url(#msg)" stroke="#3f4759" stroke-width="3"/><circle cx="74" cy="39" r="9" fill="url(#msg)" stroke="#3f4759" stroke-width="3"/><circle cx="43" cy="36" r="2.5" fill="#fff" opacity=".9"/><circle cx="71" cy="36" r="2.5" fill="#fff" opacity=".9"/>' +
+      '</g></svg>';
+  }
+  function mouseCheer() { var m = instr && instr.querySelector('.mouse'); if (m) { m.classList.remove('cheer'); void m.offsetWidth; m.classList.add('cheer'); } }
 
   function build() {
     game.innerHTML = '';
@@ -121,13 +176,15 @@ var game = KidsGame.init({ title: 'La balanza' });
     dots = el('div', 'dots');
     for (var i = 0; i < ROUNDS; i++) dots.appendChild(document.createElement('span'));
     hud.appendChild(dots);
+    vit = el('div', 'vit'); renderVit(); hud.appendChild(vit);
     var lb = el('button', 'btn round yellow', '🎚️'); lb.setAttribute('aria-label', 'Nivel');
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
 
-    var instr = el('div', 'instr panel', '<span class="ico emoji">⚖️</span><span class="txt"></span>');
+    instr = el('div', 'instr panel', mouseSVG(64) + '<span class="txt"></span>');
     instrTxt = instr.querySelector('.txt');
+    instr.querySelector('.mouse').addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.pop(); mouseCheer(); KidsGame.say(sayText); });
     var sp = el('button', 'btn round blue', '🔊');
     sp.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); KidsGame.say(sayText); });
     instr.appendChild(sp);
@@ -145,14 +202,15 @@ var game = KidsGame.init({ title: 'La balanza' });
       '<linearGradient id="gDish" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f9ff"/><stop offset=".5" stop-color="#b9c3d6"/><stop offset="1" stop-color="#5f6c86"/></linearGradient>' +
       '<radialGradient id="gKnob" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff8d0"/><stop offset=".5" stop-color="#ffcc44"/><stop offset="1" stop-color="#a86a0a"/></radialGradient>' +
       '<radialGradient id="gBadge" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3d6"/><stop offset=".6" stop-color="#f0569a"/><stop offset="1" stop-color="#b8306f"/></radialGradient>' +
-      '<filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#3a2000" flood-opacity=".35"/></filter>' +
+      '<radialGradient id="gGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe98a" stop-opacity=".9"/><stop offset="1" stop-color="#ffe98a" stop-opacity="0"/></radialGradient>' +
       '</defs>' +
-      '<ellipse cx="320" cy="356" rx="170" ry="14" fill="rgba(60,30,0,.25)"/>' +
-      '<path d="M235,348 L405,348 Q412,348 408,340 L380,302 Q376,296 368,296 L272,296 Q264,296 260,302 L232,340 Q228,348 235,348 Z" fill="url(#gBase)" filter="url(#sh)"/>' +
+      '<ellipse cx="320" cy="356" rx="170" ry="14" fill="rgba(20,40,80,.3)"/>' +
+      '<path d="M235,352 L405,352 Q412,352 408,344 L380,306 Q376,300 368,300 L272,300 Q264,300 260,306 L232,344 Q228,352 235,352 Z" fill="rgba(20,40,80,.3)"/>' +
+      '<path d="M235,348 L405,348 Q412,348 408,340 L380,302 Q376,296 368,296 L272,296 Q264,296 260,302 L232,340 Q228,348 235,348 Z" fill="url(#gBase)"/>' +
       '<path d="M272,300 L368,300 L380,318 L260,318 Z" fill="rgba(255,255,255,.35)"/>' +
       '<rect x="305" y="85" width="30" height="218" rx="12" fill="url(#gPost)"/>' +
       '<rect x="311" y="90" width="7" height="206" rx="4" fill="rgba(255,255,255,.55)"/>' +
-      '<g id="beam"><rect x="100" y="69" width="440" height="22" rx="11" fill="url(#gBeam)" filter="url(#sh)"/><rect x="112" y="73" width="416" height="6" rx="3" fill="rgba(255,255,255,.55)"/>' +
+      '<g id="beam"><rect x="100" y="75" width="440" height="22" rx="11" fill="rgba(60,30,0,.25)"/><rect x="100" y="69" width="440" height="22" rx="11" fill="url(#gBeam)"/><rect x="112" y="73" width="416" height="6" rx="3" fill="rgba(255,255,255,.55)"/>' +
       '<circle cx="110" cy="80" r="8" fill="url(#gKnob)"/><circle cx="530" cy="80" r="8" fill="url(#gKnob)"/>' +
       '<path id="ptr" d="M320,62 L328,80 L312,80 Z" fill="#b8306f"/><circle cx="320" cy="80" r="20" fill="url(#gKnob)" stroke="#a86a0a" stroke-width="2"/><ellipse cx="314" cy="73" rx="7" ry="4" fill="rgba(255,255,255,.7)"/></g>' +
       hangHTML('L') + hangHTML('R') +
@@ -166,20 +224,39 @@ var game = KidsGame.init({ title: 'La balanza' });
     game.appendChild(stage);
 
     bottom = el('div', 'bottom'); game.appendChild(bottom);
+    banner = el('div', 'rbanner'); game.appendChild(banner);
     setAngle(0);
   }
   function hangHTML(s) {
     return '<g id="hang' + s + '" class="hang">' +
+      '<ellipse class="glow" cx="0" cy="104" rx="130" ry="40" fill="url(#gGlow)"/>' +
       '<line x1="0" y1="0" x2="-88" y2="100" stroke="#6d7a92" stroke-width="4" stroke-linecap="round"/><line x1="0" y1="0" x2="88" y2="100" stroke="#6d7a92" stroke-width="4" stroke-linecap="round"/>' +
       '<line x1="0" y1="0" x2="-88" y2="100" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><line x1="0" y1="0" x2="88" y2="100" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>' +
       '<circle cx="0" cy="0" r="7" fill="url(#gKnob)"/>' +
-      '<path class="dish" d="M-104,100 Q0,160 104,100 Z" fill="url(#gDish)" filter="url(#sh)"/>' +
+      '<path d="M-104,106 Q0,166 104,106 Z" fill="rgba(20,40,80,.25)"/>' +
+      '<path class="dish" d="M-104,100 Q0,160 104,100 Z" fill="url(#gDish)"/>' +
       '<ellipse cx="0" cy="100" rx="104" ry="11" fill="#e9eef8" stroke="#8c96a8" stroke-width="3"/>' +
       '<ellipse cx="0" cy="98" rx="90" ry="6" fill="rgba(255,255,255,.7)"/>' +
       '<g class="items"></g>' +
       '<rect class="zone" x="-120" y="-10" width="240" height="160" fill="rgba(0,0,0,0)"/>' +
       '</g>';
   }
+  function renderVit(newId) {
+    var have = readJSON('kg-balanza-lab', []);
+    vit.innerHTML = DECOS.map(function (d) { var on = have.indexOf(d[0]) >= 0; return '<span class="' + (on ? (d[0] === newId ? 'new on' : 'on') : 'off') + '" title="' + d[2] + '">' + (on ? d[1] : '🔒') + '</span>'; }).join('');
+  }
+  function showBanner(txt, ms) { banner.textContent = txt; banner.classList.add('show'); clearTimeout(banner._t); banner._t = setTimeout(function () { banner.classList.remove('show'); }, ms || 1100); }
+  // Juice: acierto (partículas, anillo, +1 o racha) y fallo (sacudida suave; la racha se reinicia sin castigo)
+  function hit(node) {
+    streak++; mouseCheer();
+    if (node) {
+      var r = node.getBoundingClientRect();
+      KidsGame.fx.burstAt(node, { n: 12, chars: streak >= 3 ? ['⭐', '✨', '🧪'] : null }); KidsGame.fx.ring(node);
+      KidsGame.fx.floatText(r.left + r.width / 2, r.top, streak >= 3 ? '¡Racha x' + streak + '!' : '+1', 'good');
+    }
+    if (streak >= 3 && streak % 5 === 0) { KidsGame.addStar(); KidsGame.toast('🔥 ¡Racha x' + streak + '! ⭐ extra', 1400); KidsGame.sound.win(); }
+  }
+  function miss(node) { streak = 0; if (node) KidsGame.fx.shake(node); }
 
   function setAngle(a) {
     beam.style.transform = 'rotate(' + a + 'deg)';
@@ -202,7 +279,7 @@ var game = KidsGame.init({ title: 'La balanza' });
       var row = Math.floor(i / per), inRow = Math.min(per, n - row * per), col = i % per;
       var x = (col - (inRow - 1) / 2) * gap, y = 92 - row * (fs * 0.95);
       var t = sv('text', { x: x, y: y, 'text-anchor': 'middle', 'font-size': fs, 'class': 'item' });
-      t.textContent = arr[i].e; t.style.filter = 'drop-shadow(0 4px 3px rgba(0,0,0,.3))';
+      t.textContent = arr[i].e;
       if (i === n - 1 && arr[i].fresh) { t.style.animation = 'pop .35s ease-out'; t.style.transformOrigin = x + 'px ' + (y - fs / 2) + 'px'; arr[i].fresh = false; }
       (function (idx) { t.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); ev.preventDefault(); removeItem(side, idx); }); })(i);
       g.appendChild(t);
@@ -221,9 +298,9 @@ var game = KidsGame.init({ title: 'La balanza' });
   function showPicker() {
     running = false; lock = true;
     if (bottom) { bottom.innerHTML = ''; rules.innerHTML = ''; }
-    KidsGame.levelPicker({ key: 'balanza', labels: LABELS, onPick: function (lv) { start(lv); } });
+    KidsGame.levelPicker({ key: 'balanza', labels: LABELS, howto: HOWTO, art: mouseSVG(64), music: 'calma', onPick: function (lv) { start(lv); } });
   }
-  function start(lv) { nivel = lv; round = 0; running = true; build(); newRound(); }
+  function start(lv) { nivel = lv; round = 0; running = true; streak = 0; build(); newRound(true); }
 
   function mk(e, w, showW) { return { e: e, w: w, showW: !!showW }; }
   function rep(e, w, n, showW) { var a = []; for (var i = 0; i < n; i++) a.push(mk(e, w, showW)); return a; }
@@ -292,7 +369,14 @@ var game = KidsGame.init({ title: 'La balanza' });
     return c;
   }
 
-  function newRound() {
+  // Entre rondas todo sale deslizando y la ronda nueva entra (nunca un cambio seco)
+  function newRound(first) {
+    if (!running) return;
+    var parts = [rules, stage, bottom];
+    if (!first) { lock = true; parts.forEach(function (p) { p.classList.add('out'); }); setTimeout(function () { parts.forEach(function (p) { p.classList.remove('out'); }); doRound(); }, 300); }
+    else doRound();
+  }
+  function doRound() {
     if (!running) return;
     cur = makeRound(); lock = false;
     instrTxt.textContent = cur.instr; sayText = cur.say;
@@ -320,7 +404,13 @@ var game = KidsGame.init({ title: 'La balanza' });
       bottom.appendChild(tray);
     }
     render();
+    [rules, stage, bottom].forEach(function (p) { p.classList.add('in'); });
+    void stage.offsetWidth;
+    [rules, stage, bottom].forEach(function (p) { p.classList.remove('in'); });
+    showBanner('Ronda ' + (round + 1) + ' de ' + ROUNDS);
     KidsGame.say(sayText);
+    // Tutorial: en la primera ronda del nivel 1 la manita arrastra una cosa al plato vacío
+    if (nivel === 1 && round === 0 && !handShown) { handShown = true; setTimeout(function () { var o = bottom.querySelector('.obj'); if (running && !lock && o) KidsGame.hand({ from: o, to: hangR }); }, 1000); }
   }
   function rp(e, n) { var s = ''; for (var i = 0; i < n; i++) s += e; return s; }
 
@@ -354,21 +444,21 @@ var game = KidsGame.init({ title: 'La balanza' });
   }
   function removeItem(side, idx) {
     if (lock || !running || cur.mode !== 'drag' || side !== 'R') return;
-    var it = cur.R.splice(idx, 1)[0];
+    cur.R.splice(idx, 1);
     var tray = bottom.querySelector('.tray'); if (tray) tray.appendChild(makeObj(cur.tray));
     KidsGame.sound.tap(); render();
   }
   function checkBalance() {
     var wl = sumW(cur.L), wr = sumW(cur.R);
     if (wr === wl) { lock = true; setTimeout(function () { win(); }, 700); }
-    else if (wr > wl) { setTimeout(function () { if (!lock) { KidsGame.say('Se pasó. Quita uno.'); } }, 600); }
+    else if (wr > wl) { streak = 0; setTimeout(function () { if (!lock) { KidsGame.fx.shake(hangR); KidsGame.say('Se pasó. Quita uno.'); } }, 600); }
   }
   function tapSide(ev, side) {
     if (lock || !running || cur.mode !== 'tap') return;
     ev.preventDefault();
     var h = side === 'L' ? hangL : hangR;
     if (side !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(h);
       h.classList.remove('bad'); void h.getBoundingClientRect(); h.classList.add('bad');
       setTimeout(function () { h.classList.remove('bad'); }, 450);
       return;
@@ -379,7 +469,7 @@ var game = KidsGame.init({ title: 'La balanza' });
   function choose(n, v) {
     if (lock || !running) return;
     if (v !== cur.ans) {
-      KidsGame.sound.wrong(); KidsGame.vibrate(20);
+      KidsGame.sound.wrong(); KidsGame.vibrate(20); miss(n);
       n.classList.remove('bad'); void n.offsetWidth; n.classList.add('bad');
       setTimeout(function () { n.classList.remove('bad'); }, 450);
       return;
@@ -391,24 +481,11 @@ var game = KidsGame.init({ title: 'La balanza' });
     setTimeout(function () { win(); }, 400);
   }
 
-  function sparkle(x, y, n) {
-    var colors = ['#ffd93d', '#ff6f61', '#fff', '#3da9fc', '#2cb67d', '#f582ae'];
-    for (var i = 0; i < (n || 18); i++) {
-      var s = el('div', 'spark' + (i % 3 === 0 ? ' star' : ''));
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 110;
-      s.style.left = x + 'px'; s.style.top = y + 'px';
-      s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', (Math.sin(a) * d - 30) + 'px');
-      s.style.background = KidsGame.pick(colors); s.style.animationDuration = (.6 + Math.random() * .5) + 's';
-      game.appendChild(s); (function (q) { setTimeout(function () { q.remove(); }, 1200); })(s);
-    }
-  }
   function win() {
     lock = true;
     hangL.classList.add('win'); hangR.classList.add('win');
     KidsGame.sound.ok(); KidsGame.addStar(); KidsGame.vibrate(30);
-    var g = game.getBoundingClientRect(), rl = hangL.getBoundingClientRect(), rr = hangR.getBoundingClientRect();
-    sparkle(rl.left + rl.width / 2 - g.left, rl.top + rl.height / 2 - g.top, 16);
-    sparkle(rr.left + rr.width / 2 - g.left, rr.top + rr.height / 2 - g.top, 16);
+    hit(hangR); KidsGame.fx.burstAt(hangL, { n: 10 }); KidsGame.fx.ring(hangL);
     KidsGame.say(KidsGame.pick(['¡Quedó igual!', '¡Equilibrio!', '¡Muy bien!', '¡Eso es!']));
     dots.children[round].classList.add('on'); round++;
     setTimeout(function () { if (!running) return; if (round >= ROUNDS) finish(); else newRound(); }, 1600);
@@ -416,15 +493,19 @@ var game = KidsGame.init({ title: 'La balanza' });
   function finish() {
     running = false;
     KidsGame.levelDone(nivel);
+    var sub = '¡' + ROUNDS + ' balanzas equilibradas!';
+    // Recompensa cosmética: una poción nueva en la repisa por nivel completado
+    var have = readJSON('kg-balanza-lab', []), d = DECOS[nivel - 1];
+    if (d && have.indexOf(d[0]) < 0) { have.push(d[0]); writeJSON('kg-balanza-lab', have); renderVit(d[0]); sub += ' · ' + d[1] + ' ¡Ganaste ' + d[2] + '!'; }
     KidsGame.celebrate({
-      sub: '¡' + ROUNDS + ' balanzas equilibradas!',
+      sub: sub,
       onNext: nivel < 4 ? function () { start(nivel + 1); } : null,
       onAgain: function () { start(nivel); }
     });
   }
 
   window.__g3 = {
-    state: function () { return cur && { mode: cur.mode, L: sumW(cur.L), R: sumW(cur.R), ans: cur.ans, round: round, nivel: nivel, lock: lock }; },
+    state: function () { return cur && { mode: cur.mode, L: sumW(cur.L), R: sumW(cur.R), ans: cur.ans, round: round, nivel: nivel, lock: lock, streak: streak }; },
     solve: function () {
       if (!cur || lock) return false;
       if (cur.mode === 'drag') { var need = sumW(cur.L) - sumW(cur.R); for (var i = 0; i < need; i++) { var o = bottom.querySelector('.obj'); if (o) o.remove(); addItem(cur.tray); } return true; }
