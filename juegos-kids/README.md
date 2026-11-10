@@ -4,7 +4,9 @@ App **sin internet** con 40 juegos, pensada para instalarse en una tablet Androi
 Los juegos están inspirados en los más populares para esta edad (memoria, colorear, rompecabezas,
 globos, letras, números, formas y colores, sombras, dibujar, piano, Simón dice, atrapa al topo,
 laberinto, alimenta a los animales, crea tu monstruo, tres en raya, el intruso, ¿qué sigue?, diferencias,
-sumas, carrera, pesca, mi mascota y vestir). Todos tienen cuatro niveles: Fácil, Medio, Difícil y Experto 🏆, y la página **Progreso** (toca las estrellas del menú) muestra qué niveles completó y cuántas estrellas gana por día. Todo funciona con toques,
+sumas, carrera, pesca, mi mascota y vestir). Todos tienen cuatro niveles: Fácil, Medio, Difícil y Experto 🏆, y la página **Progreso** (toca las estrellas del menú) muestra qué niveles completó y cuántas estrellas gana por día.
+Cada juego tiene su propio mundo y personaje, **Mazi la zorrita** explica cómo se juega con voz y una manita animada,
+cada nivel terminado da un **sticker** para el álbum (72 por coleccionar) y el **Reto del día** da stickers extra. Todo funciona con toques,
 con sonidos, estrellas y celebraciones, sin anuncios ni compras.
 
 ## Instalar el APK en la tablet
