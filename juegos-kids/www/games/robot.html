@@ -41,17 +41,15 @@
   .board { position: relative; display: grid; gap: var(--gap); padding: var(--pad); border-radius: 22px;
     background: linear-gradient(180deg, #4e5f85 0%, #2b3656 100%);
     box-shadow: 0 10px 0 #151c30, 0 22px 34px rgba(0,0,40,.5), inset 0 3px 0 rgba(255,255,255,.3), inset 0 -4px 0 rgba(0,0,0,.3); }
-  .board::before { content: ""; position: absolute; inset: 6px; border-radius: 16px; pointer-events: none; border: 2px dashed rgba(255,255,255,.12); }
   .tile { position: relative; width: var(--ts); height: var(--ts); border-radius: 16%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(180deg, #b7f7e6 0%, #6fd6c2 100%); border: 2px solid rgba(255,255,255,.5);
-    box-shadow: 0 4px 0 #2b9a88, 0 6px 8px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -3px 0 rgba(0,0,0,.08); }
+    box-shadow: 0 4px 0 #2b9a88, 0 6px 8px rgba(0,0,0,.3); }
   .tile.alt { background: linear-gradient(180deg, #a4efdb 0%, #5fc9b4 100%); }
   .tile::before { content: ""; position: absolute; left: 10%; right: 10%; top: 5%; height: 34%; border-radius: 16% 16% 50% 50%; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); }
   .tile svg { width: 92%; height: 92%; overflow: visible; position: relative; z-index: 1; }
-  .tile.rock { background: linear-gradient(180deg, #8fa0b8 0%, #5c6b84 100%); box-shadow: 0 4px 0 #2e3a4c, 0 6px 8px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.5); }
-  .tile.water { background: linear-gradient(180deg, #8fe0ff 0%, #2f95e8 100%); box-shadow: 0 4px 0 #1a63a8, 0 6px 8px rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.7); overflow: hidden; }
+  .tile.rock { background: linear-gradient(180deg, #8fa0b8 0%, #5c6b84 100%); box-shadow: 0 4px 0 #2e3a4c, 0 6px 8px rgba(0,0,0,.3); }
+  .tile.water { background: linear-gradient(180deg, #8fe0ff 0%, #2f95e8 100%); box-shadow: 0 4px 0 #1a63a8, 0 6px 8px rgba(0,0,0,.3); overflow: hidden; }
   .tile.water::after { content: ""; position: absolute; left: -60%; top: 0; width: 60%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.45), rgba(255,255,255,0)); animation: shine 2.6s linear infinite; }
-  .tile.water svg { animation: float 2.4s ease-in-out infinite; }
   .tile.goal { background: radial-gradient(circle at 50% 40%, #fff6c4 0%, #ffd54a 60%, #f5b400 100%); box-shadow: 0 4px 0 #c47f00, 0 6px 8px rgba(0,0,0,.3), 0 0 18px 4px rgba(255,230,120,.8), inset 0 2px 0 #fff; }
   .tile.goal svg { animation: bounce 1.2s ease-in-out infinite; }
   .tile.goal.taken { background: linear-gradient(180deg, #b7f7e6 0%, #6fd6c2 100%); box-shadow: 0 4px 0 #2b9a88, 0 6px 8px rgba(0,0,0,.3); }
@@ -346,7 +344,10 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
     lb.addEventListener('pointerdown', function (ev) { ev.preventDefault(); KidsGame.sound.tap(); showPicker(); });
     hud.appendChild(lb);
     game.appendChild(hud);
-
+    main = null; strip = null; board = null;
+  }
+  // el tablero y el panel de programa se construyen después del primer cuadro (respuesta inmediata al toque)
+  function buildMain() {
     main = document.createElement('div'); main.className = 'main';
     boardwrap = document.createElement('div'); boardwrap.className = 'boardwrap';
     board = document.createElement('div'); board.className = 'board';
@@ -389,7 +390,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
   function showPicker() {
     running = false; executing = false; session++;
     if (tutHand) { tutHand.stop(); tutHand = null; }
-    if (board) { board.innerHTML = ''; strip.innerHTML = ''; }
+    if (board) board.innerHTML = ''; if (strip) strip.innerHTML = '';
     KidsGame.levelPicker({ key: 'robot', labels: LABELS, art: heroSVG(64), music: 'aventura',
       howto: [{ icon: '⬆️', text: 'Toca las flechas para armar el programa' }, { icon: '▶️', text: 'Toca ejecutar y Robi se mueve' }, { icon: '⭐', text: 'Llévalo hasta la estrella sin chocar' }],
       onPick: function (lv) { start(lv); } });
@@ -398,7 +399,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
     nivel = lv; cfg = CFG[lv]; running = true; idx = 0; scores = []; session++; streak = 0; nextP = null; busy = true;
     build();
     var ss = session;
-    KidsGame.defer(function () { if (ss !== session || !running) return; busy = false; newPuzzle(true); setTimeout(explain, 900); });
+    KidsGame.defer(function () { if (ss !== session || !running) return; buildMain(); busy = false; newPuzzle(true); setTimeout(explain, 900); });
   }
   function newPuzzle(first) {
     P = nextP || genPuzzle(nivel); nextP = null; program = []; cursor = null; executing = false; runId++;
