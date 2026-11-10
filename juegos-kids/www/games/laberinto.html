@@ -721,7 +721,8 @@ var game = KidsGame.init({ title: 'Laberinto' });
   window.addEventListener('resize', function () { order(); layout(); });
   // Primero se elige el nivel; el juego arranca al escoger
   cols = 5; rows = 5; cells = gen(cols, rows); wallColor = WALLS[0]; trailColor = TRAILS[0];
-  px = 0; py = 0; gx = 4; gy = 4; trail = [[0, 0]]; done = true; layout();
+  px = 0; py = 0; gx = 4; gy = 4; trail = [[0, 0]]; done = true;
+  charEl.innerHTML = charSVG(CHARS[0]); whoEl.firstChild.innerHTML = charSVG(CHARS[0], 40); applyHat(); layout();
   showPicker();
 })();
 </script>

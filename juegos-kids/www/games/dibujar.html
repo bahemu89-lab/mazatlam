@@ -272,12 +272,12 @@ function openGallery() {
 function closeGallery() { galEl.classList.remove('show'); }
 document.getElementById('galClose').onclick = function () { KidsGame.sound.tap(); closeGallery(); };
 function loadFromGallery(url) {
-  var img = new Image(); img.onload = function () { clearCanvas(); ctx.drawImage(img, 0, 0, W, H); closeGallery(); KidsGame.sound.ok(); KidsGame.toast('¡Tu dibujo volvió! 🖼️', 1200); cboxCheer('¡Sigue pintando!'); }; img.src = url;
+  var img = new Image(); img.onload = function () { clearCanvas(); ctx.drawImage(img, 0, 0, W, H); dirty = true; closeGallery(); KidsGame.sound.ok(); KidsGame.toast('¡Tu dibujo volvió! 🖼️', 1200); cboxCheer('¡Sigue pintando!'); }; img.src = url;
 }
 var SHAPES = [['circ', '●'], ['sq', '■'], ['tri', '▲'], ['rect', '▬'], ['dia', '◆'], ['star', '★'], ['heart', '♥']];
 var mode = 'brush';       // brush | rainbow | eraser | sticker | shape
 var color = COLORS[1], size = SIZES[1], sticker = STICKERS[0], shape = 'circ', rot = 0, hue = 0, mirror = false;
-var dpr = 1, W = 0, H = 0;
+var dpr = 1, W = 0, H = 0, dirty = false;
 var nivel = 1;
 
 // ---------- Lienzo: tamaño con devicePixelRatio, conservando el dibujo ----------
@@ -287,7 +287,8 @@ function resize() {
   var ndpr = Math.min(window.devicePixelRatio || 1, 1.5);
   if (nw === W && nh === H && ndpr === dpr) return;
   var old = null;
-  if (W && H) { old = document.createElement('canvas'); old.width = cv.width; old.height = cv.height; old.getContext('2d').drawImage(cv, 0, 0); }
+  // Solo se conserva el dibujo si hay algo pintado (evita copiar un lienzo en blanco al cambiar de nivel)
+  if (W && H && dirty) { old = document.createElement('canvas'); old.width = cv.width; old.height = cv.height; old.getContext('2d').drawImage(cv, 0, 0); }
   W = nw; H = nh; dpr = ndpr;
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -401,7 +402,7 @@ function placeShape(at) {
   if (mirror) shapeAt(W - at.x, at.y, s, -rot);
 }
 cv.addEventListener('pointerdown', function (e) {
-  e.preventDefault();
+  e.preventDefault(); dirty = true;
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   var p = pos(e);
   if (mode === 'sticker') { stamp(p); KidsGame.sound.pop(); KidsGame.vibrate(15); return; }
@@ -439,7 +440,7 @@ function inkCount(x0, y0, x1, y1) {
   return n;
 }
 function inkFraction() { var samples = Math.ceil(W / 3) * Math.ceil(H / 3); return inkCount(0, 0, W, H) / Math.max(1, samples); }
-function clearCanvas() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }
+function clearCanvas() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); dirty = false; }
 
 // ---------- Nivel Experto: "Dibuja lo que te digo" y "Completa el dibujo" ----------
 var PROMPTS = [
@@ -513,7 +514,7 @@ function drawHalf(key) {
   ctx.setLineDash([12, 10]); ctx.beginPath(); ctx.moveTo(W / 2, b.y0 - 12); ctx.lineTo(W / 2, b.y0 + b.s + 12); ctx.strokeStyle = '#c3cbe0'; ctx.stroke();
   ctx.setLineDash([]); ctx.strokeStyle = '#8f9bb3';
   HALVES[key].draw(tx, ty, b.s);
-  ctx.restore();
+  ctx.restore(); dirty = true;
 }
 function renderTask() {
   if (!expert) { task.classList.remove('show'); task.innerHTML = ''; return; }

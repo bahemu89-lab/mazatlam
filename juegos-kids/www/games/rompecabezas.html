@@ -7,22 +7,24 @@
 <title>Rompecabezas</title>
 <style>
   /* La galería de arte: papel tapiz, moldura y foco de luz; el cuadro va sobre un caballete */
-  .game { background: linear-gradient(180deg, #fff3e0 0%, #ffe3c2 60%, #e8c9a3 100%); }
-  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  .game { background: linear-gradient(180deg, #fff3e0 0%, #ffe3c2 60%, #e8c9a3 100%); isolation: isolate; }
+  .game::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: -1;
     background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
       repeating-linear-gradient(90deg, rgba(200,120,60,0) 0 44px, rgba(200,120,60,.08) 44px 52px),
       radial-gradient(circle at 26px 26px, rgba(220,150,90,.16) 0 4px, rgba(0,0,0,0) 5px) 0 0 / 52px 52px; }
-  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; pointer-events: none; z-index: 0;
+  .game::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; pointer-events: none; z-index: -1;
     background: repeating-linear-gradient(90deg, rgba(120,70,20,.12) 0 2px, rgba(0,0,0,0) 2px 70px), linear-gradient(180deg, #c98a4b, #9a5f2b); box-shadow: inset 0 6px 10px rgba(0,0,0,.15); }
   .rail { position: absolute; left: 0; right: 0; top: 70px; height: 10px; background: linear-gradient(180deg, #f6dcb8, #c9975a); box-shadow: 0 3px 4px rgba(0,0,0,.15); z-index: 0; }
-  .artcat { position: absolute; width: 150px; height: 180px; pointer-events: none; z-index: 2; left: 12px; bottom: 4px; }
+  .artcat { position: absolute; width: 130px; height: 156px; pointer-events: none; z-index: 2; right: 14px; bottom: 2px; }
+  .artcat.portrait { left: 8px; right: auto; width: 112px; height: 134px; }
+  .tray.land { padding-bottom: 150px !important; }
+  .tray.port { padding-left: 118px !important; }
   .artcat svg { width: 100%; height: 100%; overflow: visible; }
   .artcat .paw { transform-origin: 104px 112px; transition: transform .3s; }
   .artcat.cheer .paw { animation: pawup .4s ease-in-out 3; }
   @keyframes pawup { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-120deg); } }
   .artcat .ceyes { animation: mzblink 4.5s infinite; transform-box: fill-box; transform-origin: center; }
   .artcat .chead { transform-origin: 70px 70px; animation: float 3.5s ease-in-out infinite; }
-  .artcat.small { width: 100px; height: 120px; }
   .easel { position: absolute; left: 50%; bottom: -46px; width: 110%; height: 60px; transform: translateX(-50%); pointer-events: none; z-index: -3; }
   .easel svg { width: 100%; height: 100%; overflow: visible; }
   .board.fr-blanco::before { background-image: linear-gradient(180deg, #ffffff 0%, #eef1f7 100%); box-shadow: 0 12px 0 #b9c4dc, 0 22px 30px rgba(20,40,90,.3), inset 0 3px 0 #fff; }
@@ -420,7 +422,6 @@
       tray.appendChild(d); tiles.push(t);
     });
     layout();
-    artcat.classList.toggle('small', game.clientHeight > game.clientWidth || game.clientWidth < 900);
     KidsGame.say('Arma el rompecabezas');
     if (level === 1 && firstRound) {
       firstRound = false;
@@ -435,6 +436,8 @@
     var portrait = H > W;
     wrap.className = 'wrap' + (portrait ? ' portrait' : '');
     var bw, bh, tw, th, tcols, trows;
+    var CAT_W = 118, CAT_H = 150;
+    tray.classList.toggle('port', portrait); tray.classList.toggle('land', !portrait); artcat.classList.toggle('portrait', portrait);
     if (portrait) {
       var trayH = Math.max(130, Math.floor(H * (expert() ? 0.36 : 0.3)));
       bw = W - F; bh = H - trayH - 10 - F;
@@ -452,13 +455,13 @@
     // Tamaño de las fichas en la bandeja para que quepan todas
     if (portrait) {
       trows = expert() ? 4 : level === 3 ? 3 : 2; tcols = Math.ceil(n / trows);
-      tw = (W - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
+      tw = (W - CAT_W - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
       var availH = parseFloat(tray.style.height) - B - (trows + 1) * gap;
       if (trows * th > availH) { th = availH / trows; tw = th * tileW / tileH; }
     } else {
       tcols = expert() ? 4 : level === 3 ? 3 : 2; trows = Math.ceil(n / tcols);
       tw = (parseFloat(tray.style.width) - B - (tcols + 1) * gap) / tcols; th = tw * tileH / tileW;
-      if (trows * th > H - B - (trows + 1) * gap) { th = (H - B - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
+      if (trows * th > H - CAT_H - B - (trows + 1) * gap) { th = (H - CAT_H - B - (trows + 1) * gap) / trows; tw = th * tileW / tileH; }
     }
     trayScale = Math.min(1, tw / tileW);
     if (level === 3) trayScale *= 0.82;
@@ -554,7 +557,7 @@
   }
 
   window.addEventListener('resize', layout);
-  pickLevel();
+  setHud(); pickLevel();
 })();
 </script>
 </body>
