@@ -484,8 +484,8 @@ var game = KidsGame.init({ title: 'El huerto de Mazi' });
     var n = cfg.n, k = 0;
     for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) { var el = cellEls[r][c]; el.classList.add('win'); el.style.animationDelay = (k * 40) + 'ms'; k++; }
     var bb = board.getBoundingClientRect(), bx = bb.left + bb.width / 2, by = bb.top + bb.height / 2;
-    KidsGame.fx.burst(bx, by, { n: 22, r: 120 }); KidsGame.music.duck(2000);
-    setTimeout(function () { KidsGame.fx.burst(bx, by - 30, { n: 16, r: 110, chars: syms.slice(0, 4).concat(['⭐', '✨']) }); }, 450);
+    KidsGame.fx.burst(bx, by, { n: 16, r: 120 }); KidsGame.music.duck(2000);
+    setTimeout(function () { KidsGame.fx.burst(bx, by - 30, { n: 12, r: 110, chars: syms.slice(0, 4).concat(['⭐', '✨']) }); }, 450);
     banner('🧺 ¡Cosecha lista!');
     var stars = 3; if (hintsUsed > 0) stars--; if (errors > 3) stars--;
     stars = Math.max(1, stars);

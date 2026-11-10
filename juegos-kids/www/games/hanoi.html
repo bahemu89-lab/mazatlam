@@ -395,8 +395,8 @@ var game = KidsGame.init({ title: 'Torre de pasteles' });
     KidsGame.sound.ok(); KidsGame.addStar(1); KidsGame.vibrate(50);
     for (var d = 1; d <= n; d++) { var el = discEls[d]; el.classList.add('win'); el.style.animationDelay = ((n - d) * 90) + 'ms'; }
     var gx = world.getBoundingClientRect(), cx = gx.left + target * geo.zone + geo.zone / 2, cy = gx.top + geo.H - geo.bh - n * geo.h;
-    KidsGame.fx.burst(cx, cy, { n: 20 }); KidsGame.music.duck(2000);
-    setTimeout(function () { KidsGame.fx.burst(cx, cy - 40, { n: 14, chars: ['🎂', '🍒', '⭐', '✨'] }); KidsGame.fx.floatText(cx, cy - 80, '¡Pastel listo!', 'good'); }, 400);
+    KidsGame.fx.burst(cx, cy, { n: 16 }); KidsGame.music.duck(2000);
+    setTimeout(function () { KidsGame.fx.burst(cx, cy - 40, { n: 12, chars: ['🎂', '🍒', '⭐', '✨'] }); KidsGame.fx.floatText(cx, cy - 80, '¡Pastel listo!', 'good'); }, 400);
     banner('🎂 ¡Pastel listo!');
     var stars = moves <= opt + 2 ? 3 : (moves <= opt * 1.5 + 2 ? 2 : 1);
     if (hintsUsed > 2 && stars === 3) stars = 2;

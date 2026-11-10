@@ -340,7 +340,7 @@
     var bub = el('div', 'bubble', '¡Hola! Soy la maestra Lechuza 🦉 ¿Qué jugamos?');
     m.appendChild(hud()); m.appendChild(sign); m.appendChild(bub); m.appendChild(owlEl); m.appendChild(b1); m.appendChild(b2); game.appendChild(m);
     KidsGame.say('Hola, soy la maestra Lechuza. Elige un juego');
-    if (level === 1 && !JK.store('kg-letras-hand', 0)) KidsGame.hand({ el: b1, timeout: 9000 });
+    if (level === 1 && !JK.store('kg-letras-hand', 0)) setTimeout(function () { if (mode === 'menu' && b1.parentNode) KidsGame.hand({ el: b1, timeout: 9000 }); }, 1200);
   }
 
   /* ---------- Modo 1: Escucha y toca ---------- */
@@ -410,7 +410,7 @@
     KidsGame.say(name + '. ' + ASKS[type][1]);
     if (level === 1 && correct === 0 && !JK.store('kg-letras-hand', 0)) {
       var target = null; Array.prototype.forEach.call(choices.children, function (c) { if (c.firstChild.textContent.toUpperCase() === L) target = c; });
-      if (target) setTimeout(function () { if (target.parentNode) KidsGame.hand({ el: target, timeout: 12000 }); }, 900);
+      if (target) setTimeout(function () { if (target.parentNode) KidsGame.hand({ el: target, timeout: 12000 }); }, 1200);
     }
   }
   function pickLetter(c, l, L) {

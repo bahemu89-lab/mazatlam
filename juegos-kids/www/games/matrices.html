@@ -439,7 +439,7 @@ var game = KidsGame.init({ title: 'El cofre del tesoro' });
       // ¡clic! el candado se abre y la tapa se levanta
       setTimeout(function () {
         KidsGame.sound.pop(); cofre.classList.add('open'); KidsGame.music.duck(1600);
-        setTimeout(function () { var lr = cofre.getBoundingClientRect(); KidsGame.sound.win(); KidsGame.fx.burst(lr.left + lr.width / 2, lr.top + lr.height * .25, { n: 18, chars: ['💎', '🪙', '✨', '⭐'] }); }, 500);
+        setTimeout(function () { var lr = cofre.getBoundingClientRect(); KidsGame.sound.win(); KidsGame.fx.burst(lr.left + lr.width / 2, lr.top + lr.height * .25, { n: 14, chars: ['💎', '🪙', '✨', '⭐'] }); }, 500);
       }, 350);
       KidsGame.say(KidsGame.pick(['¡Esa es! ¡Se abrió!', '¡Muy bien! ¡Tesoro!', '¡Exacto! ¡Clic!', '¡Genial!']));
       dots.children[round].classList.add('on'); round++;

@@ -99,7 +99,7 @@
   .ctrl { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; align-items: stretch; justify-content: center; }
   .main.col .ctrl { width: 100%; flex: 0 0 auto; }
   .strip { position: relative; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; align-content: center; padding: 10px 12px; border-radius: 26px; min-height: 90px; }
-  .strip .ttl { position: absolute; left: 18px; top: -12px; font-size: 14px; font-weight: 900; color: #fff; padding: 2px 12px; border-radius: 12px; background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 2px 0 #1a63a8, 0 4px 6px rgba(0,0,0,.25); }
+  .strip .ttl { position: absolute; left: 18px; top: -14px; z-index: 3; font-size: 14px; font-weight: 900; color: #fff; padding: 2px 12px; border-radius: 12px; background: linear-gradient(180deg, #7dd0ff, #2f95e8); box-shadow: 0 2px 0 #1a63a8, 0 4px 6px rgba(0,0,0,.25); }
   .slot { width: 64px; height: 64px; border-radius: 18px; border: 3px dashed rgba(26,99,168,.4); background: rgba(255,255,255,.35); flex: 0 0 auto; cursor: pointer; transition: background .15s, border-color .15s; }
   .slot.cur { border-color: #ffb703; background: rgba(255,233,138,.6); box-shadow: 0 0 0 4px rgba(255,233,138,.5); animation: nudge 1.2s ease-in-out infinite; }
   @keyframes nudge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
@@ -319,7 +319,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
 
   // ---------- Estado / UI ----------
   var nivel = 0, cfg = null, running = false, executing = false, busy = false, P = null, nextP = null, idx = 0, scores = [], session = 0, streak = 0, handShown = false, tutHand = null;
-  var program = [], cursor = null;
+  var program = [], cursor = null, runId = 0;
   var hud, dots, stepsEl, main, boardwrap, board, robotEl, ctrl, strip, pal, runBtn, undoBtn, clearBtn, streakEl, skinBtn, tiles = {};
   var rob = { r: 0, c: 0, d: 0, stage: 0, lit: {} };
 
@@ -401,7 +401,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
     KidsGame.defer(function () { if (ss !== session || !running) return; busy = false; newPuzzle(true); setTimeout(explain, 900); });
   }
   function newPuzzle(first) {
-    P = nextP || genPuzzle(nivel); nextP = null; program = []; cursor = null; executing = false;
+    P = nextP || genPuzzle(nivel); nextP = null; program = []; cursor = null; executing = false; runId++;
     rob = { r: P.start.r, c: P.start.c, d: P.start.d, stage: 0, lit: {} };
     renderBoard(); renderProgram(); layout(); placeRobot(true); setSteps(0);
     banner('🚀 Misión ' + (idx + 1) + ' de ' + PUZZLES);
@@ -582,13 +582,13 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
     if (tutHand) { tutHand.stop(); tutHand = null; }
     KidsGame.sound.tap();
     executing = true; resetRobot();
-    var list = expand(), i = 0, steps = 0, ss = session;
+    var list = expand(), i = 0, steps = 0, ss = session, myRun = ++runId;
     setSteps(0);
     var allLit = function () { return P.lights.every(function (L, k) { return rob.lit[k]; }); };
     function success() { if (!P.two) return rob.r === P.goal.r && rob.c === P.goal.c; return rob.stage === 1 && rob.r === P.goal2.r && rob.c === P.goal2.c && allLit(); }
     function clearRun() { strip.querySelectorAll('.run').forEach(function (e) { e.classList.remove('run'); }); }
     function step() {
-      if (!running || ss !== session) { executing = false; return; }
+      if (!running || ss !== session || myRun !== runId) { if (myRun === runId) executing = false; return; }
       clearRun();
       if (i >= list.length) { endFail(); return; }
       var cmd = list[i++]; steps++; setSteps(steps);
@@ -617,7 +617,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
       puff(inside ? nr : rob.r, inside ? nc : rob.c, '💥');
       KidsGame.fx.shake(boardwrap);
       KidsGame.say('¡Pum! Ahí no puede pasar.');
-      setTimeout(function () { if (ss !== session) return; robotEl.classList.remove('bonk'); clearRun(); restoreLoopLabels(); resetRobot(); executing = false; }, 1100);
+      setTimeout(function () { if (ss !== session || myRun !== runId) return; robotEl.classList.remove('bonk'); clearRun(); restoreLoopLabels(); resetRobot(); executing = false; }, 1100);
     }
     function endFail() {
       robotEl.classList.add('sad'); streak = 0; setStreak();
@@ -625,7 +625,7 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
       if (P.two) { if (rob.stage === 0) msg = 'Primero tiene que pasar por la estrella.'; else if (!allLit()) msg = 'Faltan luces por encender.'; else msg = 'Casi. Falta llegar a la bandera.'; }
       KidsGame.say(msg); KidsGame.toast('🤔 ' + (P.two && rob.stage === 0 ? 'Primero ⭐' : (P.two && !allLit() ? 'Faltan 💡' : 'Casi...')), 1600);
       puff(rob.r, rob.c, '❓');
-      setTimeout(function () { if (ss !== session) return; restoreLoopLabels(); resetRobot(); executing = false; }, 1300);
+      setTimeout(function () { if (ss !== session || myRun !== runId) return; restoreLoopLabels(); resetRobot(); executing = false; }, 1300);
     }
     step();
   }
@@ -652,9 +652,8 @@ var game = KidsGame.init({ title: 'Robi en el planeta Chispa' });
     if (idx < PUZZLES) setTimeout(function () { if (ss === session && running) nextP = genPuzzle(nivel); }, 400);
     setTimeout(function () {
       if (ss !== session) return;
-      executing = false;
-      if (idx >= PUZZLES) { finish(); return; }
-      boardwrap.classList.add('out');
+      if (idx >= PUZZLES) { executing = false; finish(); return; }
+      boardwrap.classList.add('out'); // executing sigue en true hasta que aparece la nueva misión (evita dos corridas a la vez)
       setTimeout(function () { if (ss === session && running) newPuzzle(false); }, 280);
     }, 1900);
   }

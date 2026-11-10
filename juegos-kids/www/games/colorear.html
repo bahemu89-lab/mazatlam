@@ -647,7 +647,7 @@ function show(i, quiet) {
   if (nivel === 4) startChallenge(); else { hideModel(); updateHud(); }
   if (!quiet) KidsGame.say(d.name);
   if (nivel === 1 && !JK.store('kg-colorear-hand', 0)) {
-    setTimeout(function () { var best = null, ba = 0; for (var k = 0; k < regions.length; k++) { try { var bb = regions[k].getBBox(); if (bb.width * bb.height > ba) { ba = bb.width * bb.height; best = regions[k]; } } catch (e) {} } if (best) KidsGame.hand({ el: best, timeout: 10000 }); }, 900);
+    setTimeout(function () { var best = null, ba = 0; for (var k = 0; k < regions.length; k++) { try { var bb = regions[k].getBBox(); if (bb.width * bb.height > ba) { ba = bb.width * bb.height; best = regions[k]; } } catch (e) {} } if (best) KidsGame.hand({ el: best, timeout: 10000 }); }, 1300);
   }
 }
 stage.addEventListener('pointerdown', function (e) {

@@ -686,7 +686,7 @@ function start(n) {
   if (n === 1 && !JK.store('kg-dibujar-hand', 0)) {
     setTimeout(function () { var r = cv.getBoundingClientRect(); var a = document.createElement('div'), b = document.createElement('div');
       a.style.cssText = 'position:fixed;left:' + (r.left + r.width * .3) + 'px;top:' + (r.top + r.height * .35) + 'px;width:2px;height:2px'; b.style.cssText = 'position:fixed;left:' + (r.left + r.width * .7) + 'px;top:' + (r.top + r.height * .6) + 'px;width:2px;height:2px';
-      document.body.appendChild(a); document.body.appendChild(b); var h = KidsGame.hand({ from: a, to: b, timeout: 10000 }); setTimeout(function () { a.remove(); b.remove(); }, 10200); }, 800);
+      document.body.appendChild(a); document.body.appendChild(b); var h = KidsGame.hand({ from: a, to: b, timeout: 10000 }); setTimeout(function () { a.remove(); b.remove(); }, 10200); }, 1300);
   }
 }
 cv.addEventListener('pointerdown', function () { JK.put('kg-dibujar-hand', 1); });
